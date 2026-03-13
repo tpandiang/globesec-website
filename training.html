@@ -103,6 +103,7 @@ body {
 }
 .toc-item.active .toc-num { background: var(--aws); color: var(--bg); }
 .toc-num.plan { background: var(--accent); color: var(--bg); font-size: 0.5rem; width: 32px; border-radius: 4px; }
+.toc-num.week { background: #10b981; color: #fff; font-size: 0.6rem; width: 28px; border-radius: 4px; }
 .toc-name { font-size: 0.85rem; font-weight: 500; flex: 1; }
 .toc-weight {
     font-size: 0.72rem; color: var(--text-muted); background: var(--bg);
@@ -137,6 +138,7 @@ body {
     text-transform: uppercase; white-space: nowrap;
 }
 .plan-badge { background: var(--gradient); color: var(--bg); }
+.week-badge { background: #10b981; color: #fff; }
 .domain-title { font-size: 1.05rem; font-weight: 600; color: var(--white); }
 .domain-toggle { font-size: 1.2rem; transition: transform 0.2s; color: var(--text-muted); }
 .domain.collapsed .domain-toggle { transform: rotate(-90deg); }
@@ -275,6 +277,11 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 <a href="#study-plan" class="toc-item plan" onclick="showDomain(event, 'study-plan')">
         <span class="toc-num plan">PLAN</span>
         <span class="toc-name">Study Plan</span>
+        
+    </a>
+<a href="#week-week1-day1-2-iam-policy-fundamentals" class="toc-item week" onclick="showDomain(event, 'week-week1-day1-2-iam-policy-fundamentals')">
+        <span class="toc-num week">WE</span>
+        <span class="toc-name">Day 1-2: IAM Policy Fundamentals</span>
         
     </a>
 
@@ -2880,6 +2887,1080 @@ Account ready with full security baseline</code></pre>
 <h3>Your Study Materials</h3>
 <ul><li>Study Guide Website: http://localhost:8082</li><li>Word Document: AWS-SCS-C03-Study-Guide-v2.docx</li><li>Sources: Chad Smith crash course + KPLabs Udemy course + AWS documentation</li></ul>
 <p>*Study Plan prepared for Dr. Thiru Pandian | Target: AWS Certified Security - Specialty (SCS-C03)*</p>
+</div></div>
+        </div>
+    </div>
+    
+    <div class="domain collapsed" id="week-week1-day1-2-iam-policy-fundamentals">
+        <div class="domain-header" onclick="toggleDomain(this)">
+            <div class="domain-title-row">
+                <span class="domain-number week-badge">WEEK1</span>
+                <h1 class="domain-title">Week 1 — Day 1-2: IAM Policy Fundamentals</h1>
+            </div>
+            <span class="domain-toggle">&#9660;</span>
+        </div>
+        <div class="domain-body">
+            <div class="section" id="d8-s1">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Learning Objectives</h2>
+<div class="section-body">
+<p>By the end of Day 1-2, you should be able to:</p>
+<ul><li>Write IAM policies from scratch using all JSON elements</li><li>Distinguish between identity-based and resource-based policies</li><li>Choose the correct policy type for any given scenario</li><li>Understand managed vs inline policies and their limits</li><li>Recognize common policy misconfigurations that lead to breaches</li></ul>
+</div></div>
+<div class="section" id="d8-s2">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Part 1: IAM Policy Structure — The JSON Anatomy</h2>
+<div class="section-body">
+<p>Every IAM permission in AWS is expressed as a <strong>JSON policy document</strong>. Understanding this structure is fundamental — the exam will present policy JSON and ask you to evaluate what it allows or denies.</p>
+<h3>The Complete Policy Structure</h3>
+<pre><code>{
+  "Version": "2012-10-17",
+  "Id": "optional-policy-identifier",
+  "Statement": [
+    {
+      "Sid": "HumanReadableStatementId",
+      "Effect": "Allow",
+      "Principal": {"AWS": "arn:aws:iam::123456789012:role/MyRole"},
+      "Action": ["s3:GetObject", "s3:PutObject"],
+      "Resource": "arn:aws:s3:::my-bucket/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:PrincipalOrgID": "o-xxxxxxxxxxx"
+        }
+      }
+    }
+  ]
+}</code></pre>
+<h3>Element-by-Element Deep Dive</h3>
+<h4>1. Version (Required)</h4>
+<pre><code>"Version": "2012-10-17"</code></pre>
+<ul><li><strong>Always use</strong> <code>"2012-10-17"</code> — this is the current version</li><li>The older <code>"2008-10-17"</code> does NOT support policy variables like <code>${aws:username}</code></li><li>If you omit Version, it defaults to <code>2008-10-17</code> — <strong>never omit it</strong></li></ul>
+<p><strong>Exam Trap</strong>: If a policy uses <code>${aws:username}</code> but has <code>"Version": "2008-10-17"</code> (or no Version), the variable will be treated as a literal string, not resolved.</p>
+<h4>2. Effect (Required)</h4>
+<pre><code>"Effect": "Allow"   // or "Deny"</code></pre>
+<p>Only two values: <code>Allow</code> or <code>Deny</code>.</p>
+<p><strong>The Golden Rule</strong>: An explicit <code>Deny</code> ALWAYS overrides any <code>Allow</code>. Think of it as multiplication — <strong>0 (Deny) multiplied by anything = 0</strong>.</p>
+<p><strong>Default behavior</strong>: Everything is implicitly denied unless explicitly allowed. You don't need to write Deny statements for things not mentioned — they are already denied by default.</p>
+<p><strong>When to use explicit Deny</strong>:</p>
+<ul><li>Override broader Allow statements (e.g., deny <code>s3:DeleteBucket</code> even if <code>s3:*</code> is allowed)</li><li>Enforce guardrails in SCPs (deny specific dangerous actions)</li><li>Conditional restrictions (deny if MFA is not present)</li></ul>
+<h4>3. Principal (Required in resource-based policies ONLY)</h4>
+<p>The Principal specifies <strong>WHO</strong> the policy applies to. This element is:</p>
+<ul><li><strong>Required</strong> in resource-based policies (S3 bucket policies, KMS key policies, SQS policies, role trust policies)</li><li><strong>NOT used</strong> in identity-based policies (the principal is implicitly the entity the policy is attached to)</li></ul>
+<pre><code>┌─────────────────────────────────────────────────┐
+│              Principal Types                     │
+├─────────────────┬───────────────────────────────┤
+│ AWS Account     │ "AWS": "123456789012"         │
+│ IAM User        │ "AWS": "arn:aws:iam::1234..   │
+│                 │   :user/Alice"                │
+│ IAM Role        │ "AWS": "arn:aws:iam::1234..   │
+│                 │   :role/MyRole"               │
+│ AWS Service     │ "Service": "ec2.amazonaws.com"│
+│ Federated User  │ "Federated": "cognito-        │
+│                 │   identity.amazonaws.com"     │
+│ Everyone        │ "*"                           │
+└─────────────────┴───────────────────────────────┘</code></pre>
+<p><strong>Critical Exam Points</strong>:</p>
+<ul><li><code>"Principal": "*"</code> = <strong>everyone</strong> (anonymous access) — this is a red flag in security reviews</li><li>IAM <strong>groups</strong> CANNOT be used as principals</li><li><code>"NotPrincipal"</code> with <code>"Effect": "Deny"</code> = deny everyone EXCEPT the specified principal (used for lockdown policies)</li></ul>
+<p><strong>Dangerous Pattern — Open Principal</strong>:</p>
+<pre><code>{
+  "Effect": "Allow",
+  "Principal": "*",
+  "Action": "s3:GetObject",
+  "Resource": "arn:aws:s3:::my-bucket/*"
+}</code></pre>
+<p>This makes your S3 bucket <strong>publicly accessible</strong>. Always add conditions to restrict open principals.</p>
+<p><strong>Safe Pattern — Organization-restricted</strong>:</p>
+<pre><code>{
+  "Effect": "Allow",
+  "Principal": "*",
+  "Action": "s3:GetObject",
+  "Resource": "arn:aws:s3:::my-bucket/*",
+  "Condition": {
+    "StringEquals": {
+      "aws:PrincipalOrgID": "o-xxxxxxxxxxx"
+    }
+  }
+}</code></pre>
+<h4>4. Action / NotAction (Required)</h4>
+<p>Specifies <strong>WHAT</strong> API operations are allowed or denied.</p>
+<pre><code>"Action": ["s3:GetObject", "s3:PutObject"]     // specific actions
+"Action": "s3:Get*"                              // wildcard - all Get actions
+"Action": "s3:*"                                 // all S3 actions
+"Action": "*"                                    // ALL actions on ALL services</code></pre>
+<p><strong>NotAction</strong> — Matches everything EXCEPT the listed actions:</p>
+<pre><code>{
+  "Effect": "Deny",
+  "NotAction": [
+    "iam:ChangePassword",
+    "iam:CreateVirtualMFADevice",
+    "iam:EnableMFADevice",
+    "sts:GetSessionToken"
+  ],
+  "Resource": "*",
+  "Condition": {
+    "BoolIfExists": {"aws:MultiFactorAuthPresent": "false"}
+  }
+}</code></pre>
+<p>This denies everything EXCEPT MFA-related actions when MFA is not present — a common pattern for <strong>enforcing MFA</strong>.</p>
+<p><strong>Exam Warning</strong>: <code>NotAction</code> with <code>Allow</code> is dangerous — it allows EVERY action except the listed ones, which could grant unintended access across all services.</p>
+<h4>5. Resource / NotResource (Required in identity-based policies)</h4>
+<p>Specifies <strong>WHICH</strong> AWS resources the statement applies to.</p>
+<pre><code>"Resource": "arn:aws:s3:::my-bucket"           // the bucket itself
+"Resource": "arn:aws:s3:::my-bucket/*"          // objects IN the bucket
+"Resource": [                                    // BOTH (common pattern)
+  "arn:aws:s3:::my-bucket",
+  "arn:aws:s3:::my-bucket/*"
+]
+"Resource": "*"                                  // all resources</code></pre>
+<p><strong>ARN Format</strong>:</p>
+<pre><code>arn:aws:service:region:account-id:resource-type/resource-id</code></pre>
+<p><strong>Common mistake</strong>: Forgetting that S3 bucket operations (ListBucket) need the bucket ARN, while object operations (GetObject) need the object ARN with <code>/*</code>.</p>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│  S3 ARN Patterns — Know These!                          │
+├─────────────────────────────────────────────────────────┤
+│ Bucket-level operations (ListBucket, CreateBucket):     │
+│   Resource: "arn:aws:s3:::my-bucket"                    │
+│                                                         │
+│ Object-level operations (GetObject, PutObject):         │
+│   Resource: "arn:aws:s3:::my-bucket/*"                  │
+│                                                         │
+│ All objects in a prefix:                                 │
+│   Resource: "arn:aws:s3:::my-bucket/documents/*"        │
+│                                                         │
+│ User-specific folder (policy variable):                 │
+│   Resource: "arn:aws:s3:::my-bucket/${aws:username}/*"  │
+└─────────────────────────────────────────────────────────┘</code></pre>
+<h4>6. Condition (Optional but Critical for Security)</h4>
+<p>Conditions add <strong>WHEN</strong> a statement takes effect. This is where security policies become powerful.</p>
+<p><strong>Structure</strong>:</p>
+<pre><code>"Condition": {
+  "ConditionOperator": {
+    "ConditionKey": "ConditionValue"
+  }
+}</code></pre>
+<p><strong>Multiple conditions in the same block use AND logic</strong> (all must be true).</p>
+<p><strong>Multiple values for the same key use OR logic</strong> (any can match).</p>
+<h3>Condition Operators Reference Table</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Category</th>
+<th>Operator</th>
+<th>Description</th>
+</tr>
+<tr>
+<td><strong>String</strong></td>
+<td><code>StringEquals</code></td>
+<td>Exact match, case-sensitive</td>
+</tr>
+<tr>
+<td></td>
+<td><code>StringNotEquals</code></td>
+<td>Does not match</td>
+</tr>
+<tr>
+<td></td>
+<td><code>StringEqualsIgnoreCase</code></td>
+<td>Case-insensitive match</td>
+</tr>
+<tr>
+<td></td>
+<td><code>StringLike</code></td>
+<td>Wildcard match (<code>*</code>, <code>?</code>)</td>
+</tr>
+<tr>
+<td></td>
+<td><code>StringNotLike</code></td>
+<td>Wildcard non-match</td>
+</tr>
+<tr>
+<td><strong>Numeric</strong></td>
+<td><code>NumericEquals</code></td>
+<td>Equal</td>
+</tr>
+<tr>
+<td></td>
+<td><code>NumericLessThan</code></td>
+<td>Less than</td>
+</tr>
+<tr>
+<td></td>
+<td><code>NumericGreaterThan</code></td>
+<td>Greater than</td>
+</tr>
+<tr>
+<td><strong>Date</strong></td>
+<td><code>DateEquals</code></td>
+<td>Exact date match</td>
+</tr>
+<tr>
+<td></td>
+<td><code>DateLessThan</code></td>
+<td>Before date</td>
+</tr>
+<tr>
+<td></td>
+<td><code>DateGreaterThan</code></td>
+<td>After date</td>
+</tr>
+<tr>
+<td><strong>Boolean</strong></td>
+<td><code>Bool</code></td>
+<td>True/false comparison</td>
+</tr>
+<tr>
+<td><strong>IP</strong></td>
+<td><code>IpAddress</code></td>
+<td>IP or CIDR match</td>
+</tr>
+<tr>
+<td></td>
+<td><code>NotIpAddress</code></td>
+<td>Not in IP range</td>
+</tr>
+<tr>
+<td><strong>ARN</strong></td>
+<td><code>ArnEquals</code> / <code>ArnLike</code></td>
+<td>ARN match (wildcards supported)</td>
+</tr>
+<tr>
+<td><strong>Null</strong></td>
+<td><code>Null</code></td>
+<td>Check if key exists</td>
+</tr>
+<tr>
+<td><strong>Set</strong></td>
+<td><code>ForAllValues:</code></td>
+<td>ALL request values must match</td>
+</tr>
+<tr>
+<td></td>
+<td><code>ForAnyValue:</code></td>
+<td>At least ONE must match</td>
+</tr>
+</table></div>
+<p><strong>IfExists Modifier</strong>: Append to any operator (except Null). The condition evaluates as TRUE when the key is absent from the request context.</p>
+<h3>Top Security Condition Keys (Exam Favorites)</h3>
+<pre><code>┌──────────────────────────────────────────────────────┐
+│  HIGH-FREQUENCY EXAM CONDITION KEYS                   │
+├──────────────────────────────────────────────────────┤
+│                                                       │
+│  NETWORK RESTRICTIONS                                 │
+│  ├─ aws:SourceIp ........... Restrict by IP/CIDR     │
+│  ├─ aws:SourceVpc .......... Restrict to VPC         │
+│  ├─ aws:SourceVpce ......... Restrict to VPC endpoint│
+│  └─ aws:SecureTransport .... Require HTTPS (TLS)     │
+│                                                       │
+│  IDENTITY RESTRICTIONS                                │
+│  ├─ aws:PrincipalOrgID ..... Restrict to Org members │
+│  ├─ aws:PrincipalTag/key ... ABAC tag-based access   │
+│  ├─ aws:PrincipalAccount ... Restrict by account     │
+│  └─ aws:PrincipalType ...... User, Role, Federated   │
+│                                                       │
+│  MFA ENFORCEMENT                                      │
+│  ├─ aws:MultiFactorAuthPresent .. Is MFA active?     │
+│  └─ aws:MultiFactorAuthAge ..... MFA token freshness │
+│                                                       │
+│  SERVICE &amp; ENCRYPTION                                 │
+│  ├─ aws:RequestedRegion .... Restrict to regions     │
+│  ├─ aws:CalledVia .......... Which service called    │
+│  ├─ kms:ViaService ......... KMS via specific service│
+│  └─ s3:x-amz-server-side-encryption ... Require SSE │
+│                                                       │
+│  TAGGING                                              │
+│  ├─ aws:RequestTag/key ..... Tag in the request      │
+│  ├─ aws:ResourceTag/key .... Tag on the resource     │
+│  └─ aws:TagKeys ............ Which tag keys present  │
+│                                                       │
+└──────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Critical Exam Point</strong>: <code>aws:SourceIp</code> does NOT work when requests come through a VPC endpoint. Use <code>aws:SourceVpc</code> or <code>aws:SourceVpce</code> instead.</p>
+<h3>Common Condition Patterns for the Exam</h3>
+<p><strong>Pattern 1 — Enforce MFA</strong>:</p>
+<pre><code>{
+  "Effect": "Deny",
+  "NotAction": ["iam:ChangePassword", "iam:CreateVirtualMFADevice",
+                "iam:EnableMFADevice", "sts:GetSessionToken"],
+  "Resource": "*",
+  "Condition": {
+    "BoolIfExists": {"aws:MultiFactorAuthPresent": "false"}
+  }
+}</code></pre>
+<p>Use <code>BoolIfExists</code> (not <code>Bool</code>) — long-term access keys don't include the <code>MultiFactorAuthPresent</code> key, so <code>Bool</code> would fail to match.</p>
+<p><strong>Pattern 2 — Enforce HTTPS on S3</strong>:</p>
+<pre><code>{
+  "Effect": "Deny",
+  "Principal": "*",
+  "Action": "s3:*",
+  "Resource": ["arn:aws:s3:::bucket", "arn:aws:s3:::bucket/*"],
+  "Condition": {
+    "Bool": {"aws:SecureTransport": "false"}
+  }
+}</code></pre>
+<p><strong>Pattern 3 — Restrict to Organization</strong>:</p>
+<pre><code>{
+  "Condition": {
+    "StringEquals": {
+      "aws:PrincipalOrgID": "o-xxxxxxxxxxx"
+    }
+  }
+}</code></pre>
+<p><strong>Pattern 4 — Enforce Encryption on S3 Upload</strong>:</p>
+<pre><code>{
+  "Effect": "Deny",
+  "Principal": "*",
+  "Action": "s3:PutObject",
+  "Resource": "arn:aws:s3:::bucket/*",
+  "Condition": {
+    "StringNotEquals": {
+      "s3:x-amz-server-side-encryption": "aws:kms"
+    }
+  }
+}</code></pre>
+<p><strong>Pattern 5 — Restrict by VPC Endpoint</strong>:</p>
+<pre><code>{
+  "Effect": "Deny",
+  "Principal": "*",
+  "Action": "s3:*",
+  "Resource": ["arn:aws:s3:::bucket", "arn:aws:s3:::bucket/*"],
+  "Condition": {
+    "StringNotEquals": {
+      "aws:SourceVpce": "vpce-1234567890abcdef0"
+    }
+  }
+}</code></pre>
+</div></div>
+<div class="section" id="d8-s3">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Part 2: Identity-Based vs Resource-Based Policies</h2>
+<div class="section-body">
+<h3>The Two Approaches to Granting Access</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                 AWS Permission Model                                │
+│                                                                     │
+│   IDENTITY-BASED POLICY              RESOURCE-BASED POLICY          │
+│   (Attached to WHO)                  (Attached to WHAT)             │
+│                                                                     │
+│   ┌──────────┐                       ┌──────────────┐               │
+│   │ IAM User │──policy──►            │  S3 Bucket   │◄──policy      │
+│   │ IAM Role │  "I can access        │  KMS Key     │  "They can    │
+│   │ IAM Group│   this resource"      │  SQS Queue   │   access me"  │
+│   └──────────┘                       │  SNS Topic   │               │
+│                                      │  Lambda Func │               │
+│   - No Principal element             │  ECR Repo    │               │
+│   - Can be managed or inline         └──────────────┘               │
+│   - Attached to IAM entities                                        │
+│                                      - HAS Principal element        │
+│                                      - Always inline                │
+│                                      - Attached to resources        │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3>Identity-Based Policies</h3>
+<p><strong>What they are</strong>: JSON policies attached to IAM users, groups, or roles that define what that identity can do.</p>
+<p><strong>Key characteristics</strong>:</p>
+<ul><li>No <code>Principal</code> element (the principal is the attached entity)</li><li>Can be <strong>managed</strong> (standalone, reusable) or <strong>inline</strong> (embedded)</li><li>Control what actions the identity can perform on which resources</li></ul>
+<p><strong>Example — Allow a role to read S3 and DynamoDB</strong>:</p>
+<pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::data-bucket",
+        "arn:aws:s3:::data-bucket/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:Query"
+      ],
+      "Resource": "arn:aws:dynamodb:us-east-1:123456789012:table/Users"
+    }
+  ]
+}</code></pre>
+<h3>Resource-Based Policies</h3>
+<p><strong>What they are</strong>: JSON policies attached directly to AWS resources. They specify who can access the resource.</p>
+<p><strong>Services that support resource-based policies</strong>:</p>
+<div class="table-wrap"><table>
+<tr>
+<th>Service</th>
+<th>Policy Name</th>
+</tr>
+<tr>
+<td>S3</td>
+<td>Bucket Policy</td>
+</tr>
+<tr>
+<td>KMS</td>
+<td>Key Policy</td>
+</tr>
+<tr>
+<td>SQS</td>
+<td>Queue Policy</td>
+</tr>
+<tr>
+<td>SNS</td>
+<td>Topic Policy</td>
+</tr>
+<tr>
+<td>Lambda</td>
+<td>Function Policy</td>
+</tr>
+<tr>
+<td>ECR</td>
+<td>Repository Policy</td>
+</tr>
+<tr>
+<td>Secrets Manager</td>
+<td>Resource Policy</td>
+</tr>
+<tr>
+<td>API Gateway</td>
+<td>Resource Policy</td>
+</tr>
+<tr>
+<td>IAM Role</td>
+<td>Trust Policy</td>
+</tr>
+<tr>
+<td>CloudWatch Logs</td>
+<td>Resource Policy</td>
+</tr>
+<tr>
+<td>EventBridge</td>
+<td>Resource Policy</td>
+</tr>
+</table></div>
+<p><strong>Key characteristics</strong>:</p>
+<ul><li>MUST include <code>Principal</code> element</li><li>Always inline (no managed resource-based policies)</li><li>Enable cross-account access WITHOUT requiring role assumption</li><li>The only IAM-specific resource-based policy is the <strong>role trust policy</strong></li></ul>
+<p><strong>Example — S3 Bucket Policy allowing cross-account access</strong>:</p>
+<pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CrossAccountRead",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::999888777666:root"
+      },
+      "Action": ["s3:GetObject", "s3:ListBucket"],
+      "Resource": [
+        "arn:aws:s3:::shared-data",
+        "arn:aws:s3:::shared-data/*"
+      ]
+    }
+  ]
+}</code></pre>
+<h3>Same-Account vs Cross-Account — The Critical Difference</h3>
+<pre><code>┌──────────────────────────────────────────────────────────────┐
+│  SAME-ACCOUNT ACCESS EVALUATION                              │
+│                                                              │
+│  Identity Policy  ──┐                                        │
+│                     ├──► UNION (OR) ──► Access Granted       │
+│  Resource Policy  ──┘    Either one is sufficient             │
+│                                                              │
+│  Example: Role has no S3 permissions, but bucket policy      │
+│  grants access to the role → ACCESS ALLOWED                  │
+│                                                              │
+├──────────────────────────────────────────────────────────────┤
+│  CROSS-ACCOUNT ACCESS EVALUATION                             │
+│                                                              │
+│  Account A                    Account B                      │
+│  (Requester)                  (Resource Owner)               │
+│                                                              │
+│  Identity Policy ──┐          ┌── Resource Policy            │
+│                    ├──► AND ◄─┤                               │
+│  Must ALLOW        │          │   Must ALLOW                  │
+│                    └──────────┘                               │
+│                                                              │
+│  BOTH sides must explicitly allow access                     │
+│                                                              │
+│  Exception: If resource policy grants access directly to     │
+│  a specific IAM user/role ARN (not account root), the        │
+│  identity-based policy is still needed in Account A          │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Exam Scenario</strong>: User in Account A tries to access an S3 bucket in Account B.</p>
+<div class="table-wrap"><table>
+<tr>
+<th>Account A (Identity Policy)</th>
+<th>Account B (Bucket Policy)</th>
+<th>Result</th>
+</tr>
+<tr>
+<td>Allows <code>s3:GetObject</code> on Account B bucket</td>
+<td>Allows Account A's user</td>
+<td><strong>ALLOWED</strong></td>
+</tr>
+<tr>
+<td>Allows <code>s3:GetObject</code> on Account B bucket</td>
+<td>No mention of Account A</td>
+<td><strong>DENIED</strong></td>
+</tr>
+<tr>
+<td>No S3 permissions</td>
+<td>Allows Account A's user</td>
+<td><strong>DENIED</strong></td>
+</tr>
+<tr>
+<td>No S3 permissions</td>
+<td>No mention of Account A</td>
+<td><strong>DENIED</strong></td>
+</tr>
+</table></div>
+<p><strong>Critical Exception — Resource-Based Policy and Permissions Boundaries</strong>:</p>
+<p>If a resource-based policy in the SAME account grants access directly to a principal, <strong>permissions boundaries do NOT restrict it</strong>. This is a frequently tested concept.</p>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│  Permissions Boundary Exception (Same Account)       │
+│                                                      │
+│  User has:                                           │
+│  - Identity Policy: allows S3                        │
+│  - Permissions Boundary: allows only DynamoDB        │
+│                                                      │
+│  Bucket Policy grants access to this user directly   │
+│                                                      │
+│  Result:                                             │
+│  - Via Identity Policy: DENIED (boundary blocks)     │
+│  - Via Bucket Policy:   ALLOWED (boundary ignored!)  │
+│                                                      │
+└─────────────────────────────────────────────────────┘</code></pre>
+</div></div>
+<div class="section" id="d8-s4">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Part 3: Managed Policies vs Inline Policies</h2>
+<div class="section-body">
+<h3>Three Types of Policies</h3>
+<pre><code>┌──────────────────────────────────────────────────────────────┐
+│                     Policy Types                              │
+│                                                              │
+│  ┌─────────────────┐  ┌──────────────────┐  ┌────────────┐  │
+│  │ AWS MANAGED      │  │ CUSTOMER MANAGED  │  │ INLINE     │  │
+│  ├─────────────────┤  ├──────────────────┤  ├────────────┤  │
+│  │ Created by AWS   │  │ Created by you    │  │ Embedded   │  │
+│  │ Shared globally  │  │ In your account   │  │ in entity  │  │
+│  │ Cannot modify    │  │ Fully editable    │  │ 1:1 only   │  │
+│  │ Auto-updated     │  │ Up to 5 versions  │  │ No sharing │  │
+│  │                  │  │ Reusable          │  │ Auto-delete│  │
+│  │ "AmazonS3Read    │  │ "CompanyS3Policy" │  │ with entity│  │
+│  │  OnlyAccess"     │  │                   │  │            │  │
+│  └─────────────────┘  └──────────────────┘  └────────────┘  │
+│                                                              │
+│  ◄───── Recommended ─────────────────── Use sparingly ─────► │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘</code></pre>
+<h3>Size and Attachment Limits (Exam Favorites)</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Limit</th>
+<th>Value</th>
+</tr>
+<tr>
+<td>Managed policy max size</td>
+<td><strong>6,144 characters</strong></td>
+</tr>
+<tr>
+<td>Inline policy max size (user)</td>
+<td><strong>2,048 characters</strong></td>
+</tr>
+<tr>
+<td>Inline policy max size (role)</td>
+<td><strong>10,240 characters</strong></td>
+</tr>
+<tr>
+<td>Inline policy max size (group)</td>
+<td><strong>5,120 characters</strong></td>
+</tr>
+<tr>
+<td>Role trust policy max size</td>
+<td><strong>2,048 characters</strong> (adjustable to 4,096)</td>
+</tr>
+<tr>
+<td>Managed policies per user</td>
+<td><strong>10</strong> (adjustable to 20)</td>
+</tr>
+<tr>
+<td>Managed policies per role</td>
+<td><strong>10</strong> (adjustable to 25)</td>
+</tr>
+<tr>
+<td>Managed policies per group</td>
+<td><strong>10</strong> (not adjustable)</td>
+</tr>
+<tr>
+<td>Customer managed policies per account</td>
+<td><strong>1,500</strong> (adjustable to 5,000)</td>
+</tr>
+<tr>
+<td>Managed policy versions</td>
+<td><strong>5</strong> (not adjustable)</td>
+</tr>
+</table></div>
+<h3>When to Use Each — Decision Framework</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│  DECISION: Managed vs Inline?                                │
+│                                                              │
+│  Need to share the policy across multiple entities?          │
+│  ├─ YES → Customer Managed Policy                            │
+│  └─ NO ↓                                                     │
+│                                                              │
+│  Need strict 1:1 binding (policy MUST stay with entity)?     │
+│  ├─ YES → Inline Policy                                      │
+│  └─ NO ↓                                                     │
+│                                                              │
+│  Need version history of policy changes?                     │
+│  ├─ YES → Customer Managed Policy                            │
+│  └─ NO ↓                                                     │
+│                                                              │
+│  Want policy deleted when entity is deleted?                  │
+│  ├─ YES → Inline Policy                                      │
+│  └─ NO → Customer Managed Policy (default recommendation)    │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h3>Managed Policy Versioning</h3>
+<ul><li>Up to <strong>5 versions</strong> of a customer managed policy</li><li>One version is the <strong>default version</strong> (the active one)</li><li>Older versions are kept for rollback</li><li>If you create a 6th version, you must delete one of the existing versions first</li><li>AWS managed policies also use versioning, but you cannot control it</li></ul>
+</div></div>
+<div class="section" id="d8-s5">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Part 4: What Can Go Wrong — Security Failures and Misconfigurations</h2>
+<div class="section-body">
+<h3>The Top 5 IAM Misconfigurations</h3>
+<h4>1. Wildcard Permissions — The #1 Cloud Security Mistake</h4>
+<pre><code>{
+  "Effect": "Allow",
+  "Action": "*",
+  "Resource": "*"
+}</code></pre>
+<p><strong>What goes wrong</strong>: This is essentially <code>AdministratorAccess</code>. If attached to an EC2 instance role and that instance is compromised (via SSRF, RCE, etc.), the attacker has full access to your entire AWS account.</p>
+<p><strong>Real-world example</strong>: The <strong>Capital One breach (2019)</strong> — An EC2 instance had an overly permissive IAM role. An attacker exploited an SSRF vulnerability in the WAF to access the EC2 metadata service, retrieve the role's temporary credentials, and exfiltrate 100 million credit card applications from S3.</p>
+<p><strong>How to detect</strong>:</p>
+<ul><li><strong>IAM Access Analyzer</strong>: Flags policies granting broad access</li><li><strong>AWS Config Rule</strong>: <code>iam-policy-no-statements-with-admin-access</code></li><li><strong>Security Hub</strong>: CIS Benchmark check for admin policies</li></ul>
+<p><strong>How to protect</strong>:</p>
+<ul><li>Apply <strong>least privilege</strong> — grant only specific actions on specific resources</li><li>Use <strong>permissions boundaries</strong> to cap maximum permissions</li><li>Use <strong>SCPs</strong> to deny dangerous actions organization-wide</li></ul>
+<h4>2. Public S3 Bucket Policies</h4>
+<pre><code>{
+  "Effect": "Allow",
+  "Principal": "*",
+  "Action": "s3:GetObject",
+  "Resource": "arn:aws:s3:::customer-data/*"
+}</code></pre>
+<p><strong>What goes wrong</strong>: All objects in the bucket are accessible to anyone on the internet without authentication.</p>
+<p><strong>How to detect</strong>:</p>
+<ul><li><strong>S3 Block Public Access</strong>: Account-level and bucket-level setting</li><li><strong>IAM Access Analyzer</strong>: Detects external access to S3 buckets</li><li><strong>AWS Config Rule</strong>: <code>s3-bucket-public-read-prohibited</code>, <code>s3-bucket-public-write-prohibited</code></li><li><strong>Amazon Macie</strong>: Discovers sensitive data in publicly accessible buckets</li><li><strong>Security Hub</strong>: Multiple S3 public access findings</li></ul>
+<p><strong>How to protect</strong>:</p>
+<ul><li>Enable <strong>S3 Block Public Access</strong> at the account level</li><li>Use <code>aws:PrincipalOrgID</code> condition to restrict to organization</li><li>Apply SCP to deny <code>s3:PutBucketPolicy</code> with <code>"Principal": "*"</code> without conditions</li></ul>
+<h4>3. Missing Condition Keys — Absent Guardrails</h4>
+<p>A policy that allows <code>s3:*</code> without any conditions allows access from anywhere — any IP, any network, without MFA, without encryption.</p>
+<p><strong>Common missing conditions</strong>:</p>
+<div class="table-wrap"><table>
+<tr>
+<th>Missing Condition</th>
+<th>Risk</th>
+</tr>
+<tr>
+<td><code>aws:SecureTransport</code></td>
+<td>Data sent over HTTP (unencrypted)</td>
+</tr>
+<tr>
+<td><code>aws:SourceIp</code> or <code>aws:SourceVpc</code></td>
+<td>Access from any network</td>
+</tr>
+<tr>
+<td><code>aws:MultiFactorAuthPresent</code></td>
+<td>No MFA required for sensitive actions</td>
+</tr>
+<tr>
+<td><code>s3:x-amz-server-side-encryption</code></td>
+<td>Objects stored unencrypted</td>
+</tr>
+<tr>
+<td><code>aws:PrincipalOrgID</code></td>
+<td>Access from outside organization</td>
+</tr>
+</table></div>
+<p><strong>How to detect</strong>:</p>
+<ul><li><strong>IAM Access Analyzer</strong>: Policy validation checks for missing conditions</li><li><strong>Custom AWS Config Rule</strong>: Lambda function to evaluate policies</li><li><strong>Security Hub</strong>: Checks for missing security conditions</li></ul>
+<p><strong>How to protect</strong>:</p>
+<ul><li>Add defense-in-depth conditions to all sensitive policies</li><li>Use <strong>deny policies with conditions</strong> rather than relying on allow conditions</li><li>Template your policies with mandatory conditions</li></ul>
+<h4>4. Exposed Access Keys</h4>
+<p>Long-term IAM access keys accidentally committed to GitHub, embedded in application code, or stored in config files.</p>
+<p><strong>What goes wrong</strong>: Automated bots scan GitHub for AWS access keys within minutes of them being pushed. They spin up crypto miners, exfiltrate data, or plant backdoors.</p>
+<p><strong>How to detect</strong>:</p>
+<ul><li><strong>GuardDuty</strong>: Finding type <code>UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration</code> detects credentials used outside of EC2</li><li><strong>CloudTrail</strong>: Monitor <code>CreateAccessKey</code>, <code>GetAccessKeyLastUsed</code></li><li><strong>AWS Config</strong>: <code>iam-user-unused-credentials-check</code></li><li><strong>Git secrets scanning</strong>: Prevent commits with keys</li></ul>
+<p><strong>How to protect</strong>:</p>
+<ul><li><strong>Never create long-term access keys</strong> — use IAM roles and temporary credentials</li><li>Rotate access keys regularly (90-day maximum)</li><li>Use <strong>IAM Roles Anywhere</strong> for on-premises workloads</li><li>Enable <strong>GuardDuty</strong> to detect credential misuse</li></ul>
+<p><strong>Incident Response Steps</strong>:</p>
+<pre><code>1. DISABLE the access key (do NOT delete yet — need for investigation)
+2. Attach explicit Deny-all policy to the user
+3. Revoke active sessions: aws iam put-role-policy (inline deny with date condition)
+4. Review CloudTrail logs for unauthorized actions
+5. Determine blast radius — what did the attacker access?
+6. Remediate — fix what was affected
+7. DELETE the access key
+8. Create new credentials if needed</code></pre>
+<h4>5. Overly Permissive Role Trust Policies</h4>
+<pre><code>{
+  "Effect": "Allow",
+  "Principal": {"AWS": "*"},
+  "Action": "sts:AssumeRole"
+}</code></pre>
+<p><strong>What goes wrong</strong>: ANY AWS account can assume this role. An attacker with any AWS account can call <code>AssumeRole</code> and get credentials in your account.</p>
+<p><strong>How to detect</strong>:</p>
+<ul><li><strong>IAM Access Analyzer</strong>: Flags roles with external access</li><li><strong>AWS Config Rule</strong>: <code>iam-role-no-external-access</code></li><li><strong>CloudTrail</strong>: Monitor <code>AssumeRole</code> events from unknown accounts</li></ul>
+<p><strong>How to protect</strong>:</p>
+<ul><li>Always restrict trust policies to specific accounts: <code>"AWS": "arn:aws:iam::123456789012:root"</code></li><li>Use <code>aws:PrincipalOrgID</code> to restrict to your organization</li><li>Use <code>sts:ExternalId</code> condition for third-party cross-account access (prevents confused deputy)</li><li>Monitor <code>AssumeRole</code> CloudTrail events</li></ul>
+</div></div>
+<div class="section" id="d8-s6">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Part 5: Detection and Monitoring — Your IAM Security Arsenal</h2>
+<div class="section-body">
+<h3>Detection Services Overview</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│              IAM Security Detection Stack                            │
+│                                                                      │
+│  ┌──────────────┐   ┌──────────────┐   ┌──────────────────────┐     │
+│  │  IAM Access   │   │  AWS Config   │   │  CloudTrail           │    │
+│  │  Analyzer     │   │  Rules        │   │                       │    │
+│  ├──────────────┤   ├──────────────┤   ├──────────────────────┤     │
+│  │ External and  │   │ Continuous    │   │ API call logging      │    │
+│  │ unused access │   │ compliance    │   │ Who did what, when    │    │
+│  │ findings      │   │ evaluation    │   │ Digest validation     │    │
+│  └──────┬───────┘   └──────┬───────┘   └───────────┬──────────┘    │
+│         │                  │                        │                │
+│         ▼                  ▼                        ▼                │
+│  ┌──────────────────────────────────────────────────────────┐       │
+│  │              AWS Security Hub                              │      │
+│  │   Aggregates findings, CIS/PCI standards, ASFF format     │      │
+│  └──────────────────────────────────────────────────────────┘       │
+│         │                                                           │
+│         ▼                                                           │
+│  ┌──────────────────────────────────────────────────────────┐       │
+│  │           Amazon EventBridge → Lambda / SNS               │      │
+│  │           Automated alerts and remediation                │      │
+│  └──────────────────────────────────────────────────────────┘       │
+│                                                                      │
+└─────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3>IAM Access Analyzer — Key for SCS-C03</h3>
+<p><strong>Two analysis types</strong>:</p>
+<div class="table-wrap"><table>
+<tr>
+<th>Analyzer Type</th>
+<th>What It Finds</th>
+<th>Zone of Trust</th>
+</tr>
+<tr>
+<td><strong>External Access</strong></td>
+<td>Resources shared with principals outside your zone of trust</td>
+<td>Account or Organization</td>
+</tr>
+<tr>
+<td><strong>Unused Access</strong></td>
+<td>Unused roles, unused access keys, unused permissions</td>
+<td>Account</td>
+</tr>
+</table></div>
+<p><strong>Supported resources for external access analysis</strong>:</p>
+<p>S3, IAM Roles, KMS Keys, Lambda Functions, SQS Queues, Secrets Manager, SNS Topics, EBS Snapshots, RDS Snapshots, ECR Repositories, EFS File Systems</p>
+<p><strong>Policy Validation</strong>: Checks policies against IAM best practices, reports warnings, errors, and suggestions.</p>
+<p><strong>Policy Generation</strong>: Generates least-privilege policies based on actual CloudTrail activity (last 90 days of access).</p>
+<h3>AWS Config Rules for IAM</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Config Rule</th>
+<th>What It Checks</th>
+</tr>
+<tr>
+<td><code>iam-policy-no-statements-with-admin-access</code></td>
+<td>No <code>*:*</code> admin policies</td>
+</tr>
+<tr>
+<td><code>iam-root-access-key-check</code></td>
+<td>Root has no access keys</td>
+</tr>
+<tr>
+<td><code>iam-user-mfa-enabled</code></td>
+<td>MFA enabled for all users</td>
+</tr>
+<tr>
+<td><code>root-account-mfa-enabled</code></td>
+<td>MFA on root account</td>
+</tr>
+<tr>
+<td><code>iam-user-unused-credentials-check</code></td>
+<td>Stale credentials (configurable days)</td>
+</tr>
+<tr>
+<td><code>iam-password-policy</code></td>
+<td>Password complexity requirements</td>
+</tr>
+<tr>
+<td><code>iam-user-no-policies-check</code></td>
+<td>No policies directly on users (use groups)</td>
+</tr>
+<tr>
+<td><code>iam-group-has-users-check</code></td>
+<td>Groups are not empty</td>
+</tr>
+<tr>
+<td><code>access-keys-rotated</code></td>
+<td>Access keys rotated within period</td>
+</tr>
+</table></div>
+<h3>GuardDuty IAM-Related Findings</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Finding Type</th>
+<th>Description</th>
+</tr>
+<tr>
+<td><code>UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration.OutsideAWS</code></td>
+<td>EC2 credentials used from outside AWS</td>
+</tr>
+<tr>
+<td><code>UnauthorizedAccess:IAMUser/InstanceCredentialExfiltration.InsideAWS</code></td>
+<td>EC2 credentials used from another account</td>
+</tr>
+<tr>
+<td><code>UnauthorizedAccess:IAMUser/ConsoleLoginSuccess.B</code></td>
+<td>Console login from unusual IP</td>
+</tr>
+<tr>
+<td><code>Discovery:IAMUser/AnomalousBehavior</code></td>
+<td>Unusual API calls</td>
+</tr>
+<tr>
+<td><code>Persistence:IAMUser/AnomalousBehavior</code></td>
+<td>Attacker establishing persistence</td>
+</tr>
+<tr>
+<td><code>Impact:IAMUser/AnomalousBehavior</code></td>
+<td>Unusual high-impact API activity</td>
+</tr>
+<tr>
+<td><code>CredentialAccess:IAMUser/AnomalousBehavior</code></td>
+<td>Unusual credential-access API calls</td>
+</tr>
+</table></div>
+</div></div>
+<div class="section" id="d8-s7">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Part 6: Protection Strategies — Defense in Depth</h2>
+<div class="section-body">
+<h3>Layer 1: SCPs — Organization-Wide Guardrails</h3>
+<pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyRootActions",
+      "Effect": "Deny",
+      "Action": "*",
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "aws:PrincipalArn": "arn:aws:iam::*:root"
+        }
+      }
+    },
+    {
+      "Sid": "DenyLeavingOrg",
+      "Effect": "Deny",
+      "Action": "organizations:LeaveOrganization",
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyDisablingSecurityServices",
+      "Effect": "Deny",
+      "Action": [
+        "guardduty:DeleteDetector",
+        "guardduty:DisassociateFromMasterAccount",
+        "config:StopConfigurationRecorder",
+        "config:DeleteConfigurationRecorder",
+        "cloudtrail:StopLogging",
+        "cloudtrail:DeleteTrail"
+      ],
+      "Resource": "*"
+    }
+  ]
+}</code></pre>
+<h3>Layer 2: Permissions Boundaries — Delegated Admin Control</h3>
+<p><strong>Use case</strong>: Allow developers to create IAM roles but prevent privilege escalation.</p>
+<pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:*",
+        "dynamodb:*",
+        "lambda:*",
+        "logs:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreateUser",
+        "iam:CreateRole",
+        "organizations:*",
+        "account:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}</code></pre>
+<p>The developer's effective permissions = Identity Policy INTERSECTION Permissions Boundary. They can never exceed the boundary, even if their identity policy allows <code>*</code>.</p>
+<h3>Layer 3: Condition Keys — Defense in Depth</h3>
+<p>Apply multiple conditions to critical resources:</p>
+<pre><code>{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:*",
+      "Resource": ["arn:aws:s3:::critical-data", "arn:aws:s3:::critical-data/*"],
+      "Condition": {
+        "Bool": {"aws:SecureTransport": "false"}
+      }
+    },
+    {
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:*",
+      "Resource": ["arn:aws:s3:::critical-data", "arn:aws:s3:::critical-data/*"],
+      "Condition": {
+        "StringNotEquals": {
+          "aws:PrincipalOrgID": "o-xxxxxxxxxxx"
+        }
+      }
+    }
+  ]
+}</code></pre>
+<h3>Summary: The Defense-in-Depth Model</h3>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│                  DEFENSE IN DEPTH                        │
+│                                                          │
+│  ┌─────────────────────────────────────────────────┐    │
+│  │ Layer 1: SCPs                                    │    │
+│  │   Organization-wide guardrails                   │    │
+│  │   Deny dangerous actions, restrict regions       │    │
+│  │                                                  │    │
+│  │  ┌───────────────────────────────────────────┐  │    │
+│  │  │ Layer 2: Permissions Boundaries            │  │    │
+│  │  │   Maximum permissions for delegated roles  │  │    │
+│  │  │                                            │  │    │
+│  │  │  ┌─────────────────────────────────────┐  │  │    │
+│  │  │  │ Layer 3: Identity-Based Policies     │  │  │    │
+│  │  │  │   Specific allow for each role/user  │  │  │    │
+│  │  │  │                                      │  │  │    │
+│  │  │  │  ┌──────────────────────────────┐   │  │  │    │
+│  │  │  │  │ Layer 4: Resource Policies    │   │  │  │    │
+│  │  │  │  │   Bucket policies, KMS key    │   │  │  │    │
+│  │  │  │  │   policies with conditions    │   │  │  │    │
+│  │  │  │  └──────────────────────────────┘   │  │  │    │
+│  │  │  └─────────────────────────────────────┘  │  │    │
+│  │  └───────────────────────────────────────────┘  │    │
+│  └─────────────────────────────────────────────────┘    │
+│                                                          │
+│  Effective Permission = SCP ∩ Boundary ∩ Identity ∩ ...  │
+│                                                          │
+└─────────────────────────────────────────────────────────┘</code></pre>
+</div></div>
+<div class="section" id="d8-s8">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Quick Review — Exam Cheat Sheet</h2>
+<div class="section-body">
+<h3>Policy Evaluation Summary</h3>
+<ol>
+<li><strong>Explicit Deny</strong> → DENY (always wins)</li>
+<li><strong>SCP must allow</strong> (if in Organization) → otherwise implicit DENY</li>
+<li><strong>Resource-based policy allows?</strong> → ALLOW (same account, bypasses boundary)</li>
+<li><strong>Identity policy allows?</strong> → check boundary and session</li>
+<li><strong>Permissions boundary must allow</strong> → otherwise implicit DENY</li>
+<li><strong>Session policy must allow</strong> (if assumed role) → otherwise implicit DENY</li>
+<li><strong>Nothing allows</strong> → implicit DENY</li>
+</ol>
+<h3>Key Formulas</h3>
+<ul><li>Same-account: Identity OR Resource = ALLOW</li><li>Cross-account: Identity AND Resource = both must ALLOW</li><li>With Boundary: Identity AND Boundary = ALLOW</li><li>With SCP: Identity AND SCP = ALLOW</li><li>Explicit Deny: ALWAYS WINS regardless of any Allow</li></ul>
+<h3>Identity-Based vs Resource-Based Quick Reference</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Feature</th>
+<th>Identity-Based</th>
+<th>Resource-Based</th>
+</tr>
+<tr>
+<td>Attached to</td>
+<td>Users, Groups, Roles</td>
+<td>Resources (S3, KMS, etc.)</td>
+</tr>
+<tr>
+<td>Principal element</td>
+<td>No</td>
+<td>Yes (required)</td>
+</tr>
+<tr>
+<td>Managed policy option</td>
+<td>Yes</td>
+<td>No (always inline)</td>
+</tr>
+<tr>
+<td>Cross-account without role</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Limited by boundary</td>
+<td>Yes</td>
+<td>No (same-account)</td>
+</tr>
+<tr>
+<td>Limited by SCP</td>
+<td>Yes</td>
+<td>Yes (for principal)</td>
+</tr>
+</table></div>
+<h3>Managed vs Inline Quick Reference</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Feature</th>
+<th>AWS Managed</th>
+<th>Customer Managed</th>
+<th>Inline</th>
+</tr>
+<tr>
+<td>Reusable</td>
+<td>Yes (all accounts)</td>
+<td>Yes (your account)</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Editable</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Versioning</td>
+<td>Yes (AWS controls)</td>
+<td>Yes (5 versions)</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Max size</td>
+<td>6,144 chars</td>
+<td>6,144 chars</td>
+<td>2,048–10,240</td>
+</tr>
+<tr>
+<td>Auto-delete with entity</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Recommended</td>
+<td>Starting point</td>
+<td>Best practice</td>
+<td>Special cases</td>
+</tr>
+</table></div>
 </div></div>
         </div>
     </div>
