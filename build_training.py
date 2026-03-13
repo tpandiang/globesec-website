@@ -6,14 +6,14 @@ STUDY_DIR = r"C:\Users\txp190010\Downloads\AWS-SCS-C03-Study-Docs"
 OUTPUT = r"C:\Users\txp190010\Downloads\globesec\training.html"
 
 FILES = [
+    ("Study-Plan.md", "Study Plan", ""),
+    ("Week1-Day1-2-IAM-Policy-Fundamentals.md", "Day 1-2: IAM Policy Fundamentals", "WEEK1"),
     ("Domain1-Threat-Detection-Incident-Response.md", "Threat Detection & IR", "16%"),
     ("Domain2-Security-Logging-Monitoring.md", "Logging & Monitoring", "14%"),
     ("Domain3-Infrastructure-Security.md", "Infrastructure Security", "18%"),
     ("Domain4-Identity-Access-Management.md", "Identity & Access Mgmt", "20%"),
     ("Domain5-Data-Protection.md", "Data Protection", "18%"),
     ("Domain6-Management-Security-Governance.md", "Governance", "14%"),
-    ("Study-Plan.md", "Study Plan", ""),
-    ("Week1-Day1-2-IAM-Policy-Fundamentals.md", "Day 1-2: IAM Policy Fundamentals", "WEEK1"),
 ]
 
 
@@ -250,8 +250,14 @@ for idx, (fname, short_name, weight) in enumerate(FILES):
     print("  Processed: {}".format(fname))
 
 # Build TOC
-toc_html = ""
+toc_html = '<div class="sidebar-title">Study Materials</div>\n'
+domains_started = False
 for num, name, weight, did in toc_items:
+    # Add "Exam Domains" header before the first domain
+    if num not in ("SP", "WK") and not domains_started:
+        domains_started = True
+        toc_html += '<div class="sidebar-title" style="margin-top:0.75rem;">Exam Domains</div>\n'
+
     if num == "SP":
         extra_cls = " plan"
         num_label = "PLAN"
@@ -515,7 +521,6 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 
 <div class="layout">
     <div class="sidebar">
-        <div class="sidebar-title">Exam Domains</div>
         ''' + toc_html + '''
         <div class="progress-section">
             <div class="progress-label">Study Progress</div>
