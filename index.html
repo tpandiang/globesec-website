@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GlobeSec.ai - AI-Powered Proactive Security</title>
+<meta name="description" content="GlobeSec.ai provides AI-powered proactive security solutions that detect and fix vulnerabilities before they become breaches.">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --primary: #0a1628;
+    --secondary: #0f2744;
+    --accent: #00d4ff;
+    --accent2: #7b61ff;
+    --text: #e0e8f0;
+    --text-muted: #8899aa;
+    --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--primary);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+}
+
+/* Navbar */
+nav {
+    position: fixed; top: 0; width: 100%; z-index: 1000;
+    background: rgba(10, 22, 40, 0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+    padding: 0 2rem;
+}
+.nav-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    height: 70px;
+}
+.logo {
+    font-size: 1.5rem; font-weight: 800; text-decoration: none; color: var(--white);
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.logo-globe {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--gradient);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+}
+.logo span { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a {
+    color: var(--text-muted); text-decoration: none; font-size: 0.9rem;
+    font-weight: 500; transition: color 0.3s;
+}
+.nav-links a:hover { color: var(--accent); }
+.nav-cta {
+    background: var(--gradient); color: var(--primary) !important;
+    padding: 0.5rem 1.2rem; border-radius: 6px; font-weight: 700 !important;
+}
+.nav-cta:hover { opacity: 0.9; }
+
+/* Hero */
+.hero {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 6rem 2rem 4rem;
+    position: relative;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0, 212, 255, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(123, 97, 255, 0.05) 0%, transparent 50%);
+}
+.hero-content { max-width: 800px; }
+.hero-badge {
+    display: inline-block; padding: 0.4rem 1rem; border-radius: 50px;
+    border: 1px solid rgba(0, 212, 255, 0.3); color: var(--accent);
+    font-size: 0.8rem; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 1.5rem;
+}
+.hero h1 {
+    font-size: 3.5rem; font-weight: 800; line-height: 1.15;
+    color: var(--white); margin-bottom: 1.5rem;
+}
+.hero h1 .highlight {
+    background: var(--gradient); -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.hero p {
+    font-size: 1.2rem; color: var(--text-muted); max-width: 600px;
+    margin: 0 auto 2.5rem;
+}
+.hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.btn-primary {
+    background: var(--gradient); color: var(--primary);
+    padding: 0.85rem 2rem; border-radius: 8px; text-decoration: none;
+    font-weight: 700; font-size: 1rem; transition: transform 0.2s, box-shadow 0.2s;
+    border: none; cursor: pointer;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3); }
+.btn-secondary {
+    background: transparent; color: var(--text);
+    padding: 0.85rem 2rem; border-radius: 8px; text-decoration: none;
+    font-weight: 600; font-size: 1rem; border: 1px solid rgba(255,255,255,0.2);
+    transition: border-color 0.3s;
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Animated grid background */
+.hero::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+        linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+}
+
+/* Stats bar */
+.stats {
+    background: var(--secondary); border-top: 1px solid rgba(0,212,255,0.1);
+    border-bottom: 1px solid rgba(0,212,255,0.1);
+    padding: 3rem 2rem;
+}
+.stats-inner {
+    max-width: 1000px; margin: 0 auto;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem;
+    text-align: center;
+}
+.stat-num {
+    font-size: 2.5rem; font-weight: 800;
+    background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.stat-label { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.3rem; }
+
+/* Sections */
+section { padding: 6rem 2rem; }
+.section-inner { max-width: 1100px; margin: 0 auto; }
+.section-label {
+    color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.75rem;
+}
+.section-title {
+    font-size: 2.2rem; font-weight: 800; color: var(--white);
+    margin-bottom: 1rem;
+}
+.section-desc {
+    color: var(--text-muted); font-size: 1.05rem; max-width: 600px;
+    margin-bottom: 3rem;
+}
+
+/* Services */
+.services-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+}
+.service-card {
+    background: var(--secondary); border: 1px solid rgba(0,212,255,0.08);
+    border-radius: 12px; padding: 2rem;
+    transition: transform 0.3s, border-color 0.3s;
+}
+.service-card:hover {
+    transform: translateY(-4px); border-color: rgba(0,212,255,0.25);
+}
+.service-icon {
+    width: 48px; height: 48px; border-radius: 10px;
+    background: rgba(0, 212, 255, 0.1); display: flex;
+    align-items: center; justify-content: center;
+    font-size: 1.4rem; margin-bottom: 1.2rem;
+}
+.service-card h3 {
+    font-size: 1.15rem; color: var(--white); margin-bottom: 0.6rem;
+}
+.service-card p { color: var(--text-muted); font-size: 0.9rem; }
+
+/* How it works */
+.how-section { background: var(--secondary); }
+.steps {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;
+    position: relative;
+}
+.step {
+    text-align: center; padding: 2rem 1.5rem;
+    position: relative;
+}
+.step-num {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--gradient); color: var(--primary);
+    font-size: 1.3rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.2rem;
+}
+.step h3 { color: var(--white); margin-bottom: 0.6rem; font-size: 1.1rem; }
+.step p { color: var(--text-muted); font-size: 0.9rem; }
+
+/* About / Research */
+.about-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;
+}
+.about-text h3 { color: var(--white); font-size: 1.3rem; margin-bottom: 0.8rem; }
+.about-text p { color: var(--text-muted); margin-bottom: 1.5rem; }
+.credential-list { list-style: none; }
+.credential-list li {
+    padding: 0.5rem 0; color: var(--text);
+    display: flex; align-items: center; gap: 0.6rem;
+    font-size: 0.95rem;
+}
+.credential-list li::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); flex-shrink: 0;
+}
+.about-visual {
+    background: rgba(0, 212, 255, 0.03); border: 1px solid rgba(0,212,255,0.1);
+    border-radius: 16px; padding: 3rem; text-align: center;
+}
+.about-visual .shield-icon {
+    font-size: 4rem; margin-bottom: 1rem;
+    background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.about-visual h3 { color: var(--white); font-size: 1.2rem; margin-bottom: 0.5rem; }
+.about-visual p { color: var(--text-muted); font-size: 0.9rem; }
+
+/* CTA */
+.cta-section {
+    text-align: center;
+    background: radial-gradient(ellipse at 50% 50%, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
+}
+.cta-section h2 { font-size: 2.2rem; color: var(--white); margin-bottom: 1rem; }
+.cta-section p { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }
+
+/* Contact form */
+.contact-form {
+    max-width: 500px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 1rem;
+}
+.contact-form input, .contact-form textarea {
+    background: var(--secondary); border: 1px solid rgba(0,212,255,0.15);
+    border-radius: 8px; padding: 0.85rem 1rem; color: var(--text);
+    font-size: 0.95rem; font-family: inherit; outline: none;
+    transition: border-color 0.3s;
+}
+.contact-form input:focus, .contact-form textarea:focus {
+    border-color: var(--accent);
+}
+.contact-form input::placeholder, .contact-form textarea::placeholder {
+    color: var(--text-muted);
+}
+.contact-form textarea { min-height: 120px; resize: vertical; }
+
+/* Footer */
+footer {
+    border-top: 1px solid rgba(0,212,255,0.1);
+    padding: 2.5rem 2rem; text-align: center;
+}
+.footer-inner { max-width: 1100px; margin: 0 auto; }
+.footer-links { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1.5rem; }
+.footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; }
+.footer-links a:hover { color: var(--accent); }
+.footer-copy { color: var(--text-muted); font-size: 0.8rem; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero h1 { font-size: 2.2rem; }
+    .stats-inner { grid-template-columns: repeat(2, 1fr); }
+    .services-grid { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr; }
+    .about-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+}
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav>
+    <div class="nav-inner">
+        <a href="#" class="logo">
+            <div class="logo-globe">G</div>
+            <span>GlobeSec</span>.ai
+        </a>
+        <ul class="nav-links">
+            <li><a href="#services">Services</a></li>
+            <li><a href="#how">How It Works</a></li>
+            <li><a href="#research">Research</a></li>
+            <li><a href="#contact" class="nav-cta">Get Started</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-badge">AI-Powered Security Solutions</div>
+        <h1>Security That <span class="highlight">Thinks Ahead</span></h1>
+        <p>GlobeSec.ai uses artificial intelligence to proactively detect, analyze, and remediate security vulnerabilities before they become breaches.</p>
+        <div class="hero-buttons">
+            <a href="#contact" class="btn-primary">Schedule a Consultation</a>
+            <a href="#services" class="btn-secondary">Explore Solutions</a>
+        </div>
+    </div>
+</section>
+
+<!-- Stats -->
+<div class="stats">
+    <div class="stats-inner">
+        <div>
+            <div class="stat-num">AI</div>
+            <div class="stat-label">Powered Detection</div>
+        </div>
+        <div>
+            <div class="stat-num">24/7</div>
+            <div class="stat-label">Continuous Monitoring</div>
+        </div>
+        <div>
+            <div class="stat-num">Pro</div>
+            <div class="stat-label">Active Remediation</div>
+        </div>
+        <div>
+            <div class="stat-num">360</div>
+            <div class="stat-label">Degree Coverage</div>
+        </div>
+    </div>
+</div>
+
+<!-- Services -->
+<section id="services">
+    <div class="section-inner">
+        <div class="section-label">What We Do</div>
+        <div class="section-title">Proactive Security Solutions</div>
+        <div class="section-desc">We don't wait for breaches. Our AI-driven platform identifies and resolves threats before they impact your business.</div>
+
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">&#x1F52C;</div>
+                <h3>AI Threat Detection</h3>
+                <p>Machine learning models continuously analyze your infrastructure to identify anomalies, misconfigurations, and emerging threats in real-time.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">&#x1F6E1;</div>
+                <h3>Proactive Remediation</h3>
+                <p>Automatically fix security issues before they become vulnerabilities. Our AI patches, configures, and hardens your systems proactively.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">&#x2601;</div>
+                <h3>Cloud Security</h3>
+                <p>Comprehensive security for AWS, Azure, and GCP. Policy enforcement, compliance monitoring, and infrastructure hardening at scale.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">&#x1F510;</div>
+                <h3>Identity & Access</h3>
+                <p>AI-powered access analysis to detect privilege escalation, unused permissions, and cross-account risks before attackers exploit them.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">&#x1F4CA;</div>
+                <h3>Security Research</h3>
+                <p>Academic-grade research into emerging threats, vulnerability patterns, and AI-driven defense methodologies published for the community.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">&#x1F393;</div>
+                <h3>Security Training</h3>
+                <p>Expert-led training programs for teams and individuals. From cloud security fundamentals to advanced threat hunting techniques.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-section" id="how">
+    <div class="section-inner">
+        <div class="section-label">Our Approach</div>
+        <div class="section-title">How GlobeSec.ai Works</div>
+        <div class="section-desc">Three steps to proactive security that never sleeps.</div>
+
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <h3>Deep Scan</h3>
+                <p>Our AI continuously scans your cloud infrastructure, code repositories, and network configurations to build a complete security profile.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <h3>Predict & Detect</h3>
+                <p>Machine learning models analyze patterns to predict vulnerabilities before they are exploited, detecting threats invisible to traditional tools.</p>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <h3>Auto-Remediate</h3>
+                <p>Identified issues are automatically fixed with AI-generated patches, configuration changes, and policy updates — with full audit trails.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Research / About -->
+<section id="research">
+    <div class="section-inner">
+        <div class="section-label">Research & Expertise</div>
+        <div class="section-title">Built on Academic Research</div>
+
+        <div class="about-grid">
+            <div class="about-text">
+                <h3>Where Research Meets Practice</h3>
+                <p>GlobeSec.ai is founded by Dr. Thiru Pandian, bringing together academic rigor and real-world security expertise to build AI-powered defense systems.</p>
+                <p>Our solutions are grounded in peer-reviewed research and validated against real-world attack scenarios.</p>
+
+                <ul class="credential-list">
+                    <li>Doctorate-level Security Research</li>
+                    <li>Cloud Security Architecture (AWS, Azure, GCP)</li>
+                    <li>AI/ML Applied to Threat Detection</li>
+                    <li>Published Security Research & Analysis</li>
+                    <li>Industry Certifications (CISM, AWS Security)</li>
+                    <li>University-Level Security Education</li>
+                </ul>
+            </div>
+            <div class="about-visual">
+                <div class="shield-icon">&#x1F310;</div>
+                <h3>Global Protection</h3>
+                <p>AI-driven security that operates at the speed of threats, providing 360-degree coverage across your entire digital footprint.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA / Contact -->
+<section class="cta-section" id="contact">
+    <div class="section-inner">
+        <div class="section-label">Get Started</div>
+        <h2>Ready to Secure Your Future?</h2>
+        <p>Let's discuss how AI-powered proactive security can protect your organization.</p>
+
+        <form class="contact-form" onsubmit="handleSubmit(event)">
+            <input type="text" name="name" placeholder="Your Name" required>
+            <input type="email" name="email" placeholder="Email Address" required>
+            <input type="text" name="company" placeholder="Company / Organization">
+            <textarea name="message" placeholder="Tell us about your security needs..."></textarea>
+            <button type="submit" class="btn-primary" style="width:100%;">Send Message</button>
+        </form>
+        <p style="margin-top:1.5rem; font-size:0.85rem; color:var(--text-muted);">
+            Or email us directly at <a href="mailto:info@globesec.ai" style="color:var(--accent);">info@globesec.ai</a>
+        </p>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <div class="footer-inner">
+        <div class="footer-links">
+            <a href="#services">Services</a>
+            <a href="#how">How It Works</a>
+            <a href="#research">Research</a>
+            <a href="#contact">Contact</a>
+        </div>
+        <div class="footer-copy">&copy; 2026 GlobeSec.ai &mdash; AI-Powered Proactive Security. All rights reserved.</div>
+    </div>
+</footer>
+
+<script>
+function handleSubmit(e) {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.name.value;
+    alert('Thank you, ' + name + '! We will get back to you shortly.');
+    form.reset();
+}
+</script>
+
+</body>
+</html>
