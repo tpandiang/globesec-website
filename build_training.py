@@ -252,7 +252,7 @@ for num, name, weight, did in toc_items:
         extra_cls = ""
         num_label = num
     weight_html = '<span class="toc-weight">{}</span>'.format(weight) if weight else ''
-    toc_html += '''<a href="#{did}" class="toc-item{cls}" onclick="showDomain('{did}')">
+    toc_html += '''<a href="#{did}" class="toc-item{cls}" onclick="showDomain(event, '{did}')">
         <span class="toc-num{cls}">{num}</span>
         <span class="toc-name">{name}</span>
         {wt}
@@ -535,13 +535,15 @@ function toggleSection(title) {
     }
 }
 
-function showDomain(domainId) {
+function showDomain(e, domainId) {
+    e.preventDefault();
     const domain = document.getElementById(domainId);
     if (domain.classList.contains('collapsed')) {
         domain.classList.remove('collapsed');
     }
+    domain.scrollIntoView({ behavior: 'smooth', block: 'start' });
     document.querySelectorAll('.toc-item').forEach(t => t.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    e.currentTarget.classList.add('active');
     updateProgress();
 }
 

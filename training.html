@@ -242,37 +242,37 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 <div class="layout">
     <div class="sidebar">
         <div class="sidebar-title">Exam Domains</div>
-        <a href="#domain-1" class="toc-item" onclick="showDomain('domain-1')">
+        <a href="#domain-1" class="toc-item" onclick="showDomain(event, 'domain-1')">
         <span class="toc-num">1</span>
         <span class="toc-name">Threat Detection & IR</span>
         <span class="toc-weight">16%</span>
     </a>
-<a href="#domain-2" class="toc-item" onclick="showDomain('domain-2')">
+<a href="#domain-2" class="toc-item" onclick="showDomain(event, 'domain-2')">
         <span class="toc-num">2</span>
         <span class="toc-name">Logging & Monitoring</span>
         <span class="toc-weight">14%</span>
     </a>
-<a href="#domain-3" class="toc-item" onclick="showDomain('domain-3')">
+<a href="#domain-3" class="toc-item" onclick="showDomain(event, 'domain-3')">
         <span class="toc-num">3</span>
         <span class="toc-name">Infrastructure Security</span>
         <span class="toc-weight">18%</span>
     </a>
-<a href="#domain-4" class="toc-item" onclick="showDomain('domain-4')">
+<a href="#domain-4" class="toc-item" onclick="showDomain(event, 'domain-4')">
         <span class="toc-num">4</span>
         <span class="toc-name">Identity & Access Mgmt</span>
         <span class="toc-weight">20%</span>
     </a>
-<a href="#domain-5" class="toc-item" onclick="showDomain('domain-5')">
+<a href="#domain-5" class="toc-item" onclick="showDomain(event, 'domain-5')">
         <span class="toc-num">5</span>
         <span class="toc-name">Data Protection</span>
         <span class="toc-weight">18%</span>
     </a>
-<a href="#domain-6" class="toc-item" onclick="showDomain('domain-6')">
+<a href="#domain-6" class="toc-item" onclick="showDomain(event, 'domain-6')">
         <span class="toc-num">6</span>
         <span class="toc-name">Governance</span>
         <span class="toc-weight">14%</span>
     </a>
-<a href="#study-plan" class="toc-item plan" onclick="showDomain('study-plan')">
+<a href="#study-plan" class="toc-item plan" onclick="showDomain(event, 'study-plan')">
         <span class="toc-num plan">PLAN</span>
         <span class="toc-name">Study Plan</span>
         
@@ -2906,13 +2906,15 @@ function toggleSection(title) {
     }
 }
 
-function showDomain(domainId) {
+function showDomain(e, domainId) {
+    e.preventDefault();
     const domain = document.getElementById(domainId);
     if (domain.classList.contains('collapsed')) {
         domain.classList.remove('collapsed');
     }
+    domain.scrollIntoView({ behavior: 'smooth', block: 'start' });
     document.querySelectorAll('.toc-item').forEach(t => t.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    e.currentTarget.classList.add('active');
     updateProgress();
 }
 
