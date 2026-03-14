@@ -1586,6 +1586,534 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 <p>This section captures key lessons from practice quizzes and exam questions. Each entry includes the scenario, correct answer, WHY it's correct, and a cheat sheet of patterns to remember.</p>
 </div></div>
 <div class="section" id="d3-s2">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Cheat Sheet: Exam Decision Tables</h2>
+<div class="section-body">
+<h3>"Least Operational Overhead" — Always Pick This Order</h3>
+<pre><code>1. Built-in feature (snapshot retention, auto-scan, OAC, DNS Firewall)
+   └─ "Least operational overhead"
+
+2. Managed/declarative service (Security Hub, StackSets, metric filter)
+   └─ "No custom code needed"
+
+3. EventBridge → Lambda (for custom automation)
+   └─ "Automated response needed"
+
+4. EventBridge → SNS (for notifications)
+   └─ "Alert the team"
+
+5. CloudWatch Alarm → SNS
+   └─ Only for metric-based alerts, NOT event-based
+
+6. Custom solution (Lambda + Step Functions, NGINX, SSM scripts)
+   └─ Only when no managed option exists</code></pre>
+<h3>Service Selection — "Which AWS Service?"</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Need</th>
+<th>Answer</th>
+<th>NOT</th>
+</tr>
+<tr>
+<td>Centralized security findings</td>
+<td><strong>Security Hub</strong></td>
+<td>GuardDuty alone, Config alone</td>
+</tr>
+<tr>
+<td>Threat detection (ML-based)</td>
+<td><strong>GuardDuty</strong></td>
+<td>Config, CloudTrail alone</td>
+</tr>
+<tr>
+<td>Resource compliance tracking</td>
+<td><strong>AWS Config</strong></td>
+<td>GuardDuty, Security Hub</td>
+</tr>
+<tr>
+<td>SSO to multiple AWS accounts</td>
+<td><strong>IAM Identity Center</strong></td>
+<td>Cognito, Simple AD</td>
+</tr>
+<tr>
+<td>App user authentication (B2C)</td>
+<td><strong>Cognito</strong></td>
+<td>IAM Identity Center</td>
+</tr>
+<tr>
+<td>Cross-account role deployment</td>
+<td><strong>StackSets + auto-deploy</strong></td>
+<td>CloudTrail + Lambda</td>
+</tr>
+<tr>
+<td>Add HTTP security headers</td>
+<td><strong>CloudFront Response Header Policy</strong></td>
+<td>Lambda@Edge, WAF</td>
+</tr>
+<tr>
+<td>Filter DNS queries by domain</td>
+<td><strong>Route 53 DNS Firewall</strong></td>
+<td>NACLs, Security Groups</td>
+</tr>
+<tr>
+<td>Scalable cross-account KMS access</td>
+<td><strong>KMS Grants</strong></td>
+<td>Key policy edits, RAM</td>
+</tr>
+<tr>
+<td>WORM storage (not even root)</td>
+<td><strong>S3 Object Lock compliance</strong></td>
+<td>SCPs, bucket policies</td>
+</tr>
+<tr>
+<td>Secure EC2 shell access</td>
+<td><strong>Session Manager</strong></td>
+<td>SSH, bastion hosts</td>
+</tr>
+<tr>
+<td>Cost anomaly per service</td>
+<td><strong>Cost Anomaly Detection (Services monitor)</strong></td>
+<td>Linked Account monitor</td>
+</tr>
+<tr>
+<td>Automated remediation</td>
+<td><strong>SSM Automation runbooks</strong></td>
+<td>Lambda + Step Functions</td>
+</tr>
+<tr>
+<td>Restrict S3 origin to CloudFront</td>
+<td><strong>OAC</strong></td>
+<td>Bucket policy alone, OAI (legacy)</td>
+</tr>
+</table></div>
+<h3>Monitoring & Logging — "Which Log Source?"</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>What to Monitor</th>
+<th>Service/Log</th>
+<th>Why</th>
+</tr>
+<tr>
+<td>Root console login failures</td>
+<td><strong>CloudTrail → CW Metric Filter</strong></td>
+<td>Precise pattern, no code</td>
+</tr>
+<tr>
+<td>Lambda invocations (data plane)</td>
+<td><strong>CloudTrail Data Events</strong></td>
+<td>Management events ≠ invocations</td>
+</tr>
+<tr>
+<td>Filter by function name prefix</td>
+<td><strong>Advanced Event Selectors</strong></td>
+<td>Basic selectors can't prefix-filter</td>
+</tr>
+<tr>
+<td>Lateral movement (same VPC)</td>
+<td><strong>VPC Flow Logs</strong></td>
+<td>Instance-to-instance traffic</td>
+</tr>
+<tr>
+<td>DNS covert channels</td>
+<td><strong>Route 53 Resolver Logs</strong></td>
+<td>DNS tunneling, C2 callbacks</td>
+</tr>
+<tr>
+<td>Cross-VPC traffic via hub</td>
+<td><strong>Transit Gateway Flow Logs</strong></td>
+<td>Inter-network traffic</td>
+</tr>
+<tr>
+<td>Full EC2 session keystrokes</td>
+<td><strong>Session Manager → S3/CW</strong></td>
+<td>CloudTrail only logs API call</td>
+</tr>
+<tr>
+<td>Who created/deleted resources</td>
+<td><strong>CloudTrail Management Events</strong></td>
+<td>Always on by default</td>
+</tr>
+<tr>
+<td>Effective IAM permissions</td>
+<td><strong>IAM Access Analyzer</strong></td>
+<td>Attached ≠ effective</td>
+</tr>
+</table></div>
+<h3>Encryption & Key Management — "Which KMS Approach?"</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Scenario</th>
+<th>Answer</th>
+</tr>
+<tr>
+<td>Rotate KMS-generated keys</td>
+<td><strong>Automatic rotation</strong> (365-day)</td>
+</tr>
+<tr>
+<td>Rotate imported key material</td>
+<td><strong>Manual: new key + alias swap</strong></td>
+</tr>
+<tr>
+<td>Scalable cross-account decrypt</td>
+<td><strong>KMS Grants</strong> (not key policy edits)</td>
+</tr>
+<tr>
+<td>Key policy size limit hit</td>
+<td><strong>Use Grants instead</strong> (32 KB limit on policies)</td>
+</tr>
+<tr>
+<td>Share KMS key via RAM</td>
+<td><strong>NOT possible</strong> — RAM doesn't support KMS</td>
+</tr>
+</table></div>
+<h3>Network Security — "Which Control Layer?"</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Need</th>
+<th>Answer</th>
+<th>Why NOT Others</th>
+</tr>
+<tr>
+<td>Filter by domain name</td>
+<td><strong>DNS Firewall</strong></td>
+<td>NACLs/SGs = IP/port only</td>
+</tr>
+<tr>
+<td>Filter by IP/port</td>
+<td><strong>Security Group or NACL</strong></td>
+<td>DNS Firewall = domain only</td>
+</tr>
+<tr>
+<td>Least permissive SG (web server)</td>
+<td><strong>Inbound 443 only, no outbound</strong></td>
+<td>SG is stateful — return traffic auto-allowed</td>
+</tr>
+<tr>
+<td>Least permissive NACL</td>
+<td><strong>Inbound 443 + outbound 1024-65535</strong></td>
+<td>NACL is stateless — must allow ephemeral ports</td>
+</tr>
+<tr>
+<td>Restrict S3 to CloudFront only</td>
+<td><strong>OAC + bucket policy</strong></td>
+<td>Bucket policy alone can't identify CF</td>
+</tr>
+</table></div>
+<h3>Data Protection — "Not Even Root Can Delete"</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Control</th>
+<th>Root Can Bypass?</th>
+</tr>
+<tr>
+<td>S3 Object Lock — <strong>Compliance mode</strong></td>
+<td><strong>NO</strong> (immutable)</td>
+</tr>
+<tr>
+<td>S3 Object Lock — Governance mode</td>
+<td>Yes (with bypass permission)</td>
+</tr>
+<tr>
+<td>SCP deny delete</td>
+<td>Yes (admin can modify SCP)</td>
+</tr>
+<tr>
+<td>Bucket policy deny</td>
+<td>Yes (root bypasses policies)</td>
+</tr>
+<tr>
+<td>IAM deny policy</td>
+<td>Yes (root bypasses IAM)</td>
+</tr>
+</table></div>
+<h3>Multi-Account Patterns</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Task</th>
+<th>Best Approach</th>
+</tr>
+<tr>
+<td>Deploy IAM roles to all accounts</td>
+<td><strong>StackSets + auto-deploy</strong></td>
+</tr>
+<tr>
+<td>Centralize security findings</td>
+<td><strong>Security Hub + Organizations</strong></td>
+</tr>
+<tr>
+<td>Centralize GuardDuty (standalone)</td>
+<td>Enable → Designate admin → Invite members → Assume roles</td>
+</tr>
+<tr>
+<td>Cost monitoring per service</td>
+<td><strong>Cost Anomaly Detection (Services monitor + individual alerts)</strong></td>
+</tr>
+<tr>
+<td>Automated remediation across accounts</td>
+<td><strong>Security Hub → EventBridge → SSM Automation</strong></td>
+</tr>
+</table></div>
+<h3>Incident Response Workflow — Compromised EC2</h3>
+<pre><code>1. ISOLATE  → Swap SG to forensic isolation SG (do NOT terminate)
+2. PRESERVE → EBS snapshots (GuardDuty snapshot retention)
+3. METADATA → Capture instance metadata, tags, VPC info
+4. CONTAIN  → Remove from ASG/target group, detach from ELB
+5. INVESTIGATE → Memory dump, analyze EBS in isolated VPC, check logs
+6. ERADICATE → Terminate instance, launch clean from known-good AMI
+7. RECOVER  → Restore from clean backups, verify security controls
+8. LESSONS  → Document, update runbooks, improve detection</code></pre>
+<h3>Top Exam Traps</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Trap</th>
+<th>Why Wrong</th>
+<th>Right Answer</th>
+</tr>
+<tr>
+<td>Lambda to create snapshots</td>
+<td>Built-in GuardDuty feature exists</td>
+<td>Enable snapshot retention</td>
+</tr>
+<tr>
+<td>Cognito for enterprise SSO</td>
+<td>Cognito = app users (B2C)</td>
+<td>IAM Identity Center</td>
+</tr>
+<tr>
+<td>Config for login monitoring</td>
+<td>Config = resource state, not auth events</td>
+<td>CloudTrail + metric filter</td>
+</tr>
+<tr>
+<td>RAM to share KMS keys</td>
+<td>RAM doesn't support KMS</td>
+<td>KMS Grants</td>
+</tr>
+<tr>
+<td>NACL outbound port 443</td>
+<td>Responses use ephemeral ports</td>
+<td>Outbound 1024-65535</td>
+</tr>
+<tr>
+<td>"Daily summary" for immediate action</td>
+<td>Up to 24hr delay</td>
+<td>Individual alerts</td>
+</tr>
+<tr>
+<td>CloudTrail for session content</td>
+<td>CT logs API calls only</td>
+<td>Session Manager logs</td>
+</tr>
+<tr>
+<td>Governance mode = immutable</td>
+<td>Governance CAN be bypassed</td>
+<td>Compliance mode</td>
+</tr>
+<tr>
+<td>Key policy for 100+ customers</td>
+<td>32 KB size limit</td>
+<td>KMS Grants</td>
+</tr>
+<tr>
+<td>VPC Flow Logs for DNS attacks</td>
+<td>Flow logs = IP/port, not DNS</td>
+<td>Resolver Logs</td>
+</tr>
+<tr>
+<td>Attached policy = effective</td>
+<td>SCPs/boundaries can restrict</td>
+<td>IAM Access Analyzer</td>
+</tr>
+</table></div>
+</div></div>
+<div class="section" id="d3-s3">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Quick Reference: AWS Security Services Ecosystem</h2>
+<div class="section-body">
+<pre><code>┌──────────────────────────────────────────────────────────────────────┐
+│                    AWS Security Services Map                          │
+│                                                                       │
+│  DETECTION &amp; MONITORING                                               │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
+│  │  GuardDuty   │  │  Security    │  │  AWS Config  │               │
+│  │  Threat      │  │  Hub         │  │  Compliance  │               │
+│  │  Detection   │──►  Aggregator  │◄──  Tracking    │               │
+│  │  (ML-based)  │  │  (central)   │  │  (resource   │               │
+│  │              │  │              │  │   state)     │               │
+│  └──────┬───────┘  └──────┬───────┘  └──────────────┘               │
+│         │                 │                                           │
+│         │           ┌─────▼──────┐                                   │
+│         │           │ EventBridge│──► SSM Automation (remediation)   │
+│         │           └────────────┘──► Lambda (custom response)      │
+│         │                         ──► SNS (notifications)           │
+│         ▼                                                             │
+│  ┌──────────────┐                                                     │
+│  │  Detective   │  Investigation &amp; root cause analysis               │
+│  └──────────────┘                                                     │
+│                                                                       │
+│  IDENTITY &amp; ACCESS                                                    │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
+│  │ IAM Identity │  │   Cognito    │  │ IAM Access   │               │
+│  │ Center (SSO) │  │  (App Auth)  │  │  Analyzer    │               │
+│  │ • SAML/ADFS  │  │ • User Pools │  │ • Effective  │               │
+│  │ • SCIM sync  │  │ • Social     │  │   permissions│               │
+│  │ • Permission │  │   login      │  │ • External   │               │
+│  │   Sets       │  │ • B2C apps   │  │   access     │               │
+│  └──────────────┘  └──────────────┘  └──────────────┘               │
+│                                                                       │
+│  ENCRYPTION &amp; KEY MANAGEMENT                                          │
+│  ┌──────────────────────────────────────────────────┐                │
+│  │  AWS KMS                                          │                │
+│  │  ├─ Key Policy (32 KB limit, core admin access)   │                │
+│  │  ├─ IAM Policy (same-account principals)          │                │
+│  │  ├─ Grants (cross-account, scalable, revocable)   │                │
+│  │  ├─ Auto-rotation (KMS-generated keys, 365 days)  │                │
+│  │  └─ Manual rotation (imported keys, alias swap)   │                │
+│  └──────────────────────────────────────────────────┘                │
+│                                                                       │
+│  NETWORK SECURITY                                                     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
+│  │ Security     │  │ Network ACL  │  │ DNS Firewall │               │
+│  │ Groups       │  │ (Stateless)  │  │ (Domain      │               │
+│  │ (Stateful)   │  │ • Ephemeral  │  │  filtering)  │               │
+│  │ • No outbound│  │   ports for  │  │ • Allow/block│               │
+│  │   needed for │  │   responses  │  │   by domain  │               │
+│  │   responses  │  │ • Subnet     │  │ • VPC-level  │               │
+│  │ • ENI level  │  │   level      │  │              │               │
+│  └──────────────┘  └──────────────┘  └──────────────┘               │
+│                                                                       │
+│  LOGGING SOURCES                                                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
+│  │ CloudTrail   │  │ VPC Flow     │  │ Route 53     │               │
+│  │ • Mgmt events│  │ Logs         │  │ Resolver Logs│               │
+│  │   (default)  │  │ • Within-VPC │  │ • DNS queries│               │
+│  │ • Data events│  │   traffic    │  │ • Covert     │               │
+│  │   (extra $)  │  │ • Lateral    │  │   channels   │               │
+│  │ • Advanced   │  │   movement   │  │ • C2 detect  │               │
+│  │   selectors  │  │              │  │              │               │
+│  └──────────────┘  └──────────────┘  └──────────────┘               │
+│        │                                                              │
+│        │           ┌──────────────┐  ┌──────────────┐               │
+│        │           │ TGW Flow     │  │ Session Mgr  │               │
+│        │           │ Logs         │  │ Logs         │               │
+│        │           │ • Cross-VPC  │  │ • Full       │               │
+│        │           │   traffic    │  │   keystroke  │               │
+│        │           │ • Hub-spoke  │  │   recording  │               │
+│        │           └──────────────┘  └──────────────┘               │
+│        │                                                              │
+│        └──► Athena (query CloudTrail logs in S3)                     │
+│        └──► CW Metric Filter (pattern match, e.g., root login)      │
+│                                                                       │
+│  DATA PROTECTION                                                      │
+│  ┌──────────────────────────────────────────────────┐                │
+│  │  S3 Object Lock                                   │                │
+│  │  ├─ Compliance mode (immutable, not even root)    │                │
+│  │  ├─ Governance mode (bypassable with permission)  │                │
+│  │  └─ Legal hold (no expiry, until removed)         │                │
+│  │                                                    │                │
+│  │  CloudFront OAC                                    │                │
+│  │  ├─ Replaces OAI (legacy)                          │                │
+│  │  ├─ Associated with distribution (not buckets)     │                │
+│  │  └─ Supports SSE-KMS                               │                │
+│  └──────────────────────────────────────────────────┘                │
+│                                                                       │
+│  MULTI-ACCOUNT MANAGEMENT                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
+│  │StackSets     │  │Organizations │  │Cost Anomaly  │               │
+│  │• Auto-deploy │  │• SCPs        │  │Detection     │               │
+│  │• Existing +  │  │• Delegated   │  │• Services    │               │
+│  │  new accounts│  │  admin       │  │  monitor     │               │
+│  │• Declarative │  │• Centralized │  │• Individual  │               │
+│  │              │  │  management  │  │  alerts      │               │
+│  └──────────────┘  └──────────────┘  └──────────────┘               │
+│                                                                       │
+└──────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3>Exam Keyword → Service Mapping</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>When You See This in a Question...</th>
+<th>The Answer Is...</th>
+</tr>
+<tr>
+<td>"Least operational overhead" + automation</td>
+<td>Built-in feature or managed service</td>
+</tr>
+<tr>
+<td>"Not even root user"</td>
+<td>S3 Object Lock <strong>compliance mode</strong></td>
+</tr>
+<tr>
+<td>"SSO + Active Directory + multiple accounts"</td>
+<td><strong>IAM Identity Center</strong></td>
+</tr>
+<tr>
+<td>"Centralized security findings"</td>
+<td><strong>Security Hub</strong></td>
+</tr>
+<tr>
+<td>"Lateral movement" / "same segment"</td>
+<td><strong>VPC Flow Logs</strong></td>
+</tr>
+<tr>
+<td>"Covert channel" / "DNS tunneling"</td>
+<td><strong>Route 53 Resolver Logs</strong></td>
+</tr>
+<tr>
+<td>"Central routing hub" / "isolated networks"</td>
+<td><strong>Transit Gateway Flow Logs</strong></td>
+</tr>
+<tr>
+<td>"Filter by domain name"</td>
+<td><strong>Route 53 DNS Firewall</strong></td>
+</tr>
+<tr>
+<td>"Without updating key policy" / "scalable KMS"</td>
+<td><strong>KMS Grants</strong></td>
+</tr>
+<tr>
+<td>"Imported key material" + rotation</td>
+<td><strong>Manual: new key + alias swap</strong></td>
+</tr>
+<tr>
+<td>"Hundreds of accounts" + deploy roles</td>
+<td><strong>StackSets + auto-deploy</strong></td>
+</tr>
+<tr>
+<td>"Immediate action" + cost</td>
+<td><strong>Individual alerts</strong> (not daily summary)</td>
+</tr>
+<tr>
+<td>"No inbound ports" + EC2 access</td>
+<td><strong>Session Manager</strong></td>
+</tr>
+<tr>
+<td>"Detailed session audit"</td>
+<td><strong>Session Manager logs</strong> (not CloudTrail)</td>
+</tr>
+<tr>
+<td>"Minimize noise" + root logins</td>
+<td><strong>CW Metric Filter</strong> (precise pattern)</td>
+</tr>
+<tr>
+<td>"Advanced event selectors" / "prefix filter"</td>
+<td><strong>CloudTrail Data Events (Custom template)</strong></td>
+</tr>
+<tr>
+<td>"Stateful"</td>
+<td><strong>Security Group</strong></td>
+</tr>
+<tr>
+<td>"Stateless" / "ephemeral ports"</td>
+<td><strong>Network ACL</strong></td>
+</tr>
+<tr>
+<td>"Effective permissions" / "attached ≠ working"</td>
+<td><strong>IAM Access Analyzer</strong></td>
+</tr>
+<tr>
+<td>"Standalone accounts" (no Org)</td>
+<td>Manual IAM roles + trust</td>
+</tr>
+</table></div>
+</div></div>
+<div class="section" id="d3-s4">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q2: GuardDuty Malware Protection & Incident Response</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
@@ -1737,228 +2265,6 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 <td>Runtime malware detection</td>
 </tr>
 </table></div>
-</div></div>
-<div class="section" id="d3-s3">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Cheat Sheet: Incident Response Decision Table</h2>
-<div class="section-body">
-<h3>"Least Operational Overhead" — Pick the Right Tool</h3>
-<div class="table-wrap"><table>
-<tr>
-<th>Task</th>
-<th>Best Answer</th>
-<th>Wrong Answer</th>
-<th>Why</th>
-</tr>
-<tr>
-<td>Preserve EBS evidence</td>
-<td><strong>GuardDuty snapshot retention</strong></td>
-<td>Lambda to create snapshots</td>
-<td>Built-in feature = less overhead</td>
-</tr>
-<tr>
-<td>Isolate EC2 instance</td>
-<td><strong>EventBridge → Lambda</strong></td>
-<td>Systems Manager automation</td>
-<td>SSM needs custom config, EventBridge is event-driven</td>
-</tr>
-<tr>
-<td>Alert security team</td>
-<td><strong>EventBridge → SNS</strong></td>
-<td>CloudWatch alarm → SNS</td>
-<td>EventBridge natively matches GuardDuty events</td>
-</tr>
-<tr>
-<td>Scan for malware</td>
-<td><strong>GuardDuty Malware Protection</strong></td>
-<td>Custom ClamAV on EC2</td>
-<td>Managed service = less overhead</td>
-</tr>
-<tr>
-<td>Investigate findings</td>
-<td><strong>Amazon Detective</strong></td>
-<td>Manual CloudTrail review</td>
-<td>Detective auto-correlates with graph models</td>
-</tr>
-<tr>
-<td>Aggregate findings</td>
-<td><strong>Security Hub</strong></td>
-<td>Custom dashboard</td>
-<td>Security Hub uses standard ASFF format</td>
-</tr>
-</table></div>
-<h3>Automation Pattern Hierarchy</h3>
-<pre><code>ALWAYS prefer in this order:
-
-1. Built-in feature (snapshot retention, auto-scan)
-   └─ "Least operational overhead"
-
-2. EventBridge → Lambda (for custom automation)
-   └─ "Automated response needed"
-
-3. EventBridge → SNS (for notifications)
-   └─ "Alert the team"
-
-4. CloudWatch Alarm → SNS
-   └─ Only for metric-based alerts, NOT event-based
-
-5. Custom solution (SSM, manual scripts)
-   └─ Only when no managed option exists</code></pre>
-<h3>Compromised EC2 — Full Incident Response Workflow</h3>
-<pre><code>1. ISOLATE  → Swap SG to forensic isolation SG
-             (do NOT terminate, do NOT stop)
-
-2. PRESERVE → EBS snapshots of all attached volumes
-             (GuardDuty snapshot retention OR manual)
-
-3. METADATA → Capture instance metadata, tags, VPC info
-             (before any changes)
-
-4. CONTAIN  → Remove from ASG / target group
-             → Detach from ELB
-             → Revoke IAM role temp sessions (if needed)
-
-5. INVESTIGATE → Memory dump (if possible)
-               → Analyze EBS snapshot in isolated VPC
-               → Review CloudTrail, VPC Flow Logs
-               → Check GuardDuty / Detective findings
-
-6. ERADICATE → Terminate compromised instance
-              → Launch clean replacement from known good AMI
-              → Patch the vulnerability that was exploited
-
-7. RECOVER  → Restore from clean backups
-            → Verify security controls
-            → Update security groups / NACLs if needed
-
-8. LESSONS  → Document the incident
-            → Update runbooks / playbooks
-            → Improve detection rules</code></pre>
-<h3>Key Exam Traps to Avoid</h3>
-<div class="table-wrap"><table>
-<tr>
-<th>Trap</th>
-<th>Why It's Wrong</th>
-<th>Right Answer</th>
-</tr>
-<tr>
-<td>"Use Lambda to create snapshots when malware detected"</td>
-<td>Reinventing built-in GuardDuty feature</td>
-<td>Enable snapshot retention</td>
-</tr>
-<tr>
-<td>"Use CloudWatch alarm for automated response"</td>
-<td>CloudWatch alarms = notifications, not automation</td>
-<td>EventBridge → Lambda</td>
-</tr>
-<tr>
-<td>"Use SSM to quarantine instances"</td>
-<td>Requires custom setup, more overhead</td>
-<td>EventBridge → Lambda with forensic SG</td>
-</tr>
-<tr>
-<td>"Terminate the instance immediately"</td>
-<td>Destroys forensic evidence</td>
-<td>Isolate with security group, preserve evidence</td>
-</tr>
-<tr>
-<td>"Use SNS to trigger remediation"</td>
-<td>SNS is for notifications, not complex logic</td>
-<td>EventBridge → Lambda</td>
-</tr>
-<tr>
-<td>"Create IAM user for forensic team"</td>
-<td>IAM users = long-term credentials</td>
-<td>IAM role with temporary credentials</td>
-</tr>
-</table></div>
-</div></div>
-<div class="section" id="d3-s4">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Quick Reference: GuardDuty Integration Points</h2>
-<div class="section-body">
-<pre><code>┌─────────────────────────────────────────────────────┐
-│              GuardDuty Ecosystem                     │
-│                                                      │
-│  DATA SOURCES (automatic):                           │
-│  ├─ CloudTrail Management Events                     │
-│  ├─ CloudTrail S3 Data Events                        │
-│  ├─ VPC Flow Logs                                    │
-│  ├─ DNS Query Logs                                   │
-│  ├─ EBS Volume Data (Malware Protection)             │
-│  ├─ RDS Login Activity                               │
-│  ├─ EKS Audit Logs                                   │
-│  └─ Lambda Network Activity                          │
-│                                                      │
-│  OUTPUTS:                                            │
-│  ├─ Findings → Security Hub (aggregation)            │
-│  ├─ Findings → EventBridge (automation)              │
-│  ├─ Findings → Detective (investigation)             │
-│  └─ Findings → S3 (export for long-term storage)     │
-│                                                      │
-│  BUILT-IN FEATURES:                                  │
-│  ├─ Malware Protection (agentless EBS scan)           │
-│  ├─ Snapshot Retention (evidence preservation)        │
-│  ├─ Trusted IP Lists (suppress known-good IPs)       │
-│  ├─ Threat IP Lists (custom threat intelligence)      │
-│  ├─ Suppression Rules (filter known false positives)  │
-│  └─ Multi-account (delegated admin in Org)            │
-│                                                      │
-└─────────────────────────────────────────────────────┘</code></pre>
-<h3>Exam-Critical: GuardDuty Malware Protection Limits</h3>
-<div class="table-wrap"><table>
-<tr>
-<th>Limit</th>
-<th>Value</th>
-</tr>
-<tr>
-<td>Max EBS volume size for scan</td>
-<td><strong>2,048 GB (2 TB)</strong></td>
-</tr>
-<tr>
-<td>Max EBS volumes per instance</td>
-<td><strong>11</strong></td>
-</tr>
-<tr>
-<td>Scan frequency (GuardDuty-initiated)</td>
-<td><strong>Once per 24 hours per resource</strong></td>
-</tr>
-<tr>
-<td>On-demand scan cooldown</td>
-<td><strong>1 hour</strong> after previous scan start</td>
-</tr>
-<tr>
-<td>Supported file systems</td>
-<td>NTFS, XFS, ext2, ext4, FAT, VFAT</td>
-</tr>
-<tr>
-<td>Fargate support</td>
-<td><strong>NOT supported</strong></td>
-</tr>
-<tr>
-<td>Scan engines</td>
-<td>AWS internal + Bitdefender</td>
-</tr>
-<tr>
-<td>Signature update frequency</td>
-<td>Every <strong>15 minutes</strong></td>
-</tr>
-<tr>
-<td>Finding retention</td>
-<td><strong>90 days</strong></td>
-</tr>
-<tr>
-<td>Snapshot retention default</td>
-<td><strong>OFF</strong> — must enable explicitly</td>
-</tr>
-</table></div>
-<h3>Snapshot Retention — Enable via CLI</h3>
-<pre><code>aws guardduty update-malware-scan-settings \
-  --detector-id &lt;id&gt; \
-  --ebs-snapshot-preservation RETENTION_WITH_FINDING</code></pre>
-<h3>Findings That TRIGGER Automatic Malware Scans</h3>
-<p>These GuardDuty findings auto-initiate a malware scan — know the categories:</p>
-<ul><li><strong>Backdoor:EC2/</strong> — C&C communication, DDoS, Spambot</li><li><strong>CryptoCurrency:EC2/</strong> — Bitcoin mining (BitcoinTool.B)</li><li><strong>Impact:EC2/</strong> — Abused domains, port sweeps, WinRM brute force</li><li><strong>Trojan:EC2/</strong> — Blackhole traffic, DGA domains, DNS exfiltration, drive-by</li><li><strong>Recon:EC2/Portscan</strong> — Port scanning activity</li></ul>
-<h3>EventBridge Notification Frequency</h3>
-<ul><li><strong>New findings</strong>: Near real-time (immediate)</li><li><strong>Subsequent occurrences</strong>: Default <strong>6 hours</strong> (configurable: 15 min, 1 hr, 6 hr)</li><li><strong>Suppressed findings</strong>: NOT sent to EventBridge</li></ul>
 </div></div>
 <div class="section" id="d3-s5">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q3: IAM Identity Center — SSO with Active Directory</h2>
