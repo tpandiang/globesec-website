@@ -3551,6 +3551,60 @@ Security Hub ──► EventBridge ──► SSM Automation Runbooks
 <h3>Exam Traps</h3>
 <ul><li><strong>OAC belongs to CloudFront, not to buckets</strong> — one OAC, multiple origins</li><li><strong>Bucket policy handles both OAC + other principals</strong> — they coexist in the same policy</li><li><strong>Without OAC, no secure CloudFront-to-S3</strong> — bucket policies alone can't identify CloudFront</li><li><strong>OAC ≠ OAI</strong> — OAC supports SSE-KMS, all S3 regions, and is the current best practice</li></ul>
 </div></div>
+<div class="section" id="d3-s21">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Lambda Logging Failures — Log Group Config + IAM Access Analyzer</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Lambda functions stopped logging to CloudWatch. Execution roles have <code>AWSLambdaBasicExecutionRole</code>. No recent role/policy changes. Find root cause and restore logging.</p>
+<p><strong>Correct Answers</strong>: A (check Lambda log group config) + E (IAM Access Analyzer for effective permissions)</p>
+<h3>Concept: Why Logging Can Break Despite Correct Policy</h3>
+<pre><code>Attached policy ≠ Effective permissions
+
+AWSLambdaBasicExecutionRole (attached)
+        │
+        ▼
+  Effective permissions reduced by:
+  • SCPs (organization level)
+  • Permissions boundaries (role level)
+  • Resource policies (CloudWatch Logs)
+  • Session policies</code></pre>
+<h3>Two Investigation Paths</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Check</th>
+<th>What It Reveals</th>
+</tr>
+<tr>
+<td><strong>A — Lambda log group config</strong></td>
+<td>Log group deleted, renamed, misconfigured, or logging disabled</td>
+</tr>
+<tr>
+<td><strong>E — IAM Access Analyzer</strong></td>
+<td>Effective permissions — SCP, boundary, or resource policy blocking <code>logs:*</code> actions</td>
+</tr>
+</table></div>
+<h3>Why Wrong Answers Fail</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Option</th>
+<th>Problem</th>
+</tr>
+<tr>
+<td><strong>B</strong> — Security Hub insights</td>
+<td>Monitors security findings, not logging diagnostics</td>
+</tr>
+<tr>
+<td><strong>C</strong> — Config for changes</td>
+<td>Question says no recent changes — nothing to find</td>
+</tr>
+<tr>
+<td><strong>D</strong> — CloudWatch Logs Insights</td>
+<td>Can't query logs that <strong>don't exist</strong> — the very problem is no new logs</td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>"No policy changes" ≠ permissions are fine</strong> — SCPs or boundaries could restrict at a different level</li><li><strong>Can't query missing logs</strong> — Logs Insights only works on existing log data</li><li><strong>Attached policy ≠ effective permissions</strong> — Access Analyzer shows what the role can actually do</li><li><strong>Log group config is often overlooked</strong> — Lambda can be configured to write to a specific log group that may not exist</li></ul>
+</div></div>
         </div>
     </div>
     
