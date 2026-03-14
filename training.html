@@ -2824,6 +2824,116 @@ ORDER BY eventtime DESC;</code></pre>
 <h3>Exam Traps</h3>
 <ul><li><strong>"Linked Account" sounds right for Organizations</strong> — but it monitors total spend, not individual services. An EC2 spike could be masked by lower spend elsewhere</li><li><strong>"Daily summary" sounds efficient</strong> — but fails any requirement with "immediate" or "quick" action language</li><li><strong>Two-axis decision</strong>: always check BOTH the monitor type AND the alert type separately</li><li><strong>Per-service detection needs AWS Services monitor</strong> — this is the only type that evaluates each service independently</li><li><strong>Cost Anomaly Detection ≠ AWS Budgets</strong> — Budgets uses fixed thresholds; Cost Anomaly Detection uses ML baselines</li></ul>
 </div></div>
+<div class="section" id="d3-s11">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> CloudFormation StackSets — Cross-Account Role Deployment</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Hundreds of accounts in AWS Organizations. Security engineer needs an IAM role created in <strong>every</strong> account (existing + future) for cross-account access to review resources.</p>
+<p><strong>Correct Answer</strong>: C — CloudFormation StackSets with <strong>automatic deployment</strong> enabled</p>
+<h3>Concept: StackSets with Automatic Deployment</h3>
+<p>CloudFormation StackSets let you deploy a CloudFormation template across multiple accounts and regions from a single management account. With <strong>automatic deployment</strong>, new accounts added to the Organization automatically receive the stack.</p>
+<pre><code>StackSets Automatic Deployment:
+┌─────────────────────────────────────┐
+│     Management Account              │
+│  ┌───────────────────────────┐      │
+│  │ CloudFormation StackSet   │      │
+│  │ (IAM Role template)      │      │
+│  │ Auto-deploy: ON          │      │
+│  └─────────┬─────────────────┘      │
+│            │ Deploys to ALL accounts│
+└────────────┼────────────────────────┘
+             ▼
+  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐
+  │Acct 1│ │Acct 2│ │Acct 3│ │NEW   │ ◄── auto on join
+  │ Role │ │ Role │ │ Role │ │ Role │
+  └──────┘ └──────┘ └──────┘ └──────┘</code></pre>
+<h3>StackSets Key Features</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+<tr>
+<td><strong>Automatic deployment</strong></td>
+<td>Deploys to new accounts when they join the org/OU</td>
+</tr>
+<tr>
+<td><strong>Service-managed permissions</strong></td>
+<td>No need to create admin roles manually — Organizations handles trust</td>
+</tr>
+<tr>
+<td><strong>Drift detection</strong></td>
+<td>Detect if someone modifies or deletes the deployed role</td>
+</tr>
+<tr>
+<td><strong>Concurrent deployment</strong></td>
+<td>Deploy to multiple accounts/regions simultaneously</td>
+</tr>
+<tr>
+<td><strong>Retain stacks on removal</strong></td>
+<td>Option to keep resources if account leaves the OU</td>
+</tr>
+</table></div>
+<h3>Multi-Account Role Deployment Options</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Approach</th>
+<th>Existing Accounts</th>
+<th>New Accounts</th>
+<th>Code Required</th>
+<th>Effort</th>
+</tr>
+<tr>
+<td><strong>StackSets + auto-deploy</strong></td>
+<td><strong>Yes</strong></td>
+<td><strong>Yes (auto)</strong></td>
+<td><strong>No</strong></td>
+<td><strong>Lowest</strong></td>
+</tr>
+<tr>
+<td>CloudTrail + Lambda</td>
+<td>No</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>AssumeRole error + Lambda</td>
+<td>No (reactive)</td>
+<td>No (reactive)</td>
+<td>Yes</td>
+<td>High</td>
+</tr>
+<tr>
+<td>StackSets + Lambda</td>
+<td>Yes</td>
+<td>Yes (auto)</td>
+<td>Yes</td>
+<td>Medium</td>
+</tr>
+</table></div>
+<h3>Why Wrong Answers Fail</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Option</th>
+<th>Fatal Flaw</th>
+</tr>
+<tr>
+<td><strong>A</strong> — CloudTrail CreateAccount + Lambda</td>
+<td>Misses <strong>existing</strong> accounts. Lambda code to maintain</td>
+</tr>
+<tr>
+<td><strong>B</strong> — AssumeRole error + Lambda</td>
+<td>Reactive, unreliable, timing issues, could miss accounts</td>
+</tr>
+<tr>
+<td><strong>D</strong> — StackSets deploying Lambda</td>
+<td>Unnecessary complexity — deploy the role directly, not a function</td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>"Hundreds of accounts"</strong> = must be automated, not manual per-account solutions</li><li><strong>CloudTrail + Lambda sounds automated</strong> — but only catches <code>CreateAccount</code> events (future accounts only)</li><li><strong>Automatic deployment ≠ default</strong> — you must explicitly enable it when creating the stack set</li><li><strong>StackSets can deploy IAM roles directly</strong> — no need for Lambda intermediary</li><li><strong>"Least operational effort"</strong> = always prefer declarative/managed over code-based</li><li><strong>Service-managed vs self-managed StackSets</strong>: service-managed (Organizations integration) is lower effort</li></ul>
+</div></div>
         </div>
     </div>
     
