@@ -232,7 +232,6 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
             <span class="aws-badge">AWS</span>
             <span>SCS-C03 Security Specialty Study Guide</span>
         </div>
-        <a href="practice-guide.html" class="back-link" style="margin-left:0.5rem; background:var(--bg3); padding:0.3rem 0.7rem; border-radius:5px; border:1px solid var(--border); font-weight:600;">Practice Questions &#8594;</a>
     </div>
     <div class="topbar-right">
         <div class="search-box">
@@ -1903,7 +1902,44 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 │  ├─ Suppression Rules (filter known false positives)  │
 │  └─ Multi-account (delegated admin in Org)            │
 │                                                      │
-└─────────────────────────────────────────────────────┘</code></pre>
+└─────────────────────────────────────────────────────┘
+
+### Exam-Critical: GuardDuty Malware Protection Limits
+
+| Limit | Value |
+|-------|-------|
+| Max EBS volume size for scan | **2,048 GB (2 TB)** |
+| Max EBS volumes per instance | **11** |
+| Scan frequency (GuardDuty-initiated) | **Once per 24 hours per resource** |
+| On-demand scan cooldown | **1 hour** after previous scan start |
+| Supported file systems | NTFS, XFS, ext2, ext4, FAT, VFAT |
+| Fargate support | **NOT supported** |
+| Scan engines | AWS internal + Bitdefender |
+| Signature update frequency | Every **15 minutes** |
+| Finding retention | **90 days** |
+| Snapshot retention default | **OFF** — must enable explicitly |
+
+### Snapshot Retention — Enable via CLI
+</code></pre>
+<p>aws guardduty update-malware-scan-settings \</p>
+<p>--detector-id <id> \</p>
+<p>--ebs-snapshot-preservation RETENTION_WITH_FINDING</p>
+<pre><code>
+### Findings That TRIGGER Automatic Malware Scans
+
+These GuardDuty findings auto-initiate a malware scan — know the categories:
+
+- **Backdoor:EC2/** — C&amp;C communication, DDoS, Spambot
+- **CryptoCurrency:EC2/** — Bitcoin mining (BitcoinTool.B)
+- **Impact:EC2/** — Abused domains, port sweeps, WinRM brute force
+- **Trojan:EC2/** — Blackhole traffic, DGA domains, DNS exfiltration, drive-by
+- **Recon:EC2/Portscan** — Port scanning activity
+
+### EventBridge Notification Frequency
+
+- **New findings**: Near real-time (immediate)
+- **Subsequent occurrences**: Default **6 hours** (configurable: 15 min, 1 hr, 6 hr)
+- **Suppressed findings**: NOT sent to EventBridge</code></pre>
 </div></div>
         </div>
     </div>
