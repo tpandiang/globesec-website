@@ -2221,6 +2221,189 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 <h3>Exam Trap: S3 Tags ≠ HTTP Headers</h3>
 <p>S3 object tags are metadata for categorization, billing, and lifecycle policies. They are <strong>NOT exposed through HTTP/HTTPS access</strong>. If an answer suggests using S3 tags to set response headers, it is always wrong.</p>
 </div></div>
+<div class="section" id="d3-s7">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Systems Manager Session Manager — Secure EC2 Access</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Secure command line access to EC2 Linux instances (Amazon Linux 2023). Must have detailed audit logs, no inbound ports, and enforce least privilege.</p>
+<p><strong>Correct Answer</strong>: D — AmazonSSMManagedInstanceCore role on instances + Session Manager logging to S3 and CloudWatch + tag-based IAM policies for developers</p>
+<h3>Concept: Session Manager Architecture</h3>
+<p>Session Manager provides browser-based or CLI shell access to EC2 instances <strong>without opening any inbound ports</strong>. The SSM Agent (pre-installed on Amazon Linux 2023) communicates outbound over HTTPS (443).</p>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│         Session Manager — No Inbound Ports           │
+│                                                      │
+│  Developer                          EC2 Instance     │
+│  ┌──────────┐                      ┌──────────────┐ │
+│  │ Console  │                      │ SSM Agent    │ │
+│  │ or CLI   │                      │ (pre-installed│ │
+│  └────┬─────┘                      │  on AL2023)  │ │
+│       │                            └──────┬───────┘ │
+│       │    HTTPS (443) outbound only      │         │
+│       │         ┌──────────┐              │         │
+│       └────────►│ Systems  │◄─────────────┘         │
+│                 │ Manager  │                         │
+│                 │ Service  │                         │
+│                 └────┬─────┘                         │
+│                      │                               │
+│              Logs to S3 + CloudWatch                 │
+│              (full session recording)                │
+│                                                      │
+│  Security Group: NO inbound rules needed             │
+│  VPC Endpoints: Optional (for private subnets)       │
+│                                                      │
+└─────────────────────────────────────────────────────┘</code></pre>
+<h3>Session Manager Feature Reference</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Feature</th>
+<th>Detail</th>
+</tr>
+<tr>
+<td><strong>Ports required</strong></td>
+<td>NONE inbound. Agent uses outbound HTTPS (443)</td>
+</tr>
+<tr>
+<td><strong>SSM Agent</strong></td>
+<td>Pre-installed on Amazon Linux 2023, AL2, Ubuntu 16.04+</td>
+</tr>
+<tr>
+<td><strong>Instance role</strong></td>
+<td>Must have <code>AmazonSSMManagedInstanceCore</code> policy</td>
+</tr>
+<tr>
+<td><strong>Logging</strong></td>
+<td>S3 (full session recording), CloudWatch Logs (searchable), or both</td>
+</tr>
+<tr>
+<td><strong>Encryption</strong></td>
+<td>KMS encryption supported for session data</td>
+</tr>
+<tr>
+<td><strong>Port forwarding</strong></td>
+<td>Supported (e.g., RDP through Session Manager)</td>
+</tr>
+<tr>
+<td><strong>No bastion host</strong></td>
+<td>Eliminates bastion host management entirely</td>
+</tr>
+<tr>
+<td><strong>Audit</strong></td>
+<td>Who connected, when, full keystroke logging</td>
+</tr>
+</table></div>
+<h3>Why Wrong Answers Fail</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Option</th>
+<th>Fatal Flaw</th>
+</tr>
+<tr>
+<td><strong>A — SSH as backup</strong></td>
+<td>Allows inbound SSH → violates "no inbound ports"</td>
+</tr>
+<tr>
+<td><strong>B — CloudTrail + EventBridge</strong></td>
+<td>CloudTrail logs API calls (<code>StartSession</code>) but NOT session content (keystrokes). No instance role or VPC endpoints mentioned</td>
+</tr>
+<tr>
+<td><strong>C — SCP + bastion hosts</strong></td>
+<td>SSH through bastion requires inbound ports. SCPs cannot attach IAM roles — they only restrict permissions</td>
+</tr>
+</table></div>
+<h3>Least Privilege — Tag-Based Session Manager Access</h3>
+<p>Restrict developers to only their team's instances:</p>
+<pre><code>{
+  "Effect": "Allow",
+  "Action": "ssm:StartSession",
+  "Resource": "arn:aws:ec2:*:*:instance/*",
+  "Condition": {
+    "StringEquals": {
+      "ssm:resourceTag/Environment": "Development",
+      "ssm:resourceTag/Team": "${aws:PrincipalTag/Team}"
+    }
+  }
+}</code></pre>
+<h3>Logging: CloudTrail vs Session Manager Logs</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Log Type</th>
+<th>What It Captures</th>
+</tr>
+<tr>
+<td><strong>CloudTrail</strong></td>
+<td>API call only — who called <code>StartSession</code>, when, from where</td>
+</tr>
+<tr>
+<td><strong>Session Manager → CloudWatch</strong></td>
+<td>Full session content — every keystroke and output, searchable</td>
+</tr>
+<tr>
+<td><strong>Session Manager → S3</strong></td>
+<td>Full session recording — stored for long-term audit</td>
+</tr>
+</table></div>
+<p><strong>Exam Point</strong>: If the question asks for "detailed audit logs of sessions," CloudTrail alone is NOT enough. You need Session Manager logging to S3 and/or CloudWatch.</p>
+<h3>EC2 Access Methods Decision Table</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Method</th>
+<th>Inbound Port</th>
+<th>Session Audit</th>
+<th>Least Privilege</th>
+<th>Exam Answer?</th>
+</tr>
+<tr>
+<td><strong>Session Manager</strong></td>
+<td>None</td>
+<td>Full recording</td>
+<td>Tag-based IAM</td>
+<td><strong>YES</strong></td>
+</tr>
+<tr>
+<td>SSH + bastion</td>
+<td>22</td>
+<td>Only if configured</td>
+<td>Key management</td>
+<td>NO</td>
+</tr>
+<tr>
+<td>SSH direct</td>
+<td>22</td>
+<td>Only if configured</td>
+<td>IP-based SG</td>
+<td>NO</td>
+</tr>
+<tr>
+<td>EC2 Instance Connect</td>
+<td>22 (temporary)</td>
+<td>CloudTrail only</td>
+<td>Limited</td>
+<td>Rarely</td>
+</tr>
+</table></div>
+<h3>VPC Endpoints for Session Manager</h3>
+<p>Required only for instances in <strong>private subnets without NAT gateway</strong>. Three endpoints needed:</p>
+<div class="table-wrap"><table>
+<tr>
+<th>Endpoint</th>
+<th>Service</th>
+</tr>
+<tr>
+<td><code>com.amazonaws.region.ssm</code></td>
+<td>Systems Manager service</td>
+</tr>
+<tr>
+<td><code>com.amazonaws.region.ssmmessages</code></td>
+<td>Session Manager messages</td>
+</tr>
+<tr>
+<td><code>com.amazonaws.region.ec2messages</code></td>
+<td>EC2 messages</td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>"SSH as backup method"</strong> — If question says "no inbound ports," any SSH option is wrong</li><li><strong>CloudTrail ≠ session logs</strong> — CloudTrail logs the API call, NOT keystrokes</li><li><strong>SCPs cannot attach roles</strong> — SCPs restrict permissions, they don't provision resources</li><li><strong>VPC endpoints</strong> — Only needed for private subnets. Not required for public subnets with internet access</li></ul>
+</div></div>
         </div>
     </div>
     
