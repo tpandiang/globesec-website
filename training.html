@@ -1902,232 +1902,324 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 │  ├─ Suppression Rules (filter known false positives)  │
 │  └─ Multi-account (delegated admin in Org)            │
 │                                                      │
-└─────────────────────────────────────────────────────┘
-
-### Exam-Critical: GuardDuty Malware Protection Limits
-
-| Limit | Value |
-|-------|-------|
-| Max EBS volume size for scan | **2,048 GB (2 TB)** |
-| Max EBS volumes per instance | **11** |
-| Scan frequency (GuardDuty-initiated) | **Once per 24 hours per resource** |
-| On-demand scan cooldown | **1 hour** after previous scan start |
-| Supported file systems | NTFS, XFS, ext2, ext4, FAT, VFAT |
-| Fargate support | **NOT supported** |
-| Scan engines | AWS internal + Bitdefender |
-| Signature update frequency | Every **15 minutes** |
-| Finding retention | **90 days** |
-| Snapshot retention default | **OFF** — must enable explicitly |
-
-### Snapshot Retention — Enable via CLI
-</code></pre>
-<p>aws guardduty update-malware-scan-settings \</p>
-<p>--detector-id <id> \</p>
-<p>--ebs-snapshot-preservation RETENTION_WITH_FINDING</p>
-<pre><code>
-### Findings That TRIGGER Automatic Malware Scans
-
-These GuardDuty findings auto-initiate a malware scan — know the categories:
-
-- **Backdoor:EC2/** — C&amp;C communication, DDoS, Spambot
-- **CryptoCurrency:EC2/** — Bitcoin mining (BitcoinTool.B)
-- **Impact:EC2/** — Abused domains, port sweeps, WinRM brute force
-- **Trojan:EC2/** — Blackhole traffic, DGA domains, DNS exfiltration, drive-by
-- **Recon:EC2/Portscan** — Port scanning activity
-
-### EventBridge Notification Frequency
-
-- **New findings**: Near real-time (immediate)
-- **Subsequent occurrences**: Default **6 hours** (configurable: 15 min, 1 hr, 6 hr)
-- **Suppressed findings**: NOT sent to EventBridge
-
----
-
-## IAM Identity Center — SSO with Active Directory
-
-### Question Summary
-
-**Scenario**: Implement SSO using SAML with on-premises Active Directory. Developers need access to multiple AWS accounts with role-based permissions. Temporary credentials required. No custom development.
-
-**Correct Answer**: A — IAM Identity Center + ADFS + SCIM provisioning
-
-### Concept: IAM Identity Center (formerly AWS SSO)
-
-IAM Identity Center is the **managed service** for centralized SSO access to multiple AWS accounts and applications. Whenever you see "SSO + Active Directory + multiple AWS accounts" in a question, the answer is IAM Identity Center.
-</code></pre>
-<p>┌─────────────────────────────────────────────────────┐</p>
-<p>│         IAM Identity Center SSO Flow                 │</p>
-<p>│                                                      │</p>
-<p>│  On-Premises                        AWS              │</p>
-<p>│  ┌──────────┐    SAML    ┌────────────────────┐     │</p>
-<p>│  │  Active   │◄─────────►│  IAM Identity      │     │</p>
-<p>│  │ Directory │           │  Center            │     │</p>
-<p>│  │  + ADFS   │   SCIM    │                    │     │</p>
-<p>│  │           │──────────►│  Auto-sync users   │     │</p>
-<p>│  └──────────┘  (auto     │  & groups          │     │</p>
-<p>│                 sync)    └────────┬───────────┘     │</p>
-<p>│                                   │                  │</p>
-<p>│                          Permission Sets             │</p>
-<p>│                           ┌───────┼───────┐         │</p>
-<p>│                           ▼       ▼       ▼         │</p>
-<p>│                        Acct A  Acct B  Acct C       │</p>
-<p>│                        DevRole AdminR  ReadOnly     │</p>
-<p>│                                                      │</p>
-<p>│  Developer logs in → SSO portal → picks account     │</p>
-<p>│  → gets TEMPORARY credentials for that role         │</p>
-<p>│                                                      │</p>
-<p>└─────────────────────────────────────────────────────┘</p>
-<pre><code>
-### Key Components
-
-| Component | Purpose |
-|-----------|---------|
-| **ADFS** | Active Directory Federation Services — translates AD authentication to SAML assertions |
-| **SCIM** | System for Cross-domain Identity Management — auto-syncs users/groups from AD to AWS |
-| **Permission Sets** | Define what permissions a user gets in which account |
-| **SSO Portal** | Web portal where users pick which account/role to access |
-| **Temporary Credentials** | STS credentials generated automatically — no long-term keys |
-
-### SCIM Provisioning — Exam Point
-
-- Auto-syncs users and groups from AD to IAM Identity Center
-- No manual user creation needed in AWS
-- Changes in AD (new hire, termination) automatically reflected
-- Eliminates custom Lambda provisioning scripts
-
-### Permission Sets
-
-- Define **what permissions** a user gets in **which account**
-- Map to **AD groups** (e.g., "Developers" group → DevOps permission set → Accounts A, B, C)
-- Generate **temporary STS credentials** — no long-term keys
-- One permission set can apply to multiple accounts
-- Based on AWS managed policies or custom policies
-
-### Identity Federation Decision Table
-
-| Scenario | Answer |
-|----------|--------|
-| SSO to **multiple AWS accounts** | **IAM Identity Center** (always) |
-| Web/mobile app user authentication | **Cognito User Pools** |
-| Federate to a **single AWS account** | **IAM SAML 2.0 federation** (direct) |
-| Existing on-prem AD, need AWS access | **IAM Identity Center + ADFS** |
-| Auto-sync AD users/groups to AWS | **SCIM** (Identity Center supports this) |
-| Temporary credentials for federated users | **STS** (Identity Center handles automatically) |
-| Social login (Google, Facebook, Amazon) | **Cognito User Pools** |
-| Machine-to-machine on-prem to AWS | **IAM Roles Anywhere** |
-
-### Why Wrong Answers Fail
-
-| Option | Why Wrong |
-|--------|-----------|
-| **Cognito** | For customer/app authentication, NOT enterprise SSO to AWS accounts |
-| **Simple AD** | Basic AD compatibility only. No SAML federation. No trust relationships |
-| **Lambda provisioning** | Custom development. Nightly sync = not real-time. No built-in SSO |
-| **IAM users per account** | Long-term credentials. No SSO. Manual management per account |
-
-### Cognito vs Identity Center — Know the Difference
-</code></pre>
-<p>┌───────────────────────────┬───────────────────────────┐</p>
-<p>│     Amazon Cognito         │   IAM Identity Center     │</p>
-<p>├───────────────────────────┼───────────────────────────┤</p>
-<p>│ For: App users (B2C)       │ For: Employees (B2B/B2E)  │</p>
-<p>│ Auth to: Your app/API      │ Auth to: AWS accounts     │</p>
-<p>│ Users: Sign up themselves   │ Users: Managed by IT/AD   │</p>
-<p>│ Social login: Yes           │ Social login: No          │</p>
-<p>│ User Pools: Authentication  │ Permission Sets: AuthZ    │</p>
-<p>│ Identity Pools: Temp creds  │ Built-in temp creds       │</p>
-<p>│ Multi-account AWS: No       │ Multi-account AWS: Yes    │</p>
-<p>└───────────────────────────┴───────────────────────────┘</p>
-<pre><code>
----
-
-## CloudFront Security Headers — Response Header Policies
-
-### Question Summary
-
-**Scenario**: S3-hosted website with CloudFront distribution. Need to add security headers to all HTTPS responses with least operational overhead.
-
-**Correct Answer**: D — Create a CloudFront response header policy
-
-### The Rule: Built-in Feature &gt; WAF &gt; Lambda@Edge
-
-When adding HTTP security headers to CloudFront responses, there are three technically feasible options. The exam always picks the one with **least operational overhead**:
-</code></pre>
-<p>┌─────────────────────────────────────────────────────────┐</p>
-<p>│  Adding Security Headers — Overhead Comparison           │</p>
-<p>│                                                          │</p>
-<p>│  LEAST overhead                                          │</p>
-<p>│  ┌────────────────────────────────────────────────┐     │</p>
-<p>│  │ D. CloudFront Response Header Policy            │     │</p>
-<p>│  │    Built-in feature. No code. Just configure.   │     │</p>
-<p>│  └────────────────────────────────────────────────┘     │</p>
-<p>│                     ▼                                    │</p>
-<p>│  ┌────────────────────────────────────────────────┐     │</p>
-<p>│  │ B. AWS WAF Web ACL                              │     │</p>
-<p>│  │    Works but requires WAF setup + rule mgmt     │     │</p>
-<p>│  └────────────────────────────────────────────────┘     │</p>
-<p>│                     ▼                                    │</p>
-<p>│  ┌────────────────────────────────────────────────┐     │</p>
-<p>│  │ C. Lambda@Edge                                  │     │</p>
-<p>│  │    Works but requires code + deployment + mgmt  │     │</p>
-<p>│  └────────────────────────────────────────────────┘     │</p>
-<p>│  MOST overhead                                           │</p>
-<p>│                                                          │</p>
-<p>│  A. S3 tags — DOES NOT WORK (tags ≠ HTTP headers)       │</p>
-<p>│                                                          │</p>
-<p>└─────────────────────────────────────────────────────────┘</p>
-<pre><code>
-### CloudFront Response Header Policy
-
-A managed feature to add, remove, or override HTTP headers in responses sent to viewers.
-
-**Common security headers you can add**:
-
-| Header | Purpose |
-|--------|---------|
-| `Strict-Transport-Security` (HSTS) | Force HTTPS connections |
-| `Content-Security-Policy` (CSP) | Prevent XSS, code injection |
-| `X-Content-Type-Options` | Prevent MIME-type sniffing |
-| `X-Frame-Options` | Prevent clickjacking |
-| `X-XSS-Protection` | Enable browser XSS filter |
-| `Referrer-Policy` | Control referrer information |
-
-**How to apply**:
-1. Create a response header policy in CloudFront console
-2. Add desired security headers
-3. Attach the policy to a CloudFront behavior (or the default behavior)
-4. No invalidation needed — applies to new responses immediately
-
-### CloudFront Feature Decision Table
-
-| Need | Answer | NOT |
-|------|--------|-----|
-| Add security headers to responses | **Response Header Policy** | Lambda@Edge, WAF |
-| Custom request/response logic | **Lambda@Edge** or **CloudFront Functions** | Response Header Policy |
-| Block malicious traffic (SQLi, XSS) | **AWS WAF** | Response Header Policy |
-| Geo-blocking | **CloudFront geo-restriction** or **WAF** | Lambda@Edge |
-| URL rewriting/redirects | **CloudFront Functions** | Lambda@Edge (overkill) |
-| Auth at edge (JWT validation) | **Lambda@Edge** | CloudFront Functions (limited) |
-
-### CloudFront Functions vs Lambda@Edge
-</code></pre>
-<p>┌──────────────────────┬──────────────────────────┐</p>
-<p>│ CloudFront Functions  │ Lambda@Edge              │</p>
-<p>├──────────────────────┼──────────────────────────┤</p>
-<p>│ Viewer request/resp   │ All 4 event types        │</p>
-<p>│ JavaScript only       │ Node.js or Python        │</p>
-<p>│ < 1ms execution       │ Up to 30s execution      │</p>
-<p>│ No network access     │ Network access allowed   │</p>
-<p>│ Max 10 KB code        │ Up to 50 MB package      │</p>
-<p>│ Millions of req/sec   │ Thousands of req/sec     │</p>
-<p>│ Cheaper               │ More expensive           │</p>
-<p>│ Simple transforms     │ Complex logic            │</p>
-<p>└──────────────────────┴──────────────────────────┘</p>
-<pre><code>
-### Exam Trap: S3 Tags ≠ HTTP Headers
-
-S3 object tags are metadata for categorization, billing, and lifecycle policies. They are **NOT exposed through HTTP/HTTPS access**. If an answer suggests using S3 tags to set response headers, it is always wrong.
-</code></pre>
+└─────────────────────────────────────────────────────┘</code></pre>
+<h3>Exam-Critical: GuardDuty Malware Protection Limits</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Limit</th>
+<th>Value</th>
+</tr>
+<tr>
+<td>Max EBS volume size for scan</td>
+<td><strong>2,048 GB (2 TB)</strong></td>
+</tr>
+<tr>
+<td>Max EBS volumes per instance</td>
+<td><strong>11</strong></td>
+</tr>
+<tr>
+<td>Scan frequency (GuardDuty-initiated)</td>
+<td><strong>Once per 24 hours per resource</strong></td>
+</tr>
+<tr>
+<td>On-demand scan cooldown</td>
+<td><strong>1 hour</strong> after previous scan start</td>
+</tr>
+<tr>
+<td>Supported file systems</td>
+<td>NTFS, XFS, ext2, ext4, FAT, VFAT</td>
+</tr>
+<tr>
+<td>Fargate support</td>
+<td><strong>NOT supported</strong></td>
+</tr>
+<tr>
+<td>Scan engines</td>
+<td>AWS internal + Bitdefender</td>
+</tr>
+<tr>
+<td>Signature update frequency</td>
+<td>Every <strong>15 minutes</strong></td>
+</tr>
+<tr>
+<td>Finding retention</td>
+<td><strong>90 days</strong></td>
+</tr>
+<tr>
+<td>Snapshot retention default</td>
+<td><strong>OFF</strong> — must enable explicitly</td>
+</tr>
+</table></div>
+<h3>Snapshot Retention — Enable via CLI</h3>
+<pre><code>aws guardduty update-malware-scan-settings \
+  --detector-id &lt;id&gt; \
+  --ebs-snapshot-preservation RETENTION_WITH_FINDING</code></pre>
+<h3>Findings That TRIGGER Automatic Malware Scans</h3>
+<p>These GuardDuty findings auto-initiate a malware scan — know the categories:</p>
+<ul><li><strong>Backdoor:EC2/</strong> — C&C communication, DDoS, Spambot</li><li><strong>CryptoCurrency:EC2/</strong> — Bitcoin mining (BitcoinTool.B)</li><li><strong>Impact:EC2/</strong> — Abused domains, port sweeps, WinRM brute force</li><li><strong>Trojan:EC2/</strong> — Blackhole traffic, DGA domains, DNS exfiltration, drive-by</li><li><strong>Recon:EC2/Portscan</strong> — Port scanning activity</li></ul>
+<h3>EventBridge Notification Frequency</h3>
+<ul><li><strong>New findings</strong>: Near real-time (immediate)</li><li><strong>Subsequent occurrences</strong>: Default <strong>6 hours</strong> (configurable: 15 min, 1 hr, 6 hr)</li><li><strong>Suppressed findings</strong>: NOT sent to EventBridge</li></ul>
+</div></div>
+<div class="section" id="d3-s5">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> IAM Identity Center — SSO with Active Directory</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Implement SSO using SAML with on-premises Active Directory. Developers need access to multiple AWS accounts with role-based permissions. Temporary credentials required. No custom development.</p>
+<p><strong>Correct Answer</strong>: A — IAM Identity Center + ADFS + SCIM provisioning</p>
+<h3>Concept: IAM Identity Center (formerly AWS SSO)</h3>
+<p>IAM Identity Center is the <strong>managed service</strong> for centralized SSO access to multiple AWS accounts and applications. Whenever you see "SSO + Active Directory + multiple AWS accounts" in a question, the answer is IAM Identity Center.</p>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│         IAM Identity Center SSO Flow                 │
+│                                                      │
+│  On-Premises                        AWS              │
+│  ┌──────────┐    SAML    ┌────────────────────┐     │
+│  │  Active   │◄─────────►│  IAM Identity      │     │
+│  │ Directory │           │  Center            │     │
+│  │  + ADFS   │   SCIM    │                    │     │
+│  │           │──────────►│  Auto-sync users   │     │
+│  └──────────┘  (auto     │  &amp; groups          │     │
+│                 sync)    └────────┬───────────┘     │
+│                                   │                  │
+│                          Permission Sets             │
+│                           ┌───────┼───────┐         │
+│                           ▼       ▼       ▼         │
+│                        Acct A  Acct B  Acct C       │
+│                        DevRole AdminR  ReadOnly     │
+│                                                      │
+│  Developer logs in → SSO portal → picks account     │
+│  → gets TEMPORARY credentials for that role         │
+│                                                      │
+└─────────────────────────────────────────────────────┘</code></pre>
+<h3>Key Components</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Component</th>
+<th>Purpose</th>
+</tr>
+<tr>
+<td><strong>ADFS</strong></td>
+<td>Active Directory Federation Services — translates AD authentication to SAML assertions</td>
+</tr>
+<tr>
+<td><strong>SCIM</strong></td>
+<td>System for Cross-domain Identity Management — auto-syncs users/groups from AD to AWS</td>
+</tr>
+<tr>
+<td><strong>Permission Sets</strong></td>
+<td>Define what permissions a user gets in which account</td>
+</tr>
+<tr>
+<td><strong>SSO Portal</strong></td>
+<td>Web portal where users pick which account/role to access</td>
+</tr>
+<tr>
+<td><strong>Temporary Credentials</strong></td>
+<td>STS credentials generated automatically — no long-term keys</td>
+</tr>
+</table></div>
+<h3>SCIM Provisioning — Exam Point</h3>
+<ul><li>Auto-syncs users and groups from AD to IAM Identity Center</li><li>No manual user creation needed in AWS</li><li>Changes in AD (new hire, termination) automatically reflected</li><li>Eliminates custom Lambda provisioning scripts</li></ul>
+<h3>Permission Sets</h3>
+<ul><li>Define <strong>what permissions</strong> a user gets in <strong>which account</strong></li><li>Map to <strong>AD groups</strong> (e.g., "Developers" group → DevOps permission set → Accounts A, B, C)</li><li>Generate <strong>temporary STS credentials</strong> — no long-term keys</li><li>One permission set can apply to multiple accounts</li><li>Based on AWS managed policies or custom policies</li></ul>
+<h3>Identity Federation Decision Table</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Scenario</th>
+<th>Answer</th>
+</tr>
+<tr>
+<td>SSO to <strong>multiple AWS accounts</strong></td>
+<td><strong>IAM Identity Center</strong> (always)</td>
+</tr>
+<tr>
+<td>Web/mobile app user authentication</td>
+<td><strong>Cognito User Pools</strong></td>
+</tr>
+<tr>
+<td>Federate to a <strong>single AWS account</strong></td>
+<td><strong>IAM SAML 2.0 federation</strong> (direct)</td>
+</tr>
+<tr>
+<td>Existing on-prem AD, need AWS access</td>
+<td><strong>IAM Identity Center + ADFS</strong></td>
+</tr>
+<tr>
+<td>Auto-sync AD users/groups to AWS</td>
+<td><strong>SCIM</strong> (Identity Center supports this)</td>
+</tr>
+<tr>
+<td>Temporary credentials for federated users</td>
+<td><strong>STS</strong> (Identity Center handles automatically)</td>
+</tr>
+<tr>
+<td>Social login (Google, Facebook, Amazon)</td>
+<td><strong>Cognito User Pools</strong></td>
+</tr>
+<tr>
+<td>Machine-to-machine on-prem to AWS</td>
+<td><strong>IAM Roles Anywhere</strong></td>
+</tr>
+</table></div>
+<h3>Why Wrong Answers Fail</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Option</th>
+<th>Why Wrong</th>
+</tr>
+<tr>
+<td><strong>Cognito</strong></td>
+<td>For customer/app authentication, NOT enterprise SSO to AWS accounts</td>
+</tr>
+<tr>
+<td><strong>Simple AD</strong></td>
+<td>Basic AD compatibility only. No SAML federation. No trust relationships</td>
+</tr>
+<tr>
+<td><strong>Lambda provisioning</strong></td>
+<td>Custom development. Nightly sync = not real-time. No built-in SSO</td>
+</tr>
+<tr>
+<td><strong>IAM users per account</strong></td>
+<td>Long-term credentials. No SSO. Manual management per account</td>
+</tr>
+</table></div>
+<h3>Cognito vs Identity Center — Know the Difference</h3>
+<pre><code>┌───────────────────────────┬───────────────────────────┐
+│     Amazon Cognito         │   IAM Identity Center     │
+├───────────────────────────┼───────────────────────────┤
+│ For: App users (B2C)       │ For: Employees (B2B/B2E)  │
+│ Auth to: Your app/API      │ Auth to: AWS accounts     │
+│ Users: Sign up themselves   │ Users: Managed by IT/AD   │
+│ Social login: Yes           │ Social login: No          │
+│ User Pools: Authentication  │ Permission Sets: AuthZ    │
+│ Identity Pools: Temp creds  │ Built-in temp creds       │
+│ Multi-account AWS: No       │ Multi-account AWS: Yes    │
+└───────────────────────────┴───────────────────────────┘</code></pre>
+</div></div>
+<div class="section" id="d3-s6">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> CloudFront Security Headers — Response Header Policies</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: S3-hosted website with CloudFront distribution. Need to add security headers to all HTTPS responses with least operational overhead.</p>
+<p><strong>Correct Answer</strong>: D — Create a CloudFront response header policy</p>
+<h3>The Rule: Built-in Feature > WAF > Lambda@Edge</h3>
+<p>When adding HTTP security headers to CloudFront responses, there are three technically feasible options. The exam always picks the one with <strong>least operational overhead</strong>:</p>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│  Adding Security Headers — Overhead Comparison           │
+│                                                          │
+│  LEAST overhead                                          │
+│  ┌────────────────────────────────────────────────┐     │
+│  │ D. CloudFront Response Header Policy            │     │
+│  │    Built-in feature. No code. Just configure.   │     │
+│  └────────────────────────────────────────────────┘     │
+│                     ▼                                    │
+│  ┌────────────────────────────────────────────────┐     │
+│  │ B. AWS WAF Web ACL                              │     │
+│  │    Works but requires WAF setup + rule mgmt     │     │
+│  └────────────────────────────────────────────────┘     │
+│                     ▼                                    │
+│  ┌────────────────────────────────────────────────┐     │
+│  │ C. Lambda@Edge                                  │     │
+│  │    Works but requires code + deployment + mgmt  │     │
+│  └────────────────────────────────────────────────┘     │
+│  MOST overhead                                           │
+│                                                          │
+│  A. S3 tags — DOES NOT WORK (tags ≠ HTTP headers)       │
+│                                                          │
+└─────────────────────────────────────────────────────────┘</code></pre>
+<h3>CloudFront Response Header Policy</h3>
+<p>A managed feature to add, remove, or override HTTP headers in responses sent to viewers.</p>
+<p><strong>Common security headers you can add</strong>:</p>
+<div class="table-wrap"><table>
+<tr>
+<th>Header</th>
+<th>Purpose</th>
+</tr>
+<tr>
+<td><code>Strict-Transport-Security</code> (HSTS)</td>
+<td>Force HTTPS connections</td>
+</tr>
+<tr>
+<td><code>Content-Security-Policy</code> (CSP)</td>
+<td>Prevent XSS, code injection</td>
+</tr>
+<tr>
+<td><code>X-Content-Type-Options</code></td>
+<td>Prevent MIME-type sniffing</td>
+</tr>
+<tr>
+<td><code>X-Frame-Options</code></td>
+<td>Prevent clickjacking</td>
+</tr>
+<tr>
+<td><code>X-XSS-Protection</code></td>
+<td>Enable browser XSS filter</td>
+</tr>
+<tr>
+<td><code>Referrer-Policy</code></td>
+<td>Control referrer information</td>
+</tr>
+</table></div>
+<p><strong>How to apply</strong>:</p>
+<ol>
+<li>Create a response header policy in CloudFront console</li>
+<li>Add desired security headers</li>
+<li>Attach the policy to a CloudFront behavior (or the default behavior)</li>
+<li>No invalidation needed — applies to new responses immediately</li>
+</ol>
+<h3>CloudFront Feature Decision Table</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Need</th>
+<th>Answer</th>
+<th>NOT</th>
+</tr>
+<tr>
+<td>Add security headers to responses</td>
+<td><strong>Response Header Policy</strong></td>
+<td>Lambda@Edge, WAF</td>
+</tr>
+<tr>
+<td>Custom request/response logic</td>
+<td><strong>Lambda@Edge</strong> or <strong>CloudFront Functions</strong></td>
+<td>Response Header Policy</td>
+</tr>
+<tr>
+<td>Block malicious traffic (SQLi, XSS)</td>
+<td><strong>AWS WAF</strong></td>
+<td>Response Header Policy</td>
+</tr>
+<tr>
+<td>Geo-blocking</td>
+<td><strong>CloudFront geo-restriction</strong> or <strong>WAF</strong></td>
+<td>Lambda@Edge</td>
+</tr>
+<tr>
+<td>URL rewriting/redirects</td>
+<td><strong>CloudFront Functions</strong></td>
+<td>Lambda@Edge (overkill)</td>
+</tr>
+<tr>
+<td>Auth at edge (JWT validation)</td>
+<td><strong>Lambda@Edge</strong></td>
+<td>CloudFront Functions (limited)</td>
+</tr>
+</table></div>
+<h3>CloudFront Functions vs Lambda@Edge</h3>
+<pre><code>┌──────────────────────┬──────────────────────────┐
+│ CloudFront Functions  │ Lambda@Edge              │
+├──────────────────────┼──────────────────────────┤
+│ Viewer request/resp   │ All 4 event types        │
+│ JavaScript only       │ Node.js or Python        │
+│ &lt; 1ms execution       │ Up to 30s execution      │
+│ No network access     │ Network access allowed   │
+│ Max 10 KB code        │ Up to 50 MB package      │
+│ Millions of req/sec   │ Thousands of req/sec     │
+│ Cheaper               │ More expensive           │
+│ Simple transforms     │ Complex logic            │
+└──────────────────────┴──────────────────────────┘</code></pre>
+<h3>Exam Trap: S3 Tags ≠ HTTP Headers</h3>
+<p>S3 object tags are metadata for categorization, billing, and lifecycle policies. They are <strong>NOT exposed through HTTP/HTTPS access</strong>. If an answer suggests using S3 tags to set response headers, it is always wrong.</p>
 </div></div>
         </div>
     </div>
