@@ -2404,6 +2404,182 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 <h3>Exam Traps</h3>
 <ul><li><strong>"SSH as backup method"</strong> — If question says "no inbound ports," any SSH option is wrong</li><li><strong>CloudTrail ≠ session logs</strong> — CloudTrail logs the API call, NOT keystrokes</li><li><strong>SCPs cannot attach roles</strong> — SCPs restrict permissions, they don't provision resources</li><li><strong>VPC endpoints</strong> — Only needed for private subnets. Not required for public subnets with internet access</li></ul>
 </div></div>
+<div class="section" id="d3-s8">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> CloudTrail Data Events — Advanced Event Selectors</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Lambda functions with shared prefix <code>UpdProdCount</code> are changing DynamoDB data unexpectedly. Need a report of how often and when these functions are invoked.</p>
+<p><strong>Correct Answer</strong>: B — CloudTrail data events + advanced event selectors (custom template) + Athena for reporting</p>
+<h3>Concept: CloudTrail Event Types</h3>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│           CloudTrail Event Types                         │
+│                                                          │
+│  MANAGEMENT EVENTS (control plane)                       │
+│  ├─ CreateFunction, DeleteFunction, UpdateFunction       │
+│  ├─ CreateBucket, PutBucketPolicy                        │
+│  ├─ RunInstances, TerminateInstances                     │
+│  └─ Enabled by DEFAULT in CloudTrail                     │
+│                                                          │
+│  DATA EVENTS (data plane)                                │
+│  ├─ Lambda: Invoke (function execution)                  │
+│  ├─ S3: GetObject, PutObject, DeleteObject               │
+│  ├─ DynamoDB: GetItem, PutItem, Query                    │
+│  └─ NOT enabled by default (extra cost)                  │
+│                                                          │
+│  INSIGHTS EVENTS                                         │
+│  ├─ Unusual API activity patterns                        │
+│  └─ NOT enabled by default                               │
+│                                                          │
+└─────────────────────────────────────────────────────────┘</code></pre>
+<h3>Basic vs Advanced Event Selectors</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Feature</th>
+<th>Basic Selectors</th>
+<th>Advanced Selectors</th>
+</tr>
+<tr>
+<td>Filtering</td>
+<td>All or specific ARNs</td>
+<td>StartsWith, Equals, NotEquals</td>
+</tr>
+<tr>
+<td>Prefix matching</td>
+<td><strong>Cannot</strong> filter by prefix</td>
+<td><strong>CAN</strong> filter by prefix</td>
+</tr>
+<tr>
+<td>Templates</td>
+<td>Limited</td>
+<td>Custom, log all, readOnly, writeOnly</td>
+</tr>
+<tr>
+<td>Flexibility</td>
+<td>Low</td>
+<td><strong>High</strong> (exam answer for "most flexible")</td>
+</tr>
+<tr>
+<td>Approach</td>
+<td>Legacy</td>
+<td><strong>Recommended</strong></td>
+</tr>
+</table></div>
+<h3>Advanced Event Selector — Prefix Filter Example</h3>
+<pre><code>{
+  "Name": "UpdProdCount-Lambda-Invocations",
+  "FieldSelectors": [
+    {
+      "Field": "eventCategory",
+      "Equals": ["Data"]
+    },
+    {
+      "Field": "resources.type",
+      "Equals": ["AWS::Lambda::Function"]
+    },
+    {
+      "Field": "resources.ARN",
+      "StartsWith": [
+        "arn:aws:lambda:us-east-1:123456789012:function:UpdProdCount"
+      ]
+    }
+  ]
+}</code></pre>
+<h3>Log Selector Templates</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Template</th>
+<th>What It Does</th>
+<th>When to Use</th>
+</tr>
+<tr>
+<td><strong>Custom</strong></td>
+<td>You define filter criteria</td>
+<td><strong>Prefix matching, targeted logging</strong></td>
+</tr>
+<tr>
+<td><strong>Log all events</strong></td>
+<td>Every data event for resource type</td>
+<td>Need everything (expensive)</td>
+</tr>
+<tr>
+<td><strong>Log readOnly events</strong></td>
+<td>Only read operations</td>
+<td>Audit reads only</td>
+</tr>
+<tr>
+<td><strong>Log writeOnly events</strong></td>
+<td>Only write operations</td>
+<td>Audit writes only</td>
+</tr>
+</table></div>
+<h3>Why Wrong Answers Fail</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Option</th>
+<th>Fatal Flaw</th>
+</tr>
+<tr>
+<td><strong>A — Management events</strong></td>
+<td>Management = control plane (CreateFunction). Does NOT log Invoke calls</td>
+</tr>
+<tr>
+<td><strong>C — Basic selectors</strong></td>
+<td>Cannot filter by prefix — only all functions or one specific ARN</td>
+</tr>
+<tr>
+<td><strong>D — Log all events</strong></td>
+<td>Logs ALL Lambda invocations account-wide — expensive, noisy, not targeted</td>
+</tr>
+</table></div>
+<h3>CloudTrail + Athena Reporting Pattern</h3>
+<p>CloudTrail logs → S3 bucket → Athena query:</p>
+<pre><code>SELECT eventtime, useridentity.arn, requestparameters
+FROM cloudtrail_logs
+WHERE eventsource = 'lambda.amazonaws.com'
+  AND eventname = 'Invoke'
+  AND resources[1].arn LIKE '%UpdProdCount%'
+ORDER BY eventtime DESC;</code></pre>
+<h3>Exam Decision Table: CloudTrail Event Selection</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Need</th>
+<th>Event Type</th>
+<th>Selector</th>
+</tr>
+<tr>
+<td>Who created/deleted resources</td>
+<td>Management events</td>
+<td>Default (always on)</td>
+</tr>
+<tr>
+<td>Lambda invocation tracking</td>
+<td><strong>Data events</strong></td>
+<td>Advanced selectors</td>
+</tr>
+<tr>
+<td>S3 object-level access</td>
+<td><strong>Data events</strong></td>
+<td>Advanced selectors</td>
+</tr>
+<tr>
+<td>DynamoDB item-level access</td>
+<td><strong>Data events</strong></td>
+<td>Advanced selectors</td>
+</tr>
+<tr>
+<td>Filter by resource name prefix</td>
+<td><strong>Data events</strong></td>
+<td><strong>Advanced + Custom</strong></td>
+</tr>
+<tr>
+<td>Unusual API call patterns</td>
+<td>Insights events</td>
+<td>Enable separately</td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>Management events ≠ invocations</strong> — <code>CreateFunction</code> is management, <code>Invoke</code> is data event</li><li><strong>Basic selectors can't filter by prefix</strong> — only all-or-one-ARN</li><li><strong>"Log all events" template</strong> — works but logs everything (expensive, not "most flexible")</li><li><strong>Data events cost extra</strong> — not enabled by default</li></ul>
+</div></div>
         </div>
     </div>
     
