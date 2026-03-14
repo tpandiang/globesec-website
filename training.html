@@ -2996,6 +2996,91 @@ Step 4: Admin Assumes Roles     ← Roles must exist first (Step 3)</code></pre>
 <h3>Exam Traps</h3>
 <ul><li><strong>Order matters</strong> — you can't designate an admin before enabling Security Hub in that account</li><li><strong>Standalone = manual IAM roles</strong> — Organizations would handle this automatically with service-linked roles</li><li><strong>Step 3 before Step 4</strong> — you can't assume roles that don't exist yet</li><li><strong>GuardDuty findings auto-flow to Security Hub</strong> once both are enabled — no extra integration needed within the same account</li></ul>
 </div></div>
+<div class="section" id="d3-s13">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Security Groups vs NACLs — Stateful vs Stateless</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: EC2 web server on HTTPS (TCP 443), public access. Need <strong>least permissive</strong> security group + network ACL configuration.</p>
+<p><strong>Correct Answer</strong>: D — SG: inbound 443, no outbound rules. NACL: inbound 443, outbound 1024-65535.</p>
+<h3>Concept: Stateful vs Stateless Filtering</h3>
+<pre><code>          STATEFUL (Security Group)        STATELESS (Network ACL)
+Request:  Inbound rule checked  ✓          Inbound rule checked   ✓
+Response: Auto-allowed (tracked) ✓         Outbound rule checked  ✓
+                                           (ephemeral ports needed!)</code></pre>
+<div class="table-wrap"><table>
+<tr>
+<th>Feature</th>
+<th>Security Group</th>
+<th>Network ACL</th>
+</tr>
+<tr>
+<td>Type</td>
+<td><strong>Stateful</strong></td>
+<td><strong>Stateless</strong></td>
+</tr>
+<tr>
+<td>Return traffic</td>
+<td>Automatic</td>
+<td>Must explicitly allow</td>
+</tr>
+<tr>
+<td>Outbound for responses</td>
+<td>Not needed</td>
+<td>Required (ephemeral 1024-65535)</td>
+</tr>
+<tr>
+<td>Default</td>
+<td>Deny in, allow out</td>
+<td>Allow all</td>
+</tr>
+<tr>
+<td>Operates at</td>
+<td>ENI (instance) level</td>
+<td>Subnet level</td>
+</tr>
+</table></div>
+<h3>HTTPS Response Traffic Flow</h3>
+<pre><code>Client                              EC2 Server
+port 52847 ◄──── response ──────── port 443
+(ephemeral)   outbound traffic      (listening)
+              dest port 1024-65535</code></pre>
+<p>NACL must allow outbound to ephemeral ports (1024-65535) for responses.</p>
+<h3>Least Permissive Configuration</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Layer</th>
+<th>Direction</th>
+<th>Rule</th>
+<th>Why</th>
+</tr>
+<tr>
+<td><strong>SG</strong></td>
+<td>Inbound</td>
+<td>TCP 443 from 0.0.0.0/0</td>
+<td>Accept HTTPS requests</td>
+</tr>
+<tr>
+<td><strong>SG</strong></td>
+<td>Outbound</td>
+<td><strong>None</strong></td>
+<td>Stateful = return traffic auto-allowed</td>
+</tr>
+<tr>
+<td><strong>NACL</strong></td>
+<td>Inbound</td>
+<td>TCP 443 from 0.0.0.0/0</td>
+<td>Accept HTTPS requests</td>
+</tr>
+<tr>
+<td><strong>NACL</strong></td>
+<td>Outbound</td>
+<td>TCP 1024-65535 to 0.0.0.0/0</td>
+<td><strong>Must allow return traffic (stateless)</strong></td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>SG with no outbound rules = most restrictive for SG</strong> — stateful handles responses automatically</li><li><strong>NACL outbound port 443 ≠ response traffic</strong> — responses go to client's ephemeral port, not 443</li><li><strong>"Least permissive"</strong> — eliminate any answer with unnecessary outbound rules on the SG</li><li><strong>Ephemeral port range</strong> — Linux uses 32768-60999, but 1024-65535 covers all OS ranges</li></ul>
+</div></div>
         </div>
     </div>
     
