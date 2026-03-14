@@ -3164,6 +3164,72 @@ port 52847 ◄──── response ──────── port 443
 <h3>Exam Traps</h3>
 <ul><li><strong>"Not even root user"</strong> = always <strong>compliance mode</strong>, never governance</li><li><strong>Object Lock must be enabled at bucket creation</strong> — can't add to existing bucket</li><li><strong>Governance mode ≠ compliance</strong> — governance has a bypass permission</li><li><strong>Legal hold vs retention period</strong> — legal hold has no expiry date, retention does</li><li><strong>SCPs are mutable</strong> — management account admins can change or remove them</li></ul>
 </div></div>
+<div class="section" id="d3-s15">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Network Logging — VPC Flow Logs vs Resolver Logs vs TGW Flow Logs</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Match monitoring use cases to the correct log source: lateral movement detection, DNS covert channel detection, cross-network traffic auditing.</p>
+<p><strong>Correct Matching</strong>:</p>
+<ul><li>Lateral movement between EC2 instances → <strong>VPC Flow Logs</strong></li><li>DNS covert channels / malicious comms → <strong>Route 53 Resolver Logs</strong></li><li>Traffic between isolated networks via hub → <strong>Transit Gateway Flow Logs</strong></li></ul>
+<h3>Concept: Network Logging Layers</h3>
+<pre><code>┌─────────┐    ┌─────────┐    ┌─────────┐
+│  VPC A  │────│ Transit │────│  VPC B  │
+│ EC2↔EC2 │    │ Gateway │    │ EC2↔EC2 │
+└────┬────┘    └────┬────┘    └────┬────┘
+     │              │              │
+VPC Flow       TGW Flow       VPC Flow
+Logs           Logs           Logs
+
+Route 53 Resolver Logs ← DNS queries from all VPCs</code></pre>
+<h3>Log Source Comparison</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Log Source</th>
+<th>Captures</th>
+<th>Granularity</th>
+<th>Detects</th>
+</tr>
+<tr>
+<td><strong>VPC Flow Logs</strong></td>
+<td>IP traffic at ENI/subnet/VPC</td>
+<td>Instance-to-instance</td>
+<td>Lateral movement, port scanning</td>
+</tr>
+<tr>
+<td><strong>Route 53 Resolver Logs</strong></td>
+<td>DNS queries & responses</td>
+<td>Per query</td>
+<td>DNS tunneling, C2 callbacks, exfil via DNS</td>
+</tr>
+<tr>
+<td><strong>Transit Gateway Flow Logs</strong></td>
+<td>Traffic through TGW</td>
+<td>Cross-VPC/VPN/DX</td>
+<td>Unauthorized inter-network traffic</td>
+</tr>
+</table></div>
+<h3>Exam Keyword Signals</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Keywords in Question</th>
+<th>Answer</th>
+</tr>
+<tr>
+<td>"Lateral movement," "same segment," "between instances"</td>
+<td><strong>VPC Flow Logs</strong></td>
+</tr>
+<tr>
+<td>"Query patterns," "covert channel," "DNS," "malicious domains"</td>
+<td><strong>Route 53 Resolver Logs</strong></td>
+</tr>
+<tr>
+<td>"Central hub," "isolated networks," "connected environments"</td>
+<td><strong>Transit Gateway Flow Logs</strong></td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>VPC Flow Logs ≠ Transit Gateway Flow Logs</strong> — VPC captures within-VPC traffic; TGW captures between-VPC traffic</li><li><strong>"Covert channel" = DNS</strong> — DNS tunneling is the most common covert channel technique on the exam</li><li><strong>"Central routing hub" = Transit Gateway</strong> — the exam won't say "Transit Gateway" directly, look for the hub-and-spoke pattern</li></ul>
+</div></div>
         </div>
     </div>
     
