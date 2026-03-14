@@ -3230,6 +3230,57 @@ Route 53 Resolver Logs ← DNS queries from all VPCs</code></pre>
 <h3>Exam Traps</h3>
 <ul><li><strong>VPC Flow Logs ≠ Transit Gateway Flow Logs</strong> — VPC captures within-VPC traffic; TGW captures between-VPC traffic</li><li><strong>"Covert channel" = DNS</strong> — DNS tunneling is the most common covert channel technique on the exam</li><li><strong>"Central routing hub" = Transit Gateway</strong> — the exam won't say "Transit Gateway" directly, look for the hub-and-spoke pattern</li></ul>
 </div></div>
+<div class="section" id="d3-s16">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> KMS Key Rotation — Automatic vs Manual (Imported Keys)</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Customer managed keys, some with imported key material. Must rotate annually. Which two methods?</p>
+<p><strong>Correct Answers</strong>: A (automatic rotation for KMS-generated keys) + D (manual: new key + import material + alias swap)</p>
+<h3>Concept: Two Rotation Paths</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Key Type</th>
+<th>Rotation Method</th>
+<th>How</th>
+</tr>
+<tr>
+<td><strong>KMS-generated</strong> material</td>
+<td><strong>Automatic</strong></td>
+<td>Enable auto-rotation (365-day cycle)</td>
+</tr>
+<tr>
+<td><strong>Imported</strong> key material</td>
+<td><strong>Manual</strong></td>
+<td>Create new key → import material → update alias</td>
+</tr>
+</table></div>
+<h3>Manual Rotation with Alias Swap</h3>
+<pre><code>Before:  alias/app-key ──► Key-OLD (imported material A)
+After:   alias/app-key ──► Key-NEW (imported material B)
+         Key-OLD still active for decrypting old data</code></pre>
+<p>Applications reference the <strong>alias</strong> — no code changes needed after rotation.</p>
+<h3>Why Wrong Answers Fail</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Option</th>
+<th>Problem</th>
+</tr>
+<tr>
+<td><strong>B</strong> — Import new material to existing key</td>
+<td>Cannot replace material on an existing key</td>
+</tr>
+<tr>
+<td><strong>C</strong> — CLI/Console rotate command</td>
+<td>No direct "rotate" command exists</td>
+</tr>
+<tr>
+<td><strong>E</strong> — Delete key → new default</td>
+<td>Deleting a key doesn't create anything. Loses access to encrypted data</td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>Imported keys cannot use automatic rotation</strong> — must manually create new key + alias swap</li><li><strong>Cannot replace key material on existing key</strong> — must create a brand new key</li><li><strong>Old key must remain active</strong> — needed to decrypt data encrypted with old material</li><li><strong>Alias is the abstraction layer</strong> — makes manual rotation transparent to applications</li><li><strong>Automatic rotation keeps old material</strong> — AWS KMS retains all previous versions for decryption</li></ul>
+</div></div>
         </div>
     </div>
     
