@@ -3490,6 +3490,67 @@ Security Hub ──► EventBridge ──► SSM Automation Runbooks
 <h3>Exam Traps</h3>
 <ul><li><strong>NACLs/SGs cannot filter by domain name</strong> — only IPs and ports</li><li><strong>Inbound ≠ Outbound</strong> — inbound lets external resolve YOUR DNS; outbound resolves EXTERNAL DNS</li><li><strong>"Domain lookup" / "DNS" in the question</strong> = DNS Firewall, not network-layer controls</li><li><strong>NGINX works but fails "least overhead"</strong> — managed service always wins for overhead questions</li></ul>
 </div></div>
+<div class="section" id="d3-s20">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> CloudFront OAC — Origin Access Control with S3 Bucket Policies</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: CloudFront with two S3 origins. Bucket 1 needs CloudFront + other AWS resources access. Bucket 2 needs CloudFront-only access. Restrict access properly.</p>
+<p><strong>Correct Answer</strong>: D — Single OAC for CloudFront distribution. Bucket 1 policy allows OAC + AWS resources. Bucket 2 policy allows OAC only.</p>
+<h3>Concept: Origin Access Control (OAC)</h3>
+<p>OAC is a CloudFront identity that authenticates requests to S3 origins, replacing the legacy OAI.</p>
+<pre><code>CloudFront (single OAC)
+    │           │
+    ▼           ▼
+ BUCKET 1    BUCKET 2
+ Policy:     Policy:
+ • OAC ✓     • OAC ✓ (only)
+ • Other AWS
+   resources ✓</code></pre>
+<h3>OAC Key Facts</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Feature</th>
+<th>Detail</th>
+</tr>
+<tr>
+<td>Associated with</td>
+<td><strong>CloudFront distribution</strong> (not buckets or resources)</td>
+</tr>
+<tr>
+<td>Replaces</td>
+<td>OAI (legacy, deprecated)</td>
+</tr>
+<tr>
+<td>One per distribution</td>
+<td>Standard — same OAC for all S3 origins</td>
+</tr>
+<tr>
+<td>Access granted via</td>
+<td><strong>S3 bucket policy</strong> referencing the OAC</td>
+</tr>
+</table></div>
+<h3>Why Wrong Answers Fail</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Option</th>
+<th>Fatal Flaw</th>
+</tr>
+<tr>
+<td><strong>A</strong> — No OAC, bucket policies only</td>
+<td>No secure way to identify CloudFront requests</td>
+</tr>
+<tr>
+<td><strong>B</strong> — OAC on Bucket 2 only</td>
+<td>OAC is associated with the distribution, not per-bucket</td>
+</tr>
+<tr>
+<td><strong>C</strong> — Two OACs (one for AWS resources)</td>
+<td>OAC is CloudFront-only — can't associate with other AWS resources</td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>OAC belongs to CloudFront, not to buckets</strong> — one OAC, multiple origins</li><li><strong>Bucket policy handles both OAC + other principals</strong> — they coexist in the same policy</li><li><strong>Without OAC, no secure CloudFront-to-S3</strong> — bucket policies alone can't identify CloudFront</li><li><strong>OAC ≠ OAI</strong> — OAC supports SSE-KMS, all S3 regions, and is the current best practice</li></ul>
+</div></div>
         </div>
     </div>
     
