@@ -2580,6 +2580,141 @@ ORDER BY eventtime DESC;</code></pre>
 <h3>Exam Traps</h3>
 <ul><li><strong>Management events ≠ invocations</strong> — <code>CreateFunction</code> is management, <code>Invoke</code> is data event</li><li><strong>Basic selectors can't filter by prefix</strong> — only all-or-one-ARN</li><li><strong>"Log all events" template</strong> — works but logs everything (expensive, not "most flexible")</li><li><strong>Data events cost extra</strong> — not enabled by default</li></ul>
 </div></div>
+<div class="section" id="d3-s9">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Root User Console Login Monitoring</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Security team needs notifications of failed root user console login attempts with source IP and login data. Must minimize noise from other login attempts. CloudTrail, Config, and GuardDuty are enabled.</p>
+<p><strong>Correct Answer</strong>: B — CloudTrail → CloudWatch Logs metric filter → CloudWatch alarm → SNS</p>
+<h3>Concept: CloudTrail ConsoleLogin Events + CloudWatch Metric Filters</h3>
+<p>CloudTrail captures all AWS Management Console sign-in events as <code>ConsoleLogin</code> events. By forwarding CloudTrail logs to CloudWatch Logs, you can create <strong>metric filters</strong> that match precise patterns — no code required.</p>
+<pre><code>CloudTrail ConsoleLogin Event Flow:
+┌──────────┐    ┌────────────┐    ┌──────────────┐    ┌───────┐    ┌─────┐
+│CloudTrail│───▶│CloudWatch  │───▶│Metric Filter │───▶│Alarm  │───▶│ SNS │
+│  Logs    │    │Logs Group  │    │(root+failure)│    │       │    │     │
+└──────────┘    └────────────┘    └──────────────┘    └───────┘    └─────┘</code></pre>
+<h3>Metric Filter Pattern</h3>
+<pre><code>{
+  "filterPattern": "{ $.eventName = \"ConsoleLogin\" &amp;&amp; $.userIdentity.type = \"Root\" &amp;&amp; $.responseElements.ConsoleLogin = \"Failure\" }"
+}</code></pre>
+<p>This pattern matches <strong>only</strong> root user failed logins — no noise from IAM users or successful logins.</p>
+<h3>ConsoleLogin Event Structure</h3>
+<pre><code>{
+  "eventName": "ConsoleLogin",
+  "eventSource": "signin.amazonaws.com",
+  "userIdentity": {
+    "type": "Root",                    // ← Filter: Root only
+    "arn": "arn:aws:iam::123456789012:root"
+  },
+  "sourceIPAddress": "203.0.113.50",   // ← Security team needs this
+  "responseElements": {
+    "ConsoleLogin": "Failure"          // ← Filter: failures only
+  },
+  "additionalEventData": {
+    "MFAUsed": "No",
+    "LoginTo": "https://console.aws.amazon.com/..."
+  }
+}</code></pre>
+<h3>Why Wrong Answers Fail</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Option</th>
+<th>Why It's Wrong</th>
+</tr>
+<tr>
+<td><strong>A</strong> - AWS Config custom rule</td>
+<td>Config evaluates <strong>resource configurations</strong>, not login events. Custom rules need Lambda = more overhead</td>
+</tr>
+<tr>
+<td><strong>C</strong> - EventBridge for all failed logins</td>
+<td>Monitors <strong>all</strong> failed logins, not just root. Doesn't minimize noise</td>
+</tr>
+<tr>
+<td><strong>D</strong> - GuardDuty + Lambda</td>
+<td>GuardDuty detects <strong>anomalies</strong>, not every failed login. Lambda adds operational overhead vs declarative metric filter</td>
+</tr>
+</table></div>
+<h3>Login Monitoring Decision Table</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Monitoring Goal</th>
+<th>Best Service</th>
+<th>Why</th>
+</tr>
+<tr>
+<td>Root failed logins (specific)</td>
+<td><strong>CloudTrail + CW Metric Filter</strong></td>
+<td>Precise pattern match, no code</td>
+</tr>
+<tr>
+<td>All console login anomalies</td>
+<td><strong>GuardDuty</strong></td>
+<td>Behavioral ML detection</td>
+</tr>
+<tr>
+<td>Specific API call patterns</td>
+<td><strong>EventBridge + CloudTrail</strong></td>
+<td>Event-driven, flexible rules</td>
+</tr>
+<tr>
+<td>Resource config changes</td>
+<td><strong>AWS Config</strong></td>
+<td>Configuration state tracking</td>
+</tr>
+<tr>
+<td>Brute force attacks</td>
+<td><strong>GuardDuty</strong></td>
+<td><code>UnauthorizedAccess:IAMUser/ConsoleLoginSuccess.B</code></td>
+</tr>
+</table></div>
+<h3>CloudWatch Metric Filter vs EventBridge vs GuardDuty</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Feature</th>
+<th>CW Metric Filter</th>
+<th>EventBridge</th>
+<th>GuardDuty</th>
+</tr>
+<tr>
+<td>Code required</td>
+<td><strong>No</strong> (declarative)</td>
+<td>No (rules)</td>
+<td>No (managed)</td>
+</tr>
+<tr>
+<td>Pattern precision</td>
+<td><strong>Exact field match</strong></td>
+<td>Event pattern</td>
+<td>ML-based</td>
+</tr>
+<tr>
+<td>Root login filtering</td>
+<td><strong>Yes</strong> (filter pattern)</td>
+<td>Yes (but must configure)</td>
+<td>Limited findings</td>
+</tr>
+<tr>
+<td>Operational overhead</td>
+<td><strong>Lowest</strong></td>
+<td>Low</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>Real-time</td>
+<td>Near real-time</td>
+<td>Near real-time</td>
+<td>Minutes delay</td>
+</tr>
+<tr>
+<td>Custom noise control</td>
+<td><strong>Full control</strong></td>
+<td>Full control</td>
+<td>AWS-managed</td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>Config ≠ login monitoring</strong> — Config tracks resource state, not authentication events</li><li><strong>EventBridge "all failed logins"</strong> — watch for "all" vs "root only" in the question. If answer says "all", it doesn't minimize noise</li><li><strong>GuardDuty ≠ every failed login</strong> — GuardDuty flags anomalous patterns, not individual login failures</li><li><strong>"Least operational overhead"</strong> — metric filter (declarative) beats Lambda (code to maintain) every time</li><li><strong>CloudTrail must forward to CloudWatch Logs</strong> — metric filters work on CloudWatch Logs, not directly on CloudTrail S3 files</li></ul>
+</div></div>
         </div>
     </div>
     
