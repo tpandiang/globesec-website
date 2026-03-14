@@ -3420,6 +3420,76 @@ Security Hub ──► EventBridge ──► SSM Automation Runbooks
 <h3>Exam Traps</h3>
 <ul><li><strong>GuardDuty ≠ centralized findings</strong> — it's one source, Security Hub aggregates many sources</li><li><strong>SSM Automation runbooks ≠ Run Command</strong> — Automation has pre-built remediation; Run Command is ad-hoc</li><li><strong>Lambda + Step Functions sounds powerful</strong> — but "least overhead" means managed/declarative beats custom code</li><li><strong>Security Hub custom actions</strong> — native feature for triggering specific remediation, no extra service needed</li></ul>
 </div></div>
+<div class="section" id="d3-s19">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Route 53 Resolver DNS Firewall — Domain-Level DNS Filtering</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Lambda in private subnet uses Route 53 Resolver outbound endpoint. Must limit DNS lookups to only the specific partner domain. Least operational overhead.</p>
+<p><strong>Correct Answer</strong>: D — Route 53 Resolver DNS Firewall to filter outbound DNS traffic</p>
+<h3>Concept: DNS Firewall</h3>
+<p>Route 53 Resolver DNS Firewall provides <strong>domain-level filtering</strong> of DNS queries originating from your VPC.</p>
+<pre><code>Lambda → DNS Query → DNS Firewall → Outbound Endpoint → External DNS
+                     ALLOW: partner.com
+                     BLOCK: * (everything else)</code></pre>
+<h3>Route 53 Resolver Components</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Component</th>
+<th>Direction</th>
+<th>Purpose</th>
+</tr>
+<tr>
+<td><strong>Outbound endpoint</strong></td>
+<td>VPC → external DNS</td>
+<td>Resolve external domains</td>
+</tr>
+<tr>
+<td><strong>Inbound endpoint</strong></td>
+<td>External → VPC DNS</td>
+<td>Let on-prem resolve your private zones</td>
+</tr>
+<tr>
+<td><strong>DNS Firewall</strong></td>
+<td>Filter queries</td>
+<td>Block/allow specific domains</td>
+</tr>
+</table></div>
+<h3>DNS Firewall vs Other Controls</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Control</th>
+<th>Layer</th>
+<th>Can Filter by Domain?</th>
+<th>Overhead</th>
+</tr>
+<tr>
+<td><strong>DNS Firewall</strong></td>
+<td>DNS (Layer 7)</td>
+<td><strong>Yes</strong></td>
+<td><strong>Lowest (managed)</strong></td>
+</tr>
+<tr>
+<td>Network ACL</td>
+<td>Network (Layer 3-4)</td>
+<td>No (IP/port only)</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>Security Group</td>
+<td>Network (Layer 3-4)</td>
+<td>No (IP/port only)</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>NGINX proxy</td>
+<td>Application (Layer 7)</td>
+<td>Yes</td>
+<td><strong>High (EC2 to manage)</strong></td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>NACLs/SGs cannot filter by domain name</strong> — only IPs and ports</li><li><strong>Inbound ≠ Outbound</strong> — inbound lets external resolve YOUR DNS; outbound resolves EXTERNAL DNS</li><li><strong>"Domain lookup" / "DNS" in the question</strong> = DNS Firewall, not network-layer controls</li><li><strong>NGINX works but fails "least overhead"</strong> — managed service always wins for overhead questions</li></ul>
+</div></div>
         </div>
     </div>
     
