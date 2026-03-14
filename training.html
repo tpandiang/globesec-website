@@ -1586,7 +1586,7 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 <p>This section captures key lessons from practice quizzes and exam questions. Each entry includes the scenario, correct answer, WHY it's correct, and a cheat sheet of patterns to remember.</p>
 </div></div>
 <div class="section" id="d3-s2">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q1: GuardDuty Malware Protection & Incident Response</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q2: GuardDuty Malware Protection & Incident Response</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Implement automated malware scanning and EC2 instance isolation using GuardDuty Malware Protection. When malware is detected, store evidence in EBS volumes.</p>
@@ -1961,7 +1961,7 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 <ul><li><strong>New findings</strong>: Near real-time (immediate)</li><li><strong>Subsequent occurrences</strong>: Default <strong>6 hours</strong> (configurable: 15 min, 1 hr, 6 hr)</li><li><strong>Suppressed findings</strong>: NOT sent to EventBridge</li></ul>
 </div></div>
 <div class="section" id="d3-s5">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q2: IAM Identity Center — SSO with Active Directory</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q3: IAM Identity Center — SSO with Active Directory</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Implement SSO using SAML with on-premises Active Directory. Developers need access to multiple AWS accounts with role-based permissions. Temporary credentials required. No custom development.</p>
@@ -2097,7 +2097,7 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 └───────────────────────────┴───────────────────────────┘</code></pre>
 </div></div>
 <div class="section" id="d3-s6">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q3: CloudFront Security Headers — Response Header Policies</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q4: CloudFront Security Headers — Response Header Policies</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: S3-hosted website with CloudFront distribution. Need to add security headers to all HTTPS responses with least operational overhead.</p>
@@ -2222,7 +2222,7 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 <p>S3 object tags are metadata for categorization, billing, and lifecycle policies. They are <strong>NOT exposed through HTTP/HTTPS access</strong>. If an answer suggests using S3 tags to set response headers, it is always wrong.</p>
 </div></div>
 <div class="section" id="d3-s7">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q4: Systems Manager Session Manager — Secure EC2 Access</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q5: Systems Manager Session Manager — Secure EC2 Access</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Secure command line access to EC2 Linux instances (Amazon Linux 2023). Must have detailed audit logs, no inbound ports, and enforce least privilege.</p>
@@ -2405,7 +2405,7 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 <ul><li><strong>"SSH as backup method"</strong> — If question says "no inbound ports," any SSH option is wrong</li><li><strong>CloudTrail ≠ session logs</strong> — CloudTrail logs the API call, NOT keystrokes</li><li><strong>SCPs cannot attach roles</strong> — SCPs restrict permissions, they don't provision resources</li><li><strong>VPC endpoints</strong> — Only needed for private subnets. Not required for public subnets with internet access</li></ul>
 </div></div>
 <div class="section" id="d3-s8">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q5: CloudTrail Data Events — Advanced Event Selectors</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q6: CloudTrail Data Events — Advanced Event Selectors</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Lambda functions with shared prefix <code>UpdProdCount</code> are changing DynamoDB data unexpectedly. Need a report of how often and when these functions are invoked.</p>
@@ -2581,7 +2581,7 @@ ORDER BY eventtime DESC;</code></pre>
 <ul><li><strong>Management events ≠ invocations</strong> — <code>CreateFunction</code> is management, <code>Invoke</code> is data event</li><li><strong>Basic selectors can't filter by prefix</strong> — only all-or-one-ARN</li><li><strong>"Log all events" template</strong> — works but logs everything (expensive, not "most flexible")</li><li><strong>Data events cost extra</strong> — not enabled by default</li></ul>
 </div></div>
 <div class="section" id="d3-s9">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q6: Root User Console Login Monitoring</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q7: Root User Console Login Monitoring</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Security team needs notifications of failed root user console login attempts with source IP and login data. Must minimize noise from other login attempts. CloudTrail, Config, and GuardDuty are enabled.</p>
@@ -2716,7 +2716,7 @@ ORDER BY eventtime DESC;</code></pre>
 <ul><li><strong>Config ≠ login monitoring</strong> — Config tracks resource state, not authentication events</li><li><strong>EventBridge "all failed logins"</strong> — watch for "all" vs "root only" in the question. If answer says "all", it doesn't minimize noise</li><li><strong>GuardDuty ≠ every failed login</strong> — GuardDuty flags anomalous patterns, not individual login failures</li><li><strong>"Least operational overhead"</strong> — metric filter (declarative) beats Lambda (code to maintain) every time</li><li><strong>CloudTrail must forward to CloudWatch Logs</strong> — metric filters work on CloudWatch Logs, not directly on CloudTrail S3 files</li></ul>
 </div></div>
 <div class="section" id="d3-s10">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q7: AWS Cost Anomaly Detection — Monitor Types & Alerts</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q8: AWS Cost Anomaly Detection — Monitor Types & Alerts</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: 50 AWS accounts in Organizations. EC2 data exfiltration caused increased EC2 expenditure. Security team needs to identify similar expenditure fluctuations per service so admins can take <strong>immediate action</strong>.</p>
@@ -2825,7 +2825,7 @@ ORDER BY eventtime DESC;</code></pre>
 <ul><li><strong>"Linked Account" sounds right for Organizations</strong> — but it monitors total spend, not individual services. An EC2 spike could be masked by lower spend elsewhere</li><li><strong>"Daily summary" sounds efficient</strong> — but fails any requirement with "immediate" or "quick" action language</li><li><strong>Two-axis decision</strong>: always check BOTH the monitor type AND the alert type separately</li><li><strong>Per-service detection needs AWS Services monitor</strong> — this is the only type that evaluates each service independently</li><li><strong>Cost Anomaly Detection ≠ AWS Budgets</strong> — Budgets uses fixed thresholds; Cost Anomaly Detection uses ML baselines</li></ul>
 </div></div>
 <div class="section" id="d3-s11">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q8: CloudFormation StackSets — Cross-Account Role Deployment</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q9: CloudFormation StackSets — Cross-Account Role Deployment</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Hundreds of accounts in AWS Organizations. Security engineer needs an IAM role created in <strong>every</strong> account (existing + future) for cross-account access to review resources.</p>
@@ -2935,7 +2935,7 @@ ORDER BY eventtime DESC;</code></pre>
 <ul><li><strong>"Hundreds of accounts"</strong> = must be automated, not manual per-account solutions</li><li><strong>CloudTrail + Lambda sounds automated</strong> — but only catches <code>CreateAccount</code> events (future accounts only)</li><li><strong>Automatic deployment ≠ default</strong> — you must explicitly enable it when creating the stack set</li><li><strong>StackSets can deploy IAM roles directly</strong> — no need for Lambda intermediary</li><li><strong>"Least operational effort"</strong> = always prefer declarative/managed over code-based</li><li><strong>Service-managed vs self-managed StackSets</strong>: service-managed (Organizations integration) is lower effort</li></ul>
 </div></div>
 <div class="section" id="d3-s12">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q9: Security Hub — Centralizing GuardDuty Findings (Standalone Accounts)</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q10: Security Hub — Centralizing GuardDuty Findings (Standalone Accounts)</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Multiple standalone AWS accounts (no Organizations). Centralize GuardDuty findings into Security Hub using a designated security account. Order the setup steps.</p>
@@ -2997,7 +2997,7 @@ Step 4: Admin Assumes Roles     ← Roles must exist first (Step 3)</code></pre>
 <ul><li><strong>Order matters</strong> — you can't designate an admin before enabling Security Hub in that account</li><li><strong>Standalone = manual IAM roles</strong> — Organizations would handle this automatically with service-linked roles</li><li><strong>Step 3 before Step 4</strong> — you can't assume roles that don't exist yet</li><li><strong>GuardDuty findings auto-flow to Security Hub</strong> once both are enabled — no extra integration needed within the same account</li></ul>
 </div></div>
 <div class="section" id="d3-s13">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q10: Security Groups vs NACLs — Stateful vs Stateless</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q11: Security Groups vs NACLs — Stateful vs Stateless</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: EC2 web server on HTTPS (TCP 443), public access. Need <strong>least permissive</strong> security group + network ACL configuration.</p>
@@ -3082,7 +3082,7 @@ port 52847 ◄──── response ──────── port 443
 <ul><li><strong>SG with no outbound rules = most restrictive for SG</strong> — stateful handles responses automatically</li><li><strong>NACL outbound port 443 ≠ response traffic</strong> — responses go to client's ephemeral port, not 443</li><li><strong>"Least permissive"</strong> — eliminate any answer with unnecessary outbound rules on the SG</li><li><strong>Ephemeral port range</strong> — Linux uses 32768-60999, but 1024-65535 covers all OS ranges</li></ul>
 </div></div>
 <div class="section" id="d3-s14">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q11: S3 Object Lock — Compliance vs Governance Mode</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q12: S3 Object Lock — Compliance vs Governance Mode</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Retain S3 objects for 7 years. No principal — not even root — can delete before retention expires. Regulatory compliance requirement.</p>
@@ -3165,7 +3165,7 @@ port 52847 ◄──── response ──────── port 443
 <ul><li><strong>"Not even root user"</strong> = always <strong>compliance mode</strong>, never governance</li><li><strong>Object Lock must be enabled at bucket creation</strong> — can't add to existing bucket</li><li><strong>Governance mode ≠ compliance</strong> — governance has a bypass permission</li><li><strong>Legal hold vs retention period</strong> — legal hold has no expiry date, retention does</li><li><strong>SCPs are mutable</strong> — management account admins can change or remove them</li></ul>
 </div></div>
 <div class="section" id="d3-s15">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q12: Network Logging — VPC Flow Logs vs Resolver Logs vs TGW Flow Logs</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q13: Network Logging — VPC Flow Logs vs Resolver Logs vs TGW Flow Logs</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Match monitoring use cases to the correct log source: lateral movement detection, DNS covert channel detection, cross-network traffic auditing.</p>
@@ -3231,7 +3231,7 @@ Route 53 Resolver Logs ← DNS queries from all VPCs</code></pre>
 <ul><li><strong>VPC Flow Logs ≠ Transit Gateway Flow Logs</strong> — VPC captures within-VPC traffic; TGW captures between-VPC traffic</li><li><strong>"Covert channel" = DNS</strong> — DNS tunneling is the most common covert channel technique on the exam</li><li><strong>"Central routing hub" = Transit Gateway</strong> — the exam won't say "Transit Gateway" directly, look for the hub-and-spoke pattern</li></ul>
 </div></div>
 <div class="section" id="d3-s16">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q13: KMS Key Rotation — Automatic vs Manual (Imported Keys)</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q14: KMS Key Rotation — Automatic vs Manual (Imported Keys)</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Customer managed keys, some with imported key material. Must rotate annually. Which two methods?</p>
@@ -3282,7 +3282,7 @@ After:   alias/app-key ──► Key-NEW (imported material B)
 <ul><li><strong>Imported keys cannot use automatic rotation</strong> — must manually create new key + alias swap</li><li><strong>Cannot replace key material on existing key</strong> — must create a brand new key</li><li><strong>Old key must remain active</strong> — needed to decrypt data encrypted with old material</li><li><strong>Alias is the abstraction layer</strong> — makes manual rotation transparent to applications</li><li><strong>Automatic rotation keeps old material</strong> — AWS KMS retains all previous versions for decryption</li></ul>
 </div></div>
 <div class="section" id="d3-s17">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q14: KMS Grants — Scalable Cross-Account Key Access</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q15: KMS Grants — Scalable Cross-Account Key Access</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Multi-tenant SaaS, SSE-KMS encrypted S3. Each customer in its own AWS account with a designated role. Need scalable access without modifying the key policy repeatedly.</p>
@@ -3354,7 +3354,7 @@ aws kms revoke-grant --key-id ... --grant-id ...</code></pre>
 <ul><li><strong>"Without updating key policy"</strong> = grants (not key policy modifications)</li><li><strong>"Scalable"</strong> = key policy has 32 KB limit — won't scale to hundreds of customers</li><li><strong>RAM ≠ KMS sharing</strong> — RAM supports VPC subnets, TGW, Route 53 — NOT KMS keys</li><li><strong>Grants are revocable</strong> — instant access removal on customer offboarding</li></ul>
 </div></div>
 <div class="section" id="d3-s18">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q15: Security Hub — Centralized Findings + Automated Remediation</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q16: Security Hub — Centralized Findings + Automated Remediation</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Automated security incident response across multiple accounts in Organizations. Need centralized findings AND automated remediation with least operational overhead.</p>
@@ -3421,7 +3421,7 @@ Security Hub ──► EventBridge ──► SSM Automation Runbooks
 <ul><li><strong>GuardDuty ≠ centralized findings</strong> — it's one source, Security Hub aggregates many sources</li><li><strong>SSM Automation runbooks ≠ Run Command</strong> — Automation has pre-built remediation; Run Command is ad-hoc</li><li><strong>Lambda + Step Functions sounds powerful</strong> — but "least overhead" means managed/declarative beats custom code</li><li><strong>Security Hub custom actions</strong> — native feature for triggering specific remediation, no extra service needed</li></ul>
 </div></div>
 <div class="section" id="d3-s19">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q16: Route 53 Resolver DNS Firewall — Domain-Level DNS Filtering</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q17: Route 53 Resolver DNS Firewall — Domain-Level DNS Filtering</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Lambda in private subnet uses Route 53 Resolver outbound endpoint. Must limit DNS lookups to only the specific partner domain. Least operational overhead.</p>
@@ -3491,7 +3491,7 @@ Security Hub ──► EventBridge ──► SSM Automation Runbooks
 <ul><li><strong>NACLs/SGs cannot filter by domain name</strong> — only IPs and ports</li><li><strong>Inbound ≠ Outbound</strong> — inbound lets external resolve YOUR DNS; outbound resolves EXTERNAL DNS</li><li><strong>"Domain lookup" / "DNS" in the question</strong> = DNS Firewall, not network-layer controls</li><li><strong>NGINX works but fails "least overhead"</strong> — managed service always wins for overhead questions</li></ul>
 </div></div>
 <div class="section" id="d3-s20">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q17: CloudFront OAC — Origin Access Control with S3 Bucket Policies</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q18: CloudFront OAC — Origin Access Control with S3 Bucket Policies</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: CloudFront with two S3 origins. Bucket 1 needs CloudFront + other AWS resources access. Bucket 2 needs CloudFront-only access. Restrict access properly.</p>
@@ -3552,7 +3552,7 @@ Security Hub ──► EventBridge ──► SSM Automation Runbooks
 <ul><li><strong>OAC belongs to CloudFront, not to buckets</strong> — one OAC, multiple origins</li><li><strong>Bucket policy handles both OAC + other principals</strong> — they coexist in the same policy</li><li><strong>Without OAC, no secure CloudFront-to-S3</strong> — bucket policies alone can't identify CloudFront</li><li><strong>OAC ≠ OAI</strong> — OAC supports SSE-KMS, all S3 regions, and is the current best practice</li></ul>
 </div></div>
 <div class="section" id="d3-s21">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q18: Lambda Logging Failures — Log Group Config + IAM Access Analyzer</h2>
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q19: Lambda Logging Failures — Log Group Config + IAM Access Analyzer</h2>
 <div class="section-body">
 <h3>Question Summary</h3>
 <p><strong>Scenario</strong>: Lambda functions stopped logging to CloudWatch. Execution roles have <code>AWSLambdaBasicExecutionRole</code>. No recent role/policy changes. Find root cause and restore logging.</p>
