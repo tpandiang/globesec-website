@@ -3281,6 +3281,78 @@ After:   alias/app-key ──► Key-NEW (imported material B)
 <h3>Exam Traps</h3>
 <ul><li><strong>Imported keys cannot use automatic rotation</strong> — must manually create new key + alias swap</li><li><strong>Cannot replace key material on existing key</strong> — must create a brand new key</li><li><strong>Old key must remain active</strong> — needed to decrypt data encrypted with old material</li><li><strong>Alias is the abstraction layer</strong> — makes manual rotation transparent to applications</li><li><strong>Automatic rotation keeps old material</strong> — AWS KMS retains all previous versions for decryption</li></ul>
 </div></div>
+<div class="section" id="d3-s17">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> KMS Grants — Scalable Cross-Account Key Access</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Multi-tenant SaaS, SSE-KMS encrypted S3. Each customer in its own AWS account with a designated role. Need scalable access without modifying the key policy repeatedly.</p>
+<p><strong>Correct Answer</strong>: D — KMS grants with <code>GranteePrincipal</code> per customer role, allowing <code>kms:Decrypt</code></p>
+<h3>Concept: KMS Grants</h3>
+<p>Grants extend KMS key access <strong>without modifying the key policy</strong>. Each grant is an independent authorization "ticket" issued to a specific principal.</p>
+<pre><code>KMS Key Policy (STATIC — never changes)
+        │
+        ├── Grant → Customer A role → kms:Decrypt
+        ├── Grant → Customer B role → kms:Decrypt
+        └── Grant → Customer N role → kms:Decrypt
+            (add/revoke grants programmatically)</code></pre>
+<h3>KMS Access Control Methods</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Method</th>
+<th>Best For</th>
+<th>Scales?</th>
+<th>Modifies Key Policy?</th>
+</tr>
+<tr>
+<td><strong>Key Policy</strong></td>
+<td>Core admin, account-level</td>
+<td>No (32 KB limit)</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><strong>IAM Policy</strong></td>
+<td>Same-account principals</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td><strong>Grants</strong></td>
+<td><strong>Cross-account, per-principal</strong></td>
+<td><strong>Yes (no limit)</strong></td>
+<td><strong>No</strong></td>
+</tr>
+</table></div>
+<h3>Grant API</h3>
+<pre><code># Onboard customer
+aws kms create-grant \
+  --key-id arn:aws:kms:region:primary:key/key-id \
+  --grantee-principal arn:aws:iam::CustomerID:role/CustomerDataReaderRole \
+  --operations Decrypt
+
+# Offboard customer
+aws kms revoke-grant --key-id ... --grant-id ...</code></pre>
+<h3>Why Wrong Answers Fail</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Option</th>
+<th>Fatal Flaw</th>
+</tr>
+<tr>
+<td><strong>A</strong> — Modify key policy per customer</td>
+<td>Violates "no repeated updates." 32 KB policy size limit</td>
+</tr>
+<tr>
+<td><strong>B</strong> — Intermediate IAM role</td>
+<td>Trust policy still needs updating per customer</td>
+</tr>
+<tr>
+<td><strong>C</strong> — RAM share KMS key</td>
+<td><strong>RAM cannot share KMS keys</strong></td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>"Without updating key policy"</strong> = grants (not key policy modifications)</li><li><strong>"Scalable"</strong> = key policy has 32 KB limit — won't scale to hundreds of customers</li><li><strong>RAM ≠ KMS sharing</strong> — RAM supports VPC subnets, TGW, Route 53 — NOT KMS keys</li><li><strong>Grants are revocable</strong> — instant access removal on customer offboarding</li></ul>
+</div></div>
         </div>
     </div>
     
