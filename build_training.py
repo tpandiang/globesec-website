@@ -8,6 +8,7 @@ OUTPUT = r"C:\Users\txp190010\Downloads\globesec\training.html"
 FILES = [
     ("Study-Plan.md", "Study Plan", ""),
     ("Week1-Day1-2-IAM-Policy-Fundamentals.md", "Day 1-2: IAM Policy Fundamentals", "WEEK1"),
+    ("AWS-SkillBuilder-Learning.md", "Skill Builder - Learning", "QUIZ"),
     ("Domain1-Threat-Detection-Incident-Response.md", "Threat Detection & IR", "16%"),
     ("Domain2-Security-Logging-Monitoring.md", "Logging & Monitoring", "14%"),
     ("Domain3-Infrastructure-Security.md", "Infrastructure Security", "18%"),
@@ -222,6 +223,11 @@ for idx, (fname, short_name, weight) in enumerate(FILES):
         domain_id = "study-plan"
         toc_items.append(("SP", short_name, "", domain_id))
         domain_number_html = '<span class="domain-number plan-badge">PLAN</span>'
+    elif weight == "QUIZ":
+        quiz_id = "quiz-{}".format(fname.replace(".md", "").lower())
+        domain_id = quiz_id
+        toc_items.append(("QZ", short_name, weight, domain_id))
+        domain_number_html = '<span class="domain-number quiz-badge">QUIZ</span>'
     elif is_week:
         week_id = "week-{}".format(fname.replace(".md", "").lower())
         domain_id = week_id
@@ -261,13 +267,16 @@ for num, name, weight, did in toc_items:
     if num == "SP":
         extra_cls = " plan"
         num_label = "PLAN"
+    elif num == "QZ":
+        extra_cls = " quiz"
+        num_label = "QZ"
     elif num == "WK":
         extra_cls = " week"
         num_label = weight[:2]
     else:
         extra_cls = ""
         num_label = num
-    weight_display = weight if (weight and not weight.startswith("WEEK")) else ""
+    weight_display = weight if (weight and not weight.startswith("WEEK") and weight != "QUIZ") else ""
     weight_html = '<span class="toc-weight">{}</span>'.format(weight_display) if weight_display else ''
     toc_html += '''<a href="#{did}" class="toc-item{cls}" onclick="showDomain(event, '{did}')">
         <span class="toc-num{cls}">{num}</span>
@@ -382,6 +391,7 @@ body {
 .toc-item.active .toc-num { background: var(--aws); color: var(--bg); }
 .toc-num.plan { background: var(--accent); color: var(--bg); font-size: 0.5rem; width: 32px; border-radius: 4px; }
 .toc-num.week { background: #10b981; color: #fff; font-size: 0.6rem; width: 28px; border-radius: 4px; }
+.toc-num.quiz { background: #f59e0b; color: #000; font-size: 0.6rem; width: 28px; border-radius: 4px; }
 .toc-name { font-size: 0.85rem; font-weight: 500; flex: 1; }
 .toc-weight {
     font-size: 0.72rem; color: var(--text-muted); background: var(--bg);
@@ -417,6 +427,7 @@ body {
 }
 .plan-badge { background: var(--gradient); color: var(--bg); }
 .week-badge { background: #10b981; color: #fff; }
+.quiz-badge { background: #f59e0b; color: #000; }
 .domain-title { font-size: 1.05rem; font-weight: 600; color: var(--white); }
 .domain-toggle { font-size: 1.2rem; transition: transform 0.2s; color: var(--text-muted); }
 .domain.collapsed .domain-toggle { transform: rotate(-90deg); }

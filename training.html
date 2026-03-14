@@ -104,6 +104,7 @@ body {
 .toc-item.active .toc-num { background: var(--aws); color: var(--bg); }
 .toc-num.plan { background: var(--accent); color: var(--bg); font-size: 0.5rem; width: 32px; border-radius: 4px; }
 .toc-num.week { background: #10b981; color: #fff; font-size: 0.6rem; width: 28px; border-radius: 4px; }
+.toc-num.quiz { background: #f59e0b; color: #000; font-size: 0.6rem; width: 28px; border-radius: 4px; }
 .toc-name { font-size: 0.85rem; font-weight: 500; flex: 1; }
 .toc-weight {
     font-size: 0.72rem; color: var(--text-muted); background: var(--bg);
@@ -139,6 +140,7 @@ body {
 }
 .plan-badge { background: var(--gradient); color: var(--bg); }
 .week-badge { background: #10b981; color: #fff; }
+.quiz-badge { background: #f59e0b; color: #000; }
 .domain-title { font-size: 1.05rem; font-weight: 600; color: var(--white); }
 .domain-toggle { font-size: 1.2rem; transition: transform 0.2s; color: var(--text-muted); }
 .domain.collapsed .domain-toggle { transform: rotate(-90deg); }
@@ -256,33 +258,38 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
         
     </a>
 <div class="sidebar-title" style="margin-top:0.75rem;">Exam Domains</div>
-<a href="#domain-3" class="toc-item" onclick="showDomain(event, 'domain-3')">
-        <span class="toc-num">3</span>
-        <span class="toc-name">Threat Detection & IR</span>
-        <span class="toc-weight">16%</span>
+<a href="#quiz-aws-skillbuilder-learning" class="toc-item quiz" onclick="showDomain(event, 'quiz-aws-skillbuilder-learning')">
+        <span class="toc-num quiz">QZ</span>
+        <span class="toc-name">Skill Builder - Learning</span>
+        
     </a>
 <a href="#domain-4" class="toc-item" onclick="showDomain(event, 'domain-4')">
         <span class="toc-num">4</span>
-        <span class="toc-name">Logging & Monitoring</span>
-        <span class="toc-weight">14%</span>
+        <span class="toc-name">Threat Detection & IR</span>
+        <span class="toc-weight">16%</span>
     </a>
 <a href="#domain-5" class="toc-item" onclick="showDomain(event, 'domain-5')">
         <span class="toc-num">5</span>
-        <span class="toc-name">Infrastructure Security</span>
-        <span class="toc-weight">18%</span>
+        <span class="toc-name">Logging & Monitoring</span>
+        <span class="toc-weight">14%</span>
     </a>
 <a href="#domain-6" class="toc-item" onclick="showDomain(event, 'domain-6')">
         <span class="toc-num">6</span>
-        <span class="toc-name">Identity & Access Mgmt</span>
-        <span class="toc-weight">20%</span>
+        <span class="toc-name">Infrastructure Security</span>
+        <span class="toc-weight">18%</span>
     </a>
 <a href="#domain-7" class="toc-item" onclick="showDomain(event, 'domain-7')">
         <span class="toc-num">7</span>
-        <span class="toc-name">Data Protection</span>
-        <span class="toc-weight">18%</span>
+        <span class="toc-name">Identity & Access Mgmt</span>
+        <span class="toc-weight">20%</span>
     </a>
 <a href="#domain-8" class="toc-item" onclick="showDomain(event, 'domain-8')">
         <span class="toc-num">8</span>
+        <span class="toc-name">Data Protection</span>
+        <span class="toc-weight">18%</span>
+    </a>
+<a href="#domain-9" class="toc-item" onclick="showDomain(event, 'domain-9')">
+        <span class="toc-num">9</span>
         <span class="toc-name">Governance</span>
         <span class="toc-weight">14%</span>
     </a>
@@ -1565,16 +1572,352 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
         </div>
     </div>
     
-    <div class="domain collapsed" id="domain-3">
+    <div class="domain collapsed" id="quiz-aws-skillbuilder-learning">
         <div class="domain-header" onclick="toggleDomain(this)">
             <div class="domain-title-row">
-                <span class="domain-number">Domain 3</span>
-                <h1 class="domain-title">Domain 1: Threat Detection and Incident Response (14%)</h1>
+                <span class="domain-number quiz-badge">QUIZ</span>
+                <h1 class="domain-title">AWS Skill Builder - Learning</h1>
             </div>
             <span class="domain-toggle">&#9660;</span>
         </div>
         <div class="domain-body">
             <div class="section" id="d3-s1">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> How to Use This Section</h2>
+<div class="section-body">
+<p>This section captures key lessons from practice quizzes and exam questions. Each entry includes the scenario, correct answer, WHY it's correct, and a cheat sheet of patterns to remember.</p>
+</div></div>
+<div class="section" id="d3-s2">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> GuardDuty Malware Protection & Incident Response</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Implement automated malware scanning and EC2 instance isolation using GuardDuty Malware Protection. When malware is detected, store evidence in EBS volumes.</p>
+<p><strong>Correct Answers</strong>: B (Enable snapshot retention) + E (EventBridge → Lambda for isolation)</p>
+<h3>Concept: GuardDuty Malware Protection</h3>
+<p>GuardDuty Malware Protection provides <strong>agentless malware scanning</strong> for EC2 instances. It works by scanning EBS volumes attached to EC2 instances without requiring any software installation on the instances.</p>
+<h4>How It Works</h4>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│           GuardDuty Malware Protection Flow                  │
+│                                                              │
+│  1. GuardDuty detects suspicious behavior                    │
+│     (e.g., crypto mining, C&amp;C communication)                 │
+│              │                                               │
+│              ▼                                               │
+│  2. Automatically creates EBS snapshot of affected volume    │
+│              │                                               │
+│              ▼                                               │
+│  3. Creates encrypted replica volume from snapshot           │
+│     (in GuardDuty service account — NOT your account)        │
+│              │                                               │
+│              ▼                                               │
+│  4. Scans replica volume for malware                         │
+│     (files, executables, scripts, etc.)                      │
+│              │                                               │
+│              ▼                                               │
+│  5. Generates finding if malware detected                    │
+│     Finding type: Execution:EC2/MaliciousFile                │
+│              │                                               │
+│              ▼                                               │
+│  6. Deletes replica volume (cleanup)                         │
+│     Original instance is NOT modified                        │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h4>Key Features</h4>
+<div class="table-wrap"><table>
+<tr>
+<th>Feature</th>
+<th>Detail</th>
+</tr>
+<tr>
+<td><strong>Scanning trigger</strong></td>
+<td>Automatically triggered by GuardDuty findings (on-demand also available)</td>
+</tr>
+<tr>
+<td><strong>Agent required?</strong></td>
+<td>No — agentless, scans EBS snapshots</td>
+</tr>
+<tr>
+<td><strong>Scan scope</strong></td>
+<td>EBS volumes attached to EC2 instances</td>
+</tr>
+<tr>
+<td><strong>Encryption support</strong></td>
+<td>Scans both encrypted and unencrypted volumes</td>
+</tr>
+<tr>
+<td><strong>Snapshot retention</strong></td>
+<td>Built-in setting to keep snapshots when malware is found</td>
+</tr>
+<tr>
+<td><strong>Cost</strong></td>
+<td>Pay per GB scanned</td>
+</tr>
+<tr>
+<td><strong>Multi-account</strong></td>
+<td>Supports delegated administrator in Organizations</td>
+</tr>
+</table></div>
+<h4>Snapshot Retention — The Key Feature</h4>
+<ul><li><strong>One setting</strong> in GuardDuty Malware Protection to enable</li><li>When malware is detected, the <strong>EBS snapshot is automatically retained</strong> in your account</li><li>Without this setting, GuardDuty deletes snapshots after scanning</li><li>Retained snapshots serve as <strong>forensic evidence</strong> for investigation</li><li>Tagged with GuardDuty finding ID for traceability</li></ul>
+<p><strong>Why this matters for the exam</strong>: If a question asks about "preserving evidence" or "storing evidence in EBS" with "least operational overhead," the answer is <strong>snapshot retention</strong> — NOT a custom Lambda function.</p>
+<h3>Concept: Automated Instance Isolation</h3>
+<p>When malware is detected, you need to <strong>isolate the instance</strong> to prevent lateral movement. The standard AWS pattern:</p>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│        Automated Instance Isolation Pattern                  │
+│                                                              │
+│  GuardDuty Finding                                           │
+│       │                                                      │
+│       ▼                                                      │
+│  Amazon EventBridge Rule                                     │
+│  (matches: source = "aws.guardduty",                         │
+│   detail-type = "GuardDuty Malware Protection Finding")      │
+│       │                                                      │
+│       ▼                                                      │
+│  AWS Lambda Function                                         │
+│       │                                                      │
+│       ├──► Replace security group with "Forensic SG"         │
+│       │    (deny all inbound/outbound except forensic team)  │
+│       │                                                      │
+│       ├──► Remove from Auto Scaling Group (if applicable)    │
+│       │                                                      │
+│       ├──► Tag instance: "Status: Isolated"                  │
+│       │                                                      │
+│       ├──► Create EBS snapshot (additional evidence)          │
+│       │                                                      │
+│       └──► Send SNS notification to security team            │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h4>Forensic Security Group</h4>
+<pre><code>Forensic-Isolation-SG:
+  Inbound:  DENY ALL (or allow only forensic team IP)
+  Outbound: DENY ALL</code></pre>
+<p><strong>Critical</strong>: Do NOT terminate the instance — you need it for forensic investigation. Isolate it by swapping the security group.</p>
+<h3>Concept: EventBridge Rule for GuardDuty</h3>
+<p>EventBridge event pattern for GuardDuty Malware Protection:</p>
+<pre><code>{
+  "source": ["aws.guardduty"],
+  "detail-type": ["GuardDuty Finding"],
+  "detail": {
+    "type": [{
+      "prefix": "Execution:EC2/MaliciousFile"
+    }]
+  }
+}</code></pre>
+<p>For ALL GuardDuty findings (broader):</p>
+<pre><code>{
+  "source": ["aws.guardduty"],
+  "detail-type": ["GuardDuty Finding"]
+}</code></pre>
+<h3>GuardDuty Malware Finding Types</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Finding Type</th>
+<th>Description</th>
+</tr>
+<tr>
+<td><code>Execution:EC2/MaliciousFile</code></td>
+<td>Malicious file detected on EC2 instance</td>
+</tr>
+<tr>
+<td><code>Execution:ECS/MaliciousFile</code></td>
+<td>Malicious file detected on ECS container</td>
+</tr>
+<tr>
+<td><code>Execution:Kubernetes/MaliciousFile</code></td>
+<td>Malicious file on Kubernetes pod</td>
+</tr>
+<tr>
+<td><code>Execution:Container/MaliciousFile</code></td>
+<td>Malicious file in standalone container</td>
+</tr>
+<tr>
+<td><code>Execution:EC2/SuspiciousFile</code></td>
+<td>Suspicious (but not confirmed malicious) file</td>
+</tr>
+<tr>
+<td><code>Execution:Runtime/MaliciousFile</code></td>
+<td>Runtime malware detection</td>
+</tr>
+</table></div>
+</div></div>
+<div class="section" id="d3-s3">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Cheat Sheet: Incident Response Decision Table</h2>
+<div class="section-body">
+<h3>"Least Operational Overhead" — Pick the Right Tool</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Task</th>
+<th>Best Answer</th>
+<th>Wrong Answer</th>
+<th>Why</th>
+</tr>
+<tr>
+<td>Preserve EBS evidence</td>
+<td><strong>GuardDuty snapshot retention</strong></td>
+<td>Lambda to create snapshots</td>
+<td>Built-in feature = less overhead</td>
+</tr>
+<tr>
+<td>Isolate EC2 instance</td>
+<td><strong>EventBridge → Lambda</strong></td>
+<td>Systems Manager automation</td>
+<td>SSM needs custom config, EventBridge is event-driven</td>
+</tr>
+<tr>
+<td>Alert security team</td>
+<td><strong>EventBridge → SNS</strong></td>
+<td>CloudWatch alarm → SNS</td>
+<td>EventBridge natively matches GuardDuty events</td>
+</tr>
+<tr>
+<td>Scan for malware</td>
+<td><strong>GuardDuty Malware Protection</strong></td>
+<td>Custom ClamAV on EC2</td>
+<td>Managed service = less overhead</td>
+</tr>
+<tr>
+<td>Investigate findings</td>
+<td><strong>Amazon Detective</strong></td>
+<td>Manual CloudTrail review</td>
+<td>Detective auto-correlates with graph models</td>
+</tr>
+<tr>
+<td>Aggregate findings</td>
+<td><strong>Security Hub</strong></td>
+<td>Custom dashboard</td>
+<td>Security Hub uses standard ASFF format</td>
+</tr>
+</table></div>
+<h3>Automation Pattern Hierarchy</h3>
+<pre><code>ALWAYS prefer in this order:
+
+1. Built-in feature (snapshot retention, auto-scan)
+   └─ "Least operational overhead"
+
+2. EventBridge → Lambda (for custom automation)
+   └─ "Automated response needed"
+
+3. EventBridge → SNS (for notifications)
+   └─ "Alert the team"
+
+4. CloudWatch Alarm → SNS
+   └─ Only for metric-based alerts, NOT event-based
+
+5. Custom solution (SSM, manual scripts)
+   └─ Only when no managed option exists</code></pre>
+<h3>Compromised EC2 — Full Incident Response Workflow</h3>
+<pre><code>1. ISOLATE  → Swap SG to forensic isolation SG
+             (do NOT terminate, do NOT stop)
+
+2. PRESERVE → EBS snapshots of all attached volumes
+             (GuardDuty snapshot retention OR manual)
+
+3. METADATA → Capture instance metadata, tags, VPC info
+             (before any changes)
+
+4. CONTAIN  → Remove from ASG / target group
+             → Detach from ELB
+             → Revoke IAM role temp sessions (if needed)
+
+5. INVESTIGATE → Memory dump (if possible)
+               → Analyze EBS snapshot in isolated VPC
+               → Review CloudTrail, VPC Flow Logs
+               → Check GuardDuty / Detective findings
+
+6. ERADICATE → Terminate compromised instance
+              → Launch clean replacement from known good AMI
+              → Patch the vulnerability that was exploited
+
+7. RECOVER  → Restore from clean backups
+            → Verify security controls
+            → Update security groups / NACLs if needed
+
+8. LESSONS  → Document the incident
+            → Update runbooks / playbooks
+            → Improve detection rules</code></pre>
+<h3>Key Exam Traps to Avoid</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Trap</th>
+<th>Why It's Wrong</th>
+<th>Right Answer</th>
+</tr>
+<tr>
+<td>"Use Lambda to create snapshots when malware detected"</td>
+<td>Reinventing built-in GuardDuty feature</td>
+<td>Enable snapshot retention</td>
+</tr>
+<tr>
+<td>"Use CloudWatch alarm for automated response"</td>
+<td>CloudWatch alarms = notifications, not automation</td>
+<td>EventBridge → Lambda</td>
+</tr>
+<tr>
+<td>"Use SSM to quarantine instances"</td>
+<td>Requires custom setup, more overhead</td>
+<td>EventBridge → Lambda with forensic SG</td>
+</tr>
+<tr>
+<td>"Terminate the instance immediately"</td>
+<td>Destroys forensic evidence</td>
+<td>Isolate with security group, preserve evidence</td>
+</tr>
+<tr>
+<td>"Use SNS to trigger remediation"</td>
+<td>SNS is for notifications, not complex logic</td>
+<td>EventBridge → Lambda</td>
+</tr>
+<tr>
+<td>"Create IAM user for forensic team"</td>
+<td>IAM users = long-term credentials</td>
+<td>IAM role with temporary credentials</td>
+</tr>
+</table></div>
+</div></div>
+<div class="section" id="d3-s4">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Quick Reference: GuardDuty Integration Points</h2>
+<div class="section-body">
+<pre><code>┌─────────────────────────────────────────────────────┐
+│              GuardDuty Ecosystem                     │
+│                                                      │
+│  DATA SOURCES (automatic):                           │
+│  ├─ CloudTrail Management Events                     │
+│  ├─ CloudTrail S3 Data Events                        │
+│  ├─ VPC Flow Logs                                    │
+│  ├─ DNS Query Logs                                   │
+│  ├─ EBS Volume Data (Malware Protection)             │
+│  ├─ RDS Login Activity                               │
+│  ├─ EKS Audit Logs                                   │
+│  └─ Lambda Network Activity                          │
+│                                                      │
+│  OUTPUTS:                                            │
+│  ├─ Findings → Security Hub (aggregation)            │
+│  ├─ Findings → EventBridge (automation)              │
+│  ├─ Findings → Detective (investigation)             │
+│  └─ Findings → S3 (export for long-term storage)     │
+│                                                      │
+│  BUILT-IN FEATURES:                                  │
+│  ├─ Malware Protection (agentless EBS scan)           │
+│  ├─ Snapshot Retention (evidence preservation)        │
+│  ├─ Trusted IP Lists (suppress known-good IPs)       │
+│  ├─ Threat IP Lists (custom threat intelligence)      │
+│  ├─ Suppression Rules (filter known false positives)  │
+│  └─ Multi-account (delegated admin in Org)            │
+│                                                      │
+└─────────────────────────────────────────────────────┘</code></pre>
+</div></div>
+        </div>
+    </div>
+    
+    <div class="domain collapsed" id="domain-4">
+        <div class="domain-header" onclick="toggleDomain(this)">
+            <div class="domain-title-row">
+                <span class="domain-number">Domain 4</span>
+                <h1 class="domain-title">Domain 1: Threat Detection and Incident Response (14%)</h1>
+            </div>
+            <span class="domain-toggle">&#9660;</span>
+        </div>
+        <div class="domain-body">
+            <div class="section" id="d4-s1">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 1.1 Design and Implement an Incident Response Plan</h2>
 <div class="section-body">
 <h3>AWS Incident Response Framework</h3>
@@ -1625,7 +1968,7 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
    - Notify via SNS
 3. Step Function orchestrates full investigation</code></pre>
 </div></div>
-<div class="section" id="d3-s2">
+<div class="section" id="d4-s2">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 1.2 Detect Security Threats and Anomalies</h2>
 <div class="section-body">
 <h3>Amazon GuardDuty</h3>
@@ -1642,7 +1985,7 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
 <ul><li>Capture IP traffic information at VPC, subnet, or ENI level</li><li>Fields: srcaddr, dstaddr, srcport, dstport, protocol, action, bytes, packets</li><li><strong>Custom format</strong> available for additional fields</li><li>Publish to: CloudWatch Logs, S3, Kinesis Data Firehose</li><li><strong>Limitations</strong>: Does NOT capture DNS traffic, DHCP, metadata, license activation</li></ul>
 <h3>Amazon Macie</h3>
 <ul><li><strong>ML-powered sensitive data discovery</strong> in S3</li><li>Detects: PII, financial data, credentials, custom patterns</li><li><strong>Automated Discovery</strong>: Samples and profiles all S3 buckets</li><li><strong>Sensitive Data Discovery Jobs</strong>: Targeted scans</li><li><strong>Policy Findings</strong>: Bucket-level security issues (public, unencrypted)</li><li><strong>Sensitive Data Findings</strong>: Discovered sensitive content</li><li>Integration with Security Hub</li></ul>
-<div class="section cheatsheet-section" id="d3-cheatsheet">
+<div class="section cheatsheet-section" id="d4-cheatsheet">
 <h2 class="section-title cheatsheet-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9654;</span> CHEATSHEET - Domain 1</h2>
 <div class="section-body" style="display:none;">
 <pre><code>THREAT DETECTION QUICK REFERENCE
@@ -1703,7 +2046,7 @@ A: GuardDuty (Stealth:IAMUser/CloudTrailLoggingDisabled)
 Q: "Detect unusual API patterns?"
 A: CloudTrail Insights</code></pre>
 </div></div>
-<div class="section" id="d3-s4">
+<div class="section" id="d4-s4">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Additional Study Material (from Crash Course)</h2>
 <div class="section-body">
 <h3>Security Service Deployment Order</h3>
@@ -1799,7 +2142,7 @@ A: CloudTrail Insights</code></pre>
 7. ROTATE: Create new credentials, update applications
 8. STRENGTHEN: Enable MFA, review permissions (least privilege)</code></pre>
 </div></div>
-<div class="section" id="d3-s5">
+<div class="section" id="d4-s5">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Practice Exam Questions</h2>
 <div class="section-body">
 <p><strong>Question 1:</strong></p>
@@ -1821,7 +2164,7 @@ A: CloudTrail Insights</code></pre>
 <p><strong>Why each answer is right/wrong:</strong></p>
 <ul><li>Network ACLs are stateless, and take effect immediately. It would require rules created for both inbound and outbound traffic, and this would contain the compromise.</li><li>This answer requires an understanding of security group connection tracking, recognizing that any rule using 0.0.0.0/0 is not tracked. However, changing the rule will not impact any existing connection, as the rules are stateful. The changes will only affect future connection attempts.</li><li>This could result in a partial mitigation, assuming the compromise uses outbound connections to other destinations and on different ports. Any new outbound connection attempt will fail.</li><li>This answer choice appears to fully mitigate the compromise. However, because security group connections are stateful, this will only mitigate for future connection attempts, and will not affect existing connections.</li></ul>
 </div></div>
-<div class="section" id="d3-s6">
+<div class="section" id="d4-s6">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> KPLabs Udemy Course Notes</h2>
 <div class="section-body">
 <p>*Source: AWS Security Specialty SCS-C03 - KPLabs (Udemy)*</p>
@@ -1853,16 +2196,16 @@ A: CloudTrail Insights</code></pre>
         </div>
     </div>
     
-    <div class="domain collapsed" id="domain-4">
+    <div class="domain collapsed" id="domain-5">
         <div class="domain-header" onclick="toggleDomain(this)">
             <div class="domain-title-row">
-                <span class="domain-number">Domain 4</span>
+                <span class="domain-number">Domain 5</span>
                 <h1 class="domain-title">Domain 2: Security Logging and Monitoring (18%)</h1>
             </div>
             <span class="domain-toggle">&#9660;</span>
         </div>
         <div class="domain-body">
-            <div class="section" id="d4-s1">
+            <div class="section" id="d5-s1">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 2.1 Design and Implement Monitoring and Alerting</h2>
 <div class="section-body">
 <h3>Amazon CloudWatch</h3>
@@ -1889,7 +2232,7 @@ Macie finding (PII in S3) → EventBridge → Lambda → Apply bucket policy
 Pattern 5: Certificate Expiry
 ACM (cert expiring) → EventBridge → SNS notification</code></pre>
 </div></div>
-<div class="section" id="d4-s2">
+<div class="section" id="d5-s2">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 2.2 Troubleshoot Security Monitoring and Alerting</h2>
 <div class="section-body">
 <h3>Common Issues</h3>
@@ -1968,7 +2311,7 @@ ACM (cert expiring) → EventBridge → SNS notification</code></pre>
 </tr>
 </table></div>
 </div></div>
-<div class="section" id="d4-s3">
+<div class="section" id="d5-s3">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 2.3 Design and Implement a Logging Solution</h2>
 <div class="section-body">
 <h3>Centralized Logging Architecture</h3>
@@ -1985,7 +2328,7 @@ ACM (cert expiring) → EventBridge → SNS notification</code></pre>
 <ul><li><strong>Real-time log analysis</strong> and visualization</li><li><strong>Fine-Grained Access Control</strong> (FGAC)</li><li><strong>Encryption</strong>: At rest (KMS) and in transit (TLS)</li><li><strong>VPC Access</strong>: Deploy in VPC for network isolation</li><li><strong>Cognito Integration</strong>: Dashboard authentication</li><li><strong>Index Policies</strong>: Auto-rotate, delete old indices</li><li><strong>UltraWarm/Cold Storage</strong>: Cost-effective log retention</li></ul>
 <h3>Amazon Athena</h3>
 <ul><li><strong>Serverless SQL queries</strong> on S3 data</li><li>Query CloudTrail logs, VPC Flow Logs, ELB logs directly</li><li><strong>Partition Projection</strong>: Auto-manage partitions</li><li><strong>Federated Query</strong>: Query across data sources</li></ul>
-<div class="section cheatsheet-section" id="d4-cheatsheet">
+<div class="section cheatsheet-section" id="d5-cheatsheet">
 <h2 class="section-title cheatsheet-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9654;</span> CHEATSHEET - Domain 2</h2>
 <div class="section-body" style="display:none;">
 <pre><code>LOGGING &amp; MONITORING QUICK REFERENCE
@@ -2056,7 +2399,7 @@ A: S3 Object Lock (Compliance mode) + MFA Delete
 Q: "Monitor for unauthorized security group changes?"
 A: Config rule + EventBridge → Lambda auto-revert</code></pre>
 </div></div>
-<div class="section" id="d4-s5">
+<div class="section" id="d5-s5">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Additional Study Material (from Crash Course)</h2>
 <div class="section-body">
 <h3>CloudWatch Logs Key Architecture</h3>
@@ -2176,7 +2519,7 @@ Example SSM Documents for remediation:
 - AWS-EnableS3BucketEncryption
 - AWS-RevokeUnusedIAMUserCredentials</code></pre>
 </div></div>
-<div class="section" id="d4-s6">
+<div class="section" id="d5-s6">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> KPLabs Udemy Course Notes</h2>
 <div class="section-body">
 <p>*Source: AWS Security Specialty SCS-C03 - KPLabs (Udemy)*</p>
@@ -2232,16 +2575,16 @@ Example SSM Documents for remediation:
         </div>
     </div>
     
-    <div class="domain collapsed" id="domain-5">
+    <div class="domain collapsed" id="domain-6">
         <div class="domain-header" onclick="toggleDomain(this)">
             <div class="domain-title-row">
-                <span class="domain-number">Domain 5</span>
+                <span class="domain-number">Domain 6</span>
                 <h1 class="domain-title">Domain 3: Infrastructure Security (20%)</h1>
             </div>
             <span class="domain-toggle">&#9660;</span>
         </div>
         <div class="domain-body">
-            <div class="section" id="d5-s1">
+            <div class="section" id="d6-s1">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 3.1 Design and Implement Security Controls for Edge Services</h2>
 <div class="section-body">
 <h3>Amazon CloudFront</h3>
@@ -2255,7 +2598,7 @@ Example SSM Documents for remediation:
 <h3>AWS Firewall Manager</h3>
 <ul><li><strong>Central firewall management</strong> across AWS Organization</li><li>Manages: WAF, Shield Advanced, Security Groups, Network Firewall, Route 53 DNS Firewall</li><li><strong>Security Policies</strong>: Define and auto-apply rules to new accounts/resources</li><li><strong>Prerequisite</strong>: AWS Organizations + Config enabled</li><li>Ensures consistent security posture across all accounts</li></ul>
 </div></div>
-<div class="section" id="d5-s2">
+<div class="section" id="d6-s2">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 3.2 Design and Implement Network Security Controls</h2>
 <div class="section-body">
 <h3>VPC Security</h3>
@@ -2301,7 +2644,7 @@ Example SSM Documents for remediation:
 <h3>Elastic Load Balancers</h3>
 <ul><li><strong>ALB</strong> (Application): Layer 7, HTTP/HTTPS, WAF integration<ul><li>Authentication: OIDC, Cognito integration</li><li>SSL termination at ALB</li><li>Fixed response, redirects</li></ul></li><li><strong>GWLB</strong> (Gateway): Layer 3<ul><li>Third-party virtual appliances (firewalls, IDS/IPS)</li><li>GENEVE protocol encapsulation</li><li>Transparent network gateway</li></ul></li></ul>
 </div></div>
-<div class="section" id="d5-s3">
+<div class="section" id="d6-s3">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 3.3 Design and Implement Security for Compute Workloads</h2>
 <div class="section-body">
 <h3>Amazon EC2 Security</h3>
@@ -2312,7 +2655,7 @@ Example SSM Documents for remediation:
 <ul><li><strong>Execution Role</strong>: IAM role for function permissions</li><li><strong>Resource Policy</strong>: Who can invoke the function</li><li><strong>VPC Configuration</strong>: Run Lambda in VPC for private resource access</li><li><strong>Provisioned Concurrency</strong>: Pre-initialized execution environments</li><li><strong>Code Signing</strong>: Verify code integrity</li><li><strong>Environment Variables</strong>: Encrypt with KMS</li><li><strong>Lambda Layers</strong>: Shared code/dependencies</li></ul>
 <h3>Systems Manager</h3>
 <ul><li><strong>Session Manager</strong>: Shell access WITHOUT SSH/RDP (no open ports!)<ul><li>Logs all commands to CloudTrail + S3 + CloudWatch</li><li>IAM-based access control</li><li>Preferred over bastion hosts</li></ul></li><li><strong>Parameter Store</strong>: Secure configuration storage<ul><li>Standard: 10,000 params, 4KB max, free</li><li>Advanced: 100,000 params, 8KB max, paid</li><li>SecureString: Encrypted with KMS</li></ul></li><li><strong>Run Command</strong>: Execute scripts across fleet</li><li><strong>Inventory</strong>: Software inventory across instances</li></ul>
-<div class="section cheatsheet-section" id="d5-cheatsheet">
+<div class="section cheatsheet-section" id="d6-cheatsheet">
 <h2 class="section-title cheatsheet-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9654;</span> CHEATSHEET - Domain 3</h2>
 <div class="section-body" style="display:none;">
 <pre><code>INFRASTRUCTURE SECURITY QUICK REFERENCE
@@ -2392,7 +2735,7 @@ A: Firewall Manager + WAF policies
 Q: "Private connectivity to third-party SaaS?"
 A: PrivateLink (Interface VPC Endpoint)</code></pre>
 </div></div>
-<div class="section" id="d5-s5">
+<div class="section" id="d6-s5">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Additional Study Material (from Crash Course)</h2>
 <div class="section-body">
 <h3>WAF Rule Evaluation Order</h3>
@@ -2525,7 +2868,7 @@ A: PrivateLink (Interface VPC Endpoint)</code></pre>
   - Only sender and receiver can read data
   - Use when compliance requires NO intermediary decryption</code></pre>
 </div></div>
-<div class="section" id="d5-s6">
+<div class="section" id="d6-s6">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Practice Exam Questions</h2>
 <div class="section-body">
 <p><strong>Question 1:</strong></p>
@@ -2547,7 +2890,7 @@ A: PrivateLink (Interface VPC Endpoint)</code></pre>
 <p><strong>Why each answer is right/wrong:</strong></p>
 <ul><li>Tokenized access through IMDSv2 is much less vulnerable than v1 which required no authentication, and this could be sufficient for mitigation.</li><li>The security group rules are only activated when traffic enters or leaves the instance through the network interface. Metadata traffic is controlled by the hypervisor, and bypasses that path, and so this will not mitigate the vulnerability.</li><li>After EC2 instances are launched, the only way to modify certain attributes like metadata is to use the CLI. This solution disables it entirely, and would mitigate the vulnerability.</li><li>This answer is similar to B in that it requires the metadata traffic to actually be sent on the network, and in this case, it would have to cross subnet boundaries, which it does not do.</li><li>IMDSv1 is actually the problem with the original vulnerability, because it requires no authentication whatsoever to access metadata information, and so this solution changes nothing.</li></ul>
 </div></div>
-<div class="section" id="d5-s7">
+<div class="section" id="d6-s7">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> KPLabs Udemy Course Notes</h2>
 <div class="section-body">
 <p>*Source: AWS Security Specialty SCS-C03 - KPLabs (Udemy)*</p>
@@ -2621,16 +2964,16 @@ A: PrivateLink (Interface VPC Endpoint)</code></pre>
         </div>
     </div>
     
-    <div class="domain collapsed" id="domain-6">
+    <div class="domain collapsed" id="domain-7">
         <div class="domain-header" onclick="toggleDomain(this)">
             <div class="domain-title-row">
-                <span class="domain-number">Domain 6</span>
+                <span class="domain-number">Domain 7</span>
                 <h1 class="domain-title">Domain 4: Identity and Access Management (16%)</h1>
             </div>
             <span class="domain-toggle">&#9660;</span>
         </div>
         <div class="domain-body">
-            <div class="section" id="d6-s1">
+            <div class="section" id="d7-s1">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 4.1 Design, Implement, and Troubleshoot Authentication</h2>
 <div class="section-body">
 <h3>AWS IAM Fundamentals</h3>
@@ -2690,7 +3033,7 @@ A: PrivateLink (Interface VPC Endpoint)</code></pre>
 <h3>Multi-Factor Authentication (MFA)</h3>
 <ul><li><strong>Virtual MFA</strong>: TOTP apps (Google Authenticator, Authy)</li><li><strong>FIDO2 Security Keys</strong>: Hardware keys (YubiKey)</li><li><strong>Hardware TOTP Token</strong>: Physical token devices</li><li><strong>MFA for Root</strong>: ALWAYS enable</li><li><strong>MFA Delete</strong>: Protect S3 versioned object deletion</li><li><strong>MFA with CLI</strong>: Use <code>GetSessionToken</code> → temp credentials with MFA</li></ul>
 </div></div>
-<div class="section" id="d6-s2">
+<div class="section" id="d7-s2">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 4.2 Design, Implement, and Troubleshoot Authorization</h2>
 <div class="section-body">
 <h3>Service Control Policies (SCPs)</h3>
@@ -2709,7 +3052,7 @@ A: PrivateLink (Interface VPC Endpoint)</code></pre>
   }
 }</code></pre>
 </div></div>
-<div class="section" id="d6-s3">
+<div class="section" id="d7-s3">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 4.3 Design and Implement AWS Federation and Identity Management</h2>
 <div class="section-body">
 <h3>Amazon Cognito</h3>
@@ -2762,7 +3105,7 @@ A: PrivateLink (Interface VPC Endpoint)</code></pre>
 3. Browser posts assertion to AWS STS (AssumeRoleWithSAML)
 4. STS validates assertion, returns temp credentials
 5. User accesses AWS Console or API with temp credentials</code></pre>
-<div class="section cheatsheet-section" id="d6-cheatsheet">
+<div class="section cheatsheet-section" id="d7-cheatsheet">
 <h2 class="section-title cheatsheet-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9654;</span> CHEATSHEET - Domain 4</h2>
 <div class="section-body" style="display:none;">
 <pre><code>IAM QUICK REFERENCE
@@ -2854,7 +3197,7 @@ A: IAM Access Analyzer policy generation (90 days CloudTrail)
 Q: "Tag-based access control that scales?"
 A: ABAC with aws:PrincipalTag and aws:ResourceTag conditions</code></pre>
 </div></div>
-<div class="section" id="d6-s5">
+<div class="section" id="d7-s5">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Additional Study Material (from Crash Course)</h2>
 <div class="section-body">
 <h3>IAM Policy Evaluation - Cross-Account Deep Dive</h3>
@@ -3007,7 +3350,7 @@ Use IDENTITY (role) policy when:
   - Cross-account with many services
   - Need session policies for further restriction</code></pre>
 </div></div>
-<div class="section" id="d6-s6">
+<div class="section" id="d7-s6">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Practice Exam Questions</h2>
 <div class="section-body">
 <p><strong>Question 1:</strong></p>
@@ -3029,7 +3372,7 @@ Use IDENTITY (role) policy when:
 <p><strong>Why each answer is right/wrong:</strong></p>
 <ul><li>The first statement in the policy allows this action.</li><li>The second statement in the policy allows this action.</li><li>The first statement in the policy allows this action.</li><li>This action is not allowed by either statement, but if you are moving too quickly through the exam, it could be easy to miss.</li></ul>
 </div></div>
-<div class="section" id="d6-s7">
+<div class="section" id="d7-s7">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> KPLabs Udemy Course Notes</h2>
 <div class="section-body">
 <p>*Source: AWS Security Specialty SCS-C03 - KPLabs (Udemy)*</p>
@@ -3103,16 +3446,16 @@ Use IDENTITY (role) policy when:
         </div>
     </div>
     
-    <div class="domain collapsed" id="domain-7">
+    <div class="domain collapsed" id="domain-8">
         <div class="domain-header" onclick="toggleDomain(this)">
             <div class="domain-title-row">
-                <span class="domain-number">Domain 7</span>
+                <span class="domain-number">Domain 8</span>
                 <h1 class="domain-title">Domain 5: Data Protection (18%)</h1>
             </div>
             <span class="domain-toggle">&#9660;</span>
         </div>
         <div class="domain-body">
-            <div class="section" id="d7-s1">
+            <div class="section" id="d8-s1">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 5.1 Design and Implement Key Management</h2>
 <div class="section-body">
 <h3>AWS KMS (Key Management Service)</h3>
@@ -3217,7 +3560,7 @@ Decryption:
 </tr>
 </table></div>
 </div></div>
-<div class="section" id="d7-s2">
+<div class="section" id="d8-s2">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 5.2 Design and Implement Encryption at Rest</h2>
 <div class="section-body">
 <h3>S3 Encryption</h3>
@@ -3238,7 +3581,7 @@ Decryption:
 <h3>Other Service Encryption</h3>
 <ul><li><strong>EFS</strong>: KMS encryption at creation (cannot change later)</li><li><strong>ElastiCache</strong>: In-transit encryption + at-rest encryption</li><li><strong>Redshift</strong>: KMS or CloudHSM encryption</li><li><strong>Aurora</strong>: KMS encryption at creation</li></ul>
 </div></div>
-<div class="section" id="d7-s3">
+<div class="section" id="d8-s3">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 5.3 Design and Implement Encryption in Transit</h2>
 <div class="section-body">
 <h3>TLS/SSL Certificates</h3>
@@ -3248,7 +3591,7 @@ Decryption:
 <h3>VPN and Direct Connect Encryption</h3>
 <ul><li><strong>Site-to-Site VPN</strong>: IPsec encrypted tunnel over internet</li><li><strong>Client VPN</strong>: OpenVPN-based remote access</li><li><strong>Direct Connect</strong>: NOT encrypted by default<ul><li>Add VPN over Direct Connect for encryption</li><li>Or use <strong>MACsec</strong> (Layer 2 encryption) on dedicated connections</li></ul></li></ul>
 </div></div>
-<div class="section" id="d7-s4">
+<div class="section" id="d8-s4">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 5.4 Design and Implement Secrets Management</h2>
 <div class="section-body">
 <h3>AWS Secrets Manager</h3>
@@ -3297,7 +3640,7 @@ Decryption:
 </tr>
 </table></div>
 <p><strong>Decision</strong>: Use Secrets Manager for database credentials, API keys needing rotation. Use Parameter Store for configuration values, feature flags.</p>
-<div class="section cheatsheet-section" id="d7-cheatsheet">
+<div class="section cheatsheet-section" id="d8-cheatsheet">
 <h2 class="section-title cheatsheet-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9654;</span> CHEATSHEET - Domain 5</h2>
 <div class="section-body" style="display:none;">
 <pre><code>DATA PROTECTION QUICK REFERENCE
@@ -3395,7 +3738,7 @@ A: CMK key policy allows cross-account + S3 bucket policy
 Q: "Free SSL certs for ALB?"
 A: ACM public certificate (free, auto-renewed)</code></pre>
 </div></div>
-<div class="section" id="d7-s6">
+<div class="section" id="d8-s6">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Additional Study Material (from Crash Course)</h2>
 <div class="section-body">
 <h3>KMS Key Policy - Critical Concepts</h3>
@@ -3503,7 +3846,7 @@ NLB:         Certificate in SAME region as NLB
 API Gateway: Regional = same region, Edge = us-east-1
 EC2:         Install certificate directly (not ACM-managed)</code></pre>
 </div></div>
-<div class="section" id="d7-s7">
+<div class="section" id="d8-s7">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Practice Exam Questions</h2>
 <div class="section-body">
 <p><strong>Question 1:</strong></p>
@@ -3519,7 +3862,7 @@ EC2:         Install certificate directly (not ACM-managed)</code></pre>
 <p><strong>Why each answer is right/wrong:</strong></p>
 <ul><li>SSE-S3 meets the cost goal, as it is entirely free, but this is an AWS owned key, and cannot be audited by the customer.</li><li>SSE-KMS will use the KMS service resources to encrypt the data. Utilizing the default AWS key is cost effective as there is no monthly fee for the keys themselves, and the use of these keys are logged by CloudTrail.</li><li>This is similar to B except that the customer creates their own key in KMS. This will incur a monthly charge, and although it is logged and can be audited, it is not as cost effective as B.</li><li>This solution meets the cost requirement, as there is no charge to use a customer- provided key for the encryption. However, the use of these keys are not logged, and therefore cannot be audited.</li></ul>
 </div></div>
-<div class="section" id="d7-s8">
+<div class="section" id="d8-s8">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> KPLabs Udemy Course Notes</h2>
 <div class="section-body">
 <p>*Source: AWS Security Specialty SCS-C03 - KPLabs (Udemy)*</p>
@@ -3590,16 +3933,16 @@ EC2:         Install certificate directly (not ACM-managed)</code></pre>
         </div>
     </div>
     
-    <div class="domain collapsed" id="domain-8">
+    <div class="domain collapsed" id="domain-9">
         <div class="domain-header" onclick="toggleDomain(this)">
             <div class="domain-title-row">
-                <span class="domain-number">Domain 8</span>
+                <span class="domain-number">Domain 9</span>
                 <h1 class="domain-title">Domain 6: Management and Security Governance (14%)</h1>
             </div>
             <span class="domain-toggle">&#9660;</span>
         </div>
         <div class="domain-body">
-            <div class="section" id="d8-s1">
+            <div class="section" id="d9-s1">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 6.1 Develop a Strategy to Centrally Deploy and Manage AWS Accounts</h2>
 <div class="section-body">
 <h3>AWS Organizations</h3>
@@ -3617,7 +3960,7 @@ EC2:         Install certificate directly (not ACM-managed)</code></pre>
 <h3>AWS CloudFormation Security</h3>
 <ul><li><strong>StackSets</strong>: Deploy stacks across accounts/regions<ul><li>Service-managed: Auto-deploy to new accounts in OU</li><li>Self-managed: Specify target accounts manually</li></ul></li><li><strong>Stack Policies</strong>: Prevent updates to specific resources</li><li><strong>DeletionPolicy</strong>: Retain, Snapshot, Delete on stack deletion</li><li><strong>Dynamic References</strong>: Pull values from SSM Parameter Store or Secrets Manager</li><li><strong>IAM</strong>: Use specific <code>cloudformation:</code> conditions for stack operations</li></ul>
 </div></div>
-<div class="section" id="d8-s2">
+<div class="section" id="d9-s2">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 6.2 Implement a Strategy for Central Security Event Notifications and Auditing</h2>
 <div class="section-body">
 <h3>Centralized Security Architecture</h3>
@@ -3643,7 +3986,7 @@ Security Account:
 <h3>AWS Artifact</h3>
 <ul><li><strong>Compliance documents</strong> and agreements</li><li><strong>AWS Artifact Agreements</strong>: BAA (HIPAA), GDPR DPA</li><li><strong>AWS Artifact Reports</strong>: SOC reports, PCI, ISO certifications</li></ul>
 </div></div>
-<div class="section" id="d8-s3">
+<div class="section" id="d9-s3">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 6.3 Develop Lifecycle Management Strategy for AWS Resources</h2>
 <div class="section-body">
 <h3>AWS Service Catalog</h3>
@@ -3655,7 +3998,7 @@ Security Account:
 <h3>Resource Tagging Strategy</h3>
 <ul><li><strong>Mandatory Tags</strong>: Environment, Owner, CostCenter, Application</li><li><strong>Tag Policies</strong>: AWS Organizations tag policies enforce standards</li><li><strong>AWS Config</strong>: Rules to check for required tags</li><li><strong>Cost Allocation Tags</strong>: For billing visibility</li><li><strong>Access Control Tags</strong>: ABAC policies</li></ul>
 </div></div>
-<div class="section" id="d8-s4">
+<div class="section" id="d9-s4">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> 6.4 Security Governance Best Practices</h2>
 <div class="section-body">
 <h3>Well-Architected Framework - Security Pillar</h3>
@@ -3704,7 +4047,7 @@ Security Account:
 <ul><li><strong>Infrastructure as Code</strong>: CloudFormation/CDK for repeatable deployments</li><li><strong>Automated Remediation</strong>: Config → EventBridge → SSM Automation</li><li><strong>CI/CD Security</strong>: CodePipeline + CodeBuild with security scanning</li><li><strong>Automated Account Baseline</strong>: Control Tower + Account Factory</li><li><strong>Security as Code</strong>: Git-managed SCPs, Config rules, WAF rules</li></ul>
 <h3>GenAI Security (New SCS-C03 Content)</h3>
 <ul><li><strong>Amazon Bedrock Security</strong>:<ul><li>VPC endpoints for private access</li><li>KMS encryption for model customization data</li><li>IAM roles for model invocation</li><li>CloudTrail logging for API calls</li><li>No customer data used for model training</li></ul></li><li><strong>Amazon Q Security</strong>:<ul><li>IAM Identity Center integration</li><li>Document-level ACL</li><li>Encryption at rest and in transit</li></ul></li></ul>
-<div class="section cheatsheet-section" id="d8-cheatsheet">
+<div class="section cheatsheet-section" id="d9-cheatsheet">
 <h2 class="section-title cheatsheet-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9654;</span> CHEATSHEET - Domain 6</h2>
 <div class="section-body" style="display:none;">
 <pre><code>GOVERNANCE &amp; MANAGEMENT QUICK REFERENCE
@@ -3808,7 +4151,7 @@ A: Config rules + drift detection + EventBridge alerts
 Q: "Secure Bedrock model invocations?"
 A: VPC endpoints + IAM roles + Guardrails + CloudTrail</code></pre>
 </div></div>
-<div class="section" id="d8-s6">
+<div class="section" id="d9-s6">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Additional Study Material (from Crash Course)</h2>
 <div class="section-body">
 <h3>AWS Organizations - Account Strategy</h3>
@@ -3907,7 +4250,7 @@ Firewall Manager applies WAF/SG policies
   ↓
 Account ready with full security baseline</code></pre>
 </div></div>
-<div class="section" id="d8-s7">
+<div class="section" id="d9-s7">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Practice Exam Questions</h2>
 <div class="section-body">
 <p><strong>Question 1:</strong></p>
@@ -3929,7 +4272,7 @@ Account ready with full security baseline</code></pre>
 <p><strong>Why each answer is right/wrong:</strong></p>
 <ul><li>Trusted Advisor has several Cost Optimization checks which do include inventorying resources which have not been used in a period of time.</li><li>The Cost Explorer visualizations are useful for several purposes, but would be difficult to actually identify unused resources.</li><li>The Cost and Usage Report is extraordinarily detailed, but does not include information which could lead to identifying resources that aren't in use.</li><li>Compute Optimizer reviews several resources types and makes recommendations as to whether they are properly right-sized. A report of the over-provisioned resources would be a good starting point for identifying those which are no longer in use.</li><li>Budgets are great for identifying when cost exceeds thresholds, but does not have the granularity to identify if a resource is not being used at all.</li></ul>
 </div></div>
-<div class="section" id="d8-s8">
+<div class="section" id="d9-s8">
 <h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> KPLabs Udemy Course Notes</h2>
 <div class="section-body">
 <p>*Source: AWS Security Specialty SCS-C03 - KPLabs (Udemy)*</p>
