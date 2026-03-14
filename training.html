@@ -3081,6 +3081,89 @@ port 52847 ◄──── response ──────── port 443
 <h3>Exam Traps</h3>
 <ul><li><strong>SG with no outbound rules = most restrictive for SG</strong> — stateful handles responses automatically</li><li><strong>NACL outbound port 443 ≠ response traffic</strong> — responses go to client's ephemeral port, not 443</li><li><strong>"Least permissive"</strong> — eliminate any answer with unnecessary outbound rules on the SG</li><li><strong>Ephemeral port range</strong> — Linux uses 32768-60999, but 1024-65535 covers all OS ranges</li></ul>
 </div></div>
+<div class="section" id="d3-s14">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> S3 Object Lock — Compliance vs Governance Mode</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Retain S3 objects for 7 years. No principal — not even root — can delete before retention expires. Regulatory compliance requirement.</p>
+<p><strong>Correct Answer</strong>: A — S3 Object Lock in <strong>compliance mode</strong> with 7-year retention period</p>
+<h3>Concept: S3 Object Lock (WORM Storage)</h3>
+<p>S3 Object Lock provides Write-Once-Read-Many (WORM) protection. Two modes with very different enforcement levels:</p>
+<pre><code>┌─────────────────────────┬────────────────────────────┐
+│    GOVERNANCE Mode      │    COMPLIANCE Mode         │
+│                         │                            │
+│  Special permission     │  NO ONE can delete         │
+│  can bypass:            │  • Not root user           │
+│  s3:BypassGovernance-   │  • Not AWS support         │
+│    Retention            │  • Not account owner       │
+│                         │                            │
+│  Root CAN bypass        │  Retention is IMMUTABLE    │
+│  Soft protection        │  Hard protection           │
+│  Testing / flexibility  │  Regulatory / legal        │
+└─────────────────────────┴────────────────────────────┘</code></pre>
+<h3>Object Lock Features</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+<tr>
+<td><strong>Retention period</strong></td>
+<td>Fixed duration — no deletion until expiry</td>
+</tr>
+<tr>
+<td><strong>Legal hold</strong></td>
+<td>No expiry — stays until explicitly removed (needs <code>s3:PutObjectLegalHold</code>)</td>
+</tr>
+<tr>
+<td><strong>Compliance mode</strong></td>
+<td>Immutable — can't be shortened or removed by anyone</td>
+</tr>
+<tr>
+<td><strong>Governance mode</strong></td>
+<td>Can be bypassed with special IAM permission</td>
+</tr>
+<tr>
+<td><strong>Versioning</strong></td>
+<td>Required — Object Lock needs versioning enabled</td>
+</tr>
+</table></div>
+<h3>Why Other Approaches Fail for "Not Even Root"</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Approach</th>
+<th>Root Can Bypass?</th>
+<th>Why It Fails</th>
+</tr>
+<tr>
+<td><strong>SCP deny delete</strong></td>
+<td>Yes — root/admin can modify SCP</td>
+<td>SCPs are mutable</td>
+</tr>
+<tr>
+<td><strong>Bucket policy deny</strong></td>
+<td>Yes — root bypasses bucket policies</td>
+<td>Root has full account control</td>
+</tr>
+<tr>
+<td><strong>IAM deny policy</strong></td>
+<td>Yes — root bypasses IAM</td>
+<td>Root is unrestricted</td>
+</tr>
+<tr>
+<td><strong>Event notification + Lambda</strong></td>
+<td>N/A</td>
+<td>Reactive — object already deleted</td>
+</tr>
+<tr>
+<td><strong>S3 Object Lock compliance</strong></td>
+<td><strong>No</strong></td>
+<td><strong>Immutable until retention expires</strong></td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>"Not even root user"</strong> = always <strong>compliance mode</strong>, never governance</li><li><strong>Object Lock must be enabled at bucket creation</strong> — can't add to existing bucket</li><li><strong>Governance mode ≠ compliance</strong> — governance has a bypass permission</li><li><strong>Legal hold vs retention period</strong> — legal hold has no expiry date, retention does</li><li><strong>SCPs are mutable</strong> — management account admins can change or remove them</li></ul>
+</div></div>
         </div>
     </div>
     
