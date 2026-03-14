@@ -3353,6 +3353,73 @@ aws kms revoke-grant --key-id ... --grant-id ...</code></pre>
 <h3>Exam Traps</h3>
 <ul><li><strong>"Without updating key policy"</strong> = grants (not key policy modifications)</li><li><strong>"Scalable"</strong> = key policy has 32 KB limit — won't scale to hundreds of customers</li><li><strong>RAM ≠ KMS sharing</strong> — RAM supports VPC subnets, TGW, Route 53 — NOT KMS keys</li><li><strong>Grants are revocable</strong> — instant access removal on customer offboarding</li></ul>
 </div></div>
+<div class="section" id="d3-s18">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Security Hub — Centralized Findings + Automated Remediation</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Automated security incident response across multiple accounts in Organizations. Need centralized findings AND automated remediation with least operational overhead.</p>
+<p><strong>Correct Answer</strong>: A — Security Hub + EventBridge + SSM Automation runbooks + Organizations aggregation</p>
+<h3>Concept: Security Hub as the Central Aggregator</h3>
+<p>Security Hub aggregates findings from multiple security services AND enables automated remediation through EventBridge + SSM Automation.</p>
+<pre><code>Management Account:
+Security Hub ──► EventBridge ──► SSM Automation Runbooks
+(all findings)   (rules)         (pre-built remediation)
+     ▲
+     │ Organizations auto-aggregation
+┌────┴────┐ ┌─────────┐ ┌─────────┐
+│Member 1 │ │Member 2 │ │Member N │
+│GuardDuty│ │Config   │ │Inspector│
+└─────────┘ └─────────┘ └─────────┘</code></pre>
+<h3>"Least Overhead" Component Selection</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Need</th>
+<th>Best Choice</th>
+<th>Why NOT Alternatives</th>
+</tr>
+<tr>
+<td>Centralized findings</td>
+<td><strong>Security Hub</strong></td>
+<td>Config alone = compliance only. GuardDuty = threats only</td>
+</tr>
+<tr>
+<td>Multi-account</td>
+<td><strong>Organizations</strong></td>
+<td>StackSets = more setup. Manual = doesn't scale</td>
+</tr>
+<tr>
+<td>Event monitoring</td>
+<td><strong>EventBridge</strong></td>
+<td>CloudWatch alarms = not designed for findings</td>
+</tr>
+<tr>
+<td>Remediation</td>
+<td><strong>SSM Automation</strong></td>
+<td>Lambda/Step Functions = custom code to maintain</td>
+</tr>
+</table></div>
+<h3>Why Wrong Answers Fail</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Option</th>
+<th>Fatal Flaw</th>
+</tr>
+<tr>
+<td><strong>B</strong> — Config + Lambda + SNS</td>
+<td>No centralized findings. Lambda = custom code. SNS = notify only</td>
+</tr>
+<tr>
+<td><strong>C</strong> — GuardDuty only</td>
+<td>Threats only — no compliance, no Config, no Inspector findings</td>
+</tr>
+<tr>
+<td><strong>D</strong> — Lambda + Step Functions</td>
+<td>Custom orchestration code = high operational overhead</td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>GuardDuty ≠ centralized findings</strong> — it's one source, Security Hub aggregates many sources</li><li><strong>SSM Automation runbooks ≠ Run Command</strong> — Automation has pre-built remediation; Run Command is ad-hoc</li><li><strong>Lambda + Step Functions sounds powerful</strong> — but "least overhead" means managed/declarative beats custom code</li><li><strong>Security Hub custom actions</strong> — native feature for triggering specific remediation, no extra service needed</li></ul>
+</div></div>
         </div>
     </div>
     
