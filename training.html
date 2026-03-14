@@ -2715,6 +2715,115 @@ ORDER BY eventtime DESC;</code></pre>
 <h3>Exam Traps</h3>
 <ul><li><strong>Config ≠ login monitoring</strong> — Config tracks resource state, not authentication events</li><li><strong>EventBridge "all failed logins"</strong> — watch for "all" vs "root only" in the question. If answer says "all", it doesn't minimize noise</li><li><strong>GuardDuty ≠ every failed login</strong> — GuardDuty flags anomalous patterns, not individual login failures</li><li><strong>"Least operational overhead"</strong> — metric filter (declarative) beats Lambda (code to maintain) every time</li><li><strong>CloudTrail must forward to CloudWatch Logs</strong> — metric filters work on CloudWatch Logs, not directly on CloudTrail S3 files</li></ul>
 </div></div>
+<div class="section" id="d3-s10">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> AWS Cost Anomaly Detection — Monitor Types & Alerts</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: 50 AWS accounts in Organizations. EC2 data exfiltration caused increased EC2 expenditure. Security team needs to identify similar expenditure fluctuations per service so admins can take <strong>immediate action</strong>.</p>
+<p><strong>Correct Answer</strong>: B — Cost Anomaly Detection with <strong>AWS services monitor type</strong> in each member account + <strong>individual alerts</strong></p>
+<h3>Concept: Cost Anomaly Detection</h3>
+<p>AWS Cost Anomaly Detection uses <strong>machine learning</strong> to continuously monitor cost and usage patterns and detect unusual spends — no threshold configuration needed.</p>
+<pre><code>Cost Anomaly Detection Architecture:
+┌──────────────────────────────────────────────┐
+│           AWS Cost Anomaly Detection         │
+│                                              │
+│  ┌─────────────────┐  ┌──────────────────┐   │
+│  │ AWS Services    │  │ Linked Account   │   │
+│  │ Monitor         │  │ Monitor          │   │
+│  │                 │  │                  │   │
+│  │ EC2 ──► ✓      │  │ Account Total    │   │
+│  │ S3  ──► ✓      │  │ Spend ──► ✓      │   │
+│  │ RDS ──► ✓      │  │                  │   │
+│  │ (each separate) │  │ (single total)   │   │
+│  └────────┬────────┘  └────────┬─────────┘   │
+│           │                    │              │
+│     Detects EC2          Might miss EC2      │
+│     spike alone          spike if other       │
+│                          services offset      │
+└───────────┼────────────────────┘              │
+            ▼                                   │
+  ┌──────────────────┐                          │
+  │ Alert Subscription│                         │
+  ├──────────────────┤                          │
+  │ Individual: ASAP │ ◄── Immediate action     │
+  │ Daily Summary: 1x│ ◄── Delayed response     │
+  └──────────────────┘</code></pre>
+<h3>Monitor Types Comparison</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Monitor Type</th>
+<th>Scope</th>
+<th>Granularity</th>
+<th>Best For</th>
+</tr>
+<tr>
+<td><strong>AWS Services</strong></td>
+<td>Each AWS service independently</td>
+<td>Per-service anomaly</td>
+<td>Detecting spike in <strong>one service</strong> (e.g., EC2)</td>
+</tr>
+<tr>
+<td><strong>Linked Account</strong></td>
+<td>Total spend per account</td>
+<td>Account-level total</td>
+<td>Overall budget anomaly across an account</td>
+</tr>
+<tr>
+<td><strong>Cost Category</strong></td>
+<td>Custom groupings</td>
+<td>By category</td>
+<td>Business-unit or project cost tracking</td>
+</tr>
+<tr>
+<td><strong>Cost Allocation Tag</strong></td>
+<td>Tagged resources</td>
+<td>By tag</td>
+<td>Environment (prod/dev) cost tracking</td>
+</tr>
+</table></div>
+<h3>Alert Types Comparison</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Alert Type</th>
+<th>Delivery</th>
+<th>Latency</th>
+<th>Use Case</th>
+</tr>
+<tr>
+<td><strong>Individual</strong></td>
+<td>One alert per anomaly, <strong>as detected</strong></td>
+<td>Near real-time</td>
+<td><strong>Immediate incident response</strong></td>
+</tr>
+<tr>
+<td><strong>Daily Summary</strong></td>
+<td>One email/day with all anomalies</td>
+<td>Up to 24 hours</td>
+<td>Routine cost review, non-urgent</td>
+</tr>
+</table></div>
+<h3>Why Wrong Answers Fail</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Option</th>
+<th>Why Wrong</th>
+</tr>
+<tr>
+<td><strong>A</strong> - Services monitor + daily summary</td>
+<td>Daily summary = delayed notification. Admins can't take "immediate action"</td>
+</tr>
+<tr>
+<td><strong>C</strong> - Linked Account + daily summary</td>
+<td>Two problems: monitors total spend (misses per-service), AND daily = delayed</td>
+</tr>
+<tr>
+<td><strong>D</strong> - Linked Account + individual</td>
+<td>Monitors total account spend, not per-service. Could miss EC2-specific spike</td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>"Linked Account" sounds right for Organizations</strong> — but it monitors total spend, not individual services. An EC2 spike could be masked by lower spend elsewhere</li><li><strong>"Daily summary" sounds efficient</strong> — but fails any requirement with "immediate" or "quick" action language</li><li><strong>Two-axis decision</strong>: always check BOTH the monitor type AND the alert type separately</li><li><strong>Per-service detection needs AWS Services monitor</strong> — this is the only type that evaluates each service independently</li><li><strong>Cost Anomaly Detection ≠ AWS Budgets</strong> — Budgets uses fixed thresholds; Cost Anomaly Detection uses ML baselines</li></ul>
+</div></div>
         </div>
     </div>
     
