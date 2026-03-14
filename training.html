@@ -2038,7 +2038,96 @@ IAM Identity Center is the **managed service** for centralized SSO access to mul
 <p>│ Identity Pools: Temp creds  │ Built-in temp creds       │</p>
 <p>│ Multi-account AWS: No       │ Multi-account AWS: Yes    │</p>
 <p>└───────────────────────────┴───────────────────────────┘</p>
-<pre><code></code></pre>
+<pre><code>
+---
+
+## CloudFront Security Headers — Response Header Policies
+
+### Question Summary
+
+**Scenario**: S3-hosted website with CloudFront distribution. Need to add security headers to all HTTPS responses with least operational overhead.
+
+**Correct Answer**: D — Create a CloudFront response header policy
+
+### The Rule: Built-in Feature &gt; WAF &gt; Lambda@Edge
+
+When adding HTTP security headers to CloudFront responses, there are three technically feasible options. The exam always picks the one with **least operational overhead**:
+</code></pre>
+<p>┌─────────────────────────────────────────────────────────┐</p>
+<p>│  Adding Security Headers — Overhead Comparison           │</p>
+<p>│                                                          │</p>
+<p>│  LEAST overhead                                          │</p>
+<p>│  ┌────────────────────────────────────────────────┐     │</p>
+<p>│  │ D. CloudFront Response Header Policy            │     │</p>
+<p>│  │    Built-in feature. No code. Just configure.   │     │</p>
+<p>│  └────────────────────────────────────────────────┘     │</p>
+<p>│                     ▼                                    │</p>
+<p>│  ┌────────────────────────────────────────────────┐     │</p>
+<p>│  │ B. AWS WAF Web ACL                              │     │</p>
+<p>│  │    Works but requires WAF setup + rule mgmt     │     │</p>
+<p>│  └────────────────────────────────────────────────┘     │</p>
+<p>│                     ▼                                    │</p>
+<p>│  ┌────────────────────────────────────────────────┐     │</p>
+<p>│  │ C. Lambda@Edge                                  │     │</p>
+<p>│  │    Works but requires code + deployment + mgmt  │     │</p>
+<p>│  └────────────────────────────────────────────────┘     │</p>
+<p>│  MOST overhead                                           │</p>
+<p>│                                                          │</p>
+<p>│  A. S3 tags — DOES NOT WORK (tags ≠ HTTP headers)       │</p>
+<p>│                                                          │</p>
+<p>└─────────────────────────────────────────────────────────┘</p>
+<pre><code>
+### CloudFront Response Header Policy
+
+A managed feature to add, remove, or override HTTP headers in responses sent to viewers.
+
+**Common security headers you can add**:
+
+| Header | Purpose |
+|--------|---------|
+| `Strict-Transport-Security` (HSTS) | Force HTTPS connections |
+| `Content-Security-Policy` (CSP) | Prevent XSS, code injection |
+| `X-Content-Type-Options` | Prevent MIME-type sniffing |
+| `X-Frame-Options` | Prevent clickjacking |
+| `X-XSS-Protection` | Enable browser XSS filter |
+| `Referrer-Policy` | Control referrer information |
+
+**How to apply**:
+1. Create a response header policy in CloudFront console
+2. Add desired security headers
+3. Attach the policy to a CloudFront behavior (or the default behavior)
+4. No invalidation needed — applies to new responses immediately
+
+### CloudFront Feature Decision Table
+
+| Need | Answer | NOT |
+|------|--------|-----|
+| Add security headers to responses | **Response Header Policy** | Lambda@Edge, WAF |
+| Custom request/response logic | **Lambda@Edge** or **CloudFront Functions** | Response Header Policy |
+| Block malicious traffic (SQLi, XSS) | **AWS WAF** | Response Header Policy |
+| Geo-blocking | **CloudFront geo-restriction** or **WAF** | Lambda@Edge |
+| URL rewriting/redirects | **CloudFront Functions** | Lambda@Edge (overkill) |
+| Auth at edge (JWT validation) | **Lambda@Edge** | CloudFront Functions (limited) |
+
+### CloudFront Functions vs Lambda@Edge
+</code></pre>
+<p>┌──────────────────────┬──────────────────────────┐</p>
+<p>│ CloudFront Functions  │ Lambda@Edge              │</p>
+<p>├──────────────────────┼──────────────────────────┤</p>
+<p>│ Viewer request/resp   │ All 4 event types        │</p>
+<p>│ JavaScript only       │ Node.js or Python        │</p>
+<p>│ < 1ms execution       │ Up to 30s execution      │</p>
+<p>│ No network access     │ Network access allowed   │</p>
+<p>│ Max 10 KB code        │ Up to 50 MB package      │</p>
+<p>│ Millions of req/sec   │ Thousands of req/sec     │</p>
+<p>│ Cheaper               │ More expensive           │</p>
+<p>│ Simple transforms     │ Complex logic            │</p>
+<p>└──────────────────────┴──────────────────────────┘</p>
+<pre><code>
+### Exam Trap: S3 Tags ≠ HTTP Headers
+
+S3 object tags are metadata for categorization, billing, and lifecycle policies. They are **NOT exposed through HTTP/HTTPS access**. If an answer suggests using S3 tags to set response headers, it is always wrong.
+</code></pre>
 </div></div>
         </div>
     </div>
