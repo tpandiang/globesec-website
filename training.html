@@ -1939,7 +1939,106 @@ These GuardDuty findings auto-initiate a malware scan — know the categories:
 
 - **New findings**: Near real-time (immediate)
 - **Subsequent occurrences**: Default **6 hours** (configurable: 15 min, 1 hr, 6 hr)
-- **Suppressed findings**: NOT sent to EventBridge</code></pre>
+- **Suppressed findings**: NOT sent to EventBridge
+
+---
+
+## IAM Identity Center — SSO with Active Directory
+
+### Question Summary
+
+**Scenario**: Implement SSO using SAML with on-premises Active Directory. Developers need access to multiple AWS accounts with role-based permissions. Temporary credentials required. No custom development.
+
+**Correct Answer**: A — IAM Identity Center + ADFS + SCIM provisioning
+
+### Concept: IAM Identity Center (formerly AWS SSO)
+
+IAM Identity Center is the **managed service** for centralized SSO access to multiple AWS accounts and applications. Whenever you see "SSO + Active Directory + multiple AWS accounts" in a question, the answer is IAM Identity Center.
+</code></pre>
+<p>┌─────────────────────────────────────────────────────┐</p>
+<p>│         IAM Identity Center SSO Flow                 │</p>
+<p>│                                                      │</p>
+<p>│  On-Premises                        AWS              │</p>
+<p>│  ┌──────────┐    SAML    ┌────────────────────┐     │</p>
+<p>│  │  Active   │◄─────────►│  IAM Identity      │     │</p>
+<p>│  │ Directory │           │  Center            │     │</p>
+<p>│  │  + ADFS   │   SCIM    │                    │     │</p>
+<p>│  │           │──────────►│  Auto-sync users   │     │</p>
+<p>│  └──────────┘  (auto     │  & groups          │     │</p>
+<p>│                 sync)    └────────┬───────────┘     │</p>
+<p>│                                   │                  │</p>
+<p>│                          Permission Sets             │</p>
+<p>│                           ┌───────┼───────┐         │</p>
+<p>│                           ▼       ▼       ▼         │</p>
+<p>│                        Acct A  Acct B  Acct C       │</p>
+<p>│                        DevRole AdminR  ReadOnly     │</p>
+<p>│                                                      │</p>
+<p>│  Developer logs in → SSO portal → picks account     │</p>
+<p>│  → gets TEMPORARY credentials for that role         │</p>
+<p>│                                                      │</p>
+<p>└─────────────────────────────────────────────────────┘</p>
+<pre><code>
+### Key Components
+
+| Component | Purpose |
+|-----------|---------|
+| **ADFS** | Active Directory Federation Services — translates AD authentication to SAML assertions |
+| **SCIM** | System for Cross-domain Identity Management — auto-syncs users/groups from AD to AWS |
+| **Permission Sets** | Define what permissions a user gets in which account |
+| **SSO Portal** | Web portal where users pick which account/role to access |
+| **Temporary Credentials** | STS credentials generated automatically — no long-term keys |
+
+### SCIM Provisioning — Exam Point
+
+- Auto-syncs users and groups from AD to IAM Identity Center
+- No manual user creation needed in AWS
+- Changes in AD (new hire, termination) automatically reflected
+- Eliminates custom Lambda provisioning scripts
+
+### Permission Sets
+
+- Define **what permissions** a user gets in **which account**
+- Map to **AD groups** (e.g., "Developers" group → DevOps permission set → Accounts A, B, C)
+- Generate **temporary STS credentials** — no long-term keys
+- One permission set can apply to multiple accounts
+- Based on AWS managed policies or custom policies
+
+### Identity Federation Decision Table
+
+| Scenario | Answer |
+|----------|--------|
+| SSO to **multiple AWS accounts** | **IAM Identity Center** (always) |
+| Web/mobile app user authentication | **Cognito User Pools** |
+| Federate to a **single AWS account** | **IAM SAML 2.0 federation** (direct) |
+| Existing on-prem AD, need AWS access | **IAM Identity Center + ADFS** |
+| Auto-sync AD users/groups to AWS | **SCIM** (Identity Center supports this) |
+| Temporary credentials for federated users | **STS** (Identity Center handles automatically) |
+| Social login (Google, Facebook, Amazon) | **Cognito User Pools** |
+| Machine-to-machine on-prem to AWS | **IAM Roles Anywhere** |
+
+### Why Wrong Answers Fail
+
+| Option | Why Wrong |
+|--------|-----------|
+| **Cognito** | For customer/app authentication, NOT enterprise SSO to AWS accounts |
+| **Simple AD** | Basic AD compatibility only. No SAML federation. No trust relationships |
+| **Lambda provisioning** | Custom development. Nightly sync = not real-time. No built-in SSO |
+| **IAM users per account** | Long-term credentials. No SSO. Manual management per account |
+
+### Cognito vs Identity Center — Know the Difference
+</code></pre>
+<p>┌───────────────────────────┬───────────────────────────┐</p>
+<p>│     Amazon Cognito         │   IAM Identity Center     │</p>
+<p>├───────────────────────────┼───────────────────────────┤</p>
+<p>│ For: App users (B2C)       │ For: Employees (B2B/B2E)  │</p>
+<p>│ Auth to: Your app/API      │ Auth to: AWS accounts     │</p>
+<p>│ Users: Sign up themselves   │ Users: Managed by IT/AD   │</p>
+<p>│ Social login: Yes           │ Social login: No          │</p>
+<p>│ User Pools: Authentication  │ Permission Sets: AuthZ    │</p>
+<p>│ Identity Pools: Temp creds  │ Built-in temp creds       │</p>
+<p>│ Multi-account AWS: No       │ Multi-account AWS: Yes    │</p>
+<p>└───────────────────────────┴───────────────────────────┘</p>
+<pre><code></code></pre>
 </div></div>
         </div>
     </div>
