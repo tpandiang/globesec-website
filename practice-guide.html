@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Practice Questions Study Guide - GlobeSec.ai</title>
+<meta name="description" content="AWS Security Specialty (SCS-C03) practice questions study guide with 50+ exam scenarios organized by domain - GlobeSec.ai">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg: #0a1628;
+    --bg2: #0f2744;
+    --bg3: #162d50;
+    --accent: #00d4ff;
+    --accent2: #7b61ff;
+    --aws: #ff9900;
+    --text: #e0e8f0;
+    --text-muted: #8899aa;
+    --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95);
+    backdrop-filter: blur(20px);
+    color: #fff;
+    padding: 0 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    height: 60px;
+    border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link {
+    color: var(--accent); text-decoration: none; font-size: 0.85rem;
+    display: flex; align-items: center; gap: 0.3rem; font-weight: 500;
+}
+.back-link:hover { text-decoration: underline; }
+.topbar-title {
+    font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem;
+}
+.aws-badge {
+    background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem;
+    border-radius: 4px; font-size: 0.7rem; font-weight: 800;
+}
+.globe-badge {
+    background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem;
+    border-radius: 4px; font-size: 0.7rem; font-weight: 800;
+}
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.search-box { position: relative; }
+.search-box input {
+    padding: 0.4rem 0.8rem 0.4rem 2rem; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 0.85rem; width: 240px;
+    background: var(--bg2); color: var(--text); outline: none;
+}
+.search-box input::placeholder { color: var(--text-muted); }
+.search-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,212,255,0.15); }
+.search-icon { position: absolute; left: 0.6rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem; }
+.topbar-btn {
+    background: var(--bg3); color: var(--accent); border: 1px solid var(--border);
+    padding: 0.35rem 0.7rem; border-radius: 6px;
+    font-size: 0.78rem; font-weight: 600; cursor: pointer;
+    transition: all 0.2s;
+}
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Layout */
+.layout { display: flex; min-height: calc(100vh - 60px); }
+
+/* Sidebar */
+.sidebar {
+    width: 280px; background: var(--bg2); color: var(--text);
+    padding: 1rem 0; position: sticky; top: 60px;
+    height: calc(100vh - 60px); overflow-y: auto; flex-shrink: 0;
+    border-right: 1px solid var(--border);
+}
+.sidebar-title {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--text-muted); padding: 0.5rem 1.2rem; margin-bottom: 0.25rem;
+}
+.toc-item {
+    display: flex; align-items: center; padding: 0.6rem 1.2rem; text-decoration: none;
+    color: var(--text); gap: 0.6rem; transition: all 0.15s;
+    border-left: 3px solid transparent;
+}
+.toc-item:hover { background: var(--bg3); color: var(--white); border-left-color: var(--accent); }
+.toc-item.active { background: var(--bg3); color: var(--accent); border-left-color: var(--accent); }
+.toc-num {
+    background: var(--bg3); color: var(--aws); width: 24px; height: 24px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+}
+.toc-item.active .toc-num { background: var(--aws); color: var(--bg); }
+.toc-num.overview { background: var(--accent); color: var(--bg); font-size: 0.6rem; width: 28px; border-radius: 4px; }
+.toc-num.cheat { background: #10b981; color: #fff; font-size: 0.5rem; width: 28px; border-radius: 4px; }
+.toc-name { font-size: 0.85rem; font-weight: 500; flex: 1; }
+.toc-weight {
+    font-size: 0.72rem; color: var(--text-muted); background: var(--bg);
+    padding: 0.1rem 0.4rem; border-radius: 3px;
+}
+
+.progress-section { padding: 1rem 1.2rem; border-top: 1px solid var(--border); margin-top: 0.5rem; }
+.progress-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 0.4rem; }
+.progress-bar { background: var(--bg); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Main content */
+.main { flex: 1; padding: 1.5rem 2rem; max-width: 1000px; }
+
+/* Domain card */
+.domain {
+    background: var(--bg2); border-radius: 10px; margin-bottom: 1.25rem;
+    border: 1px solid var(--border); overflow: hidden;
+}
+.domain-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1rem 1.5rem; cursor: pointer;
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border-bottom: 1px solid var(--border);
+}
+.domain-header:hover { background: linear-gradient(135deg, #132d4f 0%, #1a3a63 100%); }
+.domain-title-row { display: flex; align-items: center; gap: 0.75rem; }
+.domain-number {
+    background: var(--aws); color: #232f3e; padding: 0.2rem 0.6rem;
+    border-radius: 4px; font-size: 0.75rem; font-weight: 800;
+    text-transform: uppercase; white-space: nowrap;
+}
+.overview-badge { background: var(--gradient); color: var(--bg); }
+.cheat-badge { background: #10b981; color: #fff; }
+.domain-title { font-size: 1.05rem; font-weight: 600; color: var(--white); }
+.domain-toggle { font-size: 1.2rem; transition: transform 0.2s; color: var(--text-muted); }
+.domain.collapsed .domain-toggle { transform: rotate(-90deg); }
+.domain.collapsed .domain-body { display: none; }
+.domain-body { padding: 0.5rem 1.5rem 1.5rem; }
+
+/* Content styling */
+h3 {
+    font-size: 0.92rem; font-weight: 600; color: var(--accent); margin: 1rem 0 0.4rem;
+    padding-bottom: 0.2rem; border-bottom: 1px solid rgba(0,212,255,0.1);
+}
+h4 { font-size: 0.85rem; font-weight: 600; color: var(--accent2); margin: 0.75rem 0 0.3rem; }
+
+p { margin: 0.4rem 0; font-size: 0.88rem; }
+a { color: var(--accent); }
+
+ul, ol { margin: 0.3rem 0 0.5rem 1.25rem; }
+li { font-size: 0.87rem; margin: 0.15rem 0; line-height: 1.5; }
+li ul { margin: 0.1rem 0 0.15rem 1rem; }
+
+strong { color: var(--white); }
+code {
+    background: rgba(0,212,255,0.08); color: #ff7eb6; padding: 0.1rem 0.35rem;
+    border-radius: 3px; font-size: 0.82rem;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+pre {
+    background: #0d1b2a; color: #e2e8f0; padding: 1rem; border-radius: 6px;
+    overflow-x: auto; margin: 0.5rem 0; font-size: 0.8rem; line-height: 1.5;
+    border: 1px solid var(--border);
+}
+pre code { background: none; color: inherit; padding: 0; font-size: 0.8rem; }
+
+/* Tables */
+.table-wrap { overflow-x: auto; margin: 0.5rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: 0.83rem; }
+th {
+    background: var(--bg3); color: var(--accent); padding: 0.45rem 0.65rem;
+    text-align: left; font-weight: 600; font-size: 0.78rem;
+    text-transform: uppercase; letter-spacing: 0.3px;
+    border-bottom: 2px solid var(--accent);
+}
+td { padding: 0.4rem 0.65rem; border-bottom: 1px solid var(--border); }
+tr:hover td { background: rgba(0,212,255,0.03); }
+
+/* Concept card */
+.concept-card {
+    background: rgba(15, 39, 68, 0.6); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem 1.25rem; margin: 0.75rem 0;
+    border-left: 3px solid var(--accent2);
+}
+.concept-card:hover { border-left-color: var(--accent); }
+.concept-num {
+    font-size: 0.7rem; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem;
+}
+.concept-title {
+    font-size: 0.95rem; font-weight: 700; color: var(--white); margin-bottom: 0.4rem;
+}
+.concept-scenario {
+    font-size: 0.85rem; color: var(--text); margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem; background: rgba(0,0,0,0.2); border-radius: 4px;
+    border-left: 2px solid var(--aws);
+}
+.concept-key {
+    display: inline-block; background: rgba(0,212,255,0.1); color: var(--accent);
+    font-size: 0.78rem; font-weight: 600; padding: 0.15rem 0.5rem;
+    border-radius: 4px; margin: 0.2rem 0.2rem 0.2rem 0;
+}
+.concept-explain { font-size: 0.85rem; color: var(--text); margin-top: 0.4rem; }
+.concept-services {
+    margin-top: 0.4rem; font-size: 0.78rem; color: var(--text-muted);
+}
+.concept-services span {
+    display: inline-block; background: rgba(255,153,0,0.1); color: var(--aws);
+    padding: 0.1rem 0.4rem; border-radius: 3px; margin: 0.15rem 0.15rem 0 0;
+    font-size: 0.75rem; font-weight: 600;
+}
+
+/* Exam tip */
+.exam-tip {
+    background: rgba(255,153,0,0.06); border: 1px solid rgba(255,153,0,0.2);
+    border-radius: 8px; padding: 0.75rem 1rem; margin: 1rem 0;
+}
+.exam-tip-label {
+    font-size: 0.75rem; font-weight: 700; color: var(--aws);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem;
+}
+.exam-tip p { font-size: 0.84rem; color: var(--text); margin: 0.2rem 0; }
+
+/* Cheatsheet */
+.cheatsheet-section {
+    border-left: 3px solid var(--aws); background: rgba(255,153,0,0.05);
+    border-radius: 6px; padding: 0.5rem 1rem; margin: 1rem 0;
+}
+
+/* Search highlight */
+mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.15rem; border-radius: 2px; }
+
+/* Responsive */
+@media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+}
+
+/* Print */
+@media print {
+    .topbar, .sidebar, .topbar-btn { display: none; }
+    .domain.collapsed .domain-body { display: block !important; }
+    body { background: #fff; color: #000; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <a href="training.html" class="back-link">&#8592; Study Guide</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">AWS</span>
+            <span>SCS-C03 Practice Questions Guide</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <div class="search-box">
+            <span class="search-icon">&#128269;</span>
+            <input type="text" id="searchInput" placeholder="Search concepts..." oninput="handleSearch(this.value)">
+        </div>
+        <button class="topbar-btn" onclick="expandAll()">Expand All</button>
+        <button class="topbar-btn" onclick="collapseAll()">Collapse All</button>
+    </div>
+</div>
+
+<div class="layout">
+    <div class="sidebar">
+        <div class="sidebar-title">Practice Guide</div>
+        <a href="#overview" class="toc-item" onclick="showDomain(event, 'overview')">
+            <span class="toc-num overview">INFO</span>
+            <span class="toc-name">Overview & Exam Structure</span>
+        </a>
+        <div class="sidebar-title" style="margin-top:0.75rem;">Exam Domains</div>
+        <a href="#domain-1" class="toc-item" onclick="showDomain(event, 'domain-1')">
+            <span class="toc-num">1</span>
+            <span class="toc-name">Threat Detection & IR</span>
+            <span class="toc-weight">14%</span>
+        </a>
+        <a href="#domain-2" class="toc-item" onclick="showDomain(event, 'domain-2')">
+            <span class="toc-num">2</span>
+            <span class="toc-name">Logging & Monitoring</span>
+            <span class="toc-weight">18%</span>
+        </a>
+        <a href="#domain-3" class="toc-item" onclick="showDomain(event, 'domain-3')">
+            <span class="toc-num">3</span>
+            <span class="toc-name">Infrastructure Security</span>
+            <span class="toc-weight">20%</span>
+        </a>
+        <a href="#domain-4" class="toc-item" onclick="showDomain(event, 'domain-4')">
+            <span class="toc-num">4</span>
+            <span class="toc-name">Identity & Access Mgmt</span>
+            <span class="toc-weight">16%</span>
+        </a>
+        <a href="#domain-5" class="toc-item" onclick="showDomain(event, 'domain-5')">
+            <span class="toc-num">5</span>
+            <span class="toc-name">Data Protection</span>
+            <span class="toc-weight">32%</span>
+        </a>
+        <a href="#cheatsheet" class="toc-item" onclick="showDomain(event, 'cheatsheet')">
+            <span class="toc-num cheat">REF</span>
+            <span class="toc-name">Key Services Cheatsheet</span>
+        </a>
+
+        <div class="progress-section">
+            <div class="progress-label">Study Progress</div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="progress-text" id="progressText">0 / 7 sections open</div>
+        </div>
+    </div>
+
+    <div class="main" id="mainContent">
+
+<!-- ===== OVERVIEW ===== -->
+<div class="domain collapsed" id="overview">
+    <div class="domain-header" onclick="toggleDomain(this)">
+        <div class="domain-title-row">
+            <span class="domain-number overview-badge">OVERVIEW</span>
+            <span class="domain-title">Overview & Exam Structure</span>
+        </div>
+        <span class="domain-toggle">&#9660;</span>
+    </div>
+    <div class="domain-body">
+        <h3>About This Guide</h3>
+        <p>This practice guide distills <strong>50+ exam-style scenarios</strong> into key concept cards organized by SCS-C03 domain. Each card covers the scenario theme, the core AWS concept being tested, a concise explanation, and the AWS services involved.</p>
+        <p>Use this alongside the <a href="training.html">main study guide</a> to reinforce your understanding of how concepts appear in exam questions.</p>
+
+        <h3>SCS-C03 Exam Structure</h3>
+        <div class="table-wrap">
+        <table>
+            <tr><th>Domain</th><th>Weight</th><th>Focus Areas</th></tr>
+            <tr><td><strong>1. Threat Detection & Incident Response</strong></td><td>14%</td><td>GuardDuty, Detective, incident workflows, forensics</td></tr>
+            <tr><td><strong>2. Security Logging & Monitoring</strong></td><td>18%</td><td>CloudTrail, CloudWatch, Config, log analysis</td></tr>
+            <tr><td><strong>3. Infrastructure Security</strong></td><td>20%</td><td>VPC, WAF, Shield, NACLs, Security Groups, firewalls</td></tr>
+            <tr><td><strong>4. Identity & Access Management</strong></td><td>16%</td><td>IAM policies, roles, federation, SCPs, ABAC</td></tr>
+            <tr><td><strong>5. Data Protection</strong></td><td>32%</td><td>KMS, encryption, S3 security, Secrets Manager, ACM</td></tr>
+        </table>
+        </div>
+
+        <div class="exam-tip">
+            <div class="exam-tip-label">Exam Strategy</div>
+            <p><strong>Data Protection is 32%</strong> of the exam &mdash; spend the most time here. KMS key policies, S3 encryption enforcement, and Secrets Manager rotation are heavily tested.</p>
+            <p>Questions often test whether you know the <strong>correct combination of services</strong>, not just individual service features.</p>
+        </div>
+
+        <h3>How to Use This Guide</h3>
+        <ul>
+            <li><strong>Read the scenario</strong> &mdash; understand what the question is really asking</li>
+            <li><strong>Study the key concept</strong> &mdash; this is the core knowledge being tested</li>
+            <li><strong>Review the explanation</strong> &mdash; understand why this is the correct approach</li>
+            <li><strong>Note the services</strong> &mdash; build mental maps of which services solve which problems</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ===== DOMAIN 1: THREAT DETECTION & IR ===== -->
+<div class="domain collapsed" id="domain-1">
+    <div class="domain-header" onclick="toggleDomain(this)">
+        <div class="domain-title-row">
+            <span class="domain-number">DOMAIN 1</span>
+            <span class="domain-title">Threat Detection & Incident Response (14%)</span>
+        </div>
+        <span class="domain-toggle">&#9660;</span>
+    </div>
+    <div class="domain-body">
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 1.1</div>
+            <div class="concept-title">GuardDuty C2 Detection + SSM Inventory Response</div>
+            <div class="concept-scenario">A security team needs to detect command-and-control (C2) activity on EC2 instances and automatically gather inventory data from potentially compromised instances for investigation.</div>
+            <span class="concept-key">GuardDuty Finding Types</span>
+            <span class="concept-key">Automated Response</span>
+            <div class="concept-explain">GuardDuty detects C2 activity through DNS-based and network-based findings (e.g., <code>Backdoor:EC2/C&CActivity.B</code>). When a finding fires, use EventBridge to trigger a Lambda function that invokes SSM Inventory collection on the flagged instance, gathering installed packages, running processes, and network connections for forensic analysis.</div>
+            <div class="concept-services">Services: <span>GuardDuty</span> <span>EventBridge</span> <span>Lambda</span> <span>Systems Manager</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 1.2</div>
+            <div class="concept-title">EC2 Incident Response Preparation</div>
+            <div class="concept-scenario">An organization wants to ensure that when an EC2 instance is compromised, they can preserve evidence and prevent accidental termination during investigation.</div>
+            <span class="concept-key">Termination Protection</span>
+            <span class="concept-key">EBS Snapshots</span>
+            <span class="concept-key">Instance Metadata</span>
+            <div class="concept-explain">Key IR steps for EC2: <strong>1)</strong> Enable termination protection to prevent accidental deletion. <strong>2)</strong> Create EBS snapshots of all attached volumes for forensic analysis. <strong>3)</strong> Capture instance metadata (security groups, IAM role, VPC info). <strong>4)</strong> Isolate the instance by changing its security group to one that denies all traffic. <strong>5)</strong> Tag the instance as under investigation. Do NOT stop or terminate the instance as this loses volatile memory data.</div>
+            <div class="concept-services">Services: <span>EC2</span> <span>EBS</span> <span>VPC Security Groups</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 1.3</div>
+            <div class="concept-title">GuardDuty Multi-Region + EventBridge Alerting</div>
+            <div class="concept-scenario">A company operates in multiple AWS regions and needs centralized threat detection with real-time alerting when high-severity findings are detected.</div>
+            <span class="concept-key">Multi-Region GuardDuty</span>
+            <span class="concept-key">EventBridge Cross-Region</span>
+            <div class="concept-explain">GuardDuty must be enabled in <strong>every region</strong> you operate in &mdash; threats can originate from any region. Use a GuardDuty delegated administrator in AWS Organizations for centralized management. Set up EventBridge rules in each region to forward high-severity findings to a central region, then route to SNS for notifications. GuardDuty findings are region-specific; there is no global view without aggregation.</div>
+            <div class="concept-services">Services: <span>GuardDuty</span> <span>EventBridge</span> <span>SNS</span> <span>AWS Organizations</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 1.4</div>
+            <div class="concept-title">CloudTrail Event History for Compromised Access Keys</div>
+            <div class="concept-scenario">An IAM access key has been exposed on a public repository. The security team needs to determine what actions were performed using the compromised key.</div>
+            <span class="concept-key">CloudTrail Lookup Events</span>
+            <span class="concept-key">Access Key Remediation</span>
+            <div class="concept-explain">Immediately <strong>disable (not delete)</strong> the compromised access key to preserve the key ID for investigation. Use CloudTrail Event History or query CloudTrail logs in S3 to filter events by the access key ID. Check for unauthorized API calls, resource creation, or data exfiltration. Review the last 90 days of events in Event History, or use Athena for longer lookback in S3-stored logs. After investigation, delete the key and rotate all credentials for the affected IAM user.</div>
+            <div class="concept-services">Services: <span>CloudTrail</span> <span>IAM</span> <span>Athena</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 1.5</div>
+            <div class="concept-title">CloudTrail + Athena for Former Employee Investigation</div>
+            <div class="concept-scenario">A company suspects a recently terminated employee accessed AWS resources before their credentials were revoked. They need to investigate activity over the past 6 months.</div>
+            <span class="concept-key">Athena Log Analysis</span>
+            <span class="concept-key">CloudTrail S3 Logs</span>
+            <div class="concept-explain">CloudTrail Event History only provides the last 90 days via console. For longer investigation periods, query CloudTrail logs stored in S3 using <strong>Amazon Athena</strong>. Create an Athena table pointing to the CloudTrail S3 bucket, then run SQL queries filtering by the user's IAM ARN or username. This allows searching across months of activity data for specific API calls, accessed resources, and source IPs.</div>
+            <div class="concept-services">Services: <span>CloudTrail</span> <span>Athena</span> <span>S3</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 1.6</div>
+            <div class="concept-title">EC2 Key Pair Recovery via Volume Detachment</div>
+            <div class="concept-scenario">An administrator has lost the SSH key pair for an EC2 instance and needs to regain access without terminating the instance.</div>
+            <span class="concept-key">EBS Volume Detach/Attach</span>
+            <span class="concept-key">Authorized Keys</span>
+            <div class="concept-explain">Stop the instance (not terminate). Detach the root EBS volume. Attach it as a secondary volume to another instance. Mount it and modify the <code>~/.ssh/authorized_keys</code> file to add a new public key. Unmount and detach the volume, reattach it as the root volume of the original instance, and start it. Alternatively, use <strong>EC2 Instance Connect</strong> or <strong>SSM Session Manager</strong> which don't require key pairs at all.</div>
+            <div class="concept-services">Services: <span>EC2</span> <span>EBS</span> <span>SSM Session Manager</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 1.7</div>
+            <div class="concept-title">GuardDuty + Security Hub Integration</div>
+            <div class="concept-scenario">A security operations team wants a centralized dashboard showing findings from GuardDuty, Inspector, and Macie with automated compliance checks.</div>
+            <span class="concept-key">Security Hub Aggregation</span>
+            <span class="concept-key">ASFF Format</span>
+            <div class="concept-explain">AWS Security Hub aggregates findings from GuardDuty, Inspector, Macie, Firewall Manager, and third-party tools into the <strong>AWS Security Finding Format (ASFF)</strong>. Enable Security Hub in all accounts via Organizations. Findings are normalized and can trigger automated remediation via EventBridge. Security Hub also runs <strong>automated security checks</strong> against standards like CIS AWS Foundations Benchmark and AWS Foundational Security Best Practices.</div>
+            <div class="concept-services">Services: <span>Security Hub</span> <span>GuardDuty</span> <span>Inspector</span> <span>Macie</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 1.8</div>
+            <div class="concept-title">Automated Forensic Evidence Collection</div>
+            <div class="concept-scenario">When a security incident is detected, the team needs to automatically collect forensic artifacts (memory dumps, disk snapshots, logs) before any manual intervention could alter evidence.</div>
+            <span class="concept-key">Step Functions Orchestration</span>
+            <span class="concept-key">Forensic Automation</span>
+            <div class="concept-explain">Use <strong>Step Functions</strong> to orchestrate an automated forensic workflow triggered by GuardDuty findings via EventBridge. The workflow: <strong>1)</strong> Isolate the instance (swap security group). <strong>2)</strong> Create EBS snapshots. <strong>3)</strong> Capture instance metadata via EC2 API. <strong>4)</strong> Enable termination protection. <strong>5)</strong> Notify the security team via SNS. <strong>6)</strong> Create a forensic timeline in a dedicated S3 bucket. This ensures consistent evidence collection regardless of who is on-call.</div>
+            <div class="concept-services">Services: <span>Step Functions</span> <span>Lambda</span> <span>EventBridge</span> <span>GuardDuty</span> <span>S3</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 1.9</div>
+            <div class="concept-title">Amazon Detective for Investigation</div>
+            <div class="concept-scenario">After receiving a GuardDuty finding, the security analyst needs to investigate the scope of the potential breach by visualizing related entity relationships and activity patterns.</div>
+            <span class="concept-key">Detective Behavior Graphs</span>
+            <span class="concept-key">Entity Profiling</span>
+            <div class="concept-explain">Amazon Detective automatically collects log data from VPC Flow Logs, CloudTrail, and GuardDuty findings to build a <strong>behavior graph</strong>. It uses ML to create visualizations showing resource interactions, API call patterns, and geolocation data. From a GuardDuty finding, you can pivot directly into Detective to see what else the flagged entity (IP, IAM principal, EC2 instance) has done. Detective retains up to <strong>12 months</strong> of data for investigation.</div>
+            <div class="concept-services">Services: <span>Detective</span> <span>GuardDuty</span> <span>CloudTrail</span> <span>VPC Flow Logs</span></div>
+        </div>
+
+        <div class="exam-tip">
+            <div class="exam-tip-label">Exam Tips &mdash; Domain 1</div>
+            <p><strong>Isolate, don't terminate:</strong> The correct IR response for EC2 is always to isolate (change SG) and snapshot, never terminate.</p>
+            <p><strong>GuardDuty is regional:</strong> It must be enabled per-region. Use Organizations delegated admin for centralized management.</p>
+            <p><strong>Disable, don't delete</strong> compromised access keys &mdash; deleting removes the key ID needed for CloudTrail investigation.</p>
+            <p><strong>Detective vs. GuardDuty:</strong> GuardDuty <em>detects</em> threats; Detective <em>investigates</em> them with behavior graphs.</p>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===== DOMAIN 2: LOGGING & MONITORING ===== -->
+<div class="domain collapsed" id="domain-2">
+    <div class="domain-header" onclick="toggleDomain(this)">
+        <div class="domain-title-row">
+            <span class="domain-number">DOMAIN 2</span>
+            <span class="domain-title">Security Logging & Monitoring (18%)</span>
+        </div>
+        <span class="domain-toggle">&#9660;</span>
+    </div>
+    <div class="domain-body">
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 2.1</div>
+            <div class="concept-title">CloudWatch Logs Insights for Forensic Log Analysis</div>
+            <div class="concept-scenario">A security team needs to quickly search through millions of log events to find specific patterns related to a suspected breach, such as failed login attempts from unusual IP addresses.</div>
+            <span class="concept-key">Logs Insights Queries</span>
+            <span class="concept-key">Log Group Analysis</span>
+            <div class="concept-explain">CloudWatch Logs Insights provides an interactive query language for searching and analyzing log data. Use purpose-built query syntax with commands like <code>filter</code>, <code>stats</code>, <code>sort</code>, and <code>parse</code>. Example: <code>filter @message like /UnauthorizedAccess/ | stats count(*) by sourceIPAddress</code>. It automatically discovers fields in JSON logs. Queries run against one or more log groups and return results in seconds even over large datasets.</div>
+            <div class="concept-services">Services: <span>CloudWatch Logs</span> <span>CloudWatch Logs Insights</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 2.2</div>
+            <div class="concept-title">API Gateway Access Logging + Logs Insights</div>
+            <div class="concept-scenario">An API Gateway is being targeted with suspicious requests. The team needs to enable detailed logging and analyze request patterns to identify the attack source.</div>
+            <span class="concept-key">API Gateway Access Logs</span>
+            <span class="concept-key">Execution Logs</span>
+            <div class="concept-explain">API Gateway supports two types of logging: <strong>Execution logs</strong> (detailed request/response processing, useful for debugging) and <strong>Access logs</strong> (customizable, who accessed the API, how, and with what result). Enable access logging with a custom log format that includes <code>$context.identity.sourceIp</code>, <code>$context.requestTime</code>, <code>$context.status</code>. Route logs to CloudWatch and query with Logs Insights to identify suspicious patterns, top callers, and error rates.</div>
+            <div class="concept-services">Services: <span>API Gateway</span> <span>CloudWatch Logs</span> <span>Logs Insights</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 2.3</div>
+            <div class="concept-title">Kinesis for Real-Time Docker Log Forensics</div>
+            <div class="concept-scenario">Containers running on ECS are generating security-relevant logs that need to be analyzed in real-time for threat patterns, not just stored for later review.</div>
+            <span class="concept-key">Kinesis Data Streams</span>
+            <span class="concept-key">Real-Time Processing</span>
+            <div class="concept-explain">Configure ECS containers to send logs to <strong>Kinesis Data Streams</strong> using the <code>awslogs</code> or <code>awsfirelens</code> log driver. Use a Kinesis Data Analytics application or Lambda consumer to process logs in real-time, applying security rules and alerting on suspicious patterns. For archival, use Kinesis Data Firehose to deliver to S3. This architecture provides sub-second detection latency compared to polling-based approaches.</div>
+            <div class="concept-services">Services: <span>Kinesis Data Streams</span> <span>ECS</span> <span>Lambda</span> <span>Kinesis Data Firehose</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 2.4</div>
+            <div class="concept-title">KMS Key Rotation Auditing via CloudTrail</div>
+            <div class="concept-scenario">An auditor asks the security team to prove that all KMS customer managed keys have automatic rotation enabled and to show when the last rotation occurred.</div>
+            <span class="concept-key">KMS Automatic Rotation</span>
+            <span class="concept-key">CloudTrail KMS Events</span>
+            <div class="concept-explain">Use <code>aws kms get-key-rotation-status</code> to check if rotation is enabled for each key. CloudTrail logs the <code>RotateKey</code> event when automatic rotation occurs. Automatic rotation generates new key material <strong>every year</strong> (configurable 90-2560 days) while keeping the same key ID &mdash; previously encrypted data doesn't need re-encryption. Use AWS Config rule <code>cmk-backing-key-rotation-enabled</code> for continuous compliance checking. Note: AWS managed keys rotate automatically every year and cannot be configured.</div>
+            <div class="concept-services">Services: <span>KMS</span> <span>CloudTrail</span> <span>AWS Config</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 2.5</div>
+            <div class="concept-title">EventBridge Rules for KMS Key Deletion Monitoring</div>
+            <div class="concept-scenario">The company needs to be alerted immediately when anyone schedules a KMS key for deletion, as this could cause data loss or indicate malicious activity.</div>
+            <span class="concept-key">EventBridge Rules</span>
+            <span class="concept-key">KMS Key Deletion Protection</span>
+            <div class="concept-explain">Create an EventBridge rule matching CloudTrail's <code>ScheduleKeyDeletion</code> API event. KMS requires a mandatory waiting period of <strong>7-30 days</strong> before deletion, giving time to respond. The EventBridge rule can trigger SNS for immediate notification and Lambda for automated response (e.g., canceling the deletion with <code>CancelKeyDeletion</code>, or alerting the security team). Also monitor <code>DisableKey</code> events as disabled keys can't encrypt/decrypt.</div>
+            <div class="concept-services">Services: <span>EventBridge</span> <span>KMS</span> <span>CloudTrail</span> <span>SNS</span> <span>Lambda</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 2.6</div>
+            <div class="concept-title">AWS Config Managed Rules (restricted-ssh)</div>
+            <div class="concept-scenario">The security policy requires that no EC2 security groups allow inbound SSH (port 22) from 0.0.0.0/0. The team needs continuous monitoring and automatic detection of violations.</div>
+            <span class="concept-key">Config Managed Rules</span>
+            <span class="concept-key">Compliance Monitoring</span>
+            <div class="concept-explain">Use the AWS Config managed rule <code>restricted-ssh</code> which checks that security groups don't allow unrestricted SSH access. Config continuously evaluates resources against rules and marks them as <strong>COMPLIANT</strong> or <strong>NON_COMPLIANT</strong>. For automated remediation, pair with Config remediation actions using SSM Automation documents to automatically remove the offending inbound rule. Config also provides a compliance timeline showing when resources became non-compliant.</div>
+            <div class="concept-services">Services: <span>AWS Config</span> <span>SSM Automation</span> <span>Security Groups</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 2.7</div>
+            <div class="concept-title">S3 Server Access Logging vs. CloudTrail Data Events</div>
+            <div class="concept-scenario">A compliance requirement mandates logging all access to an S3 bucket containing sensitive data. The team needs to choose between S3 server access logging and CloudTrail S3 data events.</div>
+            <span class="concept-key">S3 Access Logging</span>
+            <span class="concept-key">CloudTrail Data Events</span>
+            <div class="concept-explain"><strong>S3 Server Access Logging:</strong> Free, best-effort delivery, logs to another S3 bucket, includes bucket-owner-level detail, can have delays. <strong>CloudTrail Data Events:</strong> Paid, reliable delivery, logs to CloudTrail/S3, includes IAM identity details, near real-time. For security and compliance, <strong>CloudTrail Data Events</strong> are preferred because they provide IAM identity info, integrate with EventBridge for alerting, and have guaranteed delivery. S3 access logs are useful for access pattern analysis and are free.</div>
+            <div class="concept-services">Services: <span>S3</span> <span>CloudTrail</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 2.8</div>
+            <div class="concept-title">VPC Flow Logs for Network Forensics</div>
+            <div class="concept-scenario">A suspected data exfiltration event requires the security team to analyze network traffic patterns from a specific EC2 instance over the past week.</div>
+            <span class="concept-key">VPC Flow Logs</span>
+            <span class="concept-key">Network Analysis</span>
+            <div class="concept-explain">VPC Flow Logs capture IP traffic information at the <strong>VPC, subnet, or ENI level</strong>. They log source/destination IPs, ports, protocol, packet/byte counts, and action (ACCEPT/REJECT). Publish to CloudWatch Logs or S3. For forensic analysis, query with Athena (S3) or Logs Insights (CloudWatch). Custom log format can include additional fields like <code>vpc-id</code>, <code>tcp-flags</code>, <code>pkt-srcaddr</code>. Note: Flow Logs do NOT capture packet content &mdash; use VPC Traffic Mirroring for that.</div>
+            <div class="concept-services">Services: <span>VPC Flow Logs</span> <span>Athena</span> <span>CloudWatch Logs</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 2.9</div>
+            <div class="concept-title">CloudWatch Alarms for Unauthorized API Calls</div>
+            <div class="concept-scenario">The CIS AWS Foundations Benchmark requires monitoring for unauthorized API calls, console sign-in failures, and root account usage.</div>
+            <span class="concept-key">Metric Filters</span>
+            <span class="concept-key">CIS Benchmarks</span>
+            <div class="concept-explain">Create CloudWatch <strong>metric filters</strong> on CloudTrail log groups to detect specific patterns: unauthorized API calls (<code>errorCode = "AccessDenied"</code>), root account usage (<code>userIdentity.type = "Root"</code>), console sign-in failures, IAM policy changes, and VPC changes. Each metric filter feeds a CloudWatch Alarm that triggers SNS notifications. This is a core CIS AWS Foundations Benchmark requirement. Security Hub automates these checks with its CIS standard.</div>
+            <div class="concept-services">Services: <span>CloudWatch</span> <span>CloudTrail</span> <span>SNS</span> <span>Security Hub</span></div>
+        </div>
+
+        <div class="exam-tip">
+            <div class="exam-tip-label">Exam Tips &mdash; Domain 2</div>
+            <p><strong>CloudTrail vs. Config:</strong> CloudTrail logs <em>who did what</em> (API calls). Config tracks <em>what changed</em> (resource configuration over time).</p>
+            <p><strong>Real-time = Kinesis:</strong> When a question says "real-time" log processing, think Kinesis Data Streams. CloudWatch Logs has near-real-time but not true real-time processing.</p>
+            <p><strong>Athena for historical:</strong> For queries beyond 90 days, always use Athena against CloudTrail S3 logs.</p>
+            <p><strong>Flow Logs ≠ packet capture:</strong> VPC Flow Logs capture metadata only. Use Traffic Mirroring for actual packet content.</p>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===== DOMAIN 3: INFRASTRUCTURE SECURITY ===== -->
+<div class="domain collapsed" id="domain-3">
+    <div class="domain-header" onclick="toggleDomain(this)">
+        <div class="domain-title-row">
+            <span class="domain-number">DOMAIN 3</span>
+            <span class="domain-title">Infrastructure Security (20%)</span>
+        </div>
+        <span class="domain-toggle">&#9660;</span>
+    </div>
+    <div class="domain-body">
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 3.1</div>
+            <div class="concept-title">WAF Rate-Based Rules for Layer 7 DDoS</div>
+            <div class="concept-scenario">A web application behind an ALB is experiencing an HTTP flood attack (Layer 7 DDoS). The team needs to automatically block IP addresses generating excessive requests.</div>
+            <span class="concept-key">WAF Rate-Based Rules</span>
+            <span class="concept-key">Layer 7 DDoS Mitigation</span>
+            <div class="concept-explain">AWS WAF <strong>rate-based rules</strong> automatically block IPs that exceed a specified request threshold within a 5-minute window (minimum: 100 requests). Unlike regular rules, rate-based rules track request counts per IP and automatically add/remove IPs from the block list. Attach the WAF Web ACL to the ALB or CloudFront distribution. For advanced DDoS protection, combine with <strong>Shield Advanced</strong> which provides 24/7 DDoS response team (DRT) access and cost protection.</div>
+            <div class="concept-services">Services: <span>WAF</span> <span>ALB</span> <span>CloudFront</span> <span>Shield Advanced</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 3.2</div>
+            <div class="concept-title">CloudFront + OAI/OAC for S3 Access Restriction</div>
+            <div class="concept-scenario">A company serves static content from S3 via CloudFront but needs to ensure users cannot bypass CloudFront and access S3 directly.</div>
+            <span class="concept-key">Origin Access Identity (OAI)</span>
+            <span class="concept-key">Origin Access Control (OAC)</span>
+            <div class="concept-explain">Use <strong>Origin Access Control (OAC)</strong> (recommended, replaces OAI) to restrict S3 bucket access to only CloudFront. OAC creates a special identity that CloudFront uses to authenticate with S3. Update the S3 bucket policy to allow <code>s3:GetObject</code> only from the CloudFront distribution using a condition on <code>AWS:SourceArn</code>. Remove any public access on the bucket. OAC supports SSE-KMS encrypted objects (OAI does not). Block public access via S3 Block Public Access settings.</div>
+            <div class="concept-services">Services: <span>CloudFront</span> <span>S3</span> <span>OAC/OAI</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 3.3</div>
+            <div class="concept-title">NACL Default Deny Behavior and Statelessness</div>
+            <div class="concept-scenario">After creating a new NACL and associating it with a subnet, all traffic to instances in that subnet is being blocked, even though security groups allow the traffic.</div>
+            <span class="concept-key">NACL Statelessness</span>
+            <span class="concept-key">Default Deny</span>
+            <div class="concept-explain">A <strong>custom NACL</strong> has a default rule that <strong>denies all inbound and outbound traffic</strong>. You must explicitly add allow rules. Unlike security groups, NACLs are <strong>stateless</strong> &mdash; you must create rules for both inbound AND outbound traffic, including ephemeral port ranges (1024-65535) for return traffic. Rules are evaluated in <strong>number order</strong> (lowest first); the first matching rule is applied. The default VPC NACL allows all traffic, but custom NACLs deny all by default.</div>
+            <div class="concept-services">Services: <span>VPC NACLs</span> <span>VPC</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 3.4</div>
+            <div class="concept-title">NACL vs Security Groups for IP Blocking</div>
+            <div class="concept-scenario">The security team needs to block a specific malicious IP address from accessing any resources in a subnet. They need to decide between NACL and Security Group approaches.</div>
+            <span class="concept-key">NACL Deny Rules</span>
+            <span class="concept-key">SG Allow-Only</span>
+            <div class="concept-explain">Use <strong>NACLs to block specific IPs</strong> because NACLs support <strong>deny rules</strong>; security groups are allow-only (no explicit deny). Add a NACL inbound rule with a low rule number (e.g., 50) denying traffic from the malicious IP, placed before any allow rules. Security groups cannot block specific IPs &mdash; they can only allow specified sources. NACLs apply at the subnet level; security groups apply at the instance ENI level.</div>
+            <div class="table-wrap">
+            <table>
+                <tr><th>Feature</th><th>NACL</th><th>Security Group</th></tr>
+                <tr><td>Level</td><td>Subnet</td><td>Instance (ENI)</td></tr>
+                <tr><td>Deny rules</td><td>Yes</td><td>No (allow only)</td></tr>
+                <tr><td>Statefulness</td><td>Stateless</td><td>Stateful</td></tr>
+                <tr><td>Rule evaluation</td><td>Number order</td><td>All rules evaluated</td></tr>
+                <tr><td>Default</td><td>Custom: deny all</td><td>Deny all inbound, allow all outbound</td></tr>
+            </table>
+            </div>
+            <div class="concept-services">Services: <span>VPC NACLs</span> <span>Security Groups</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 3.5</div>
+            <div class="concept-title">VPC Traffic Mirroring for IDS/IPS</div>
+            <div class="concept-scenario">A company needs to implement network-based intrusion detection (IDS) by capturing and analyzing actual packet content from EC2 instances.</div>
+            <span class="concept-key">Traffic Mirroring</span>
+            <span class="concept-key">Packet Capture</span>
+            <div class="concept-explain">VPC Traffic Mirroring copies network traffic from an ENI (<strong>mirror source</strong>) to a target (<strong>mirror target</strong>) for inspection. The target can be an ENI or a Network Load Balancer behind which IDS/IPS appliances run. Use <strong>mirror filters</strong> to select specific traffic (e.g., only TCP port 443). Traffic Mirroring captures actual packet content, unlike VPC Flow Logs which only capture metadata. Supported on Nitro-based instances. Use for deep packet inspection, threat monitoring, and compliance.</div>
+            <div class="concept-services">Services: <span>VPC Traffic Mirroring</span> <span>NLB</span> <span>EC2</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 3.6</div>
+            <div class="concept-title">Route Table Isolation for Database Security</div>
+            <div class="concept-scenario">Database instances in a private subnet must have no internet access while still being accessible from application servers in another subnet.</div>
+            <span class="concept-key">Private Subnet Routing</span>
+            <span class="concept-key">Network Isolation</span>
+            <div class="concept-explain">Place database instances in a <strong>private subnet</strong> with a route table that has NO route to an Internet Gateway or NAT Gateway. Only include the local VPC route. Application servers in a separate subnet communicate with databases via the local VPC route. For database patching or external connectivity needs, use <strong>VPC endpoints</strong> (for AWS services) or a <strong>VPN connection</strong>. This ensures databases cannot reach the internet and internet cannot reach databases, even if security groups were misconfigured.</div>
+            <div class="concept-services">Services: <span>VPC</span> <span>Route Tables</span> <span>VPC Endpoints</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 3.7</div>
+            <div class="concept-title">Systems Manager Session Manager for Secure Remote Access</div>
+            <div class="concept-scenario">The security team wants to eliminate SSH key management and close port 22 on all EC2 instances while still allowing administrators to access instances for troubleshooting.</div>
+            <span class="concept-key">Session Manager</span>
+            <span class="concept-key">No Bastion Host Needed</span>
+            <div class="concept-explain">SSM Session Manager provides shell access to EC2 instances <strong>without opening inbound ports</strong>, managing SSH keys, or running bastion hosts. The SSM agent on the instance initiates an outbound connection to the SSM service. Access is controlled via IAM policies. All session activity is logged to CloudTrail, and session data can be logged to S3 or CloudWatch Logs for audit. Requires the instance to have an IAM role with <code>AmazonSSMManagedInstanceCore</code> policy and outbound connectivity to SSM endpoints (or VPC endpoint).</div>
+            <div class="concept-services">Services: <span>SSM Session Manager</span> <span>IAM</span> <span>CloudTrail</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 3.8</div>
+            <div class="concept-title">Direct Connect for Hybrid Architecture</div>
+            <div class="concept-scenario">A financial institution requires a dedicated, private network connection between their on-premises data center and AWS, bypassing the public internet for regulatory compliance.</div>
+            <span class="concept-key">Direct Connect</span>
+            <span class="concept-key">Private Connectivity</span>
+            <div class="concept-explain">AWS Direct Connect provides a <strong>dedicated physical connection</strong> between on-premises and AWS. Traffic does NOT traverse the public internet, providing consistent network performance and reduced bandwidth costs. For encryption, add a <strong>Site-to-Site VPN over Direct Connect</strong> (Direct Connect alone is private but not encrypted). Use Direct Connect Gateway to connect to VPCs in multiple regions. A <strong>Virtual Private Gateway (VGW)</strong> is the VPC-side endpoint. For redundancy, establish connections at two different Direct Connect locations.</div>
+            <div class="concept-services">Services: <span>Direct Connect</span> <span>VPN</span> <span>VGW</span> <span>Direct Connect Gateway</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 3.9</div>
+            <div class="concept-title">AWS Network Firewall for VPC Traffic Filtering</div>
+            <div class="concept-scenario">A company needs stateful packet inspection, intrusion prevention, and domain-based filtering for all traffic entering and leaving their VPCs.</div>
+            <span class="concept-key">Network Firewall</span>
+            <span class="concept-key">Stateful Inspection</span>
+            <div class="concept-explain">AWS Network Firewall is a managed service that provides <strong>stateful inspection, intrusion prevention (IPS), and web filtering</strong> for VPCs. Deploy in a dedicated firewall subnet. It supports Suricata-compatible IPS rules. Key capabilities: domain name filtering (allow/deny lists), protocol detection, and TLS inspection. Route traffic through the firewall using VPC route table entries pointing to the firewall endpoint. Managed by <strong>Firewall Manager</strong> across multiple accounts in AWS Organizations.</div>
+            <div class="concept-services">Services: <span>Network Firewall</span> <span>Firewall Manager</span> <span>VPC</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 3.10</div>
+            <div class="concept-title">PrivateLink for Secure Service Access</div>
+            <div class="concept-scenario">An application needs to access an AWS service (e.g., S3, KMS) or a third-party SaaS service without traffic leaving the AWS network or traversing the internet.</div>
+            <span class="concept-key">VPC Endpoints</span>
+            <span class="concept-key">PrivateLink</span>
+            <div class="concept-explain"><strong>Interface endpoints</strong> (powered by PrivateLink) create an ENI in your subnet with a private IP, routing traffic to the service privately. <strong>Gateway endpoints</strong> (S3 and DynamoDB only) add a route to your route table. Use <strong>VPC endpoint policies</strong> to restrict which actions can be performed through the endpoint (e.g., limit to specific S3 buckets). PrivateLink keeps traffic within the AWS network. Endpoint policies are independent of IAM policies &mdash; both must allow the action.</div>
+            <div class="concept-services">Services: <span>PrivateLink</span> <span>VPC Endpoints</span> <span>S3</span> <span>KMS</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 3.11</div>
+            <div class="concept-title">Shield Advanced for DDoS Protection</div>
+            <div class="concept-scenario">A company running a high-profile e-commerce site needs enterprise-grade DDoS protection with financial protection against scaling costs during attacks.</div>
+            <span class="concept-key">Shield Advanced</span>
+            <span class="concept-key">DDoS Cost Protection</span>
+            <div class="concept-explain"><strong>Shield Standard</strong> is free and automatically protects against common Layer 3/4 DDoS attacks. <strong>Shield Advanced</strong> ($3,000/month) adds: real-time attack visibility, access to the AWS DDoS Response Team (DRT), <strong>cost protection</strong> (credits for scaling charges during DDoS attacks), advanced attack mitigation for CloudFront, ALB, NLB, Elastic IP, and Global Accelerator. Shield Advanced also integrates with WAF &mdash; WAF fees are included. Health-based detection uses Route 53 health checks for faster response.</div>
+            <div class="concept-services">Services: <span>Shield Advanced</span> <span>WAF</span> <span>CloudFront</span> <span>Route 53</span></div>
+        </div>
+
+        <div class="exam-tip">
+            <div class="exam-tip-label">Exam Tips &mdash; Domain 3</div>
+            <p><strong>Block IPs = NACL:</strong> Only NACLs can explicitly deny traffic. Security groups are allow-only.</p>
+            <p><strong>No SSH keys = Session Manager:</strong> When the question mentions eliminating SSH key management or bastion hosts, Session Manager is the answer.</p>
+            <p><strong>OAC over OAI:</strong> For CloudFront + S3, OAC is the modern approach and supports SSE-KMS.</p>
+            <p><strong>Encryption over Direct Connect:</strong> Direct Connect alone is private but NOT encrypted. Add VPN for encryption.</p>
+            <p><strong>Gateway vs Interface endpoints:</strong> Gateway = S3 and DynamoDB only (free). Interface = everything else (paid, uses ENI).</p>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===== DOMAIN 4: IDENTITY & ACCESS MANAGEMENT ===== -->
+<div class="domain collapsed" id="domain-4">
+    <div class="domain-header" onclick="toggleDomain(this)">
+        <div class="domain-title-row">
+            <span class="domain-number">DOMAIN 4</span>
+            <span class="domain-title">Identity & Access Management (16%)</span>
+        </div>
+        <span class="domain-toggle">&#9660;</span>
+    </div>
+    <div class="domain-body">
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 4.1</div>
+            <div class="concept-title">Lambda Execution Roles (Not Access Keys)</div>
+            <div class="concept-scenario">A developer hard-codes IAM access keys into a Lambda function to access DynamoDB. The security team needs to remediate this and establish the correct pattern.</div>
+            <span class="concept-key">Execution Roles</span>
+            <span class="concept-key">No Hard-Coded Credentials</span>
+            <div class="concept-explain">Lambda functions should <strong>never</strong> use hard-coded access keys. Instead, assign an <strong>IAM execution role</strong> to the Lambda function. The Lambda service automatically provides temporary credentials via STS to the function's runtime environment. The execution role's policy should follow least privilege &mdash; only grant the specific DynamoDB actions needed (e.g., <code>dynamodb:GetItem</code>) on the specific table ARN. Use <code>aws/lambda</code> resource-based policy for invocation permissions.</div>
+            <div class="concept-services">Services: <span>Lambda</span> <span>IAM</span> <span>STS</span> <span>DynamoDB</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 4.2</div>
+            <div class="concept-title">IAM Access Analyzer Policy Generation from CloudTrail</div>
+            <div class="concept-scenario">An organization wants to create least-privilege IAM policies based on actual service usage rather than guessing what permissions are needed.</div>
+            <span class="concept-key">Access Analyzer Policy Generation</span>
+            <span class="concept-key">Least Privilege</span>
+            <div class="concept-explain">IAM Access Analyzer can <strong>generate IAM policies</strong> based on access activity logged in CloudTrail. Specify a CloudTrail trail and a time period (up to 90 days). Access Analyzer analyzes the logs to determine which services and actions were actually used, then generates a policy granting only those permissions. Also use Access Analyzer to <strong>validate policies</strong> against best practices and to <strong>find external access</strong> &mdash; it identifies resources shared with external principals (cross-account, public).</div>
+            <div class="concept-services">Services: <span>IAM Access Analyzer</span> <span>CloudTrail</span> <span>IAM</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 4.3</div>
+            <div class="concept-title">Cross-Account IAM Roles with Trust Policies</div>
+            <div class="concept-scenario">Account A (production) needs to allow an application in Account B (development) to read from an S3 bucket in Account A without sharing long-term credentials.</div>
+            <span class="concept-key">Cross-Account Roles</span>
+            <span class="concept-key">Trust Policy</span>
+            <div class="concept-explain">In Account A, create an IAM role with: <strong>1)</strong> A <strong>trust policy</strong> that allows Account B's principal to assume the role (<code>"Principal": {"AWS": "arn:aws:iam::ACCOUNT-B:root"}</code>). <strong>2)</strong> A <strong>permissions policy</strong> granting S3 read access. In Account B, grant the application's role permission to call <code>sts:AssumeRole</code> on the cross-account role ARN. The application calls <code>AssumeRole</code> to get temporary credentials. This is more secure than sharing access keys and allows fine-grained control with external ID conditions.</div>
+            <div class="concept-services">Services: <span>IAM</span> <span>STS</span> <span>S3</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 4.4</div>
+            <div class="concept-title">Permission Boundaries for Regional Restriction</div>
+            <div class="concept-scenario">A company wants to allow developers to create IAM roles but restrict those roles to only work in specific AWS regions (e.g., us-east-1 and eu-west-1).</div>
+            <span class="concept-key">Permission Boundaries</span>
+            <span class="concept-key">Delegated Administration</span>
+            <div class="concept-explain">Permission boundaries set the <strong>maximum permissions</strong> an IAM entity can have. Even if the entity's identity policy grants broader access, the effective permissions are the <strong>intersection</strong> of the identity policy and the permission boundary. Create a permission boundary policy with a condition: <code>"aws:RequestedRegion": ["us-east-1", "eu-west-1"]</code>. When developers create roles, require them to attach this permission boundary. The roles they create can never exceed the boundary's permissions, preventing privilege escalation.</div>
+            <div class="concept-services">Services: <span>IAM</span> <span>Permission Boundaries</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 4.5</div>
+            <div class="concept-title">SCP + Permission Boundaries for Delegated Admin</div>
+            <div class="concept-scenario">An organization wants to allow team leads to manage IAM in their accounts but prevent them from creating overly permissive roles or removing security guardrails.</div>
+            <span class="concept-key">Service Control Policies</span>
+            <span class="concept-key">Defense in Depth</span>
+            <div class="concept-explain">Layer <strong>SCPs</strong> and <strong>permission boundaries</strong> for defense in depth. SCPs at the OU level restrict what actions are possible in the account (e.g., deny deleting CloudTrail trails). Permission boundaries restrict what permissions delegated admins can assign to roles they create. SCP denies override everything &mdash; even the account root user. Use SCP to: prevent leaving the organization, enforce region restrictions, require encryption. Permission boundaries prevent privilege escalation by delegated admins.</div>
+            <div class="concept-services">Services: <span>Organizations SCPs</span> <span>IAM</span> <span>Permission Boundaries</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 4.6</div>
+            <div class="concept-title">ABAC with Tags for Secrets Manager</div>
+            <div class="concept-scenario">A company with multiple project teams wants to allow each team to manage only their own secrets in Secrets Manager, without creating separate policies per team.</div>
+            <span class="concept-key">Attribute-Based Access Control</span>
+            <span class="concept-key">Tag-Based Policies</span>
+            <div class="concept-explain"><strong>ABAC</strong> uses tags for access control instead of maintaining separate policies per resource. Create a single IAM policy with conditions matching the user's tag to the resource's tag: <code>"Condition": {"StringEquals": {"aws:ResourceTag/Project": "${aws:PrincipalTag/Project}"}}</code>. Tag IAM users and Secrets Manager secrets with a <code>Project</code> tag. New teams or secrets automatically inherit the right permissions based on tags &mdash; no policy updates needed. ABAC scales better than RBAC for dynamic environments.</div>
+            <div class="concept-services">Services: <span>IAM</span> <span>Secrets Manager</span> <span>Tags</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 4.7</div>
+            <div class="concept-title">Security Hub Cross-Organization Invitations</div>
+            <div class="concept-scenario">A security team managing multiple AWS accounts needs to aggregate security findings across all accounts in their AWS Organization from a central account.</div>
+            <span class="concept-key">Security Hub Delegated Admin</span>
+            <span class="concept-key">Multi-Account Aggregation</span>
+            <div class="concept-explain">Designate a <strong>delegated administrator</strong> account for Security Hub in AWS Organizations. The delegated admin automatically has visibility into all member accounts' findings. Member accounts are added automatically when new accounts join the organization. The admin account can enable security standards and configure automation rules across all accounts. Findings can be aggregated into a single region using <strong>cross-region aggregation</strong>. Use custom actions to trigger EventBridge rules for automated responses.</div>
+            <div class="concept-services">Services: <span>Security Hub</span> <span>AWS Organizations</span> <span>EventBridge</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 4.8</div>
+            <div class="concept-title">SAML Federation Certificate Management</div>
+            <div class="concept-scenario">A company uses SAML-based federation with an on-premises Active Directory for AWS console access. The SAML certificate is about to expire.</div>
+            <span class="concept-key">SAML 2.0 Federation</span>
+            <span class="concept-key">Certificate Rotation</span>
+            <div class="concept-explain">SAML federation uses X.509 certificates to establish trust between the IdP and AWS. When the certificate expires, federation breaks. To rotate: <strong>1)</strong> Generate a new certificate on the IdP. <strong>2)</strong> Upload the new metadata XML to the AWS IAM SAML provider (<code>update-saml-provider</code>). <strong>3)</strong> The SAML provider in IAM can hold multiple certificates during rotation. <strong>4)</strong> Update the IdP to use the new certificate. AWS supports <strong>SAML 2.0</strong> for both console access (via federation endpoint) and API access (via <code>AssumeRoleWithSAML</code>).</div>
+            <div class="concept-services">Services: <span>IAM</span> <span>STS</span> <span>SAML 2.0</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 4.9</div>
+            <div class="concept-title">IAM Policy Evaluation Logic</div>
+            <div class="concept-scenario">A developer has an IAM policy that explicitly allows S3 access, but an SCP denies it. They can't understand why their S3 operations fail.</div>
+            <span class="concept-key">Explicit Deny Wins</span>
+            <span class="concept-key">Policy Evaluation Order</span>
+            <div class="concept-explain">IAM policy evaluation follows a strict order: <strong>1)</strong> Explicit deny in any policy = DENY (always). <strong>2)</strong> SCP must allow (Organization level). <strong>3)</strong> Resource-based policy can independently grant access. <strong>4)</strong> Permission boundary must allow. <strong>5)</strong> Session policy must allow. <strong>6)</strong> Identity policy must allow. If any of these is missing an explicit allow (and it's not the resource-based policy), the result is an <strong>implicit deny</strong>. An explicit deny at ANY level overrides all allows. SCPs affect all principals in the account including root (but don't affect service-linked roles).</div>
+            <div class="concept-services">Services: <span>IAM</span> <span>Organizations SCPs</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 4.10</div>
+            <div class="concept-title">Cognito User Pool Security Features</div>
+            <div class="concept-scenario">A web application needs user authentication with MFA, password policies, and protection against compromised credentials, without building a custom auth system.</div>
+            <span class="concept-key">Cognito User Pools</span>
+            <span class="concept-key">Advanced Security</span>
+            <div class="concept-explain">Cognito User Pools provide managed user authentication with built-in security features: <strong>adaptive authentication</strong> (risk-based MFA challenges), <strong>compromised credentials detection</strong> (checks passwords against known breaches), custom password policies, and account takeover protection. User Pools handle sign-up, sign-in, and token management (JWT). <strong>Identity Pools</strong> (separate service) exchange tokens for temporary AWS credentials. For API access control, use a Cognito authorizer on API Gateway to validate JWT tokens.</div>
+            <div class="concept-services">Services: <span>Cognito User Pools</span> <span>Cognito Identity Pools</span> <span>API Gateway</span></div>
+        </div>
+
+        <div class="exam-tip">
+            <div class="exam-tip-label">Exam Tips &mdash; Domain 4</div>
+            <p><strong>Never hard-code keys:</strong> If a question mentions embedded credentials, the answer involves IAM roles (execution roles, instance profiles, task roles).</p>
+            <p><strong>Explicit deny always wins:</strong> In any policy evaluation question, look for explicit denies first &mdash; they override everything.</p>
+            <p><strong>ABAC = tags, RBAC = policies:</strong> When scaling access control for many teams/projects, ABAC with tags scales better.</p>
+            <p><strong>Permission boundary ≠ permissions:</strong> Boundaries set the maximum; the user still needs identity-based policies to grant actual access.</p>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===== DOMAIN 5: DATA PROTECTION ===== -->
+<div class="domain collapsed" id="domain-5">
+    <div class="domain-header" onclick="toggleDomain(this)">
+        <div class="domain-title-row">
+            <span class="domain-number">DOMAIN 5</span>
+            <span class="domain-title">Data Protection (32%)</span>
+        </div>
+        <span class="domain-toggle">&#9660;</span>
+    </div>
+    <div class="domain-body">
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 5.1</div>
+            <div class="concept-title">KMS Key Policy Conditions (kms:ViaService)</div>
+            <div class="concept-scenario">An organization wants to ensure a KMS key can only be used for S3 encryption &mdash; not by any other AWS service or direct API calls.</div>
+            <span class="concept-key">kms:ViaService Condition</span>
+            <span class="concept-key">Key Policy Restrictions</span>
+            <div class="concept-explain">The <code>kms:ViaService</code> condition key restricts KMS key usage to requests that come from a specific AWS service. Example: <code>"Condition": {"StringEquals": {"kms:ViaService": "s3.us-east-1.amazonaws.com"}}</code>. This means the key can ONLY be used when S3 makes the encryption/decryption call on behalf of the user. Direct <code>kms:Encrypt</code> or <code>kms:Decrypt</code> API calls will be denied. Useful for enforcing that keys are only used for their intended purpose.</div>
+            <div class="concept-services">Services: <span>KMS</span> <span>S3</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 5.2</div>
+            <div class="concept-title">SSE-KMS for S3 Bucket Policy Enforcement</div>
+            <div class="concept-scenario">A security policy mandates that all objects uploaded to a specific S3 bucket must be encrypted with a specific KMS key. Unencrypted uploads must be denied.</div>
+            <span class="concept-key">S3 Bucket Policy Encryption</span>
+            <span class="concept-key">Default Encryption</span>
+            <div class="concept-explain">Two mechanisms: <strong>1) Bucket policy deny:</strong> Add a condition that denies <code>PutObject</code> if the <code>s3:x-amz-server-side-encryption</code> header is not <code>aws:kms</code> or if <code>s3:x-amz-server-side-encryption-aws-kms-key-id</code> doesn't match the required key ARN. <strong>2) Default encryption:</strong> Set the bucket's default encryption to SSE-KMS with the specific key. Note: default encryption applies only when the request doesn't specify encryption &mdash; the bucket policy deny is needed to <strong>enforce</strong> it. Both together provide defense in depth.</div>
+            <div class="concept-services">Services: <span>S3</span> <span>KMS</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 5.3</div>
+            <div class="concept-title">S3 Object Lock: Compliance Mode vs. Governance Mode</div>
+            <div class="concept-scenario">A healthcare company must store medical records in S3 with WORM (Write Once Read Many) compliance for regulatory requirements. Records must be immutable for 7 years.</div>
+            <span class="concept-key">Object Lock Modes</span>
+            <span class="concept-key">WORM Storage</span>
+            <div class="concept-explain">S3 Object Lock provides WORM storage with two retention modes:</div>
+            <div class="table-wrap">
+            <table>
+                <tr><th>Feature</th><th>Governance Mode</th><th>Compliance Mode</th></tr>
+                <tr><td>Override possible?</td><td>Yes, with <code>s3:BypassGovernanceRetention</code></td><td><strong>No one</strong>, not even root</td></tr>
+                <tr><td>Retention can be shortened?</td><td>Yes, with permission</td><td>No, never</td></tr>
+                <tr><td>Use case</td><td>Testing, soft protection</td><td>Regulatory compliance (HIPAA, SEC)</td></tr>
+                <tr><td>Delete during retention?</td><td>With permission</td><td>Impossible</td></tr>
+            </table>
+            </div>
+            <div class="concept-explain">For regulatory WORM requirements, use <strong>Compliance Mode</strong>. A <strong>Legal Hold</strong> can be added independently of retention period &mdash; it prevents deletion until removed, regardless of retention settings. Object Lock must be enabled at bucket creation time (requires versioning).</div>
+            <div class="concept-services">Services: <span>S3 Object Lock</span> <span>S3 Versioning</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 5.4</div>
+            <div class="concept-title">RDS Encryption at Rest (Snapshot-Restore Approach)</div>
+            <div class="concept-scenario">An unencrypted RDS database needs to be encrypted at rest to meet compliance requirements. Encryption cannot be enabled on an existing unencrypted instance.</div>
+            <span class="concept-key">Snapshot-Copy-Restore</span>
+            <span class="concept-key">RDS Encryption</span>
+            <div class="concept-explain">You <strong>cannot enable encryption</strong> on an existing unencrypted RDS instance directly. The process: <strong>1)</strong> Create a snapshot of the unencrypted DB instance. <strong>2)</strong> Copy the snapshot, enabling encryption with a KMS key during the copy. <strong>3)</strong> Restore a new DB instance from the encrypted snapshot. <strong>4)</strong> Update your application's connection string to point to the new instance. <strong>5)</strong> Delete the old unencrypted instance and snapshot. All data, logs, snapshots, and read replicas of an encrypted instance are also encrypted.</div>
+            <div class="concept-services">Services: <span>RDS</span> <span>KMS</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 5.5</div>
+            <div class="concept-title">Cross-Account EBS Encryption with KMS</div>
+            <div class="concept-scenario">An EBS snapshot encrypted with a KMS key in Account A needs to be shared with Account B so they can create volumes from it.</div>
+            <span class="concept-key">KMS Key Sharing</span>
+            <span class="concept-key">Cross-Account Snapshots</span>
+            <div class="concept-explain">To share an encrypted EBS snapshot cross-account: <strong>1)</strong> The KMS key policy must grant Account B permission to use the key (<code>kms:DescribeKey</code>, <code>kms:CreateGrant</code>, <code>kms:ReEncrypt*</code>, <code>kms:Decrypt</code>). <strong>2)</strong> Share the snapshot with Account B via <code>ModifySnapshotAttribute</code>. <strong>3)</strong> In Account B, copy the snapshot re-encrypting with a KMS key owned by Account B. <strong>4)</strong> Create volumes from the re-encrypted snapshot. Note: <strong>AWS managed keys</strong> (aws/ebs) cannot be shared cross-account &mdash; only customer managed keys (CMKs).</div>
+            <div class="concept-services">Services: <span>EBS</span> <span>KMS</span> <span>EC2</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 5.6</div>
+            <div class="concept-title">Secrets Manager Automatic Rotation for RDS</div>
+            <div class="concept-scenario">A company needs to automatically rotate database credentials for an RDS MySQL instance every 30 days without application downtime.</div>
+            <span class="concept-key">Secrets Manager Rotation</span>
+            <span class="concept-key">Lambda Rotation Function</span>
+            <div class="concept-explain">Secrets Manager can <strong>natively rotate credentials</strong> for RDS, Redshift, and DocumentDB using built-in Lambda rotation functions. Configure a rotation schedule (e.g., every 30 days). The rotation uses a <strong>multi-user strategy</strong>: creates a clone of the original user with a new password, then swaps which one is "current." This avoids downtime as the old credentials remain valid until the next rotation. The application retrieves the current secret via <code>GetSecretValue</code> API, which always returns the current version. Secrets are encrypted with KMS.</div>
+            <div class="concept-services">Services: <span>Secrets Manager</span> <span>Lambda</span> <span>RDS</span> <span>KMS</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 5.7</div>
+            <div class="concept-title">ACM Certificates with CloudFront (us-east-1 Requirement)</div>
+            <div class="concept-scenario">A company needs to configure HTTPS on a CloudFront distribution using a custom domain name and an ACM certificate.</div>
+            <span class="concept-key">ACM Region Requirement</span>
+            <span class="concept-key">CloudFront SSL/TLS</span>
+            <div class="concept-explain">For CloudFront, ACM certificates <strong>must be issued in us-east-1</strong> (N. Virginia), regardless of where your other resources are located. This is because CloudFront is a global service that uses us-east-1 as its control plane. For ALB, certificates must be in the <strong>same region</strong> as the ALB. ACM provides free public certificates with automatic renewal. Use DNS validation (recommended) or email validation to prove domain ownership. ACM certificates cannot be exported &mdash; they're managed entirely by AWS.</div>
+            <div class="concept-services">Services: <span>ACM</span> <span>CloudFront</span> <span>Route 53</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 5.8</div>
+            <div class="concept-title">Secrets Manager + ECS Task Roles</div>
+            <div class="concept-scenario">Containers running on ECS Fargate need to securely access database credentials stored in Secrets Manager at startup, without embedding secrets in container images or environment variables.</div>
+            <span class="concept-key">ECS Task Roles</span>
+            <span class="concept-key">Secret Injection</span>
+            <div class="concept-explain">ECS supports <strong>native Secrets Manager integration</strong> in task definitions. Reference a secret ARN in the task definition's <code>secrets</code> section, and ECS injects the secret value as an environment variable at container startup. The <strong>ECS task execution role</strong> needs <code>secretsmanager:GetSecretValue</code> and KMS <code>kms:Decrypt</code> permissions. The <strong>task role</strong> (different from execution role) grants the container's runtime permissions. Never store secrets in container images, Dockerfiles, or task definition environment variables in plaintext.</div>
+            <div class="concept-services">Services: <span>ECS</span> <span>Secrets Manager</span> <span>IAM</span> <span>KMS</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 5.9</div>
+            <div class="concept-title">S3 Lifecycle + DynamoDB TTL for PII Cleanup</div>
+            <div class="concept-scenario">A GDPR-compliant application stores personal data in S3 and DynamoDB. Data must be automatically deleted after the retention period expires.</div>
+            <span class="concept-key">S3 Lifecycle Rules</span>
+            <span class="concept-key">DynamoDB TTL</span>
+            <div class="concept-explain">For S3: Create <strong>lifecycle rules</strong> that transition objects to cheaper storage classes and then expire (delete) them after the retention period. Use prefix or tag filters to target PII objects specifically. For DynamoDB: Enable <strong>Time to Live (TTL)</strong> on a timestamp attribute. DynamoDB automatically deletes items when their TTL timestamp is in the past. TTL deletions don't consume write capacity units. Both mechanisms provide automated, cost-effective data cleanup for compliance. Combine with S3 Object Lock for retention enforcement.</div>
+            <div class="concept-services">Services: <span>S3</span> <span>DynamoDB</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 5.10</div>
+            <div class="concept-title">KMS CMK Troubleshooting (Key State, Permissions)</div>
+            <div class="concept-scenario">An application suddenly can't decrypt data, returning KMS errors. The security team needs to diagnose whether it's a key state issue, permission problem, or key deletion.</div>
+            <span class="concept-key">KMS Key States</span>
+            <span class="concept-key">KMS Troubleshooting</span>
+            <div class="concept-explain">KMS key states: <strong>Enabled</strong> (normal use), <strong>Disabled</strong> (can't use, re-enable anytime), <strong>Pending Deletion</strong> (7-30 day waiting period, can cancel), <strong>Pending Import</strong> (imported key material expected), <strong>Unavailable</strong> (custom key store disconnected). Common issues: <strong>1)</strong> Key is disabled or pending deletion. <strong>2)</strong> Key policy doesn't grant the caller access. <strong>3)</strong> Missing KMS grants. <strong>4)</strong> IAM policy doesn't allow <code>kms:Decrypt</code>. <strong>5)</strong> Key is in a different region than the resource. Check CloudTrail for KMS API errors to identify the exact cause.</div>
+            <div class="concept-services">Services: <span>KMS</span> <span>CloudTrail</span> <span>IAM</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 5.11</div>
+            <div class="concept-title">CloudHSM vs. KMS for Key Management</div>
+            <div class="concept-scenario">A financial institution must store encryption keys in a FIPS 140-2 Level 3 validated hardware security module with full customer control over key material.</div>
+            <span class="concept-key">CloudHSM</span>
+            <span class="concept-key">FIPS 140-2 Level 3</span>
+            <div class="concept-explain">
+            </div>
+            <div class="table-wrap">
+            <table>
+                <tr><th>Feature</th><th>KMS</th><th>CloudHSM</th></tr>
+                <tr><td>FIPS validation</td><td>Level 2 (some Level 3)</td><td><strong>Level 3</strong></td></tr>
+                <tr><td>Key control</td><td>Shared (AWS manages HSM)</td><td><strong>Full customer control</strong></td></tr>
+                <tr><td>Multi-tenant</td><td>Yes</td><td>Single-tenant (dedicated HSM)</td></tr>
+                <tr><td>Pricing</td><td>Per-request</td><td>Per-hour per HSM</td></tr>
+                <tr><td>Integration</td><td>Native with all AWS services</td><td>Custom via PKCS#11, JCE, OpenSSL</td></tr>
+                <tr><td>HA</td><td>Built-in</td><td>Must deploy across AZs</td></tr>
+            </table>
+            </div>
+            <div class="concept-explain">Use CloudHSM when regulations require FIPS 140-2 Level 3, single-tenant HSM, or full customer control of key material. CloudHSM can also integrate with KMS via <strong>custom key stores</strong>, letting you use CloudHSM-backed keys with AWS services that integrate with KMS.</div>
+            <div class="concept-services">Services: <span>CloudHSM</span> <span>KMS</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 5.12</div>
+            <div class="concept-title">S3 Bucket Encryption Default Settings</div>
+            <div class="concept-scenario">A security audit reveals some S3 buckets don't have default encryption configured. The team needs to ensure all current and future objects are encrypted.</div>
+            <span class="concept-key">S3 Default Encryption</span>
+            <span class="concept-key">SSE-S3 vs SSE-KMS</span>
+            <div class="concept-explain">S3 now encrypts all new objects by default with <strong>SSE-S3</strong> (AES-256). However, organizations may require SSE-KMS for audit trail (CloudTrail logs KMS usage) and key control. Configure <strong>default encryption</strong> on each bucket specifying SSE-KMS and the key. To <strong>enforce</strong> encryption type, add a bucket policy denying <code>PutObject</code> without the correct encryption header. Use AWS Config rule <code>s3-bucket-server-side-encryption-enabled</code> to monitor compliance. <strong>SSE-C</strong> (customer-provided keys) requires the customer to manage key material and provide it with every request.</div>
+            <div class="concept-services">Services: <span>S3</span> <span>KMS</span> <span>AWS Config</span></div>
+        </div>
+
+        <div class="concept-card">
+            <div class="concept-num">Concept 5.13</div>
+            <div class="concept-title">Macie for PII Discovery in S3</div>
+            <div class="concept-scenario">A company needs to automatically discover and classify sensitive data (PII, financial data, credentials) stored across hundreds of S3 buckets.</div>
+            <span class="concept-key">Macie Data Discovery</span>
+            <span class="concept-key">Sensitive Data Classification</span>
+            <div class="concept-explain">Amazon Macie uses <strong>machine learning and pattern matching</strong> to discover and classify sensitive data in S3. It automatically identifies PII (names, addresses, SSNs), financial data (credit card numbers), and credentials (API keys, private keys). Create <strong>sensitive data discovery jobs</strong> that scan buckets on a schedule. Macie generates findings that integrate with Security Hub and EventBridge. It also provides a <strong>bucket inventory</strong> showing encryption status, public access, and shared access across all your S3 buckets.</div>
+            <div class="concept-services">Services: <span>Macie</span> <span>S3</span> <span>Security Hub</span></div>
+        </div>
+
+        <div class="exam-tip">
+            <div class="exam-tip-label">Exam Tips &mdash; Domain 5</div>
+            <p><strong>ACM + CloudFront = us-east-1:</strong> This is the most commonly tested ACM fact. Always us-east-1 for CloudFront certificates.</p>
+            <p><strong>Can't encrypt existing RDS:</strong> Snapshot &rarr; Copy (encrypt) &rarr; Restore is the only path.</p>
+            <p><strong>Compliance Mode = immutable:</strong> No one, not even root, can delete objects in Compliance Mode. Governance Mode can be overridden.</p>
+            <p><strong>AWS managed keys can't be shared:</strong> For cross-account encryption, you must use customer managed keys (CMKs).</p>
+            <p><strong>kms:ViaService:</strong> Locks a key to a specific service &mdash; prevents direct API use.</p>
+            <p><strong>Secrets Manager vs. Parameter Store:</strong> Secrets Manager has built-in rotation. Parameter Store is simpler and cheaper but requires custom Lambda for rotation.</p>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===== KEY SERVICES CHEATSHEET ===== -->
+<div class="domain collapsed" id="cheatsheet">
+    <div class="domain-header" onclick="toggleDomain(this)">
+        <div class="domain-title-row">
+            <span class="domain-number cheat-badge">REFERENCE</span>
+            <span class="domain-title">Key Services Cheatsheet</span>
+        </div>
+        <span class="domain-toggle">&#9660;</span>
+    </div>
+    <div class="domain-body">
+
+        <h3>Threat Detection Services</h3>
+        <div class="table-wrap">
+        <table>
+            <tr><th>Service</th><th>What It Does</th><th>Key Fact</th></tr>
+            <tr><td><strong>GuardDuty</strong></td><td>Threat detection from CloudTrail, VPC Flow Logs, DNS</td><td>Regional; must enable per-region</td></tr>
+            <tr><td><strong>Detective</strong></td><td>Investigate findings with behavior graphs</td><td>12-month data retention</td></tr>
+            <tr><td><strong>Security Hub</strong></td><td>Aggregates findings, compliance checks</td><td>Uses ASFF format; delegated admin</td></tr>
+            <tr><td><strong>Inspector</strong></td><td>Vulnerability scanning for EC2/ECR/Lambda</td><td>Agentless for ECR; SSM agent for EC2</td></tr>
+            <tr><td><strong>Macie</strong></td><td>PII discovery in S3</td><td>ML-based classification</td></tr>
+        </table>
+        </div>
+
+        <h3>Logging & Monitoring Services</h3>
+        <div class="table-wrap">
+        <table>
+            <tr><th>Service</th><th>What It Does</th><th>Key Fact</th></tr>
+            <tr><td><strong>CloudTrail</strong></td><td>API call logging</td><td>90 days in Event History; S3 for longer</td></tr>
+            <tr><td><strong>CloudWatch Logs</strong></td><td>Log aggregation and analysis</td><td>Logs Insights for queries</td></tr>
+            <tr><td><strong>AWS Config</strong></td><td>Resource configuration tracking</td><td>Managed rules for compliance</td></tr>
+            <tr><td><strong>VPC Flow Logs</strong></td><td>Network traffic metadata</td><td>No packet content; metadata only</td></tr>
+            <tr><td><strong>EventBridge</strong></td><td>Event routing and automation</td><td>Near real-time; pattern matching</td></tr>
+        </table>
+        </div>
+
+        <h3>Infrastructure Security Services</h3>
+        <div class="table-wrap">
+        <table>
+            <tr><th>Service</th><th>What It Does</th><th>Key Fact</th></tr>
+            <tr><td><strong>WAF</strong></td><td>Layer 7 web application firewall</td><td>Rate-based rules for DDoS</td></tr>
+            <tr><td><strong>Shield Standard</strong></td><td>Free Layer 3/4 DDoS protection</td><td>Automatic, always-on</td></tr>
+            <tr><td><strong>Shield Advanced</strong></td><td>Enhanced DDoS + DRT + cost protection</td><td>$3,000/month; includes WAF</td></tr>
+            <tr><td><strong>Network Firewall</strong></td><td>VPC stateful inspection, IPS</td><td>Suricata-compatible rules</td></tr>
+            <tr><td><strong>Firewall Manager</strong></td><td>Centralized firewall rule management</td><td>Requires Organizations + Config</td></tr>
+        </table>
+        </div>
+
+        <h3>Identity & Access Services</h3>
+        <div class="table-wrap">
+        <table>
+            <tr><th>Service</th><th>What It Does</th><th>Key Fact</th></tr>
+            <tr><td><strong>IAM</strong></td><td>Users, roles, policies, groups</td><td>Explicit deny always wins</td></tr>
+            <tr><td><strong>STS</strong></td><td>Temporary credentials</td><td>AssumeRole for cross-account</td></tr>
+            <tr><td><strong>Organizations + SCPs</strong></td><td>Multi-account management, guardrails</td><td>SCPs affect all users including root</td></tr>
+            <tr><td><strong>IAM Access Analyzer</strong></td><td>External access detection, policy generation</td><td>Uses CloudTrail for policy generation</td></tr>
+            <tr><td><strong>Cognito</strong></td><td>User authentication for apps</td><td>User Pools = auth; Identity Pools = AWS creds</td></tr>
+        </table>
+        </div>
+
+        <h3>Data Protection Services</h3>
+        <div class="table-wrap">
+        <table>
+            <tr><th>Service</th><th>What It Does</th><th>Key Fact</th></tr>
+            <tr><td><strong>KMS</strong></td><td>Key management, encryption</td><td>FIPS 140-2 Level 2; kms:ViaService condition</td></tr>
+            <tr><td><strong>CloudHSM</strong></td><td>Dedicated HSM, full key control</td><td>FIPS 140-2 Level 3; single-tenant</td></tr>
+            <tr><td><strong>ACM</strong></td><td>SSL/TLS certificate management</td><td>CloudFront = us-east-1 only</td></tr>
+            <tr><td><strong>Secrets Manager</strong></td><td>Secret storage with rotation</td><td>Native RDS rotation; encrypted with KMS</td></tr>
+            <tr><td><strong>S3 Object Lock</strong></td><td>WORM storage</td><td>Compliance mode = no one can delete</td></tr>
+        </table>
+        </div>
+
+        <h3>Common Service Comparisons</h3>
+        <div class="cheatsheet-section">
+        <h4>Secrets Manager vs. Systems Manager Parameter Store</h4>
+        <div class="table-wrap">
+        <table>
+            <tr><th>Feature</th><th>Secrets Manager</th><th>Parameter Store</th></tr>
+            <tr><td>Built-in rotation</td><td>Yes (native RDS)</td><td>No (custom Lambda)</td></tr>
+            <tr><td>Cost</td><td>$0.40/secret/month</td><td>Standard: Free</td></tr>
+            <tr><td>Cross-account</td><td>Yes (resource policy)</td><td>No</td></tr>
+            <tr><td>Max size</td><td>64 KB</td><td>8 KB (standard) / 8 KB (advanced)</td></tr>
+        </table>
+        </div>
+        </div>
+
+        <div class="cheatsheet-section">
+        <h4>NACL vs. Security Group</h4>
+        <div class="table-wrap">
+        <table>
+            <tr><th>Feature</th><th>NACL</th><th>Security Group</th></tr>
+            <tr><td>Level</td><td>Subnet</td><td>Instance ENI</td></tr>
+            <tr><td>State</td><td>Stateless</td><td>Stateful</td></tr>
+            <tr><td>Deny rules</td><td>Yes</td><td>No</td></tr>
+            <tr><td>Rule order</td><td>Numbered (lowest first)</td><td>All evaluated</td></tr>
+            <tr><td>IP blocking</td><td>Yes</td><td>No</td></tr>
+        </table>
+        </div>
+        </div>
+
+        <div class="cheatsheet-section">
+        <h4>S3 Object Lock: Governance vs. Compliance</h4>
+        <div class="table-wrap">
+        <table>
+            <tr><th>Feature</th><th>Governance Mode</th><th>Compliance Mode</th></tr>
+            <tr><td>Override</td><td>With s3:BypassGovernanceRetention</td><td>No one</td></tr>
+            <tr><td>Root can delete?</td><td>With permission</td><td>No</td></tr>
+            <tr><td>Shorten retention?</td><td>Yes</td><td>No</td></tr>
+            <tr><td>Use case</td><td>Testing, internal policy</td><td>Regulatory (HIPAA, SEC 17a-4)</td></tr>
+        </table>
+        </div>
+        </div>
+
+        <div class="cheatsheet-section">
+        <h4>KMS Key Types</h4>
+        <div class="table-wrap">
+        <table>
+            <tr><th>Type</th><th>Management</th><th>Cross-Account</th><th>Rotation</th></tr>
+            <tr><td>AWS Owned</td><td>AWS (invisible)</td><td>N/A</td><td>Varies</td></tr>
+            <tr><td>AWS Managed</td><td>AWS (visible)</td><td>No</td><td>Every year (automatic)</td></tr>
+            <tr><td>Customer Managed</td><td>Customer</td><td>Yes</td><td>Configurable (90-2560 days)</td></tr>
+        </table>
+        </div>
+        </div>
+
+        <div class="exam-tip">
+            <div class="exam-tip-label">Final Exam Reminders</div>
+            <p><strong>Read carefully:</strong> Exam questions often have 2-3 plausible answers. Look for the one that is MOST secure, LEAST operational overhead, or MOST cost-effective based on what the question asks.</p>
+            <p><strong>Service combinations:</strong> Many correct answers involve 2-3 services working together. Understand how services integrate.</p>
+            <p><strong>Eliminate distractors:</strong> If an option suggests a manual process when an automated AWS service exists, it's usually wrong.</p>
+            <p><strong>Region awareness:</strong> Many services are regional. Know which ones are global (IAM, CloudFront, Route 53, WAF for CloudFront).</p>
+        </div>
+
+    </div>
+</div>
+
+    </div>
+</div>
+
+<script>
+function toggleDomain(header) {
+    const domain = header.closest('.domain');
+    domain.classList.toggle('collapsed');
+    updateProgress();
+}
+
+function showDomain(e, domainId) {
+    e.preventDefault();
+    const domain = document.getElementById(domainId);
+    if (domain.classList.contains('collapsed')) {
+        domain.classList.remove('collapsed');
+    }
+    domain.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelectorAll('.toc-item').forEach(t => t.classList.remove('active'));
+    e.currentTarget.classList.add('active');
+    updateProgress();
+}
+
+function expandAll() {
+    document.querySelectorAll('.domain').forEach(d => d.classList.remove('collapsed'));
+    updateProgress();
+}
+function collapseAll() {
+    document.querySelectorAll('.domain').forEach(d => d.classList.add('collapsed'));
+    updateProgress();
+}
+
+function handleSearch(query) {
+    const main = document.getElementById('mainContent');
+    main.querySelectorAll('mark').forEach(m => { m.replaceWith(m.textContent); });
+    if (!query || query.length < 2) return;
+
+    const regex = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+    document.querySelectorAll('.domain').forEach(d => d.classList.remove('collapsed'));
+
+    function highlightNode(node) {
+        if (node.nodeType === 3) {
+            const text = node.textContent;
+            if (regex.test(text)) {
+                const span = document.createElement('span');
+                span.innerHTML = text.replace(regex, '<mark>$1</mark>');
+                node.replaceWith(span);
+            }
+        } else if (node.nodeType === 1 && !['SCRIPT', 'STYLE', 'INPUT', 'MARK'].includes(node.tagName)) {
+            Array.from(node.childNodes).forEach(highlightNode);
+        }
+    }
+    highlightNode(main);
+
+    const firstMark = main.querySelector('mark');
+    if (firstMark) firstMark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    updateProgress();
+}
+
+function updateProgress() {
+    const domains = document.querySelectorAll('.domain');
+    const expanded = Array.from(domains).filter(d => !d.classList.contains('collapsed')).length;
+    document.getElementById('progressFill').style.width = (expanded / domains.length * 100) + '%';
+    document.getElementById('progressText').textContent = expanded + ' / ' + domains.length + ' sections open';
+}
+
+window.addEventListener('scroll', () => {
+    const domains = document.querySelectorAll('.domain');
+    let current = '';
+    domains.forEach(d => {
+        const rect = d.getBoundingClientRect();
+        if (rect.top <= 100) current = d.id;
+    });
+    if (current) {
+        document.querySelectorAll('.toc-item').forEach(t => {
+            t.classList.toggle('active', t.getAttribute('href') === '#' + current);
+        });
+    }
+});
+
+updateProgress();
+</script>
+</body>
+</html>
