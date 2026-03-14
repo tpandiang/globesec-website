@@ -260,7 +260,7 @@ toc_html = '<div class="sidebar-title">Study Materials</div>\n'
 domains_started = False
 for num, name, weight, did in toc_items:
     # Add "Exam Domains" header before the first domain
-    if num not in ("SP", "WK") and not domains_started:
+    if num not in ("SP", "WK", "QZ") and not domains_started:
         domains_started = True
         toc_html += '<div class="sidebar-title" style="margin-top:0.75rem;">Exam Domains</div>\n'
 
