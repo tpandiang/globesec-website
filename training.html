@@ -2934,6 +2934,68 @@ ORDER BY eventtime DESC;</code></pre>
 <h3>Exam Traps</h3>
 <ul><li><strong>"Hundreds of accounts"</strong> = must be automated, not manual per-account solutions</li><li><strong>CloudTrail + Lambda sounds automated</strong> — but only catches <code>CreateAccount</code> events (future accounts only)</li><li><strong>Automatic deployment ≠ default</strong> — you must explicitly enable it when creating the stack set</li><li><strong>StackSets can deploy IAM roles directly</strong> — no need for Lambda intermediary</li><li><strong>"Least operational effort"</strong> = always prefer declarative/managed over code-based</li><li><strong>Service-managed vs self-managed StackSets</strong>: service-managed (Organizations integration) is lower effort</li></ul>
 </div></div>
+<div class="section" id="d3-s12">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Security Hub — Centralizing GuardDuty Findings (Standalone Accounts)</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: Multiple standalone AWS accounts (no Organizations). Centralize GuardDuty findings into Security Hub using a designated security account. Order the setup steps.</p>
+<p><strong>Correct Order</strong>:</p>
+<ol>
+<li>Enable Security Hub in the designated security account</li>
+<li>Configure it as the Security Hub administrator account</li>
+<li>Enable Security Hub + GuardDuty in member accounts + create IAM trust roles</li>
+<li>Configure admin account to assume member roles</li>
+</ol>
+<h3>Concept: Security Hub Multi-Account Setup (Standalone)</h3>
+<p>Without AWS Organizations, Security Hub cross-account setup requires <strong>manual IAM role trust</strong> and explicit invitation flow.</p>
+<pre><code>Setup Dependency Chain:
+Step 1: Enable Security Hub     ← Foundation
+              │
+              ▼
+Step 2: Designate as Admin      ← Needs Security Hub running
+              │
+              ▼
+Step 3: Enable in Members +     ← Admin must exist to accept invites
+        Create IAM Trust Roles     Roles trust the admin account
+              │
+              ▼
+Step 4: Admin Assumes Roles     ← Roles must exist first (Step 3)</code></pre>
+<h3>Organizations vs Standalone Setup</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Feature</th>
+<th>With Organizations</th>
+<th>Standalone</th>
+</tr>
+<tr>
+<td>Admin designation</td>
+<td>Delegated admin (org settings)</td>
+<td>Manual after enabling</td>
+</tr>
+<tr>
+<td>Member enrollment</td>
+<td>Auto or invite</td>
+<td>Manual invite + accept</td>
+</tr>
+<tr>
+<td>Cross-account access</td>
+<td>Service-linked roles (auto)</td>
+<td><strong>Manual IAM roles + trust</strong></td>
+</tr>
+<tr>
+<td>GuardDuty → Security Hub</td>
+<td>Auto-forwarded</td>
+<td>Enable both per account</td>
+</tr>
+<tr>
+<td>Operational effort</td>
+<td>Lower</td>
+<td>Higher</td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>Order matters</strong> — you can't designate an admin before enabling Security Hub in that account</li><li><strong>Standalone = manual IAM roles</strong> — Organizations would handle this automatically with service-linked roles</li><li><strong>Step 3 before Step 4</strong> — you can't assume roles that don't exist yet</li><li><strong>GuardDuty findings auto-flow to Security Hub</strong> once both are enabled — no extra integration needed within the same account</li></ul>
+</div></div>
         </div>
     </div>
     
