@@ -3911,6 +3911,70 @@ AWSLambdaBasicExecutionRole (attached)
 <h3>Exam Traps</h3>
 <ul><li><strong>"No policy changes" ≠ permissions are fine</strong> — SCPs or boundaries could restrict at a different level</li><li><strong>Can't query missing logs</strong> — Logs Insights only works on existing log data</li><li><strong>Attached policy ≠ effective permissions</strong> — Access Analyzer shows what the role can actually do</li><li><strong>Log group config is often overlooked</strong> — Lambda can be configured to write to a specific log group that may not exist</li></ul>
 </div></div>
+<div class="section" id="d3-s22">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Q20: SSM Patch Manager + Security Hub Admin — End-of-Support Software</h2>
+<div class="section-body">
+<h3>Question Summary</h3>
+<p><strong>Scenario</strong>: 300 EC2 instances running Microsoft Windows/SQL Server across multiple accounts in Organizations. Need end-of-support info for Microsoft software + alerts to all member accounts. Business Support Plan.</p>
+<p><strong>Correct Answer</strong>: D — Systems Manager Patch Manager for software scanning + Security Hub administrator account for centralized alerting</p>
+<h3>Concept: Patch Manager vs Trusted Advisor</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Tool</th>
+<th>What It Checks</th>
+<th>Scans Inside EC2?</th>
+</tr>
+<tr>
+<td><strong>SSM Patch Manager</strong></td>
+<td>Software, patches, end-of-support status on EC2</td>
+<td><strong>Yes</strong> (agent-based)</td>
+</tr>
+<tr>
+<td><strong>Trusted Advisor</strong></td>
+<td>AWS account best practices (cost, security, limits)</td>
+<td><strong>No</strong> (service-level only)</td>
+</tr>
+</table></div>
+<h3>Security Hub — Admin Account vs Per-Account</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Approach</th>
+<th>Setup</th>
+<th>Effort</th>
+</tr>
+<tr>
+<td><strong>Admin account</strong> (Organizations)</td>
+<td>Auto-enrolls all members</td>
+<td><strong>Lowest</strong></td>
+</tr>
+<tr>
+<td>Per-account configuration</td>
+<td>Manual setup in each account</td>
+<td>Higher</td>
+</tr>
+</table></div>
+<h3>Why Wrong Answers Fail</h3>
+<div class="table-wrap"><table>
+<tr>
+<th>Option</th>
+<th>Fatal Flaw</th>
+</tr>
+<tr>
+<td><strong>A</strong> — Patch Manager + per-account Security Hub</td>
+<td>Per-account = manual, more effort</td>
+</tr>
+<tr>
+<td><strong>B</strong> — Trusted Advisor + admin account</td>
+<td>TA can't scan EC2 instance software</td>
+</tr>
+<tr>
+<td><strong>C</strong> — Trusted Advisor + per-account</td>
+<td>Both wrong tools and approach</td>
+</tr>
+</table></div>
+<h3>Exam Traps</h3>
+<ul><li><strong>Trusted Advisor ≠ instance-level scanning</strong> — it checks AWS service configurations, not software on EC2</li><li><strong>Business Support Plan</strong> mentioned as distractor — unlocks TA checks but irrelevant since TA can't check instance software</li><li><strong>"Each member account" = manual</strong> — always prefer admin/delegated admin approach with Organizations</li><li><strong>Patch Manager needs SSM Agent</strong> — pre-installed on Amazon-provided Windows AMIs</li></ul>
+</div></div>
         </div>
     </div>
     
