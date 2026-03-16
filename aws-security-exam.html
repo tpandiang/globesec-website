@@ -171,7 +171,23 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 <div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Deleting the existing trail is necessary; create a new trail afterward</span></div>
 <div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a new trail inheriting from the original and change management events' storage to a new S3 bucket</span></div>
 </div>
-<div class="explanation"><strong>&#10003; Correct: B.</strong> You can create a second trail configured for management events only, directing it to a separate S3 bucket, while the original trail handles data events.</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Create a new trail for management events only and send to a different S3 bucket.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Management Events (Control Plane)</em> — Operations that manage your AWS resources. Examples: <code>CreateBucket</code>, <code>CreateTrail</code>, <code>RunInstances</code>, <code>AttachRolePolicy</code>, IAM operations, console sign-in events. These tell you <em>who</em> did <em>what</em> to your infrastructure.<br><br>
+<em>Data Events (Data Plane)</em> — Operations performed <em>on</em> data within resources. Examples: S3 <code>GetObject</code>/<code>PutObject</code>, Lambda <code>Invoke</code>, DynamoDB <code>GetItem</code>/<code>PutItem</code>. These are high-volume and tell you what data was accessed or modified.<br><br>
+
+<strong>Security Best Practice:</strong><br>
+Separating management and data events into different S3 buckets provides: (1) <strong>Separation of concerns</strong> — security teams can monitor control-plane changes without sifting through high-volume data events; (2) <strong>Cost optimization</strong> — data events generate far more log volume, so you can apply different lifecycle/storage policies; (3) <strong>Access control</strong> — apply different bucket policies so only certain teams access each log type.<br><br>
+
+<strong>Why B is correct:</strong> AWS CloudTrail supports up to 5 trails per region. You can create a second trail configured to capture only management events and direct it to a separate S3 bucket, while the original trail continues logging data events to its own bucket. This cleanly separates the two event types.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Modify the existing trail to store data events in a new S3 bucket</em> — A single trail sends <em>all</em> its events to one S3 bucket. You cannot configure one trail to split different event types across different buckets.<br>
+<em>C) Deleting the existing trail is necessary</em> — Deleting the trail is unnecessary and dangerous — it would create a gap in logging during recreation, potentially missing critical security events.<br>
+<em>D) Create a new trail inheriting from the original</em> — CloudTrail trails do not support inheritance. Each trail is independently configured; there is no parent-child relationship between trails.
+</div>
 </div>
 
 <!-- Q2 MC -->
