@@ -5,270 +5,791 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GlobeSec.ai - AI-Powered Proactive Security</title>
 <meta name="description" content="GlobeSec.ai provides AI-powered proactive security solutions that detect and fix vulnerabilities before they become breaches.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-    --primary: #0a1628;
-    --secondary: #0f2744;
-    --accent: #00d4ff;
-    --accent2: #7b61ff;
-    --text: #e0e8f0;
-    --text-muted: #8899aa;
-    --white: #ffffff;
-    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --bg: #0a0a0c;
+    --bg2: #0f1114;
+    --bg3: #141619;
+    --cyan: #00f0ff;
+    --cyan-dim: rgba(0, 240, 255, 0.15);
+    --orange: #ff6a2f;
+    --orange-glow: rgba(255, 106, 47, 0.25);
+    --text: #c8ccd0;
+    --text-dim: #5a6270;
+    --white: #eef0f2;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+html { scroll-behavior: smooth; }
+
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: var(--primary);
+    font-family: var(--sans);
+    background: var(--bg);
     color: var(--text);
-    line-height: 1.7;
+    line-height: 1.6;
     overflow-x: hidden;
 }
 
-/* Navbar */
+/* ─── Scanline overlay ─── */
+body::after {
+    content: '';
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 240, 255, 0.008) 2px,
+        rgba(0, 240, 255, 0.008) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* ─── Grid background ─── */
+body::before {
+    content: '';
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+        linear-gradient(rgba(0, 240, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ─── Navbar ─── */
 nav {
     position: fixed; top: 0; width: 100%; z-index: 1000;
-    background: rgba(10, 22, 40, 0.92);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(0, 212, 255, 0.1);
-    padding: 0 2rem;
+    background: rgba(10, 10, 12, 0.95);
+    border-bottom: 1px solid rgba(0, 240, 255, 0.08);
+    padding: 0 1.5rem;
 }
 .nav-inner {
     max-width: 1200px; margin: 0 auto;
     display: flex; justify-content: space-between; align-items: center;
-    height: 70px;
+    height: 64px;
 }
 .logo {
-    font-size: 1.5rem; font-weight: 800; text-decoration: none; color: var(--white);
-    display: flex; align-items: center; gap: 0.5rem;
+    display: flex; align-items: center; gap: 0.75rem;
+    text-decoration: none; color: var(--white);
 }
-.logo-globe {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: var(--gradient);
+.logo-diamond {
+    width: 40px; height: 40px;
+    background: var(--cyan);
+    transform: rotate(45deg);
     display: flex; align-items: center; justify-content: center;
+    border-radius: 4px;
+}
+.logo-diamond span {
+    transform: rotate(-45deg);
+    font-family: var(--sans);
+    font-weight: 900;
     font-size: 1.1rem;
+    color: var(--bg);
 }
-.logo span { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.nav-links { display: flex; gap: 2rem; list-style: none; }
+.logo-text {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+    color: var(--white);
+    line-height: 1.1;
+}
+.logo-sub {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 500;
+    color: var(--cyan);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+.nav-links { display: flex; gap: 1.8rem; list-style: none; align-items: center; }
 .nav-links a {
-    color: var(--text-muted); text-decoration: none; font-size: 0.9rem;
-    font-weight: 500; transition: color 0.3s;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 0.3s;
 }
-.nav-links a:hover { color: var(--accent); }
+.nav-links a:hover { color: var(--cyan); }
 .nav-cta {
-    background: var(--gradient); color: var(--primary) !important;
-    padding: 0.5rem 1.2rem; border-radius: 6px; font-weight: 700 !important;
+    background: var(--orange) !important;
+    color: var(--bg) !important;
+    padding: 0.45rem 1rem;
+    border-radius: 0;
+    font-weight: 700 !important;
 }
 .nav-cta:hover { opacity: 0.9; }
 
-/* Hero */
+/* Hamburger */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 8px;
+    border: 1px solid rgba(0, 240, 255, 0.15);
+    background: transparent;
+}
+.hamburger span {
+    width: 22px; height: 2px;
+    background: var(--orange);
+    transition: 0.3s;
+}
+
+/* Mobile menu */
+.mobile-menu {
+    display: none;
+    position: fixed; top: 64px; left: 0; right: 0;
+    background: rgba(10, 10, 12, 0.98);
+    border-bottom: 1px solid rgba(0, 240, 255, 0.08);
+    padding: 1.5rem;
+    z-index: 999;
+}
+.mobile-menu.active { display: block; }
+.mobile-menu a {
+    display: block;
+    color: var(--text);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.05);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.mobile-menu a:hover { color: var(--cyan); }
+
+/* ─── Hero ─── */
 .hero {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    text-align: center; padding: 6rem 2rem 4rem;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 7rem 2rem 4rem;
     position: relative;
-    background: radial-gradient(ellipse at 50% 0%, rgba(0, 212, 255, 0.08) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 50%, rgba(123, 97, 255, 0.05) 0%, transparent 50%);
+    z-index: 1;
 }
-.hero-content { max-width: 800px; }
-.hero-badge {
-    display: inline-block; padding: 0.4rem 1rem; border-radius: 50px;
-    border: 1px solid rgba(0, 212, 255, 0.3); color: var(--accent);
-    font-size: 0.8rem; font-weight: 600; letter-spacing: 1px;
-    text-transform: uppercase; margin-bottom: 1.5rem;
+.hero-content {
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
 }
+
+/* Terminal tag */
+.terminal-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+.terminal-tag .bar {
+    width: 3px; height: 24px;
+    background: var(--orange);
+}
+.terminal-tag .label {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--orange);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+/* System info text */
+.sys-info {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-bottom: 1.5rem;
+    line-height: 1.8;
+}
+
+/* Hero heading */
 .hero h1 {
-    font-size: 3.5rem; font-weight: 800; line-height: 1.15;
-    color: var(--white); margin-bottom: 1.5rem;
+    font-family: var(--sans);
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    font-weight: 900;
+    line-height: 1.0;
+    color: var(--white);
+    margin-bottom: 2rem;
+    letter-spacing: -1px;
 }
-.hero h1 .highlight {
-    background: var(--gradient); -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+.hero h1 .cyan {
+    color: var(--cyan);
+    text-shadow: 0 0 40px rgba(0, 240, 255, 0.3);
 }
-.hero p {
-    font-size: 1.2rem; color: var(--text-muted); max-width: 600px;
-    margin: 0 auto 2.5rem;
+
+/* Console lines */
+.console-lines {
+    border-left: 2px solid rgba(0, 240, 255, 0.2);
+    padding-left: 1.2rem;
+    margin-bottom: 2.5rem;
 }
-.hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+.console-lines p {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    line-height: 2;
+}
+.console-lines p::before {
+    content: '> ';
+    color: var(--cyan);
+}
+
+/* CTA buttons */
+.hero-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 480px;
+}
 .btn-primary {
-    background: var(--gradient); color: var(--primary);
-    padding: 0.85rem 2rem; border-radius: 8px; text-decoration: none;
-    font-weight: 700; font-size: 1rem; transition: transform 0.2s, box-shadow 0.2s;
-    border: none; cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    background: var(--orange);
+    color: var(--bg);
+    padding: 1.1rem 2rem;
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: box-shadow 0.3s, transform 0.2s;
 }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3); }
+.btn-primary:hover {
+    box-shadow: 0 0 30px var(--orange-glow);
+    transform: translateY(-1px);
+}
+.btn-primary .arrow { font-size: 1.2rem; }
 .btn-secondary {
-    background: transparent; color: var(--text);
-    padding: 0.85rem 2rem; border-radius: 8px; text-decoration: none;
-    font-weight: 600; font-size: 1rem; border: 1px solid rgba(255,255,255,0.2);
-    transition: border-color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: transparent;
+    color: var(--cyan);
+    padding: 1.1rem 2rem;
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: 1px solid var(--cyan);
+    transition: background 0.3s, box-shadow 0.3s;
 }
-.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-
-/* Animated grid background */
-.hero::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background-image:
-        linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
-    pointer-events: none;
+.btn-secondary:hover {
+    background: rgba(0, 240, 255, 0.05);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+}
+.btn-secondary .icon {
+    font-family: var(--mono);
+    font-size: 1rem;
 }
 
-/* Stats bar */
+/* ─── Status panel ─── */
+.status-panel {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem 4rem;
+    position: relative;
+    z-index: 1;
+}
+.status-card {
+    background: var(--bg2);
+    border: 1px solid rgba(0, 240, 255, 0.1);
+    padding: 1.5rem 2rem;
+}
+.status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.status-left {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+.status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+.status-left span { color: var(--cyan); }
+.status-right {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+}
+.progress-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.6rem;
+}
+.progress-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.progress-val {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--cyan);
+}
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(0, 240, 255, 0.08);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.2rem;
+}
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan), var(--orange));
+    width: 84.2%;
+    position: relative;
+}
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: -2px; bottom: -2px;
+    width: 3px;
+    background: var(--white);
+    box-shadow: 0 0 8px var(--white);
+}
+
+/* Status grid blocks */
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+.status-block {
+    height: 32px;
+    background: rgba(0, 240, 255, 0.06);
+    border: 1px solid rgba(0, 240, 255, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+.status-block::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.1), transparent);
+    animation: shimmer 3s ease-in-out infinite;
+}
+.status-block:nth-child(2)::after { animation-delay: 0.5s; }
+.status-block:nth-child(3)::after { animation-delay: 1s; }
+.status-block:nth-child(4)::after { animation-delay: 1.5s; }
+@keyframes shimmer {
+    0% { left: -100%; }
+    50% { left: 100%; }
+    100% { left: 100%; }
+}
+
+/* ─── Stats Bar ─── */
 .stats {
-    background: var(--secondary); border-top: 1px solid rgba(0,212,255,0.1);
-    border-bottom: 1px solid rgba(0,212,255,0.1);
+    border-top: 1px solid rgba(0, 240, 255, 0.06);
+    border-bottom: 1px solid rgba(0, 240, 255, 0.06);
+    background: var(--bg2);
     padding: 3rem 2rem;
+    position: relative; z-index: 1;
 }
 .stats-inner {
-    max-width: 1000px; margin: 0 auto;
+    max-width: 1100px; margin: 0 auto;
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem;
     text-align: center;
 }
 .stat-num {
-    font-size: 2.5rem; font-weight: 800;
-    background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-family: var(--mono);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--cyan);
+    text-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
 }
-.stat-label { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.3rem; }
+.stat-label {
+    font-family: var(--mono);
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+}
 
-/* Sections */
-section { padding: 6rem 2rem; }
+/* ─── Section commons ─── */
+section {
+    padding: 5rem 2rem;
+    position: relative;
+    z-index: 1;
+}
 .section-inner { max-width: 1100px; margin: 0 auto; }
 .section-label {
-    color: var(--accent); font-size: 0.8rem; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+.section-label .bar {
+    width: 3px; height: 18px;
+    background: var(--cyan);
+}
+.section-label .text {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 .section-title {
-    font-size: 2.2rem; font-weight: 800; color: var(--white);
-    margin-bottom: 1rem;
+    font-family: var(--sans);
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.5px;
 }
 .section-desc {
-    color: var(--text-muted); font-size: 1.05rem; max-width: 600px;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    max-width: 600px;
     margin-bottom: 3rem;
+    letter-spacing: 0.5px;
+    line-height: 1.8;
 }
 
-/* Services */
+/* ─── Services ─── */
 .services-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(0, 240, 255, 0.06);
 }
 .service-card {
-    background: var(--secondary); border: 1px solid rgba(0,212,255,0.08);
-    border-radius: 12px; padding: 2rem;
-    transition: transform 0.3s, border-color 0.3s;
+    background: var(--bg);
+    padding: 2rem;
+    position: relative;
+    transition: background 0.3s;
 }
 .service-card:hover {
-    transform: translateY(-4px); border-color: rgba(0,212,255,0.25);
+    background: var(--bg2);
 }
+.service-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 0; height: 2px;
+    background: var(--cyan);
+    transition: width 0.4s;
+}
+.service-card:hover::before { width: 100%; }
 .service-icon {
-    width: 48px; height: 48px; border-radius: 10px;
-    background: rgba(0, 212, 255, 0.1); display: flex;
-    align-items: center; justify-content: center;
-    font-size: 1.4rem; margin-bottom: 1.2rem;
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+    filter: grayscale(0.3);
 }
 .service-card h3 {
-    font-size: 1.15rem; color: var(--white); margin-bottom: 0.6rem;
+    font-family: var(--sans);
+    font-size: 1rem;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+    font-weight: 700;
 }
-.service-card p { color: var(--text-muted); font-size: 0.9rem; }
+.service-card p {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.7;
+}
+/* Training card special */
+.service-card.featured {
+    border-left: 2px solid var(--orange);
+}
+.live-badge {
+    display: inline-block;
+    background: var(--orange);
+    color: var(--bg);
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+}
+.training-links {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(0, 240, 255, 0.06);
+}
+.training-links-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 0.5rem;
+}
+.training-link {
+    display: block;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+    margin-bottom: 0.3rem;
+    border-left: 2px solid transparent;
+    transition: border-color 0.2s, background 0.2s;
+}
+.training-link:hover {
+    border-left-color: var(--orange);
+    background: rgba(255, 106, 47, 0.05);
+}
+.training-link .tag {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+}
+.training-link .tag.aws { color: #ff9900; }
+.training-link .tag.sc02 { color: var(--cyan); }
 
-/* How it works */
-.how-section { background: var(--secondary); }
+/* ─── How it works ─── */
+.how-section { background: var(--bg2); }
 .steps {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
     position: relative;
 }
 .step {
-    text-align: center; padding: 2rem 1.5rem;
+    padding: 2rem;
     position: relative;
+    border-right: 1px solid rgba(0, 240, 255, 0.06);
 }
+.step:last-child { border-right: none; }
 .step-num {
-    width: 56px; height: 56px; border-radius: 50%;
-    background: var(--gradient); color: var(--primary);
-    font-size: 1.3rem; font-weight: 800;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 1.2rem;
+    font-family: var(--mono);
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--orange);
+    opacity: 0.3;
+    margin-bottom: 1rem;
+    line-height: 1;
 }
-.step h3 { color: var(--white); margin-bottom: 0.6rem; font-size: 1.1rem; }
-.step p { color: var(--text-muted); font-size: 0.9rem; }
+.step h3 {
+    font-family: var(--sans);
+    color: var(--white);
+    margin-bottom: 0.6rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+.step p {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    line-height: 1.7;
+}
 
-/* About / Research */
+/* ─── Research ─── */
 .about-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
 }
-.about-text h3 { color: var(--white); font-size: 1.3rem; margin-bottom: 0.8rem; }
-.about-text p { color: var(--text-muted); margin-bottom: 1.5rem; }
+.about-text h3 {
+    color: var(--white);
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+    font-weight: 700;
+}
+.about-text p {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+}
 .credential-list { list-style: none; }
 .credential-list li {
-    padding: 0.5rem 0; color: var(--text);
-    display: flex; align-items: center; gap: 0.6rem;
-    font-size: 0.95rem;
+    padding: 0.5rem 0;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.04);
 }
 .credential-list li::before {
-    content: ''; width: 8px; height: 8px; border-radius: 50%;
-    background: var(--accent); flex-shrink: 0;
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan);
+    flex-shrink: 0;
 }
 .about-visual {
-    background: rgba(0, 212, 255, 0.03); border: 1px solid rgba(0,212,255,0.1);
-    border-radius: 16px; padding: 3rem; text-align: center;
+    background: var(--bg2);
+    border: 1px solid rgba(0, 240, 255, 0.08);
+    padding: 2.5rem;
+    position: relative;
+}
+.about-visual::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, var(--cyan), var(--orange));
 }
 .about-visual .shield-icon {
-    font-size: 4rem; margin-bottom: 1rem;
-    background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
 }
-.about-visual h3 { color: var(--white); font-size: 1.2rem; margin-bottom: 0.5rem; }
-.about-visual p { color: var(--text-muted); font-size: 0.9rem; }
-
-/* CTA */
-.cta-section {
-    text-align: center;
-    background: radial-gradient(ellipse at 50% 50%, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
+.about-visual h3 {
+    color: var(--white);
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
 }
-.cta-section h2 { font-size: 2.2rem; color: var(--white); margin-bottom: 1rem; }
-.cta-section p { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }
+.about-visual p {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    line-height: 1.7;
+}
 
-/* Contact form */
+/* ─── CTA / Contact ─── */
+.cta-section { background: var(--bg); }
 .contact-form {
-    max-width: 500px; margin: 0 auto;
-    display: flex; flex-direction: column; gap: 1rem;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 2rem;
 }
 .contact-form input, .contact-form textarea {
-    background: var(--secondary); border: 1px solid rgba(0,212,255,0.15);
-    border-radius: 8px; padding: 0.85rem 1rem; color: var(--text);
-    font-size: 0.95rem; font-family: inherit; outline: none;
+    background: var(--bg2);
+    border: 1px solid rgba(0, 240, 255, 0.1);
+    padding: 0.85rem 1rem;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    outline: none;
     transition: border-color 0.3s;
 }
 .contact-form input:focus, .contact-form textarea:focus {
-    border-color: var(--accent);
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.08);
 }
 .contact-form input::placeholder, .contact-form textarea::placeholder {
-    color: var(--text-muted);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
-.contact-form textarea { min-height: 120px; resize: vertical; }
+.contact-form textarea { min-height: 100px; resize: vertical; }
+.contact-form button {
+    background: var(--orange);
+    color: var(--bg);
+    padding: 1rem;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    transition: box-shadow 0.3s;
+}
+.contact-form button:hover {
+    box-shadow: 0 0 25px var(--orange-glow);
+}
+.email-line {
+    margin-top: 1.5rem;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--text-dim);
+}
+.email-line a { color: var(--cyan); text-decoration: none; }
+.email-line a:hover { text-decoration: underline; }
 
-/* Footer */
+/* ─── Footer ─── */
 footer {
-    border-top: 1px solid rgba(0,212,255,0.1);
-    padding: 2.5rem 2rem; text-align: center;
+    border-top: 1px solid rgba(0, 240, 255, 0.06);
+    padding: 2rem;
+    position: relative; z-index: 1;
 }
-.footer-inner { max-width: 1100px; margin: 0 auto; }
-.footer-links { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1.5rem; }
-.footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; }
-.footer-links a:hover { color: var(--accent); }
-.footer-copy { color: var(--text-muted); font-size: 0.8rem; }
+.footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.footer-links { display: flex; gap: 1.5rem; }
+.footer-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 0.3s;
+}
+.footer-links a:hover { color: var(--cyan); }
+.footer-copy {
+    font-family: var(--mono);
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+}
 
-/* Responsive */
-@media (max-width: 768px) {
-    .hero h1 { font-size: 2.2rem; }
-    .stats-inner { grid-template-columns: repeat(2, 1fr); }
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
     .services-grid { grid-template-columns: 1fr; }
     .steps { grid-template-columns: 1fr; }
+    .step { border-right: none; border-bottom: 1px solid rgba(0, 240, 255, 0.06); }
     .about-grid { grid-template-columns: 1fr; }
-    .nav-links { display: none; }
+    .stats-inner { grid-template-columns: repeat(2, 1fr); }
 }
-
-/* Smooth scroll */
-html { scroll-behavior: smooth; }
+@media (max-width: 768px) {
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+    .hero h1 { font-size: 2.5rem; }
+    .hero-buttons { max-width: 100%; }
+    .footer-inner { flex-direction: column; gap: 1rem; text-align: center; }
+    .footer-links { flex-wrap: wrap; justify-content: center; }
+    .status-grid { grid-template-columns: repeat(2, 1fr); }
+}
 </style>
 </head>
 <body>
@@ -277,31 +798,90 @@ html { scroll-behavior: smooth; }
 <nav>
     <div class="nav-inner">
         <a href="#" class="logo">
-            <div class="logo-globe">G</div>
-            <span>GlobeSec</span>.ai
+            <div class="logo-diamond"><span>G</span></div>
+            <div>
+                <div class="logo-text">GLOBESEC</div>
+                <div class="logo-sub">protocol.ai</div>
+            </div>
         </a>
         <ul class="nav-links">
             <li><a href="training.html">Training</a></li>
             <li><a href="#services">Services</a></li>
-            <li><a href="#how">How It Works</a></li>
+            <li><a href="#how">Process</a></li>
             <li><a href="#research">Research</a></li>
             <li><a href="#contact" class="nav-cta">Get Started</a></li>
         </ul>
+        <button class="hamburger" onclick="document.querySelector('.mobile-menu').classList.toggle('active')" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
     </div>
 </nav>
+<div class="mobile-menu">
+    <a href="training.html">Training</a>
+    <a href="#services" onclick="this.parentElement.classList.remove('active')">Services</a>
+    <a href="#how" onclick="this.parentElement.classList.remove('active')">Process</a>
+    <a href="#research" onclick="this.parentElement.classList.remove('active')">Research</a>
+    <a href="#contact" onclick="this.parentElement.classList.remove('active')">Contact</a>
+</div>
 
 <!-- Hero -->
 <section class="hero">
     <div class="hero-content">
-        <div class="hero-badge">AI-Powered Security Solutions</div>
-        <h1>Security That <span class="highlight">Thinks Ahead</span></h1>
-        <p>GlobeSec.ai uses artificial intelligence to proactively detect, analyze, and remediate security vulnerabilities before they become breaches.</p>
+        <div class="terminal-tag">
+            <div class="bar"></div>
+            <div class="label">Neural-Threat-Defense-v2.0</div>
+        </div>
+
+        <div class="sys-info">
+            SYS_INIT: OK<br>
+            MEM_CHECK: 0X00F3FF<br>
+            PROT_LAYER: ACTIVE
+        </div>
+
+        <h1>SECURITY<br><span class="cyan">THAT<br>THINKS</span><br>AHEAD</h1>
+
+        <div class="console-lines">
+            <p>Initializing proactive defense strategies.</p>
+            <p>AI core detecting vulnerabilities in real-time.</p>
+            <p>Zero-day exploit mitigation engaged.</p>
+        </div>
+
         <div class="hero-buttons">
-            <a href="#contact" class="btn-primary">Schedule a Consultation</a>
-            <a href="#services" class="btn-secondary">Explore Solutions</a>
+            <a href="#contact" class="btn-primary">
+                Schedule Consultation <span class="arrow">&rarr;</span>
+            </a>
+            <a href="#services" class="btn-secondary">
+                Explore Solutions <span class="icon">[&gt;_]</span>
+            </a>
         </div>
     </div>
 </section>
+
+<!-- Status Panel -->
+<div class="status-panel">
+    <div class="status-card">
+        <div class="status-header">
+            <div class="status-left">
+                <div class="status-dot"></div>
+                <span>CORE_STATUS: NOMINAL</span>
+            </div>
+            <div class="status-right">REF_ID: 884-X</div>
+        </div>
+        <div class="progress-row">
+            <div class="progress-label">Threat_Vector_Scan</div>
+            <div class="progress-val">84.2%</div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        <div class="status-grid">
+            <div class="status-block"></div>
+            <div class="status-block"></div>
+            <div class="status-block"></div>
+            <div class="status-block"></div>
+        </div>
+    </div>
+</div>
 
 <!-- Stats -->
 <div class="stats">
@@ -315,7 +895,7 @@ html { scroll-behavior: smooth; }
             <div class="stat-label">Continuous Monitoring</div>
         </div>
         <div>
-            <div class="stat-num">Pro</div>
+            <div class="stat-num">PRO</div>
             <div class="stat-label">Active Remediation</div>
         </div>
         <div>
@@ -328,29 +908,32 @@ html { scroll-behavior: smooth; }
 <!-- Services -->
 <section id="services">
     <div class="section-inner">
-        <div class="section-label">What We Do</div>
+        <div class="section-label">
+            <div class="bar"></div>
+            <div class="text">What We Do</div>
+        </div>
         <div class="section-title">Proactive Security Solutions</div>
         <div class="section-desc">We don't wait for breaches. Our AI-driven platform identifies and resolves threats before they impact your business.</div>
 
         <div class="services-grid">
-            <div class="service-card" style="border-color:rgba(0,212,255,0.25); position:relative;">
-                <div style="position:absolute;top:0.75rem;right:0.75rem;background:var(--gradient);color:var(--primary);font-size:0.65rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px;">Live Course</div>
-                <div class="service-icon" style="background:rgba(123,97,255,0.15);">&#x1F393;</div>
+            <div class="service-card featured">
+                <div class="live-badge">Live Course</div>
+                <div class="service-icon">&#x1F393;</div>
                 <h3>Security Training</h3>
                 <p>Expert-led training programs covering AWS Security, Cloud Architecture, and certification preparation.</p>
-                <div style="margin-top:1rem; padding-top:0.75rem; border-top:1px solid rgba(0,212,255,0.1);">
-                    <p style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--accent); margin-bottom:0.5rem;">AWS Security Learning</p>
-                    <a href="training.html" style="display:block; text-decoration:none; color:var(--text); padding:0.4rem 0.6rem; border-radius:6px; margin-bottom:0.35rem; background:rgba(255,153,0,0.08); border:1px solid rgba(255,153,0,0.15); font-size:0.85rem; transition:background 0.2s;">
-                        <span style="color:#ff9900; font-weight:700;">SCS-C03</span> Study Guide &#8594;
+                <div class="training-links">
+                    <div class="training-links-label">AWS Security Learning</div>
+                    <a href="training.html" class="training-link">
+                        <span class="tag aws">SCS-C03</span> Study Guide &rarr;
                     </a>
-                    <a href="practice-guide.html" style="display:block; text-decoration:none; color:var(--text); padding:0.4rem 0.6rem; border-radius:6px; margin-bottom:0.35rem; background:rgba(255,153,0,0.08); border:1px solid rgba(255,153,0,0.15); font-size:0.85rem; transition:background 0.2s;">
-                        <span style="color:#ff9900; font-weight:700;">SCS-C03</span> Practice Questions &#8594;
+                    <a href="practice-guide.html" class="training-link">
+                        <span class="tag aws">SCS-C03</span> Practice Questions &rarr;
                     </a>
-                    <a href="quiz.html" style="display:block; text-decoration:none; color:var(--text); padding:0.4rem 0.6rem; border-radius:6px; margin-bottom:0.35rem; background:rgba(255,153,0,0.08); border:1px solid rgba(255,153,0,0.15); font-size:0.85rem; transition:background 0.2s;">
-                        <span style="color:#ff9900; font-weight:700;">SCS-C03</span> Fundamentals Quiz &#8594;
+                    <a href="quiz.html" class="training-link">
+                        <span class="tag aws">SCS-C03</span> Fundamentals Quiz &rarr;
                     </a>
-                    <a href="aws-security-exam.html" style="display:block; text-decoration:none; color:var(--text); padding:0.4rem 0.6rem; border-radius:6px; background:rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.15); font-size:0.85rem; transition:background 0.2s;">
-                        <span style="color:#00d4ff; font-weight:700;">SC-02</span> AWS Security Exam &#128274; &#8594;
+                    <a href="aws-security-exam.html" class="training-link">
+                        <span class="tag sc02">SC-02</span> AWS Security Exam &#128274; &rarr;
                     </a>
                 </div>
             </div>
@@ -371,7 +954,7 @@ html { scroll-behavior: smooth; }
             </div>
             <div class="service-card">
                 <div class="service-icon">&#x1F510;</div>
-                <h3>Identity & Access</h3>
+                <h3>Identity &amp; Access</h3>
                 <p>AI-powered access analysis to detect privilege escalation, unused permissions, and cross-account risks before attackers exploit them.</p>
             </div>
             <div class="service-card">
@@ -386,25 +969,28 @@ html { scroll-behavior: smooth; }
 <!-- How It Works -->
 <section class="how-section" id="how">
     <div class="section-inner">
-        <div class="section-label">Our Approach</div>
+        <div class="section-label">
+            <div class="bar"></div>
+            <div class="text">Our Approach</div>
+        </div>
         <div class="section-title">How GlobeSec.ai Works</div>
         <div class="section-desc">Three steps to proactive security that never sleeps.</div>
 
         <div class="steps">
             <div class="step">
-                <div class="step-num">1</div>
+                <div class="step-num">01</div>
                 <h3>Deep Scan</h3>
                 <p>Our AI continuously scans your cloud infrastructure, code repositories, and network configurations to build a complete security profile.</p>
             </div>
             <div class="step">
-                <div class="step-num">2</div>
-                <h3>Predict & Detect</h3>
+                <div class="step-num">02</div>
+                <h3>Predict &amp; Detect</h3>
                 <p>Machine learning models analyze patterns to predict vulnerabilities before they are exploited, detecting threats invisible to traditional tools.</p>
             </div>
             <div class="step">
-                <div class="step-num">3</div>
+                <div class="step-num">03</div>
                 <h3>Auto-Remediate</h3>
-                <p>Identified issues are automatically fixed with AI-generated patches, configuration changes, and policy updates — with full audit trails.</p>
+                <p>Identified issues are automatically fixed with AI-generated patches, configuration changes, and policy updates &mdash; with full audit trails.</p>
             </div>
         </div>
     </div>
@@ -413,7 +999,10 @@ html { scroll-behavior: smooth; }
 <!-- Research / About -->
 <section id="research">
     <div class="section-inner">
-        <div class="section-label">Research & Expertise</div>
+        <div class="section-label">
+            <div class="bar"></div>
+            <div class="text">Research &amp; Expertise</div>
+        </div>
         <div class="section-title">Built on Academic Research</div>
 
         <div class="about-grid">
@@ -426,7 +1015,7 @@ html { scroll-behavior: smooth; }
                     <li>Doctorate-level Security Research</li>
                     <li>Cloud Security Architecture (AWS, Azure, GCP)</li>
                     <li>AI/ML Applied to Threat Detection</li>
-                    <li>Published Security Research & Analysis</li>
+                    <li>Published Security Research &amp; Analysis</li>
                     <li>Industry Certifications (CISM, AWS Security)</li>
                     <li>University-Level Security Education</li>
                 </ul>
@@ -443,19 +1032,22 @@ html { scroll-behavior: smooth; }
 <!-- CTA / Contact -->
 <section class="cta-section" id="contact">
     <div class="section-inner">
-        <div class="section-label">Get Started</div>
-        <h2>Ready to Secure Your Future?</h2>
-        <p>Let's discuss how AI-powered proactive security can protect your organization.</p>
+        <div class="section-label">
+            <div class="bar"></div>
+            <div class="text">Get Started</div>
+        </div>
+        <div class="section-title">Ready to Secure Your Future?</div>
+        <div class="section-desc">Let's discuss how AI-powered proactive security can protect your organization.</div>
 
         <form class="contact-form" onsubmit="handleSubmit(event)">
             <input type="text" name="name" placeholder="Your Name" required>
             <input type="email" name="email" placeholder="Email Address" required>
             <input type="text" name="company" placeholder="Company / Organization">
             <textarea name="message" placeholder="Tell us about your security needs..."></textarea>
-            <button type="submit" class="btn-primary" style="width:100%;">Send Message</button>
+            <button type="submit">Send Message &rarr;</button>
         </form>
-        <p style="margin-top:1.5rem; font-size:0.85rem; color:var(--text-muted);">
-            Or email us directly at <a href="mailto:info@globesec.ai" style="color:var(--accent);">info@globesec.ai</a>
+        <p class="email-line">
+            Or email directly at <a href="mailto:info@globesec.ai">info@globesec.ai</a>
         </p>
     </div>
 </section>
@@ -465,11 +1057,11 @@ html { scroll-behavior: smooth; }
     <div class="footer-inner">
         <div class="footer-links">
             <a href="#services">Services</a>
-            <a href="#how">How It Works</a>
+            <a href="#how">Process</a>
             <a href="#research">Research</a>
             <a href="#contact">Contact</a>
         </div>
-        <div class="footer-copy">&copy; 2026 GlobeSec.ai &mdash; AI-Powered Proactive Security. All rights reserved.</div>
+        <div class="footer-copy">&copy; 2026 GlobeSec.ai &mdash; AI-Powered Proactive Security</div>
     </div>
 </footer>
 
