@@ -500,7 +500,32 @@ When a question mentions <strong>"compliance documents"</strong>, <strong>"attes
 <div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use CloudFormation for SQL code restrictions on CloudFront distributions</span></div>
 <div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Implement AWS WAF to block SQL code in requests</span></div>
 </div>
-<div class="explanation"><strong>&#10003; Correct: D.</strong> AWS WAF has built-in SQL injection detection rules that inspect HTTP requests and block malicious SQL patterns.</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Implement AWS WAF to block SQL code in requests.<br><br>
+
+<strong>How to Think About This:</strong><br>
+AWS has two services that sound similar but protect against <strong>completely different attack types</strong>. Memorize this:<br>
+&bull; <strong>AWS WAF</strong> → <strong>Layer 7 (Application)</strong> → Protects against: SQL injection, XSS, bad bots, request flooding. Inspects HTTP request <em>content</em> (URL, body, headers, cookies).<br>
+&bull; <strong>AWS Shield</strong> → <strong>Layer 3/4 (Network)</strong> → Protects against: <strong>DDoS attacks only</strong> (SYN floods, UDP reflection, volumetric attacks). Does NOT inspect request content.<br><br>
+Simple rule: if the question mentions <strong>SQL injection, XSS, or request content</strong> → WAF. If it mentions <strong>DDoS</strong> → Shield.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>AWS WAF (Web Application Firewall)</em> — Sits in front of CloudFront, ALB, or API Gateway and inspects every HTTP/HTTPS request. You create <strong>rules</strong> that examine request content:<br>
+&bull; <strong>SQL Injection Match</strong> — Built-in rule that detects SQL patterns like <code>' OR 1=1 --</code>, <code>UNION SELECT</code>, <code>DROP TABLE</code> in query strings, body, or headers. Uses pattern matching and transformation functions (URL decode, HTML decode) to catch encoded attacks.<br>
+&bull; <strong>AWS Managed Rule Groups</strong> — Pre-built rulesets maintained by AWS, including <code>AWSManagedRulesSQLiRuleSet</code> specifically for SQL injection. Just enable it — no need to write custom rules.<br>
+&bull; Actions: <strong>Block</strong> (reject the request), <strong>Allow</strong>, or <strong>Count</strong> (log but don't block, useful for testing).<br><br>
+
+<em>AWS Shield</em> — Protects against <strong>Distributed Denial of Service (DDoS)</strong> attacks. Shield Standard is free and automatic on all AWS resources. Shield Advanced adds real-time metrics, 24/7 DDoS Response Team, and cost protection. But Shield operates at the <strong>network/transport layer</strong> — it sees packet volumes, connection rates, and protocol anomalies. It has <strong>zero visibility into HTTP request content</strong>, so it cannot detect SQL injection. A SQL injection is a single, normal-looking HTTP request — Shield wouldn't even notice it.<br><br>
+
+<em>SQL Injection Explained</em> — An attacker inserts malicious SQL code into input fields (login forms, search boxes, URLs). Example: a login form where the attacker types <code>admin' OR '1'='1</code> as the username. If the backend directly concatenates this into a SQL query, it becomes <code>SELECT * FROM users WHERE username='admin' OR '1'='1'</code> — which returns all users. WAF catches this pattern <em>before</em> it reaches your application.<br><br>
+
+<strong>Why D is correct:</strong> AWS WAF inspects HTTP request content and has purpose-built SQL injection detection rules. It can block requests containing SQL patterns before they ever reach your application. This is exactly what a penetration test audit would recommend.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Custom NACL filter with Lambda</em> — NACLs (Network Access Control Lists) operate at <strong>Layer 3/4</strong> — they filter by IP address, port, and protocol. They cannot inspect HTTP request content or detect SQL patterns. You can't write a NACL rule that says "block requests containing SQL code." Lambda could theoretically process requests, but this is a custom, fragile solution when WAF does it natively.<br>
+<em>B) AWS Shield</em> — Shield protects against <strong>DDoS only</strong>. A SQL injection is a single, well-formed HTTP request — not a flood of traffic. Shield sees it as normal traffic and lets it through. Shield and WAF complement each other but solve completely different problems.<br>
+<em>C) CloudFormation for SQL restrictions on CloudFront</em> — CloudFormation is an <strong>infrastructure-as-code</strong> tool that deploys resources from templates. It doesn't filter or inspect traffic. You could use CloudFormation to <em>deploy</em> a WAF configuration on CloudFront, but CloudFormation itself provides zero security filtering.
+</div>
 </div>
 
 <!-- Q13 MC -->
