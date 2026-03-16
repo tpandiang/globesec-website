@@ -200,7 +200,24 @@ Separating management and data events into different S3 buckets provides: (1) <s
 <div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use Macie to query logs stored in a single S3 bucket for CloudTrail</span></div>
 <div class="option" onclick="selectMC(this,4)" data-idx="4"><span class="option-letter">E</span><span class="option-text">Use DynamoDB to query logs stored in a single S3 bucket for CloudTrail</span></div>
 </div>
-<div class="explanation"><strong>&#10003; Correct: B.</strong> CloudTrail natively logs to S3. Amazon Athena can query those S3 logs directly using standard SQL without needing to move data to another database.</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Direct CloudTrail logs to a single S3 bucket and use Athena for querying.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>AWS CloudTrail</em> — Records all API calls and account activity across your AWS environment. By default, CloudTrail delivers log files as compressed JSON to an S3 bucket. In a multi-account or multi-region setup, you can consolidate all trails into a single S3 bucket (called an <strong>organization trail</strong> or cross-account logging).<br><br>
+<em>Amazon Athena</em> — A serverless, interactive query service that lets you analyze data directly in S3 using <strong>standard SQL</strong>. No infrastructure to manage — you simply define a table schema over your S3 data and start querying. Athena has built-in support for CloudTrail log format with pre-built table definitions.<br><br>
+
+<strong>Security Best Practice:</strong><br>
+After a credential leak, you need to investigate: which APIs were called, from what IP addresses, and what resources were accessed. The fastest path is: (1) Consolidate all CloudTrail logs into one S3 bucket, (2) Create an Athena table pointing to that bucket, (3) Run SQL queries like <code>SELECT * FROM cloudtrail_logs WHERE useridentity.accesskeyid = 'AKIA...'</code> to trace the compromised credential's activity. This is the AWS-recommended approach for forensic investigation.<br><br>
+
+<strong>Why B is correct:</strong> CloudTrail natively logs to S3 in JSON format. Athena can query S3 data directly using standard SQL — no ETL, no data movement, no servers to manage. AWS even provides a ready-made Athena table definition for CloudTrail logs, making this the simplest and most cost-effective solution.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Use DynamoDB to store CloudTrail logs and query using Athena</em> — DynamoDB is a NoSQL key-value database, not designed for log storage or SQL analytics. Moving logs from S3 to DynamoDB adds unnecessary complexity and cost. Also, Athena queries S3, not DynamoDB.<br>
+<em>C) Store CloudTrail logs in an RDS database and query using Athena</em> — RDS is a relational database (MySQL, PostgreSQL, etc.). Loading massive log files into RDS is expensive and slow. Athena does not query RDS directly — it queries S3. This adds unnecessary infrastructure.<br>
+<em>D) Use Macie to query logs</em> — Amazon Macie is a data security service that discovers and protects <strong>sensitive data</strong> (PII, credentials) in S3. It does not provide SQL query capabilities for CloudTrail logs. Macie is for data classification, not log analysis.<br>
+<em>E) Use DynamoDB to query logs in S3</em> — DynamoDB is a database, not a query engine. It cannot query data stored in S3. DynamoDB stores and retrieves its own data using key-value lookups, not SQL queries over external files.
+</div>
 </div>
 
 <!-- Q3 MC -->
