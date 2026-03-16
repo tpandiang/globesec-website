@@ -229,7 +229,26 @@ After a credential leak, you need to investigate: which APIs were called, from w
 <div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable CloudTrail in a single account, then configure other accounts to use the same S3 bucket. Update bucket policies for cross-account access</span></div>
 <div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable CloudWatch in every account and funnel logs into individual S3 buckets</span></div>
 </div>
-<div class="explanation"><strong>&#10003; Correct: C.</strong> You can configure CloudTrail in each account to deliver logs to a single centralized S3 bucket with appropriate cross-account bucket policies for the auditor.</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Enable CloudTrail in each account, send all logs to one centralized S3 bucket, and update bucket policies for cross-account access.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When a question mentions <strong>"multiple AWS accounts"</strong> + <strong>"auditor/compliance/central visibility"</strong>, your mental model should be: <strong>Centralized Logging</strong>. The pattern is always: (1) each account runs its own CloudTrail, (2) all trails deliver to <strong>one central S3 bucket</strong> in a designated logging/security account, (3) bucket policy grants cross-account <code>s3:PutObject</code> permission. This is the <strong>AWS Well-Architected security pillar</strong> pattern for multi-account audit.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Cross-Account CloudTrail Logging</em> — Each AWS account enables its own CloudTrail trail but configures the <strong>same destination S3 bucket</strong> (owned by a central account). The central bucket's policy must explicitly allow <code>cloudtrail.amazonaws.com</code> to write from each account using conditions like <code>"aws:SourceArn"</code>. This gives auditors a single location to review all API activity.<br><br>
+<em>S3 Bucket Policy for Cross-Account</em> — The key mechanism. The bucket owner adds a policy allowing CloudTrail from accounts 2-7 to deliver logs. Each account's logs land in a prefix like <code>AWSLogs/&lt;account-id&gt;/</code> so they remain organized and identifiable.<br><br>
+
+<strong>Security Best Practice:</strong><br>
+For auditor access: (1) Centralize all logs into one bucket — auditors review one location, not 7. (2) Grant the auditor read-only IAM access to that single bucket. (3) Enable S3 Object Lock or versioning so logs cannot be tampered with. (4) Use a <strong>dedicated security/logging account</strong> to own the bucket — separate from workload accounts — so no one can delete or modify logs from their own account.<br><br>
+
+<strong>Why C is correct:</strong> CloudTrail in each account captures that account's API events. Configuring all trails to deliver to one centralized S3 bucket with cross-account bucket policies gives the auditor a single place to inspect all 7 accounts' activity. This is the standard AWS multi-account logging architecture.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Create an Organization, enable CloudTrail only for the master account</em> — While AWS Organizations supports organization trails, this answer says "only for the master account." An organization trail from the management account <em>does</em> capture all member accounts, but the phrasing "enable CloudTrail only for the master account" implies the other accounts wouldn't be logging — which is misleading. Also, creating an entire AWS Organization just for a 2-week audit is overkill if you don't already have one.<br>
+<em>B) Send logs to separate S3 buckets</em> — This defeats the purpose of "consolidation." The auditor would have to check 7 different buckets across 7 accounts, each requiring separate access permissions. Not practical for a fortnight audit.<br>
+<em>D) Enable CloudWatch in every account</em> — CloudWatch is for <strong>metrics, alarms, and application logs</strong>, not API event auditing. CloudTrail is the service that records API calls. Also, sending to "individual S3 buckets" again fails the consolidation requirement.
+</div>
 </div>
 
 <!-- Q4 MC -->
