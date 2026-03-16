@@ -337,7 +337,24 @@ This question says <strong>"real-time protection"</strong> and <strong>"against 
 <div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use AWS's current services but consider a more monolithic architecture</span></div>
 <div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Programmatically grant and revoke access to the CMK just before and after decryption</span></div>
 </div>
-<div class="explanation"><strong>&#10003; Correct: D.</strong> Programmatically granting and revoking CMK access ensures the principle of least privilege by providing access only during the exact window of decryption.</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Programmatically grant and revoke access to the CMK just before and after decryption.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When a question mentions <strong>"Principle of Least Privilege"</strong> + <strong>"encryption/decryption"</strong>, think about <strong>time-based access</strong>. The strictest form of least privilege isn't just limiting <em>who</em> can access a key — it's limiting <em>when</em> they can access it. The gold standard: grant permission → perform the operation → immediately revoke permission. This is called <strong>Just-In-Time (JIT) access</strong>.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>CMK (Customer Master Key)</em> — A key in AWS KMS (Key Management Service) used to encrypt and decrypt data. In healthcare, patient data (PHI — Protected Health Information) is encrypted at rest using a CMK. To read the data, a service must call <code>kms:Decrypt</code> with that CMK — but who gets permission to call <code>kms:Decrypt</code> and for how long is the security question.<br><br>
+<em>KMS Grants</em> — A lightweight, temporary permission mechanism in KMS. Unlike IAM policies (which are persistent), grants can be <strong>created and retired programmatically</strong> in milliseconds. The workflow: (1) <code>CreateGrant</code> — gives a service permission to use the CMK for decryption, (2) Service performs <code>Decrypt</code>, (3) <code>RetireGrant</code> — immediately removes the permission. The access window is seconds, not permanent.<br><br>
+<em>Why Healthcare Demands This</em> — HIPAA compliance requires strict access controls over PHI. If a decryption key is permanently accessible, a compromised service could decrypt all patient records at any time. With JIT grants, even a compromised service can only decrypt during the brief window the grant is active — massively reducing the blast radius.<br><br>
+
+<strong>Why D is correct:</strong> Using KMS grants to programmatically grant access just before decryption and revoke immediately after is the <strong>strictest implementation</strong> of least privilege. The access exists only for the exact duration needed — typically seconds. This is the AWS-recommended pattern for sensitive workloads like healthcare, finance, and government.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Use a grant constraint and enable CloudTrail alerts</em> — Grant constraints (like <code>EncryptionContextEquals</code>) add conditions to grants, which is good but incomplete. CloudTrail alerts are <strong>detective</strong> controls — they notify you <em>after</em> unauthorized access happens. The question asks for <strong>prevention</strong> (least privilege), not detection. Monitoring alone doesn't enforce least privilege.<br>
+<em>B) Manipulate IAM policies programmatically</em> — While technically possible, IAM policy changes are <strong>slow</strong> (eventual consistency, can take seconds to minutes to propagate). They're also <strong>heavy-weight</strong> — IAM policies are meant to be relatively stable, not toggled on/off per request. KMS grants are purpose-built for temporary, per-operation access and propagate immediately.<br>
+<em>C) Consider a more monolithic architecture</em> — A monolithic architecture is the <strong>opposite</strong> of a security best practice. It concentrates all services into one, meaning one compromise exposes everything. Microservices with isolated permissions are more secure. This answer doesn't address the encryption access problem at all.
+</div>
 </div>
 
 <!-- Q8 MA -->
