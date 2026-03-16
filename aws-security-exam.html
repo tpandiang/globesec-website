@@ -465,7 +465,30 @@ When <strong>"AWS Organizations"</strong> is an option and the question asks for
 <div class="option" onclick="selectMC(this,4)" data-idx="4"><span class="option-letter">E</span><span class="option-text">Submit a Support Case for the document</span></div>
 <div class="option" onclick="selectMC(this,5)" data-idx="5"><span class="option-letter">F</span><span class="option-text">AWS Legal Services website</span></div>
 </div>
-<div class="explanation"><strong>&#10003; Correct: B.</strong> AWS Artifact is the self-service portal for on-demand access to AWS compliance reports including PCI DSS attestation documents.</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS Artifact is the self-service portal for on-demand access to AWS compliance reports.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When a question mentions <strong>"compliance documents"</strong>, <strong>"attestation"</strong>, <strong>"audit reports"</strong>, or <strong>"certifications"</strong> from AWS, the answer is always <strong>AWS Artifact</strong>. Think of Artifact as AWS's <strong>document library</strong> — it's the one place to download all of AWS's compliance and security paperwork. No support tickets, no emails, no legal websites — just log in and download.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>AWS Artifact</em> — A free, self-service portal in the AWS Console that provides on-demand access to AWS's security and compliance documents. Two main sections:<br>
+&bull; <strong>Artifact Reports</strong> — Download AWS compliance reports: PCI DSS Attestation of Compliance (AOC), SOC 1/2/3 reports, ISO 27001 certification, HIPAA documentation, FedRAMP reports, and more.<br>
+&bull; <strong>Artifact Agreements</strong> — Review and accept agreements like the Business Associate Agreement (BAA) for HIPAA or the GDPR Data Processing Addendum (DPA).<br><br>
+
+<em>PCI DSS</em> — Payment Card Industry Data Security Standard. Any business that processes, stores, or transmits credit card data must comply. AWS is PCI DSS Level 1 certified (the highest level). The <strong>Attestation of Compliance (AOC)</strong> is the document proving AWS passed its PCI DSS audit — auditors need this to verify that the infrastructure layer meets compliance. The <strong>Responsibility Summary</strong> clarifies which controls AWS handles vs. what the customer is responsible for (shared responsibility model).<br><br>
+
+<em>Why This Matters for Audits</em> — When an external auditor asks "prove your cloud provider is PCI compliant," you don't need to audit AWS yourself. You download the AOC from Artifact and hand it over. This is part of the <strong>Shared Responsibility Model</strong> — AWS is responsible for security <em>of</em> the cloud (and proves it via Artifact documents), while you're responsible for security <em>in</em> the cloud.<br><br>
+
+<strong>Why B is correct:</strong> AWS Artifact is specifically designed for this purpose — instant, self-service access to compliance documents including PCI DSS AOC. No waiting, no approvals needed. Available 24/7 in the AWS Console under Artifact.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) AWS Macie</em> — Macie is a data security service that uses machine learning to discover and protect sensitive data (like credit card numbers, PII) stored in S3. It helps you <em>achieve</em> PCI compliance by finding exposed card data, but it does not provide compliance <em>documents</em>.<br>
+<em>C) AWS IAM Console</em> — IAM manages users, roles, and permissions. It has nothing to do with compliance documentation. You use IAM to control <em>who can access what</em>, not to download audit reports.<br>
+<em>D) AWS WorkDocs</em> — WorkDocs is a document collaboration and storage service (like Google Drive or SharePoint). It's for your own documents, not AWS compliance reports.<br>
+<em>E) Submit a Support Case</em> — Before Artifact existed, this was how you obtained compliance documents. Now it's unnecessary — Artifact provides instant self-service access. No need to wait for a support response.<br>
+<em>F) AWS Legal Services website</em> — There is no "AWS Legal Services website" that distributes compliance documents. Legal matters like agreements are handled through Artifact Agreements, not a separate website.
+</div>
 </div>
 
 <!-- Q12 MC -->
