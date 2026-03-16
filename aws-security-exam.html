@@ -393,7 +393,7 @@ The key rule is simple: <strong>Route 53 can only log queries that Route 53 itse
 </div>
 
 <!-- Q9 MA -->
-<div class="question" data-type="ma" data-answers="0,1,2,3">
+<div class="question" data-type="ma" data-answers="1,2,3">
 <div class="question-text"><span class="question-num">Q9.</span><span>How can Route 53 help your application handle a sudden spike in traffic? <span class="q-type-badge">Select All</span></span></div>
 <div class="options">
 <div class="option" onclick="toggleMA(this)" data-idx="0"><span class="option-letter">A</span><span class="option-text">By enabling failover routing</span></div>
@@ -402,7 +402,24 @@ The key rule is simple: <strong>Route 53 can only log queries that Route 53 itse
 <div class="option" onclick="toggleMA(this)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Using geographic routing</span></div>
 </div>
 <button class="check-btn" onclick="checkMA(this)">Check Answers</button>
-<div class="explanation"><strong>&#10003; Correct: A, B, C, D.</strong> All four Route 53 routing policies help handle traffic spikes by distributing load or ensuring availability.</div>
+<div class="explanation">
+<strong>&#10003; Correct: B, C, D.</strong> These three routing policies actively <strong>distribute</strong> traffic across multiple endpoints, which helps absorb a sudden spike.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When a question says <strong>"handle a traffic spike"</strong>, think: <strong>distribute the load across multiple endpoints</strong>. The key word is "spike" — you need to spread traffic out, not just switch from one endpoint to another. Ask yourself: does this routing policy send traffic to <em>multiple</em> destinations simultaneously? If yes, it helps with spikes.<br><br>
+
+<strong>Key Concepts — Route 53 Routing Policies:</strong><br>
+&bull; <strong>Weighted Routing / Multi-AZ Distribution</strong> — Splits traffic across multiple resources by percentage (e.g., 70% to AZ-A, 30% to AZ-B). Directly spreads the load across availability zones. Best for spike handling.<br>
+&bull; <strong>Latency-Based Routing</strong> — Routes each user to the region with lowest latency. If you have endpoints in us-east-1, eu-west-1, and ap-southeast-1, traffic is naturally distributed across all three regions based on user location. More endpoints = more capacity to absorb spikes.<br>
+&bull; <strong>Geographic (Geolocation) Routing</strong> — Routes based on user's country/continent. US users go to US servers, EU users to EU servers. Like latency-based, this distributes traffic across multiple regional endpoints, spreading the load geographically.<br><br>
+
+<em>Failover Routing</em> — An <strong>active-passive</strong> pattern. Only ONE endpoint receives traffic at a time. The secondary sits idle until the primary fails a health check. During a traffic spike, failover does <strong>not</strong> help because: (1) all traffic still hits a single endpoint, (2) the secondary only activates if the primary goes DOWN, not if it's just busy, (3) it doesn't distribute — it switches. Failover is for <strong>disaster recovery</strong>, not load distribution.<br><br>
+
+<strong>Why B, C, D are correct:</strong> All three send traffic to <strong>multiple endpoints simultaneously</strong>, effectively spreading the spike across several resources that share the load.<br><br>
+
+<strong>Why A is wrong:</strong><br>
+<em>A) Failover routing</em> — Failover is <strong>active-passive</strong>, meaning only one endpoint handles traffic at any time. Think of it as having a backup generator — it only turns on when the power goes out, not when you need more power. A traffic spike needs more capacity (distribute), not a backup (switch). Even if the spike crashes the primary and failover kicks in, you've just moved the entire spike to the secondary, which may also be overwhelmed.
+</div>
 </div>
 
 <!-- Q10 MC -->
