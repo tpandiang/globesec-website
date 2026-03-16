@@ -260,7 +260,27 @@ For auditor access: (1) Centralize all logs into one bucket — auditors review 
 <div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The Lambda function is not triggering correctly</span></div>
 <div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The Lambda execution role can't write to S3</span></div>
 </div>
-<div class="explanation"><strong>&#10003; Correct: A.</strong> Lambda functions use an execution role to access AWS services. If the role lacks DynamoDB write permissions, the function cannot update customer data.</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> The Lambda execution role lacks permission to write to the DynamoDB table.<br><br>
+
+<strong>Why is Lambda in the picture? (The Architecture Concept)</strong><br>
+In modern web applications, <strong>customers never talk directly to the database</strong>. The architecture looks like this:<br><br>
+<code>Customer Browser → API Gateway → Lambda Function → DynamoDB</code><br><br>
+Think of it like a restaurant: customers (browser) don't walk into the kitchen (database) themselves. They tell the waiter (API Gateway), who passes the order to the chef (Lambda), who actually cooks (reads/writes DynamoDB). This is called a <strong>serverless architecture</strong>. Customers interact with a website frontend that calls an API — the API triggers a Lambda function — and Lambda performs the database operation on their behalf.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Lambda Execution Role</em> — Every Lambda function runs under an <strong>IAM role</strong> (called its execution role). This role defines what AWS services the function can access. If the role doesn't include <code>dynamodb:PutItem</code> or <code>dynamodb:UpdateItem</code> permissions, the function will get an <strong>AccessDeniedException</strong> when trying to write customer data — even though the code is correct.<br><br>
+<em>Why customers don't have IAM roles</em> — End users (website customers) are <strong>not IAM users</strong>. They don't have AWS credentials. They authenticate through your application (login form, Cognito, etc.), not through AWS IAM. Only the backend Lambda function needs AWS permissions because it's the one making AWS API calls.<br><br>
+<em>Principle of Least Privilege</em> — Lambda execution roles should only have the minimum permissions needed. For this use case: <code>dynamodb:UpdateItem</code> on the specific table ARN — nothing more.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When a question says <strong>"users can't do X on a website"</strong> and the options mention Lambda + a database, think: <strong>the Lambda execution role is the bottleneck</strong>. The chain is User → API → Lambda → AWS Service. If anything fails, check Lambda's IAM execution role first — it's the most common permission issue in serverless apps.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) IAM role for customers can't write to DynamoDB</em> — Customers of a website are <strong>not IAM users</strong>. They don't have IAM roles or AWS credentials. They interact through the application frontend, which calls Lambda. The Lambda execution role handles all AWS permissions, not the customer.<br>
+<em>C) The Lambda function is not triggering correctly</em> — While possible, the question asks about a <strong>permission</strong> issue ("can't update"). If Lambda wasn't triggering at all, the error would be different (timeout, 404, no response). The specific symptom of "can't update" points to a write permission denial, not a trigger failure.<br>
+<em>D) The Lambda execution role can't write to S3</em> — The question is about updating <strong>contact details</strong> (structured data like name, email, phone). This is stored in a database (DynamoDB), not in S3 file storage. S3 is for objects/files, not transactional record updates.
+</div>
 </div>
 
 <!-- Q5 MC -->
