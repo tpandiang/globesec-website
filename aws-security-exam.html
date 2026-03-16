@@ -431,7 +431,27 @@ When a question says <strong>"handle a traffic spike"</strong>, think: <strong>d
 <div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create an AWS Organization and use a single CloudTrail and S3 bucket</span></div>
 <div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create an AWS Organization and enable individual CloudTrails</span></div>
 </div>
-<div class="explanation"><strong>&#10003; Correct: C.</strong> AWS Organizations allows creating an organization trail that logs events from all member accounts to a single S3 bucket for centralized review.</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Create an AWS Organization and use a single CloudTrail and S3 bucket.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Compare this with Q3 (similar topic, different answer). The key difference:<br>
+&bull; <strong>Q3</strong>: "7 accounts, external auditor, fortnight" — no mention of AWS Organizations. Answer: cross-account bucket policies (manual setup).<br>
+&bull; <strong>Q10</strong>: Answer option explicitly says "Create an AWS Organization" — this unlocks the <strong>Organization Trail</strong> feature, the cleanest and most scalable approach.<br>
+When <strong>"AWS Organizations"</strong> is an option and the question asks for centralized logging, that's the best answer because it's a single configuration that automatically covers all member accounts.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>AWS Organizations</em> — A service that lets you centrally manage multiple AWS accounts under one umbrella. The management account (formerly "master") can enforce policies and create shared resources across all member accounts.<br><br>
+<em>Organization Trail</em> — A special CloudTrail trail created from the management account that <strong>automatically logs API events from ALL member accounts</strong> into a single S3 bucket. No need to configure CloudTrail individually in each account — the organization trail handles it. Key benefits: (1) one trail covers all accounts, (2) one S3 bucket for all logs, (3) member accounts cannot disable or modify the trail, (4) new accounts added to the org are automatically included.<br><br>
+<em>Consultant Access Pattern</em> — For a consultant to review: create an IAM role in the logging account with read-only access to the S3 bucket, then give the consultant cross-account access to assume that role. One bucket, one role, complete visibility.<br><br>
+
+<strong>Why C is correct:</strong> An Organization Trail is the AWS-recommended approach for centralized, multi-account logging. One CloudTrail configuration in the management account + one S3 bucket = complete API event visibility across all accounts. It's the simplest, most scalable, and most secure option because member accounts cannot tamper with the trail.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Separate CloudTrail and S3 buckets in each account</em> — This is the opposite of centralization. The consultant would need access to each account's S3 bucket individually — impractical to manage and review. If you have 20 accounts, that's 20 separate buckets and 20 sets of permissions to configure.<br>
+<em>B) Use CloudWatch Logs and a single S3 bucket</em> — CloudWatch Logs is for application logs, metrics, and alarms — not for API event auditing. CloudTrail is the service that records API calls. You can't replace CloudTrail with CloudWatch for this use case. Also, CloudWatch doesn't natively export to S3 across accounts in a centralized way.<br>
+<em>D) Create an Organization and enable individual CloudTrails</em> — If you already have AWS Organizations, why configure CloudTrail individually in each account? The entire point of an Organization Trail is to avoid this. Individual trails mean individual management, individual S3 buckets (or manual cross-account bucket policies), and member accounts could disable their own trails. This defeats the purpose of having Organizations.
+</div>
 </div>
 
 <!-- Q11 MC -->
