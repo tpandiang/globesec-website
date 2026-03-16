@@ -292,7 +292,28 @@ When a question says <strong>"users can't do X on a website"</strong> and the op
 <div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">VPC Flow logs</span></div>
 <div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Network Firewall</span></div>
 </div>
-<div class="explanation"><strong>&#10003; Correct: D.</strong> AWS Network Firewall provides real-time network and application layer filtering with IPS capabilities. Inspector is for assessment, GuardDuty for detection, Flow Logs for logging.</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Network Firewall provides real-time network and application layer filtering with IPS capabilities.<br><br>
+
+<strong>How to Think About This:</strong><br>
+AWS security services fall into 4 distinct categories. When you see a question, first classify what it's asking for:<br>
+&bull; <strong>PROTECT (block/filter traffic)</strong> → Network Firewall, WAF, Security Groups, NACLs<br>
+&bull; <strong>DETECT (find threats)</strong> → GuardDuty, Security Hub<br>
+&bull; <strong>ASSESS (scan for vulnerabilities)</strong> → Inspector<br>
+&bull; <strong>LOG (record for analysis)</strong> → VPC Flow Logs, CloudTrail<br><br>
+This question says <strong>"real-time protection"</strong> and <strong>"against attacks"</strong> — that's the PROTECT category. Only a firewall actively blocks traffic in real-time.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>AWS Network Firewall</em> — A managed firewall service deployed inside your VPC that inspects traffic in real-time. Key capabilities: (1) <strong>Intrusion Prevention System (IPS)</strong> — detects and <em>blocks</em> known exploit signatures, (2) <strong>Stateful packet inspection</strong> — tracks connection state for protocol-level filtering, (3) <strong>Application-layer filtering</strong> — inspects HTTP/TLS traffic, blocks malicious payloads, (4) <strong>Suricata-compatible rules</strong> — uses industry-standard rule format to match brute force patterns, SQL injection, port scans, etc. It sits in a dedicated firewall subnet and all traffic routes through it via VPC route tables.<br><br>
+<em>Network Layer vs Application Layer</em> — Network layer (Layer 3/4) filters by IP, port, protocol. Application layer (Layer 7) inspects actual content — HTTP headers, request bodies, TLS metadata. AWS Network Firewall handles <strong>both layers</strong>, which is why it's the answer when the question mentions both.<br><br>
+
+<strong>Why D is correct:</strong> The question asks for three things: (1) real-time, (2) network AND application layer, (3) protection against exploits and brute force. AWS Network Firewall is the only service that actively <strong>blocks</strong> traffic at both layers in real-time using IPS rules. It doesn't just detect or log — it prevents the attack from reaching your resources.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) AWS Inspector</em> — Inspector is an <strong>assessment</strong> tool, not protection. It scans EC2 instances, Lambda functions, and container images for known vulnerabilities (CVEs) and network exposure. It produces a report saying "you have vulnerability X" — but it does <strong>not block any traffic</strong>. Think of it as a health checkup, not a bodyguard.<br>
+<em>B) GuardDuty</em> — GuardDuty is a <strong>threat detection</strong> service. It analyzes CloudTrail logs, VPC Flow Logs, and DNS logs using machine learning to <em>detect</em> suspicious activity (like unusual API calls or communication with known malicious IPs). It generates <strong>findings</strong> (alerts) but does <strong>not block anything</strong>. It tells you "someone is attacking" — but doesn't stop them.<br>
+<em>C) VPC Flow Logs</em> — Flow Logs are purely a <strong>logging</strong> mechanism. They record metadata about traffic (source/dest IP, port, protocol, accept/reject) flowing through network interfaces. They are used <em>after the fact</em> for analysis and troubleshooting. They do not inspect content, do not block traffic, and have no real-time protection capability.
+</div>
 </div>
 
 <!-- Q6 MC -->
