@@ -367,7 +367,29 @@ When a question mentions <strong>"Principle of Least Privilege"</strong> + <stro
 <div class="option" onclick="toggleMA(this)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Private hosted zone with Route 53 servers</span></div>
 </div>
 <button class="check-btn" onclick="checkMA(this)">Check Answers</button>
-<div class="explanation"><strong>&#10003; Correct: C, D.</strong> Route 53 DNS Query Logging only works for zones resolved by Route 53 DNS servers &mdash; public hosted zones with Route 53 servers and private hosted zones with Route 53 Resolver.</div>
+<div class="explanation">
+<strong>&#10003; Correct: C, D.</strong> Route 53 DNS Query Logging works for public hosted zones and private hosted zones — but only when resolved by Route 53's own DNS servers.<br><br>
+
+<strong>How to Think About This:</strong><br>
+The key rule is simple: <strong>Route 53 can only log queries that Route 53 itself handles</strong>. If DNS resolution goes through an external DNS server (like GoDaddy, Cloudflare, or on-premises DNS), Route 53 never sees those queries, so it can't log them. Think of it like a security camera — it can only record what happens in <em>its own</em> building, not someone else's.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>DNS Hosted Zone</em> — A container for DNS records (A, CNAME, MX, etc.) for a domain. Two types:<br>
+&bull; <strong>Public Hosted Zone</strong> — Resolves domain names on the public internet (e.g., <code>globesec.ai → 54.x.x.x</code>). When you create one in Route 53, AWS assigns 4 name servers (e.g., <code>ns-123.awsdns-45.com</code>). Your domain registrar must point to these Route 53 name servers for Route 53 to handle queries.<br>
+&bull; <strong>Private Hosted Zone</strong> — Resolves domain names only within your VPC (e.g., <code>db.internal → 10.0.1.50</code>). Uses Route 53 Resolver, which automatically handles DNS for resources inside the VPC.<br><br>
+
+<em>Route 53 DNS Query Logging</em> — Logs every DNS query that Route 53 resolves, including: domain name queried, query type (A, AAAA, CNAME), response code, timestamp. Logs are sent to <strong>CloudWatch Logs</strong>. This is essential for security monitoring — detecting DNS exfiltration, C2 callbacks, or unauthorized domain lookups.<br><br>
+
+<em>External DNS Servers</em> — If your domain's name servers point to a third-party provider (not Route 53), those queries never touch Route 53 infrastructure. Route 53 has no visibility into queries handled by external servers, so query logging is impossible for those configurations.<br><br>
+
+<strong>Why C and D are correct:</strong><br>
+<em>C) Public hosted zone with Route 53 servers</em> — Route 53 handles the DNS resolution, so it can log every query. This is the standard setup when your domain's NS records point to Route 53's name servers.<br>
+<em>D) Private hosted zone with Route 53 servers</em> — Route 53 Resolver handles DNS for your VPC internally. All private zone queries go through Route 53 Resolver, so they can be logged.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Public hosted zone with external DNS servers</em> — If you created a public hosted zone in Route 53 but your domain's NS records still point to an external DNS provider (e.g., GoDaddy), queries go to that external provider, <strong>not</strong> Route 53. Route 53 never sees the traffic, so it cannot log anything. The hosted zone exists in Route 53 but is effectively unused.<br>
+<em>B) Private hosted zone with external DNS servers</em> — Private hosted zones are designed to work with Route 53 Resolver inside a VPC. If DNS queries are being forwarded to external DNS servers (via Route 53 Resolver outbound endpoints), the resolution happens externally. Route 53 cannot log queries it forwards to third-party resolvers — it only logs queries it resolves itself.
+</div>
 </div>
 
 <!-- Q9 MA -->
