@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS Exam Real - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Password Overlay */
+.pw-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg); z-index: 9999; display: flex;
+    align-items: center; justify-content: center; flex-direction: column;
+}
+.pw-overlay.hidden { display: none; }
+.pw-box {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 2.5rem; text-align: center; max-width: 400px; width: 90%;
+}
+.pw-box h2 { color: var(--white); margin-bottom: 0.5rem; font-size: 1.3rem; }
+.pw-box p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+.pw-box input {
+    width: 100%; padding: 0.7rem 1rem; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: 1rem; margin-bottom: 0.75rem;
+    outline: none;
+}
+.pw-box input:focus { border-color: var(--accent); }
+.pw-box button {
+    background: var(--gradient); color: var(--bg); border: none; padding: 0.6rem 2rem;
+    border-radius: 6px; font-size: 0.9rem; font-weight: 700; cursor: pointer;
+    transition: opacity 0.2s; width: 100%;
+}
+.pw-box button:hover { opacity: 0.85; }
+.pw-error { color: var(--wrong); font-size: 0.8rem; margin-top: 0.5rem; display: none; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.real-badge { background: linear-gradient(135deg, #ef4444 0%, #f97316 100%); color: #fff; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.q-type-badge { font-size: 0.65rem; background: var(--accent2); color: #fff; padding: 0.1rem 0.4rem; border-radius: 3px; font-weight: 700; vertical-align: middle; margin-left: 0.4rem; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option.ma-selected { border-color: var(--accent); background: rgba(0,212,255,0.08); }
+.option.ma-selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option-text { flex: 1; }
+.check-btn { margin-top: 0.6rem; background: var(--gradient); color: var(--bg); border: none; padding: 0.45rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+.check-btn:hover { opacity: 0.85; }
+.check-btn.disabled { opacity: 0.4; cursor: default; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- Password Overlay -->
+<div class="pw-overlay" id="pwOverlay">
+    <div class="pw-box">
+        <h2>AWS Exam Real</h2>
+        <p>Enter the password to access the exam questions.</p>
+        <input type="password" id="pwInput" placeholder="Password" onkeydown="if(event.key==='Enter')checkPw()">
+        <button onclick="checkPw()">Unlock Quiz</button>
+        <div class="pw-error" id="pwError">Incorrect password. Try again.</div>
+    </div>
+</div>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">AWS</span>
+            <span class="real-badge">REAL</span>
+            <span>AWS Exam Real</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap" id="mainContent">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Exam Real</h2>
+        <p><span id="questionCount">0</span> questions &mdash; real exam questions with detailed explanations</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/0</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 0 answered</div>
+</div>
+
+<!-- Q1 MC -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q1.</span><span>A security engineer is troubleshooting an AWS Lambda function named MyLambdaFunction. The function encounters an error when it attempts to read objects in an Amazon S3 bucket named DOC-EXAMPLE-BUCKET. The S3 bucket has the following bucket policy:<br><br>
+<code style="display:block;background:var(--bg);padding:0.8rem;border-radius:6px;font-size:0.8rem;white-space:pre;overflow-x:auto;border:1px solid var(--border);">{
+    "Effect": "Allow",
+    "Principal": {
+        "Service": "lambda.amazonaws.com"
+    },
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::DOC-EXAMPLE-BUCKET",
+    "Condition": {
+        "ArnLike": {
+            "aws:SourceArn": "arn:aws:lambda:::function:MyLambdaFunction"
+        }
+    }
+}</code><br>
+Which change should the security engineer make to the policy to ensure that the Lambda function can read the bucket objects?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Remove the Condition element. Change the Principal element to: <code>{"AWS": "arn:aws:lambda:::function:MyLambdaFunction"}</code></span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Change the Action element to: <code>["s3:GetObject*", "s3:GetBucket*"]</code></span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Change the Resource element to <code>"arn:aws:s3:::DOC-EXAMPLE-BUCKET/*"</code></span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Change the Resource element to <code>"arn:aws:lambda:::function:MyLambdaFunction"</code>. Change the Principal element to: <code>{"Service": "s3.amazonaws.com"}</code></span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Change the Resource element to <code>"arn:aws:s3:::DOC-EXAMPLE-BUCKET/*"</code>.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When an S3 policy isn't working, always check that the <em>Resource ARN scope</em> matches the <em>Action scope</em>. S3 has two levels: <strong>bucket-level</strong> operations (like <code>s3:ListBucket</code>) use the bucket ARN, while <strong>object-level</strong> operations (like <code>s3:GetObject</code>) require the bucket ARN <em>with a wildcard suffix</em> (<code>/*</code>). This is one of the most common S3 policy mistakes on the exam.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>S3 Bucket ARN vs Object ARN</em> — <code>arn:aws:s3:::DOC-EXAMPLE-BUCKET</code> refers to the bucket itself (used for bucket-level actions like <code>ListBucket</code>, <code>GetBucketLocation</code>). <code>arn:aws:s3:::DOC-EXAMPLE-BUCKET/*</code> refers to all objects inside the bucket (used for object-level actions like <code>GetObject</code>, <code>PutObject</code>, <code>DeleteObject</code>).<br><br>
+<em>S3 Bucket Policy Principal</em> — The <code>"Service": "lambda.amazonaws.com"</code> principal with an <code>ArnLike</code> condition is a valid pattern for allowing a specific Lambda function to access the bucket via a resource-based policy. This part of the policy is correct.<br><br>
+
+<strong>Why C is correct:</strong> The action <code>s3:GetObject</code> operates on <em>objects</em>, but the Resource ARN <code>arn:aws:s3:::DOC-EXAMPLE-BUCKET</code> points to the <em>bucket</em> itself — not its contents. Adding <code>/*</code> changes the scope to all objects within the bucket, which is exactly what <code>s3:GetObject</code> needs to function. This is the only change required.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Remove the Condition and set Principal to <code>{"AWS": "arn:aws:lambda:::function:MyLambdaFunction"}</code></em> — Lambda functions are <em>not</em> IAM principals. You cannot place a Lambda function ARN in the <code>"AWS"</code> principal field. Access from Lambda to S3 is granted either through the function's <em>execution role</em> (IAM role) or through a bucket policy using the <code>"Service": "lambda.amazonaws.com"</code> principal with a condition. The existing Principal/Condition pattern is already valid — the Resource is the problem.<br>
+<em>B) Change the Action to <code>["s3:GetObject*", "s3:GetBucket*"]</code></em> — Adding more actions does not fix the underlying <em>resource scope mismatch</em>. Even with additional actions, the Resource ARN still points to the bucket, not its objects. The original <code>s3:GetObject</code> action is sufficient — the action is not the problem.<br>
+<em>D) Change Resource to Lambda ARN and Principal to <code>s3.amazonaws.com</code></em> — This is backwards. In an S3 bucket policy, the Resource must be an <em>S3 ARN</em> (the bucket or its objects), not a Lambda ARN. Setting the Principal to <code>s3.amazonaws.com</code> would mean the S3 service itself is the caller, which makes no sense for a Lambda-to-S3 access scenario.
+</div>
+</div>
+
+</div><!-- end main-wrap -->
+
+<script>
+// Password protection
+(function() {
+    if (sessionStorage.getItem('aws-exam-real-unlocked') === 'true') {
+        document.getElementById('pwOverlay').classList.add('hidden');
+    }
+})();
+
+function checkPw() {
+    var input = document.getElementById('pwInput');
+    if (input.value === 'utdallas2026') {
+        sessionStorage.setItem('aws-exam-real-unlocked', 'true');
+        document.getElementById('pwOverlay').classList.add('hidden');
+    } else {
+        document.getElementById('pwError').style.display = 'block';
+        input.value = '';
+        input.focus();
+    }
+}
+
+// Score tracking
+var totalCorrect = 0;
+var totalAnswered = 0;
+var totalQuestions = 0;
+
+function countQuestions() {
+    totalQuestions = document.querySelectorAll('.question').length;
+    document.getElementById('questionCount').textContent = totalQuestions;
+    updateScoreDisplay();
+}
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = totalQuestions > 0 ? (totalAnswered / totalQuestions * 100) + '%' : '0%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+// MC: single-answer
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+// MA: multi-answer toggle
+function toggleMA(optEl) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    optEl.classList.toggle('ma-selected');
+}
+
+// MA: check answers
+function checkMA(btn) {
+    var question = btn.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    btn.classList.add('disabled');
+
+    var correctIndices = question.dataset.answers.split(',').map(Number);
+    var opts = question.querySelectorAll('.option');
+    var allCorrect = true;
+
+    opts.forEach(function(o) {
+        var idx = parseInt(o.dataset.idx);
+        var isCorrect = correctIndices.indexOf(idx) !== -1;
+        var isSelected = o.classList.contains('ma-selected');
+        o.classList.add('disabled');
+        o.classList.remove('ma-selected');
+
+        if (isCorrect) {
+            o.classList.add('correct');
+        }
+        if (isSelected && !isCorrect) {
+            o.classList.add('wrong');
+            allCorrect = false;
+        }
+        if (!isSelected && isCorrect) {
+            allCorrect = false;
+        }
+    });
+
+    if (allCorrect) {
+        totalCorrect++;
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+// Reset all
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled', 'ma-selected');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+        var cb = q.querySelector('.check-btn');
+        if (cb) cb.classList.remove('disabled');
+    });
+    updateScoreDisplay();
+}
+
+countQuestions();
+</script>
+</body>
+</html>
