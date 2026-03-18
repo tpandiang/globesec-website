@@ -3997,6 +3997,149 @@ AWSLambdaBasicExecutionRole (attached)
         </div>
     </div>
     
+    <div class="domain collapsed" id="concept-user-login-flow">
+        <div class="domain-header" onclick="toggleDomain(this)">
+            <div class="domain-title-row">
+                <span class="domain-number" style="background:var(--accent);color:var(--bg);">C1</span>
+                <h1 class="domain-title">User Login Process to AWS Resource</h1>
+            </div>
+            <span class="domain-toggle">&#9660;</span>
+        </div>
+        <div class="domain-body">
+            <div class="section" id="concept-login-s1">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Full Traffic Flow — User to AWS Resource</h2>
+<div class="section-body">
+<p>When a user accesses a resource deployed in AWS (e.g., a web application), the request passes through multiple layers of networking and security components. Each component inspects or processes the traffic at a specific layer.</p>
+
+<pre><code>USER (browser)
+  │
+  ▼
+[DNS Resolution] ── Route 53
+  │                  → Returns IP of CloudFront or ELB
+  ▼
+[Internet]
+  │
+  ▼
+[CloudFront] (if using CDN)
+  │  → Edge location closest to user
+  │  → AWS WAF can attach here
+  │  → SSL/TLS termination
+  ▼
+[AWS Shield] ── Always on (Standard)
+  │  → DDoS protection at network edge
+  │  → Absorbs volumetric attacks (Layer 3/4)
+  ▼
+[Internet Gateway]
+  │  → Entry point into your VPC
+  │  → 1:1 NAT for public IPs
+  ▼
+[NACL ─ inbound] ── Public Subnet boundary
+  │  → Layer 3/4, stateless
+  │  → Evaluates src IP, dst IP, port, protocol
+  │  → ALLOW or DENY
+  ▼
+[ELB / ALB] ── Public Subnet
+  │  → AWS WAF attaches here (if no CloudFront)
+  │  → WAF inspects Layer 7 (HTTP body, headers, URI)
+  │  → SSL/TLS termination
+  │  → Health checks on targets
+  │  → Routes to healthy target
+  ▼
+[NACL ─ inbound] ── Private Subnet boundary
+  │  → If EC2 is in a different subnet from ELB
+  │  → Layer 3/4 check again
+  ▼
+[Security Group] ── On EC2 instance
+  │  → Layer 3/4, stateful
+  │  → "Allow inbound from ALB security group on port 443"
+  │  → No explicit deny — just allow rules
+  ▼
+[EC2 / Application] ── Private Subnet
+  │  → App receives request
+  │  → Needs to query database
+  ▼
+[Security Group] ── On RDS instance
+  │  → "Allow inbound from EC2 security group on port 3306"
+  ▼
+[NACL] ── Database Subnet boundary
+  │  → Layer 3/4 check
+  ▼
+[RDS] ── Private/Database Subnet
+  │  → IAM authentication or username/password
+  │  → Returns data
+  ▼
+[Response travels back ─ reverse path]
+  RDS → EC2 → ALB → IGW → Internet → User
+  (NACLs check outbound too — they're stateless)
+  (Security Groups DON'T re-check — they're stateful)</code></pre>
+</div></div>
+
+            <div class="section" id="concept-login-s2">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> What Each Component Does</h2>
+<div class="section-body">
+<div class="table-wrap"><table>
+<tr><th>Layer</th><th>Component</th><th>What It Checks</th><th>Blocks?</th><th>Stateful?</th></tr>
+<tr><td>DNS</td><td><strong>Route 53</strong></td><td>Domain → IP resolution</td><td>Routing policies only</td><td>N/A</td></tr>
+<tr><td>Edge</td><td><strong>CloudFront</strong></td><td>Caches content, closest edge location</td><td>No</td><td>N/A</td></tr>
+<tr><td>Edge</td><td><strong>AWS Shield</strong></td><td>Volumetric DDoS patterns</td><td>Yes (automatic)</td><td>N/A</td></tr>
+<tr><td>Layer 7</td><td><strong>AWS WAF</strong></td><td>HTTP body, headers, SQL injection, XSS, IP sets</td><td>Yes</td><td>N/A</td></tr>
+<tr><td>VPC Entry</td><td><strong>Internet Gateway</strong></td><td>Has public IP?</td><td>No (routes only)</td><td>N/A</td></tr>
+<tr><td>Layer 3/4</td><td><strong>NACL</strong></td><td>IP, port, protocol</td><td>Yes</td><td><strong>No (stateless)</strong></td></tr>
+<tr><td>Layer 3/4</td><td><strong>Security Group</strong></td><td>IP, port, protocol, SG references</td><td>Yes</td><td><strong>Yes (stateful)</strong></td></tr>
+<tr><td>Application</td><td><strong>EC2 / App</strong></td><td>Application logic, authentication</td><td>Yes</td><td>N/A</td></tr>
+<tr><td>Data</td><td><strong>RDS</strong></td><td>Queries, IAM auth</td><td>Yes</td><td>N/A</td></tr>
+</table></div>
+</div></div>
+
+            <div class="section" id="concept-login-s3">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Inspection Order — NACL vs WAF vs Security Group</h2>
+<div class="section-body">
+<p>A common exam question: <strong>which component inspects first?</strong> The answer follows the physical path of the packet:</p>
+
+<pre><code>1. NACL (inbound)     → Layer 3/4, subnet edge, stateless
+2. Security Group     → Layer 3/4, attached to ELB ENI, stateful
+3. ELB receives       → TCP connection established
+4. AWS WAF            → Layer 7, inspects HTTP request content
+5. ELB forwards       → To target EC2 instance
+6. NACL (target subnet) → If EC2 is in a different subnet
+7. Security Group     → On the EC2 instance
+8. Application        → Processes the request</code></pre>
+
+<h3>Key Takeaway</h3>
+<ul>
+<li><strong>NACL inspects first</strong> — it sits at the subnet boundary (Layer 3/4). If the NACL denies the IP range, the packet is dropped immediately and never reaches the ELB or WAF.</li>
+<li><strong>WAF inspects after ELB</strong> — WAF is attached to the ELB (or CloudFront). It only sees traffic that has already passed through the NACL.</li>
+<li><strong>NACL = cheap, fast, blunt</strong> — blocks at the perimeter, no compute cost.</li>
+<li><strong>WAF = smart, expensive</strong> — inspects content, but the packet already traveled further into your infrastructure.</li>
+<li>Using <strong>both</strong> is defense in depth.</li>
+</ul>
+</div></div>
+
+            <div class="section" id="concept-login-s4">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Stateful vs Stateless — Why It Matters on the Return Trip</h2>
+<div class="section-body">
+<p><strong>Security Group (stateful):</strong> If inbound traffic was allowed, the response is <em>automatically allowed out</em>. No outbound rule needed for return traffic.</p>
+<p><strong>NACL (stateless):</strong> It forgets. Even if it allowed the request inbound, it <em>checks outbound rules separately</em> on the response. You must have explicit outbound allow rules, including <strong>ephemeral ports</strong> (1024-65535) for return traffic.</p>
+
+<pre><code>Inbound request:   NACL checks inbound rules ✓  →  SG checks inbound rules ✓
+Response back:     SG auto-allows (stateful) ✓  →  NACL checks OUTBOUND rules (stateless) ✓?</code></pre>
+
+<p>This is why a misconfigured NACL outbound rule can break things even when inbound works fine.</p>
+
+<div class="table-wrap"><table>
+<tr><th>Feature</th><th>Security Group</th><th>NACL</th></tr>
+<tr><td>Operates at</td><td>Instance (ENI) level</td><td>Subnet boundary</td></tr>
+<tr><td>Stateful?</td><td><strong>Yes</strong> — return traffic auto-allowed</td><td><strong>No</strong> — must explicitly allow return traffic</td></tr>
+<tr><td>Rules</td><td>Allow only (implicit deny)</td><td>Allow AND Deny (explicit)</td></tr>
+<tr><td>Rule evaluation</td><td>All rules evaluated</td><td>Rules evaluated in number order, first match wins</td></tr>
+<tr><td>Ephemeral ports</td><td>Not needed (stateful)</td><td><strong>Must allow</strong> outbound 1024-65535</td></tr>
+<tr><td>Default</td><td>Deny all inbound, allow all outbound</td><td>Allow all inbound and outbound</td></tr>
+</table></div>
+</div></div>
+
+        </div>
+    </div>
+
     <div class="domain collapsed" id="domain-4">
         <div class="domain-header" onclick="toggleDomain(this)">
             <div class="domain-title-row">
@@ -6396,149 +6539,6 @@ Account ready with full security baseline</code></pre>
 <p>*(Slides 1590-1607)*</p>
 <ul><li>Before AWS Verified Access, if you wanted to give employees access to private</li><li>internal applications (like a corporate wiki, a payroll dashboard, or a developer</li><li>portal), you typically used a VPN (Virtual Private Network).</li><li>Typical Problem with VPNs</li><li>VPNs primarily follow the model of All-or-Nothing" Access</li><li>AWS Verified Access</li><li>AWS Verified Access is a Zero Trust Network Access  service that allows you to</li><li>securely provide access to your internal applications without requiring a VPN.</li><li>Key components of Verified Access</li><li>The following diagram provides a high-level overview of Verified Access. Users</li><li>send requests to access an application.</li><li>1 - Trusted Providers</li><li>Trust Providers are the external services that AWS Verified Access</li><li>communicates with to validate users and devices.</li><li>An identity provider (IdP) service that stores and manages digital</li><li>identities for users.</li><li>Device management</li><li>device management system for devices such as laptops, tablets, and</li><li>You can choose to use either AWS IAM Identity Center or an OpenID</li><li>Connect-compatible user-identity trust provider.</li><li>2 - Verified Access Policies</li><li>AWS Verified Access uses the Cedar policy language to define the rules for</li><li>3 - Verified Access Endpoints</li><li>An Endpoint represents a specific application you want to protect.</li><li>This is the actual entry point. Verified Access creates a public DNS name for</li><li>the endpoint. When users hit this URL, the evaluation process begins.</li><li>4 - Verified Access Groups</li><li>A Verified Access Group is a logical collection of Verified Access Endpoints</li><li>(applications) that share similar security requirements.</li><li>Instead of writing a policy for every single application, you write a policy for the</li><li>Group. All applications (Endpoints) inside that group inherit this policy.</li><li>5 - Verified Access Instance</li><li>An AWS Verified Access instance is an AWS resource that helps you organize</li><li>your trust providers and Verified Access groups.</li><li>AWS IAM Identity Center enabled in the AWS Region.</li><li>An application running behind an internal load balancer from ELB.</li><li>Associate your security group with the load balancer.</li><li>A public TLS certificate in Certificate Manager.</li><li>A public hosted domain and the permissions required to update DNS</li><li>records for the domain.</li><li>Create AWS Verified Access Trust Provider</li><li>Create AWS Verified Access Instance</li><li>Create AWS Verified Groups (with appropriate Policy)</li><li>Create AWS Verified Endpoints</li><li>Best of Luck with the Exams</li></ul>
 </div></div>
-        </div>
-    </div>
-
-    <div class="domain collapsed" id="concept-user-login-flow">
-        <div class="domain-header" onclick="toggleDomain(this)">
-            <div class="domain-title-row">
-                <span class="domain-number" style="background:var(--accent);color:var(--bg);">C1</span>
-                <h1 class="domain-title">User Login Process to AWS Resource</h1>
-            </div>
-            <span class="domain-toggle">&#9660;</span>
-        </div>
-        <div class="domain-body">
-            <div class="section" id="concept-login-s1">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Full Traffic Flow — User to AWS Resource</h2>
-<div class="section-body">
-<p>When a user accesses a resource deployed in AWS (e.g., a web application), the request passes through multiple layers of networking and security components. Each component inspects or processes the traffic at a specific layer.</p>
-
-<pre><code>USER (browser)
-  │
-  ▼
-[DNS Resolution] ── Route 53
-  │                  → Returns IP of CloudFront or ELB
-  ▼
-[Internet]
-  │
-  ▼
-[CloudFront] (if using CDN)
-  │  → Edge location closest to user
-  │  → AWS WAF can attach here
-  │  → SSL/TLS termination
-  ▼
-[AWS Shield] ── Always on (Standard)
-  │  → DDoS protection at network edge
-  │  → Absorbs volumetric attacks (Layer 3/4)
-  ▼
-[Internet Gateway]
-  │  → Entry point into your VPC
-  │  → 1:1 NAT for public IPs
-  ▼
-[NACL ─ inbound] ── Public Subnet boundary
-  │  → Layer 3/4, stateless
-  │  → Evaluates src IP, dst IP, port, protocol
-  │  → ALLOW or DENY
-  ▼
-[ELB / ALB] ── Public Subnet
-  │  → AWS WAF attaches here (if no CloudFront)
-  │  → WAF inspects Layer 7 (HTTP body, headers, URI)
-  │  → SSL/TLS termination
-  │  → Health checks on targets
-  │  → Routes to healthy target
-  ▼
-[NACL ─ inbound] ── Private Subnet boundary
-  │  → If EC2 is in a different subnet from ELB
-  │  → Layer 3/4 check again
-  ▼
-[Security Group] ── On EC2 instance
-  │  → Layer 3/4, stateful
-  │  → "Allow inbound from ALB security group on port 443"
-  │  → No explicit deny — just allow rules
-  ▼
-[EC2 / Application] ── Private Subnet
-  │  → App receives request
-  │  → Needs to query database
-  ▼
-[Security Group] ── On RDS instance
-  │  → "Allow inbound from EC2 security group on port 3306"
-  ▼
-[NACL] ── Database Subnet boundary
-  │  → Layer 3/4 check
-  ▼
-[RDS] ── Private/Database Subnet
-  │  → IAM authentication or username/password
-  │  → Returns data
-  ▼
-[Response travels back ─ reverse path]
-  RDS → EC2 → ALB → IGW → Internet → User
-  (NACLs check outbound too — they're stateless)
-  (Security Groups DON'T re-check — they're stateful)</code></pre>
-</div></div>
-
-            <div class="section" id="concept-login-s2">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> What Each Component Does</h2>
-<div class="section-body">
-<div class="table-wrap"><table>
-<tr><th>Layer</th><th>Component</th><th>What It Checks</th><th>Blocks?</th><th>Stateful?</th></tr>
-<tr><td>DNS</td><td><strong>Route 53</strong></td><td>Domain → IP resolution</td><td>Routing policies only</td><td>N/A</td></tr>
-<tr><td>Edge</td><td><strong>CloudFront</strong></td><td>Caches content, closest edge location</td><td>No</td><td>N/A</td></tr>
-<tr><td>Edge</td><td><strong>AWS Shield</strong></td><td>Volumetric DDoS patterns</td><td>Yes (automatic)</td><td>N/A</td></tr>
-<tr><td>Layer 7</td><td><strong>AWS WAF</strong></td><td>HTTP body, headers, SQL injection, XSS, IP sets</td><td>Yes</td><td>N/A</td></tr>
-<tr><td>VPC Entry</td><td><strong>Internet Gateway</strong></td><td>Has public IP?</td><td>No (routes only)</td><td>N/A</td></tr>
-<tr><td>Layer 3/4</td><td><strong>NACL</strong></td><td>IP, port, protocol</td><td>Yes</td><td><strong>No (stateless)</strong></td></tr>
-<tr><td>Layer 3/4</td><td><strong>Security Group</strong></td><td>IP, port, protocol, SG references</td><td>Yes</td><td><strong>Yes (stateful)</strong></td></tr>
-<tr><td>Application</td><td><strong>EC2 / App</strong></td><td>Application logic, authentication</td><td>Yes</td><td>N/A</td></tr>
-<tr><td>Data</td><td><strong>RDS</strong></td><td>Queries, IAM auth</td><td>Yes</td><td>N/A</td></tr>
-</table></div>
-</div></div>
-
-            <div class="section" id="concept-login-s3">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Inspection Order — NACL vs WAF vs Security Group</h2>
-<div class="section-body">
-<p>A common exam question: <strong>which component inspects first?</strong> The answer follows the physical path of the packet:</p>
-
-<pre><code>1. NACL (inbound)     → Layer 3/4, subnet edge, stateless
-2. Security Group     → Layer 3/4, attached to ELB ENI, stateful
-3. ELB receives       → TCP connection established
-4. AWS WAF            → Layer 7, inspects HTTP request content
-5. ELB forwards       → To target EC2 instance
-6. NACL (target subnet) → If EC2 is in a different subnet
-7. Security Group     → On the EC2 instance
-8. Application        → Processes the request</code></pre>
-
-<h3>Key Takeaway</h3>
-<ul>
-<li><strong>NACL inspects first</strong> — it sits at the subnet boundary (Layer 3/4). If the NACL denies the IP range, the packet is dropped immediately and never reaches the ELB or WAF.</li>
-<li><strong>WAF inspects after ELB</strong> — WAF is attached to the ELB (or CloudFront). It only sees traffic that has already passed through the NACL.</li>
-<li><strong>NACL = cheap, fast, blunt</strong> — blocks at the perimeter, no compute cost.</li>
-<li><strong>WAF = smart, expensive</strong> — inspects content, but the packet already traveled further into your infrastructure.</li>
-<li>Using <strong>both</strong> is defense in depth.</li>
-</ul>
-</div></div>
-
-            <div class="section" id="concept-login-s4">
-<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Stateful vs Stateless — Why It Matters on the Return Trip</h2>
-<div class="section-body">
-<p><strong>Security Group (stateful):</strong> If inbound traffic was allowed, the response is <em>automatically allowed out</em>. No outbound rule needed for return traffic.</p>
-<p><strong>NACL (stateless):</strong> It forgets. Even if it allowed the request inbound, it <em>checks outbound rules separately</em> on the response. You must have explicit outbound allow rules, including <strong>ephemeral ports</strong> (1024-65535) for return traffic.</p>
-
-<pre><code>Inbound request:   NACL checks inbound rules ✓  →  SG checks inbound rules ✓
-Response back:     SG auto-allows (stateful) ✓  →  NACL checks OUTBOUND rules (stateless) ✓?</code></pre>
-
-<p>This is why a misconfigured NACL outbound rule can break things even when inbound works fine.</p>
-
-<div class="table-wrap"><table>
-<tr><th>Feature</th><th>Security Group</th><th>NACL</th></tr>
-<tr><td>Operates at</td><td>Instance (ENI) level</td><td>Subnet boundary</td></tr>
-<tr><td>Stateful?</td><td><strong>Yes</strong> — return traffic auto-allowed</td><td><strong>No</strong> — must explicitly allow return traffic</td></tr>
-<tr><td>Rules</td><td>Allow only (implicit deny)</td><td>Allow AND Deny (explicit)</td></tr>
-<tr><td>Rule evaluation</td><td>All rules evaluated</td><td>Rules evaluated in number order, first match wins</td></tr>
-<tr><td>Ephemeral ports</td><td>Not needed (stateful)</td><td><strong>Must allow</strong> outbound 1024-65535</td></tr>
-<tr><td>Default</td><td>Deny all inbound, allow all outbound</td><td>Allow all inbound and outbound</td></tr>
-</table></div>
-</div></div>
-
         </div>
     </div>
 
