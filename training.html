@@ -261,6 +261,11 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
         <span class="toc-name">Skill Builder - Learning</span>
         
     </a>
+<div class="sidebar-title" style="margin-top:0.75rem;">Concepts</div>
+<a href="#concept-user-login-flow" class="toc-item" onclick="showDomain(event, 'concept-user-login-flow')">
+        <span class="toc-num" style="background:var(--accent);color:var(--bg);">C1</span>
+        <span class="toc-name">User Login Flow to AWS</span>
+    </a>
 <div class="sidebar-title" style="margin-top:0.75rem;">Exam Domains</div>
 <a href="#domain-4" class="toc-item" onclick="showDomain(event, 'domain-4')">
         <span class="toc-num">4</span>
@@ -6395,6 +6400,151 @@ Account ready with full security baseline</code></pre>
     </div>
     
     </div>
+
+    <div class="domain collapsed" id="concept-user-login-flow">
+        <div class="domain-header" onclick="toggleDomain(this)">
+            <div class="domain-title-row">
+                <span class="domain-number" style="background:var(--accent);color:var(--bg);">C1</span>
+                <h1 class="domain-title">User Login Process to AWS Resource</h1>
+            </div>
+            <span class="domain-toggle">&#9660;</span>
+        </div>
+        <div class="domain-body">
+            <div class="section" id="concept-login-s1">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Full Traffic Flow — User to AWS Resource</h2>
+<div class="section-body">
+<p>When a user accesses a resource deployed in AWS (e.g., a web application), the request passes through multiple layers of networking and security components. Each component inspects or processes the traffic at a specific layer.</p>
+
+<pre><code>USER (browser)
+  │
+  ▼
+[DNS Resolution] ── Route 53
+  │                  → Returns IP of CloudFront or ELB
+  ▼
+[Internet]
+  │
+  ▼
+[CloudFront] (if using CDN)
+  │  → Edge location closest to user
+  │  → AWS WAF can attach here
+  │  → SSL/TLS termination
+  ▼
+[AWS Shield] ── Always on (Standard)
+  │  → DDoS protection at network edge
+  │  → Absorbs volumetric attacks (Layer 3/4)
+  ▼
+[Internet Gateway]
+  │  → Entry point into your VPC
+  │  → 1:1 NAT for public IPs
+  ▼
+[NACL ─ inbound] ── Public Subnet boundary
+  │  → Layer 3/4, stateless
+  │  → Evaluates src IP, dst IP, port, protocol
+  │  → ALLOW or DENY
+  ▼
+[ELB / ALB] ── Public Subnet
+  │  → AWS WAF attaches here (if no CloudFront)
+  │  → WAF inspects Layer 7 (HTTP body, headers, URI)
+  │  → SSL/TLS termination
+  │  → Health checks on targets
+  │  → Routes to healthy target
+  ▼
+[NACL ─ inbound] ── Private Subnet boundary
+  │  → If EC2 is in a different subnet from ELB
+  │  → Layer 3/4 check again
+  ▼
+[Security Group] ── On EC2 instance
+  │  → Layer 3/4, stateful
+  │  → "Allow inbound from ALB security group on port 443"
+  │  → No explicit deny — just allow rules
+  ▼
+[EC2 / Application] ── Private Subnet
+  │  → App receives request
+  │  → Needs to query database
+  ▼
+[Security Group] ── On RDS instance
+  │  → "Allow inbound from EC2 security group on port 3306"
+  ▼
+[NACL] ── Database Subnet boundary
+  │  → Layer 3/4 check
+  ▼
+[RDS] ── Private/Database Subnet
+  │  → IAM authentication or username/password
+  │  → Returns data
+  ▼
+[Response travels back ─ reverse path]
+  RDS → EC2 → ALB → IGW → Internet → User
+  (NACLs check outbound too — they're stateless)
+  (Security Groups DON'T re-check — they're stateful)</code></pre>
+</div></div>
+
+            <div class="section" id="concept-login-s2">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> What Each Component Does</h2>
+<div class="section-body">
+<div class="table-wrap"><table>
+<tr><th>Layer</th><th>Component</th><th>What It Checks</th><th>Blocks?</th><th>Stateful?</th></tr>
+<tr><td>DNS</td><td><strong>Route 53</strong></td><td>Domain → IP resolution</td><td>Routing policies only</td><td>N/A</td></tr>
+<tr><td>Edge</td><td><strong>CloudFront</strong></td><td>Caches content, closest edge location</td><td>No</td><td>N/A</td></tr>
+<tr><td>Edge</td><td><strong>AWS Shield</strong></td><td>Volumetric DDoS patterns</td><td>Yes (automatic)</td><td>N/A</td></tr>
+<tr><td>Layer 7</td><td><strong>AWS WAF</strong></td><td>HTTP body, headers, SQL injection, XSS, IP sets</td><td>Yes</td><td>N/A</td></tr>
+<tr><td>VPC Entry</td><td><strong>Internet Gateway</strong></td><td>Has public IP?</td><td>No (routes only)</td><td>N/A</td></tr>
+<tr><td>Layer 3/4</td><td><strong>NACL</strong></td><td>IP, port, protocol</td><td>Yes</td><td><strong>No (stateless)</strong></td></tr>
+<tr><td>Layer 3/4</td><td><strong>Security Group</strong></td><td>IP, port, protocol, SG references</td><td>Yes</td><td><strong>Yes (stateful)</strong></td></tr>
+<tr><td>Application</td><td><strong>EC2 / App</strong></td><td>Application logic, authentication</td><td>Yes</td><td>N/A</td></tr>
+<tr><td>Data</td><td><strong>RDS</strong></td><td>Queries, IAM auth</td><td>Yes</td><td>N/A</td></tr>
+</table></div>
+</div></div>
+
+            <div class="section" id="concept-login-s3">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Inspection Order — NACL vs WAF vs Security Group</h2>
+<div class="section-body">
+<p>A common exam question: <strong>which component inspects first?</strong> The answer follows the physical path of the packet:</p>
+
+<pre><code>1. NACL (inbound)     → Layer 3/4, subnet edge, stateless
+2. Security Group     → Layer 3/4, attached to ELB ENI, stateful
+3. ELB receives       → TCP connection established
+4. AWS WAF            → Layer 7, inspects HTTP request content
+5. ELB forwards       → To target EC2 instance
+6. NACL (target subnet) → If EC2 is in a different subnet
+7. Security Group     → On the EC2 instance
+8. Application        → Processes the request</code></pre>
+
+<h3>Key Takeaway</h3>
+<ul>
+<li><strong>NACL inspects first</strong> — it sits at the subnet boundary (Layer 3/4). If the NACL denies the IP range, the packet is dropped immediately and never reaches the ELB or WAF.</li>
+<li><strong>WAF inspects after ELB</strong> — WAF is attached to the ELB (or CloudFront). It only sees traffic that has already passed through the NACL.</li>
+<li><strong>NACL = cheap, fast, blunt</strong> — blocks at the perimeter, no compute cost.</li>
+<li><strong>WAF = smart, expensive</strong> — inspects content, but the packet already traveled further into your infrastructure.</li>
+<li>Using <strong>both</strong> is defense in depth.</li>
+</ul>
+</div></div>
+
+            <div class="section" id="concept-login-s4">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Stateful vs Stateless — Why It Matters on the Return Trip</h2>
+<div class="section-body">
+<p><strong>Security Group (stateful):</strong> If inbound traffic was allowed, the response is <em>automatically allowed out</em>. No outbound rule needed for return traffic.</p>
+<p><strong>NACL (stateless):</strong> It forgets. Even if it allowed the request inbound, it <em>checks outbound rules separately</em> on the response. You must have explicit outbound allow rules, including <strong>ephemeral ports</strong> (1024-65535) for return traffic.</p>
+
+<pre><code>Inbound request:   NACL checks inbound rules ✓  →  SG checks inbound rules ✓
+Response back:     SG auto-allows (stateful) ✓  →  NACL checks OUTBOUND rules (stateless) ✓?</code></pre>
+
+<p>This is why a misconfigured NACL outbound rule can break things even when inbound works fine.</p>
+
+<div class="table-wrap"><table>
+<tr><th>Feature</th><th>Security Group</th><th>NACL</th></tr>
+<tr><td>Operates at</td><td>Instance (ENI) level</td><td>Subnet boundary</td></tr>
+<tr><td>Stateful?</td><td><strong>Yes</strong> — return traffic auto-allowed</td><td><strong>No</strong> — must explicitly allow return traffic</td></tr>
+<tr><td>Rules</td><td>Allow only (implicit deny)</td><td>Allow AND Deny (explicit)</td></tr>
+<tr><td>Rule evaluation</td><td>All rules evaluated</td><td>Rules evaluated in number order, first match wins</td></tr>
+<tr><td>Ephemeral ports</td><td>Not needed (stateful)</td><td><strong>Must allow</strong> outbound 1024-65535</td></tr>
+<tr><td>Default</td><td>Deny all inbound, allow all outbound</td><td>Allow all inbound and outbound</td></tr>
+</table></div>
+</div></div>
+
+        </div>
+    </div>
+
+</div>
 </div>
 
 <script>
