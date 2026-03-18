@@ -4011,6 +4011,11 @@ AWSLambdaBasicExecutionRole (attached)
 <div class="section-body">
 <p>When a user accesses a resource deployed in AWS (e.g., a web application), the request passes through multiple layers of networking and security components. Each component inspects or processes the traffic at a specific layer.</p>
 
+<div style="margin:1rem 0;text-align:center;">
+<img src="diagrams/aws-traffic-flow.svg" alt="AWS Traffic Flow Architecture Diagram" style="max-width:100%;border-radius:8px;border:1px solid rgba(0,212,255,0.15);">
+</div>
+
+<details style="margin:0.75rem 0;"><summary style="cursor:pointer;color:var(--accent);font-size:0.85rem;font-weight:600;">View as text (copy-friendly)</summary>
 <pre><code>USER (browser)
   │
   ▼
@@ -4072,6 +4077,7 @@ AWSLambdaBasicExecutionRole (attached)
   RDS → EC2 → ALB → IGW → Internet → User
   (NACLs check outbound too — they're stateless)
   (Security Groups DON'T re-check — they're stateful)</code></pre>
+</details>
 </div></div>
 
             <div class="section" id="concept-login-s2">
