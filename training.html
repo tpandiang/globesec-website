@@ -266,6 +266,10 @@ mark { background: rgba(0,212,255,0.3); color: var(--white); padding: 0.1rem 0.1
         <span class="toc-num" style="background:var(--accent);color:var(--bg);">C1</span>
         <span class="toc-name">User Login Flow to AWS</span>
     </a>
+<a href="#concept-assuming-roles" class="toc-item" onclick="showDomain(event, 'concept-assuming-roles')">
+        <span class="toc-num" style="background:var(--accent);color:var(--bg);">C2</span>
+        <span class="toc-name">Assuming Roles in AWS</span>
+    </a>
 <div class="sidebar-title" style="margin-top:0.75rem;">Exam Domains</div>
 <a href="#domain-4" class="toc-item" onclick="showDomain(event, 'domain-4')">
         <span class="toc-num">4</span>
@@ -4141,6 +4145,154 @@ Response back:     SG auto-allows (stateful) ✓  →  NACL checks OUTBOUND rule
 <tr><td>Ephemeral ports</td><td>Not needed (stateful)</td><td><strong>Must allow</strong> outbound 1024-65535</td></tr>
 <tr><td>Default</td><td>Deny all inbound, allow all outbound</td><td>Allow all inbound and outbound</td></tr>
 </table></div>
+</div></div>
+
+        </div>
+    </div>
+
+    <div class="domain collapsed" id="concept-assuming-roles">
+        <div class="domain-header" onclick="toggleDomain(this)">
+            <div class="domain-title-row">
+                <span class="domain-number" style="background:var(--accent);color:var(--bg);">C2</span>
+                <h1 class="domain-title">Assuming Roles in AWS</h1>
+            </div>
+            <span class="domain-toggle">&#9660;</span>
+        </div>
+        <div class="domain-body">
+            <div class="section" id="concept-roles-s1">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> What Is Assuming a Role?</h2>
+<div class="section-body">
+<p>"Assuming a role" means <strong>temporarily becoming someone else</strong>. You trade your current identity and permissions for a completely different set of permissions &mdash; like putting on a different uniform to enter a restricted area.</p>
+<p>When you assume a role, AWS gives you <strong>temporary credentials</strong> (access key + secret key + session token) that expire after a set time (15 minutes to 12 hours).</p>
+
+<h3>Why Roles Exist</h3>
+<p>IAM Users have <strong>permanent credentials</strong> (password, access keys). This creates problems:</p>
+<ul>
+<li>You can't give temporary access easily</li>
+<li>You can't grant access across AWS accounts without sharing credentials</li>
+<li>AWS services (like EC2, Lambda) need permissions too &mdash; you can't embed user credentials in code safely</li>
+</ul>
+<p>Roles solve all of these problems.</p>
+</div></div>
+
+            <div class="section" id="concept-roles-s2">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> The Two Parts of Every Role</h2>
+<div class="section-body">
+<p>Every IAM role has <strong>two policies</strong> that work together:</p>
+
+<h3>1. Trust Policy &mdash; WHO Can Assume This Role?</h3>
+<pre><code>{
+  "Effect": "Allow",
+  "Principal": {
+    "AWS": "arn:aws:iam::111111111111:root"
+  },
+  "Action": "sts:AssumeRole"
+}</code></pre>
+<p>This is like the <strong>guest list</strong> at a door. It defines who is allowed to "put on this uniform."</p>
+
+<h3>2. Permission Policy &mdash; WHAT Can the Role Do?</h3>
+<pre><code>{
+  "Effect": "Allow",
+  "Action": ["ec2:StopInstances", "ec2:TerminateInstances"],
+  "Resource": "*"
+}</code></pre>
+<p>This defines what powers the uniform gives you. Once you assume the role, you can <strong>ONLY</strong> do what this policy allows &mdash; your original permissions are <strong>gone</strong> for the duration.</p>
+</div></div>
+
+            <div class="section" id="concept-roles-s3">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> How It Works &mdash; Step by Step</h2>
+<div class="section-body">
+<pre><code>  Account A (your account)            Account B (target account)
+  ┌────────────────────────┐          ┌──────────────────────────────┐
+  │                        │          │                              │
+  │  IAM User: Alice       │──Step 1─►│  Role: IncidentResponder     │
+  │  Has policy:           │          │                              │
+  │  sts:AssumeRole        │◄─Step 2──│  Trust: Account A allowed    │
+  │                        │          │  Permissions: ReadOnly       │
+  │  Alice now operates    │          │                              │
+  │  with temp credentials │          └──────────────────────────────┘
+  │  (ReadOnly only)       │
+  └────────────────────────┘</code></pre>
+
+<h3>Step 1: Alice Calls sts:AssumeRole</h3>
+<p>Alice's application or CLI calls <code>sts:AssumeRole</code> targeting the role ARN in Account B.</p>
+
+<h3>Step 2: AWS Checks Both Sides</h3>
+<ul>
+<li>Does Alice have an IAM policy allowing <code>sts:AssumeRole</code>? (checked in <strong>her</strong> account)</li>
+<li>Does the role's trust policy allow Alice's account? (checked in <strong>target</strong> account)</li>
+</ul>
+
+<h3>Step 3: Temporary Credentials Returned</h3>
+<p>If both checks pass, AWS returns temporary credentials:</p>
+<pre><code>{
+  "AccessKeyId": "ASIA...",
+  "SecretAccessKey": "wJalr...",
+  "SessionToken": "FwoGZX...",
+  "Expiration": "2026-03-18T23:00:00Z"
+}</code></pre>
+
+<h3>Step 4: Alice Operates as the Role</h3>
+<p>Alice uses these temp credentials. She now operates as the role with <strong>ONLY</strong> the role's permissions. Her original IAM user permissions are completely inactive during this session.</p>
+</div></div>
+
+            <div class="section" id="concept-roles-s4">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Real-World Analogy</h2>
+<div class="section-body">
+<p>Think of it like a <strong>hospital badge system</strong>:</p>
+<div class="table-wrap"><table>
+<tr><th>Hospital</th><th>AWS</th></tr>
+<tr><td>You're a hospital administrator</td><td>IAM User in Account A</td></tr>
+<tr><td>You need to access the surgical wing</td><td>Resources in Account B</td></tr>
+<tr><td>You show your ID at the front desk</td><td>Call <code>sts:AssumeRole</code></td></tr>
+<tr><td>Desk checks: "Are you on the approved list?"</td><td>Trust Policy evaluation</td></tr>
+<tr><td>You receive a visitor badge: "Surgical Observer Only"</td><td>Temporary credentials with scoped permissions</td></tr>
+<tr><td>Badge expires in 1 hour</td><td>Session duration (15 min &ndash; 12 hours)</td></tr>
+<tr><td>While wearing visitor badge, you can ONLY observe</td><td>Your original admin powers don't carry over</td></tr>
+</table></div>
+</div></div>
+
+            <div class="section" id="concept-roles-s5">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Three Common Use Cases</h2>
+<div class="section-body">
+<h3>1. Cross-Account Access</h3>
+<pre><code>Management Account  ──AssumeRole──►  Dev Account
+   (admin user)                      (role: StopResources)</code></pre>
+<p>An admin temporarily gets permission to stop EC2 instances in the Dev account. The role in Dev is scoped to only stop/terminate actions &mdash; the admin cannot do anything else in that account.</p>
+
+<h3>2. AWS Service Roles (EC2, Lambda, etc.)</h3>
+<pre><code>EC2 Instance  ──AssumeRole──►  EC2 Instance Role
+                               (role: ReadS3Bucket)</code></pre>
+<p>The EC2 instance automatically assumes its attached role. No credentials are stored on the instance &mdash; AWS handles rotation of the temporary credentials via the instance metadata service.</p>
+
+<h3>3. Federation (External Users)</h3>
+<pre><code>Corporate SSO (Okta/AD)  ──AssumeRoleWithSAML──►  AWS Role
+                                                   (role: DeveloperAccess)</code></pre>
+<p>Employees log in with their corporate credentials and get temporary AWS access. No IAM users need to be created for each employee.</p>
+</div></div>
+
+            <div class="section" id="concept-roles-s6">
+<h2 class="section-title" onclick="toggleSection(this)"><span class="toggle-icon">&#9660;</span> Key Exam Points</h2>
+<div class="section-body">
+<div class="table-wrap"><table>
+<tr><th>Concept</th><th>Detail</th></tr>
+<tr><td><strong>Credentials are temporary</strong></td><td>15 min to 12 hours, then they expire automatically</td></tr>
+<tr><td><strong>Original permissions are dropped</strong></td><td>You operate with ONLY the role's permissions during the session</td></tr>
+<tr><td><strong>Trust policy lives in the TARGET account</strong></td><td>The account being accessed controls who can enter</td></tr>
+<tr><td><strong>Both sides must agree</strong></td><td>Caller needs <code>sts:AssumeRole</code> permission AND the trust policy must allow them</td></tr>
+<tr><td><strong><code>:root</code> means the whole account</strong></td><td>NOT the literal root user &mdash; any IAM principal in that account can assume the role</td></tr>
+<tr><td><strong>Consolidated Billing ≠ access</strong></td><td>Billing linkage grants zero IAM permissions across accounts</td></tr>
+<tr><td><strong>MFA can be required</strong></td><td>Trust policy can include <code>aws:MultiFactorAuthPresent: true</code> condition</td></tr>
+<tr><td><strong>No Organization required</strong></td><td>Cross-account roles work between ANY two AWS accounts</td></tr>
+</table></div>
+
+<h3>Common Misconceptions</h3>
+<ul>
+<li><strong>"Permissions are inherited from the source account"</strong> &mdash; FALSE. When you assume a role, you get ONLY the role's permissions. Your original user permissions do not carry over.</li>
+<li><strong>"The role must be created in the source account"</strong> &mdash; FALSE. The role is created in the <em>target</em> account (where the resources are). The source account only needs an <code>sts:AssumeRole</code> policy.</li>
+<li><strong>"Consolidated Billing gives cross-account access"</strong> &mdash; FALSE. Billing and IAM are completely separate. Linking accounts for billing does not create any trust relationships.</li>
+<li><strong>"<code>:root</code> in a trust policy means only the root user"</strong> &mdash; FALSE. It means the entire account. Any IAM user or role in that account can assume the role (if they have <code>sts:AssumeRole</code> permission).</li>
+</ul>
 </div></div>
 
         </div>
