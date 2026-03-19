@@ -106,11 +106,11 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 <div class="score-banner">
     <div class="score-banner-left">
         <h2>IAM Advanced Practice Exam</h2>
-        <p>6 questions &mdash; IAM policies, S3 security &amp; access control scenarios</p>
+        <p>16 questions &mdash; IAM policies, cross-account access, S3 security &amp; AWS best practices</p>
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/6</div>
+            <div class="score-big" id="overallScore">0/16</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -373,10 +373,329 @@ If using the AWS Console, the console handles MFA at login time. If using the CL
 </div>
 </div>
 
+<!-- Q7 MC - Least Privilege -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q7.</span><span>A developer needs to upload objects to a specific S3 bucket named <code>company-data-backup</code> but should not be able to delete any objects or access other buckets. Which policy configuration best follows AWS security best practices?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Attach the managed policy AmazonS3FullAccess to the developer's IAM user.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create a custom inline policy allowing s3:* on arn:aws:s3:::company-data-backup/*.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a customer-managed policy allowing s3:PutObject on arn:aws:s3:::company-data-backup/*.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Add the developer to a Group with a policy allowing s3:ListBucket on all resources.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Create a customer-managed policy allowing s3:PutObject on the specific bucket.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"needs to do X but should NOT do Y"</strong>, the answer is always <em>least privilege</em>: grant only the exact actions needed on the exact resources needed. Nothing more.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Principle of Least Privilege</em> &mdash; Every IAM entity should have <strong>only</strong> the permissions required to perform their job function. This minimizes the blast radius if credentials are compromised. In this case, the developer needs one action (<code>s3:PutObject</code>) on one bucket (<code>company-data-backup</code>).<br><br>
+
+<em>Customer-Managed vs. Inline vs. AWS-Managed Policies</em> &mdash; Customer-managed policies are the best practice because they are reusable, versionable, and centrally managed. Inline policies are embedded directly in a user/role and can't be reused. AWS-managed policies (like <code>AmazonS3FullAccess</code>) are pre-built but often far too broad.<br><br>
+
+<strong>Why C is correct:</strong> It grants exactly one action (<code>s3:PutObject</code>) on exactly one resource (<code>arn:aws:s3:::company-data-backup/*</code>). The developer can upload files to that bucket and nothing else &mdash; no delete, no read, no access to other buckets. This is textbook least privilege.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) AmazonS3FullAccess</em> &mdash; This grants <code>s3:*</code> on <strong>all</strong> S3 resources. The developer could delete objects, read any bucket, modify bucket policies &mdash; a massive over-grant of permissions and a security risk.<br>
+<em>B) s3:* on the specific bucket</em> &mdash; While this scopes to the correct bucket, <code>s3:*</code> includes <code>s3:DeleteObject</code>, <code>s3:GetObject</code>, <code>s3:PutBucketPolicy</code>, and dozens of other actions. The requirement explicitly states no delete access.<br>
+<em>D) s3:ListBucket on all resources</em> &mdash; <code>ListBucket</code> only lets you list objects in a bucket &mdash; it doesn't allow uploading. Also, "all resources" means every bucket in the account, violating least privilege.
+</div>
+</div>
+
+<!-- Q8 MC - Cross-Account Access -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q8.</span><span>Your organization recently acquired a subsidiary that operates its own AWS account. A security auditor in the parent "Main" account needs to review IAM configurations in the "Subsidiary" account. What is the most secure way to implement this access?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create an IAM user in the Subsidiary account and share the access keys with the auditor.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create a cross-account IAM Role in the Subsidiary account that trusts the Main account ID and has the ReadOnlyAccess policy attached.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use a Service Control Policy (SCP) to grant the auditor access across the entire AWS Organization.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Configure a Bucket Policy in the Subsidiary account to allow the Main account user access to IAM logs.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Create a cross-account IAM Role in the Subsidiary account with a trust policy for the Main account.<br><br>
+
+<strong>How to Think About This:</strong><br>
+<strong>"Cross-account access"</strong> = IAM Role with a trust policy. Never share credentials (access keys) between accounts &mdash; that creates permanent, unauditable access that can't be revoked without rotating the keys.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Cross-Account Roles</em> &mdash; The role is created in the <strong>target</strong> account (Subsidiary). Its trust policy specifies the Main account as a trusted principal. The auditor in the Main account calls <code>sts:AssumeRole</code> and receives temporary credentials with ReadOnlyAccess. The credentials expire automatically, and every assumption is logged in CloudTrail.<br><br>
+
+<strong>Why B is correct:</strong> This follows the AWS-recommended cross-account access pattern: temporary credentials, auditable via CloudTrail, revocable by modifying the trust policy, and scoped to ReadOnlyAccess (no write permissions). The auditor never needs a separate user or permanent credentials in the Subsidiary account.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Create an IAM user and share access keys</em> &mdash; Sharing long-term credentials is a serious security anti-pattern. Access keys don't expire, can be leaked, are difficult to audit (who is actually using them?), and you'd need to manage a separate user. Cross-account roles are always preferred over credential sharing.<br>
+<em>C) Use an SCP to grant access</em> &mdash; SCPs <strong>restrict</strong> permissions &mdash; they cannot <strong>grant</strong> them. An SCP sets the maximum permission boundary for accounts in an OU. It can deny actions but cannot add new allow permissions. You still need IAM policies or roles to grant actual access.<br>
+<em>D) Bucket Policy for IAM logs</em> &mdash; IAM configurations are not stored in S3. IAM is an API-based service &mdash; you view configurations through the IAM API/console, not by reading files from a bucket. A bucket policy cannot grant access to IAM service APIs.
+</div>
+</div>
+
+<!-- Q9 MC - Policy Evaluation Logic -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q9.</span><span>An IAM user has two policies attached:<br><br>&bull; <strong>Policy A</strong>: Allows <code>ec2:RunInstances</code> on all resources.<br>&bull; <strong>Policy B</strong>: Denies <code>ec2:RunInstances</code> if the region is <code>us-east-1</code>.<br><br>If the user attempts to launch an instance in us-east-1, what is the result?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The request is allowed because an explicit Allow overrides a Deny.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The request is denied because an explicit Deny always overrides an Allow.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The request is allowed because Policy A is evaluated first.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The request is denied because of the "Default Deny" rule.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The request is denied because an explicit Deny always overrides an Allow.<br><br>
+
+<strong>How to Think About This:</strong><br>
+AWS IAM policy evaluation follows one golden rule: <strong>Explicit Deny ALWAYS wins</strong>. No matter how many Allow statements exist, a single explicit Deny for the same action will override them all. The evaluation order of policies does not matter.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>IAM Policy Evaluation Order</em> &mdash; AWS evaluates all applicable policies and applies this logic:<br>
+1. <strong>Explicit Deny?</strong> &rarr; If any policy explicitly denies the action, the request is <strong>DENIED</strong>. Full stop.<br>
+2. <strong>Explicit Allow?</strong> &rarr; If no deny exists and any policy explicitly allows the action, the request is <strong>ALLOWED</strong>.<br>
+3. <strong>Neither?</strong> &rarr; The request is <strong>DENIED</strong> (implicit/default deny).<br><br>
+
+Think of it as: <strong>Deny &gt; Allow &gt; Default Deny</strong><br><br>
+
+<strong>Why B is correct:</strong> Policy B explicitly denies <code>ec2:RunInstances</code> when the region is <code>us-east-1</code>. The user is trying to launch in us-east-1, so the deny condition matches. Even though Policy A allows <code>RunInstances</code>, the explicit deny in Policy B takes absolute precedence. The request is denied.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Allow overrides Deny</em> &mdash; This is backwards. In AWS IAM, Deny <strong>always</strong> overrides Allow. There is no exception to this rule.<br>
+<em>C) Policy A is evaluated first</em> &mdash; AWS does not evaluate policies sequentially. All applicable policies are collected and evaluated together. Order of attachment or creation is irrelevant. Even if AWS "saw" the Allow first, it would still check all policies and the Deny would win.<br>
+<em>D) Default Deny</em> &mdash; The default deny applies when there is <strong>no explicit allow or deny</strong>. In this case, there IS an explicit deny in Policy B. The request is denied because of the explicit deny, not the default deny. The distinction matters: explicit deny means "I specifically said no," while default deny means "nobody said yes."
+</div>
+</div>
+
+<!-- Q10 MC - Root User Security -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q10.</span><span>Which of the following is considered a critical security best practice for the AWS Account Root User?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use the root user for daily administrative tasks to ensure full visibility into all account activities.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Delete the root user account immediately after creating IAM admin users.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable MFA on the root user, delete root access keys, and use IAM users or roles for all day-to-day work.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Share the root password with at least two senior engineers for redundancy in case of emergencies.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Enable MFA, delete root access keys, and use IAM users/roles for all work.<br><br>
+
+<strong>How to Think About This:</strong><br>
+The root user has <strong>unrestricted access</strong> to everything in the AWS account &mdash; it cannot be limited by IAM policies or SCPs. This makes it the highest-value target for attackers. The security strategy is: <strong>lock it down, don't use it</strong>.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Root User</em> &mdash; The root user is the identity that created the AWS account. It has complete, unrestricted access to all services and resources. It is the <strong>only</strong> identity that can: close the account, change the account name/email, modify certain billing settings, and restore IAM permissions.<br><br>
+
+<em>AWS Root User Best Practices</em>:<br>
+&bull; <strong>Enable MFA</strong> &mdash; Use a hardware MFA device (YubiKey) or virtual MFA (authenticator app). This prevents account takeover even if the password is compromised.<br>
+&bull; <strong>Delete access keys</strong> &mdash; Root access keys allow programmatic access without MFA. Delete them so root can only be used via the console (which requires MFA).<br>
+&bull; <strong>Don't use for daily tasks</strong> &mdash; Create IAM users or roles with AdministratorAccess for daily work. The root user should only be used for the handful of tasks that specifically require it.<br><br>
+
+<strong>Why C is correct:</strong> This covers all three critical best practices: MFA (prevents unauthorized login), deleting access keys (prevents programmatic abuse), and using IAM for daily work (limits root exposure). This matches AWS's own security recommendations.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Use root for daily tasks</em> &mdash; This is the exact opposite of best practice. Using root daily exposes the most powerful credentials to phishing, session hijacking, and accidental damage. If root is compromised, the attacker owns everything with no way to restrict them.<br>
+<em>B) Delete the root user</em> &mdash; The root user <strong>cannot be deleted</strong>. It is permanently tied to the AWS account. You can only secure it by enabling MFA, removing access keys, and not using it.<br>
+<em>D) Share the root password</em> &mdash; Sharing credentials violates every security principle. It eliminates accountability (who logged in?), increases exposure surface, and makes it impossible to rotate credentials safely. For emergency access, use a sealed envelope in a physical safe with MFA device &mdash; never share the password.
+</div>
+</div>
+
+<!-- Q11 MC - IAM Roles for EC2 -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q11.</span><span>An application running on an EC2 instance needs to read files from an S3 bucket. How should you provide the necessary credentials to the application?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Hardcode the IAM user's Access Key and Secret Key into the application's configuration file.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Store the credentials in a private GitHub repository that the EC2 instance can pull from.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Assign an IAM Role to an Instance Profile and attach it to the EC2 instance.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use the instance's Public IP address in an S3 Bucket Policy to grant access.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Assign an IAM Role to an Instance Profile and attach it to the EC2 instance.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"EC2 needs access to another AWS service"</strong>, the answer is always <em>IAM Role + Instance Profile</em>. Never embed credentials in code, config files, or repositories.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Instance Profile</em> &mdash; An Instance Profile is a container for an IAM Role that is attached to an EC2 instance. When the instance launches, it can automatically assume the role and receive <strong>temporary credentials</strong> via the Instance Metadata Service (IMDS) at <code>http://169.254.169.254</code>. AWS SDKs automatically discover and use these credentials &mdash; no configuration needed in your code.<br><br>
+
+<em>How It Works</em>:<br>
+1. Create an IAM Role with a policy allowing <code>s3:GetObject</code> on the target bucket.<br>
+2. The role's trust policy allows <code>ec2.amazonaws.com</code> as the principal.<br>
+3. Attach the role to an Instance Profile and associate it with the EC2 instance.<br>
+4. AWS automatically rotates the temporary credentials (they refresh before expiry).<br>
+5. Your application code simply calls S3 &mdash; the SDK handles credential retrieval automatically.<br><br>
+
+<strong>Why C is correct:</strong> IAM Roles with Instance Profiles provide temporary, auto-rotating credentials with no secrets to manage. The credentials are never stored in code or on disk. If the instance is compromised, you revoke access by detaching the role. This is the only AWS-recommended approach.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Hardcode access keys</em> &mdash; This is a critical security violation. Hardcoded keys end up in version control, logs, backups, and AMI snapshots. They don't rotate automatically. If compromised, an attacker has permanent access until you manually rotate the keys. This is the #1 cause of AWS credential leaks.<br>
+<em>B) Store credentials in GitHub</em> &mdash; Even in a "private" repository, this is extremely dangerous. Private repos can be accidentally made public, accessed by all org members, exposed through GitHub API tokens, or leaked through CI/CD logs. AWS credential scanners regularly find leaked keys on GitHub within minutes.<br>
+<em>D) Use Public IP in a Bucket Policy</em> &mdash; Public IP addresses change when instances stop/start (unless using Elastic IPs). Multiple instances may share NAT Gateway IPs, granting unintended access. IP-based policies also don't provide identity &mdash; you can't audit <em>which</em> application accessed the data. This approach is fragile and insecure.
+</div>
+</div>
+
+<!-- Q12 MC - Policy Variables -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q12.</span><span>You need to create a single IAM policy that allows 100 different users to access only their own "folder" in an S3 bucket (e.g., <code>s3://company-home/username/</code>). Which IAM feature should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create individual resource-based policies for every user on the S3 bucket.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use IAM Policy Variables (e.g., ${aws:username}) in the Resource element to dynamically scope access to each user's prefix.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create IAM Groups with specific prefix permissions for each user.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use Permission Boundaries to restrict each user to their own folder.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Use IAM Policy Variables like <code>${aws:username}</code> to dynamically scope the resource.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"one policy for many users, each with their own data"</strong>, the answer is <em>policy variables</em>. They let you write a single policy that dynamically resolves to different values for each user.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>IAM Policy Variables</em> &mdash; AWS IAM supports variables in the <code>Resource</code> and <code>Condition</code> elements that are replaced at evaluation time with values from the request context. The most common variable is <code>${aws:username}</code>, which resolves to the IAM user's name.<br><br>
+
+<em>Example Policy</em>:<br>
+<code>"Resource": "arn:aws:s3:::company-home/${aws:username}/*"</code><br>
+When user "alice" makes a request, this resolves to <code>arn:aws:s3:::company-home/alice/*</code>. When user "bob" makes a request, it resolves to <code>arn:aws:s3:::company-home/bob/*</code>. One policy, 100 users, each scoped to their own prefix.<br><br>
+
+<strong>Why B is correct:</strong> Policy variables allow a single policy to dynamically scope access per user. You attach one policy to a group, add all 100 users to the group, and each user can only access their own folder. No need to create or maintain 100 separate policies.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Individual resource-based policies for every user</em> &mdash; This means creating and maintaining 100 separate policies (or 100 statements in one bucket policy). It's operationally impractical, error-prone, and hits the S3 bucket policy size limit (20KB). Policy variables solve this exact problem.<br>
+<em>C) IAM Groups with specific prefix permissions</em> &mdash; This means creating 100 groups, each with a policy hard-coding a specific user's prefix. Groups are meant for shared permissions, not per-user scoping. This defeats the purpose and is just as unmanageable as option A.<br>
+<em>D) Permission Boundaries</em> &mdash; Permission Boundaries set the <strong>maximum permissions</strong> an IAM entity can have. They are used to delegate safe IAM administration (e.g., allowing a junior admin to create users without escalating privileges). They are not designed for dynamic per-user resource scoping.
+</div>
+</div>
+
+<!-- Q13 MC - SCPs -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q13.</span><span>In an AWS Organization, a developer complains they cannot create an S3 bucket even though their IAM user has <code>AdministratorAccess</code>. You investigate and discover an SCP applied to their Organizational Unit (OU) that denies <code>s3:CreateBucket</code>. What is the result and why?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The developer can create the bucket because IAM permissions take precedence over SCPs.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The developer can create the bucket only if they use the AWS CLI instead of the Console.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The developer is denied access because an SCP acts as a guardrail that limits the maximum permissions for accounts in an OU, regardless of IAM policies.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The developer is denied access only if the bucket name contains the word "restricted".</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The SCP denies the action regardless of IAM permissions.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Think of SCPs as a <strong>fence around a playground</strong>. IAM policies determine what you <em>can</em> do inside the fence, but the SCP determines the <strong>boundary of the playground</strong>. Even if your IAM policy says "you can do anything" (AdministratorAccess), you still can't go outside the fence.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Service Control Policies (SCPs)</em> &mdash; SCPs are organization-level policies that set the <strong>maximum available permissions</strong> for accounts in an OU. Key facts:<br>
+&bull; SCPs do NOT grant permissions &mdash; they only <strong>restrict</strong> them<br>
+&bull; An explicit Deny in an SCP overrides ANY IAM Allow in the affected accounts<br>
+&bull; SCPs apply to all IAM users and roles in the account (including admin users)<br>
+&bull; SCPs do NOT affect the management account (only member accounts)<br>
+&bull; For an action to be allowed, it must be permitted by BOTH the SCP AND the IAM policy<br><br>
+
+<em>Effective Permissions</em> = intersection of SCP + IAM Policy. If either says Deny, the action is denied.<br><br>
+
+<strong>Why C is correct:</strong> The SCP explicitly denies <code>s3:CreateBucket</code>. This creates an absolute boundary that no IAM policy within the account can override. Even <code>AdministratorAccess</code> (which allows <code>*</code> on <code>*</code>) is bounded by the SCP. The developer cannot create a bucket until the SCP is modified or the account is moved to a different OU.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) IAM takes precedence over SCPs</em> &mdash; The opposite is true. SCPs act as a ceiling on permissions. IAM policies operate <strong>within</strong> the limits set by SCPs, not above them. Think: SCP is the constitution, IAM policies are local laws &mdash; local laws cannot override the constitution.<br>
+<em>B) CLI vs. Console makes a difference</em> &mdash; SCPs enforce at the API level, regardless of how the request is made. Whether you use the Console, CLI, SDK, or CloudFormation, the same SCP evaluation applies. The access method is irrelevant.<br>
+<em>D) Only if bucket name contains "restricted"</em> &mdash; The SCP described denies <code>s3:CreateBucket</code> unconditionally &mdash; there is no condition on the bucket name. SCPs can include conditions, but this one does not.
+</div>
+</div>
+
+<!-- Q14 MC - Temporary Credentials -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q14.</span><span>A mobile application needs to allow users to upload photos directly to S3. You do not want to embed long-term AWS credentials in the app code. Which AWS service should you use to provide temporary, limited-privilege credentials to the mobile app?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS IAM User Groups</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Cognito Identity Pools</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Directory Service</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Secrets Manager</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon Cognito Identity Pools.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"mobile app" + "direct access to AWS service" + "no embedded credentials"</strong>, the answer is <em>Amazon Cognito Identity Pools</em>. Cognito is specifically designed to give end users (mobile/web) temporary AWS credentials scoped to their identity.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Amazon Cognito Identity Pools (Federated Identities)</em> &mdash; Cognito Identity Pools exchange authentication tokens (from Cognito User Pools, Google, Facebook, SAML, etc.) for <strong>temporary AWS credentials</strong>. The flow:<br>
+1. User authenticates (signs in via your app).<br>
+2. App sends the auth token to Cognito Identity Pool.<br>
+3. Cognito calls <code>sts:AssumeRoleWithWebIdentity</code> behind the scenes.<br>
+4. App receives temporary AWS credentials (access key, secret, session token).<br>
+5. App uses these credentials to upload directly to S3.<br><br>
+
+The IAM role attached to the Identity Pool determines what the user can do. You can use policy variables like <code>${cognito-identity.amazonaws.com:sub}</code> to scope each user to their own S3 prefix.<br><br>
+
+<strong>Why B is correct:</strong> Cognito Identity Pools are purpose-built for this exact scenario: providing temporary, scoped AWS credentials to mobile and web applications without embedding long-term access keys. It handles authentication, token exchange, and credential vending automatically.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) IAM User Groups</em> &mdash; IAM User Groups organize IAM users for shared permissions within your AWS account. They are for <strong>your team members</strong>, not end users of a mobile app. You cannot create millions of IAM users for app users, and IAM users have long-term credentials &mdash; the opposite of what's needed.<br>
+<em>C) AWS Directory Service</em> &mdash; Directory Service provides managed Active Directory (Microsoft AD) or Simple AD for enterprise environments. It's used for corporate workstation authentication and on-premises integration, not for mobile app credential vending to consumers.<br>
+<em>D) AWS Secrets Manager</em> &mdash; Secrets Manager stores and rotates secrets (database passwords, API keys). If you stored AWS credentials in Secrets Manager and retrieved them from the mobile app, the app would still need credentials to access Secrets Manager &mdash; a chicken-and-egg problem. It doesn't solve the fundamental issue of how to authenticate anonymous/external users.
+</div>
+</div>
+
+<!-- Q15 MC - Permission Boundaries -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q15.</span><span>A junior administrator has been given the ability to create new IAM users and assign policies. How can you ensure the junior admin does not create a new user with more permissions than they themselves have?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use IAM Access Analyzer to automatically revoke excessive permissions.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Apply an IAM Permission Boundary to the junior administrator's role, and require that any user they create also has this Permission Boundary attached.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Review CloudTrail logs every 24 hours to detect and remove unauthorized users.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable AWS Config rules to automatically delete any users created with excessive permissions.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Apply a Permission Boundary and require it on all users the junior admin creates.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"delegate IAM administration safely"</strong> or <strong>"prevent privilege escalation"</strong>, the answer is <em>Permission Boundaries</em>. They let you say: "You can create users, but every user you create is capped at <em>these</em> maximum permissions."<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Permission Boundaries</em> &mdash; A Permission Boundary is an advanced IAM feature that sets the <strong>maximum permissions</strong> an IAM entity (user or role) can have. Even if someone attaches AdministratorAccess to a user, the user's <em>effective</em> permissions are the <strong>intersection</strong> of their identity policy AND the boundary.<br><br>
+
+<em>How to Enforce</em>: You add a condition to the junior admin's IAM policy:<br>
+<code>"Condition": {"StringEquals": {"iam:PermissionsBoundary": "arn:aws:iam::123456789012:policy/JuniorBoundary"}}</code><br>
+This means the junior admin can only call <code>iam:CreateUser</code> if they also attach the specified Permission Boundary. They literally cannot create unbounded users.<br><br>
+
+<em>Effective Permissions</em> = Identity Policy &cap; Permission Boundary. If the boundary doesn't allow an action, it's denied &mdash; regardless of what the identity policy says.<br><br>
+
+<strong>Why B is correct:</strong> Permission Boundaries provide a <strong>preventive</strong> control. The junior admin is physically unable to create users that exceed the boundary. This is a real-time enforcement mechanism, not a detection-after-the-fact approach. It's the AWS-recommended solution for delegating IAM administration.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) IAM Access Analyzer</em> &mdash; Access Analyzer identifies resources shared with external entities and unused permissions. It is an <strong>analysis/advisory</strong> tool, not an enforcement mechanism. It cannot automatically revoke permissions or prevent user creation in real time.<br>
+<em>C) Review CloudTrail logs every 24 hours</em> &mdash; This is a <strong>detective</strong> control, not a <strong>preventive</strong> one. By the time you review logs, a user with excessive permissions could have already been created and caused damage. You need prevention, not detection-after-the-fact.<br>
+<em>D) AWS Config rules to delete users</em> &mdash; While you could create a Config rule to detect non-compliant users, this is still reactive. There's a window between user creation and deletion where the over-privileged user exists. Also, automatically deleting users is risky and disruptive. Permission Boundaries prevent the problem from occurring in the first place.
+</div>
+</div>
+
+<!-- Q16 MC - Audit and Compliance -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q16.</span><span>Your security team wants to identify which IAM roles have not been used in the last 90 days and pinpoint unused permissions to help achieve least privilege. Which AWS tool is best suited for this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Trusted Advisor</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">IAM Access Analyzer (Access Advisor / Last Accessed information)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Inspector</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Shield</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> IAM Access Analyzer with Access Advisor / Last Accessed information.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"unused roles/permissions" + "least privilege" + "audit"</strong>, the answer is <em>IAM Access Analyzer</em> and its <em>Access Advisor</em> data. This is the only AWS tool that shows you <strong>which services and actions</strong> each role has actually used (and when they last used them).<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>IAM Access Analyzer</em> &mdash; A tool with two major capabilities:<br>
+&bull; <strong>External Access Findings</strong> &mdash; Identifies resources (S3 buckets, IAM roles, KMS keys, etc.) that are shared with external entities outside your account or organization.<br>
+&bull; <strong>Unused Access Findings</strong> &mdash; Identifies IAM roles not used within a specified period, unused permissions, and unused access keys. This is the feature relevant to this question.<br><br>
+
+<em>Access Advisor (Last Accessed Information)</em> &mdash; Shows the last time each service was accessed by a role/user. If a role has <code>s3:*</code> permissions but has only ever used <code>s3:GetObject</code>, Access Advisor reveals that all other S3 permissions are unused and can be safely removed. Available in the IAM console under each role's "Access Advisor" tab.<br><br>
+
+<em>Policy Generation</em> &mdash; Access Analyzer can even <strong>generate a least-privilege policy</strong> based on actual usage from CloudTrail logs, replacing overly broad policies with ones that match real behavior.<br><br>
+
+<strong>Why B is correct:</strong> IAM Access Analyzer with Access Advisor is the only tool that directly answers both questions: "which roles are unused?" (last activity timestamp) and "which permissions are unused?" (service-level last accessed data). It's purpose-built for achieving and maintaining least privilege.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) AWS Trusted Advisor</em> &mdash; Trusted Advisor provides high-level best practice recommendations across cost, performance, security, fault tolerance, and service limits. It can flag some IAM issues (like MFA not enabled on root, or exposed access keys) but it does <strong>not</strong> provide granular last-accessed data or identify unused permissions per role.<br>
+<em>C) Amazon Inspector</em> &mdash; Inspector scans EC2 instances and container images for <strong>software vulnerabilities</strong> (CVEs) and unintended network exposure. It is a vulnerability management tool, not an IAM audit tool. It has nothing to do with IAM roles or permission analysis.<br>
+<em>D) AWS Shield</em> &mdash; Shield is a <strong>DDoS protection</strong> service. Shield Standard provides basic DDoS mitigation for all AWS accounts. Shield Advanced provides enhanced DDoS protection, cost protection, and 24/7 DDoS response team access. It has absolutely no IAM auditing capabilities.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 6;
+var totalQuestions = 16;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
