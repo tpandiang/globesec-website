@@ -106,11 +106,11 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 <div class="score-banner">
     <div class="score-banner-left">
         <h2>IAM Advanced Practice Exam</h2>
-        <p>16 questions &mdash; IAM policies, cross-account access, S3 security &amp; AWS best practices</p>
+        <p>26 questions &mdash; IAM policies, cross-account access, S3 security &amp; AWS best practices</p>
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/16</div>
+            <div class="score-big" id="overallScore">0/26</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -692,10 +692,353 @@ When you see <strong>"unused roles/permissions" + "least privilege" + "audit"</s
 </div>
 </div>
 
+<!-- Q17 MC - Confused Deputy -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q17.</span><span>A third-party SaaS security vendor requires access to your AWS account to monitor CloudTrail logs. They ask you to create an IAM role that their AWS account can assume. To prevent the "Confused Deputy" problem, which condition should you add to the Trust Policy?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">aws:SourceIp restricted to the vendor's office IP range.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sts:ExternalId with a unique value provided by the vendor.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">aws:PrincipalArn restricted to the vendor's root user.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">aws:RequestedRegion restricted to us-east-1.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Use <code>sts:ExternalId</code> with a unique value provided by the vendor.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"third-party access" + "cross-account role"</strong>, immediately think <em>Confused Deputy</em> and <em>ExternalId</em>. The Confused Deputy is an attack where another customer of the same vendor tricks the vendor into assuming <em>your</em> role instead of their own.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>The Confused Deputy Problem</em> &mdash; Imagine the vendor (Account V) serves two customers: You (Account Y) and an Attacker (Account A). Both create roles trusting Account V. The attacker tells the vendor: "Please assume role in Account Y" instead of their own account. Without a distinguishing factor, the vendor happily assumes your role &mdash; the attacker has now accessed your data through the vendor.<br><br>
+
+<em>ExternalId</em> &mdash; A unique, secret string that acts as a <strong>shared password</strong> between you and the vendor. You add it to the trust policy condition:<br>
+<code>"Condition": {"StringEquals": {"sts:ExternalId": "UniqueString12345"}}</code><br>
+When the vendor calls <code>sts:AssumeRole</code>, they must pass this ExternalId. Since the attacker doesn't know your ExternalId, they can't trick the vendor into assuming your role.<br><br>
+
+<strong>Why B is correct:</strong> <code>sts:ExternalId</code> is the AWS-recommended mechanism specifically designed to prevent the Confused Deputy problem. It ensures that only the intended vendor, using the correct ExternalId, can assume the role. AWS documentation explicitly recommends this for any third-party cross-account access.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) aws:SourceIp restricted to vendor's office IP</em> &mdash; The vendor's service likely runs from AWS infrastructure (EC2, Lambda), not from office IPs. Also, IP-based restrictions don't prevent the Confused Deputy &mdash; the vendor's own service is making the call from their infrastructure, which is the same regardless of which customer triggered it.<br>
+<em>C) aws:PrincipalArn restricted to vendor's root user</em> &mdash; Restricting to the root user is overly broad (the entire account) and doesn't solve the Confused Deputy problem. The vendor's service uses the same principal ARN regardless of which customer triggered the action &mdash; that's the entire problem.<br>
+<em>D) aws:RequestedRegion restricted to us-east-1</em> &mdash; Region restrictions are for limiting where services can be used. They have nothing to do with verifying the identity or intent of the calling party. The Confused Deputy attack works regardless of region.
+</div>
+</div>
+
+<!-- Q18 MC - SCP Allow-List -->
+<div class="question" data-type="mc" data-answer="0">
+<div class="question-text"><span class="question-num">Q18.</span><span>An organization uses AWS Organizations. A developer in a member account has an IAM policy granting <code>s3:*</code> on all buckets. However, the developer receives an "Access Denied" error when trying to delete a bucket. You find an SCP attached to the member account that only allows <code>s3:List*</code> and <code>s3:Get*</code>. What is the cause?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">SCPs do not grant permissions; they act as a filter. Since s3:DeleteBucket isn't explicitly allowed in the SCP, it is implicitly denied even though the IAM policy allows it.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The IAM policy must be converted to a Resource-based policy for it to work.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">SCPs only apply to the Root user of the member account, not to IAM users.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">There is a conflict between the IAM policy and the SCP, and IAM takes precedence, so the issue is elsewhere.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> SCPs act as a filter &mdash; since the SCP doesn't allow <code>s3:DeleteBucket</code>, the action is implicitly denied.<br><br>
+
+<strong>How to Think About This:</strong><br>
+SCPs use an <strong>allow-list</strong> or <strong>deny-list</strong> strategy. In this case, the SCP uses an allow-list: it explicitly allows only <code>s3:List*</code> and <code>s3:Get*</code>. Everything NOT in the allow-list is <strong>implicitly denied</strong>. Think of the SCP as a filter: the IAM policy says "allow s3:*", but the SCP only lets <code>List</code> and <code>Get</code> through the filter. <code>DeleteBucket</code> is blocked at the filter.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>SCP as a Permission Ceiling</em> &mdash; For an action to succeed in a member account, it must be allowed by <strong>BOTH</strong> the SCP AND the IAM policy. The effective permissions are the <strong>intersection</strong>:<br>
+&bull; IAM allows: <code>s3:*</code> (everything)<br>
+&bull; SCP allows: <code>s3:List*</code>, <code>s3:Get*</code> (read-only)<br>
+&bull; Effective: <code>s3:List*</code>, <code>s3:Get*</code> (intersection = read-only)<br><br>
+
+<em>Allow-List vs. Deny-List SCPs</em>:<br>
+&bull; <strong>Allow-List Strategy</strong>: Remove the default <code>FullAWSAccess</code> SCP, then add SCPs that allow only specific actions. Everything else is implicitly denied. (This is what's happening here.)<br>
+&bull; <strong>Deny-List Strategy</strong>: Keep <code>FullAWSAccess</code> and add SCPs that explicitly deny specific actions. Everything else is allowed. (More common in practice.)<br><br>
+
+<strong>Why A is correct:</strong> The SCP only allows List and Get operations. Since <code>s3:DeleteBucket</code> is not in the allow-list, the SCP implicitly denies it. The IAM policy's <code>s3:*</code> is irrelevant &mdash; it cannot grant permissions beyond what the SCP allows.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) Convert to Resource-based policy</em> &mdash; The type of IAM policy (identity-based vs. resource-based) doesn't matter here. SCPs act as a ceiling over the entire member account. Even resource-based policies in the account are bounded by SCPs for principals within that account.<br>
+<em>C) SCPs only apply to Root user</em> &mdash; SCPs apply to <strong>all IAM users and roles</strong> in member accounts. The only exception is the <strong>management account</strong> of the organization &mdash; SCPs never restrict the management account itself.<br>
+<em>D) IAM takes precedence over SCP</em> &mdash; The opposite is true. SCPs set the maximum boundary. IAM policies operate within that boundary. If the SCP doesn't allow an action, no IAM policy can grant it.
+</div>
+</div>
+
+<!-- Q19 MC - Permission Boundaries vs Escalation -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q19.</span><span>You want to allow a "Project Lead" to create IAM roles for their team's Lambda functions. However, you must ensure the Lead cannot create a role with <code>AdministratorAccess</code> and then assume it themselves to escalate privileges. What is the best architectural solution?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use an IAM Programmatic Access key for the Lead so their actions can be tracked.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Attach a Permissions Boundary to the Lead's IAM user and require via IAM conditions that any role they create must also have this Permissions Boundary attached.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use a Service Control Policy (SCP) to restrict iam:CreateRole for the Lead's account.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a Lambda function that triggers on CreateRole events to automatically delete over-privileged roles.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Attach a Permissions Boundary and require it on all roles the Lead creates.<br><br>
+
+<strong>How to Think About This:</strong><br>
+This is a <strong>privilege escalation prevention</strong> scenario. The danger: if a user can create roles with arbitrary permissions AND can assume those roles, they can effectively give themselves any permission. Permission Boundaries break this chain by capping what any created role can do.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>The Escalation Path</em>:<br>
+1. Lead creates a role with <code>AdministratorAccess</code>.<br>
+2. Lead assumes that role via <code>sts:AssumeRole</code>.<br>
+3. Lead now has full admin &mdash; privilege escalation complete.<br><br>
+
+<em>How Permissions Boundaries Block This</em>:<br>
+1. The Lead's IAM policy includes a condition: <code>"iam:PermissionsBoundary": "arn:aws:iam::123456789012:policy/ProjectBoundary"</code>.<br>
+2. The Lead can only call <code>iam:CreateRole</code> if they attach <code>ProjectBoundary</code> as the Permission Boundary on the new role.<br>
+3. Even if the Lead attaches <code>AdministratorAccess</code> to the new role, the effective permissions are <strong>Admin &cap; ProjectBoundary = ProjectBoundary</strong>.<br>
+4. The Lead assumes the role but only gets the bounded permissions &mdash; escalation is prevented.<br><br>
+
+<strong>Why B is correct:</strong> Permissions Boundaries provide a <strong>preventive, real-time</strong> control that makes privilege escalation architecturally impossible. The Lead can create roles freely for their team's Lambda functions, but none of those roles can exceed the boundary. This is the AWS-recommended pattern for delegating IAM administration safely.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Use Programmatic Access key for tracking</em> &mdash; Tracking (via CloudTrail) is a detective control, not a preventive one. By the time you detect the escalation, the damage may already be done. An access key type has no bearing on what permissions the user has.<br>
+<em>C) SCP to restrict iam:CreateRole</em> &mdash; If you block <code>iam:CreateRole</code> entirely, the Lead cannot create roles for Lambda functions at all &mdash; which is their legitimate job. SCPs are too coarse for this use case. You need to allow role creation but limit what the created roles can do. That's exactly what Permission Boundaries achieve.<br>
+<em>D) Lambda to delete over-privileged roles</em> &mdash; This is a reactive control with a dangerous gap. Between when the role is created and when the Lambda triggers, the Lead could assume the over-privileged role and take destructive actions. Event-driven cleanup is useful as a secondary control but should never be the primary defense against privilege escalation.
+</div>
+</div>
+
+<!-- Q20 MC - SAML Federation -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q20.</span><span>Your company uses an on-premises Active Directory (AD). You need to allow employees to access the AWS Management Console using their AD credentials without creating individual IAM users for each employee. Which approach is the most secure?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Sync AD users to IAM using AWS Directory Service to create matching IAM users automatically.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use SAML 2.0 Identity Federation with an IdP (like AD FS) and the AssumeRoleWithSAML API to grant temporary console access.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a single shared IAM user with a long-term password and distribute it to employees via AD Group Policy.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use AWS Secrets Manager to store AD credentials and rotate them every 24 hours for each employee.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Use SAML 2.0 Identity Federation with AD FS and <code>AssumeRoleWithSAML</code>.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"on-premises AD" + "console access" + "no IAM users"</strong>, the answer is <em>SAML 2.0 Federation</em>. The key words are "without creating individual IAM users" &mdash; federation lets users authenticate through your existing identity provider and receive temporary AWS credentials mapped to IAM roles.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>SAML 2.0 Federation Flow</em>:<br>
+1. Employee navigates to the corporate SSO portal (AD FS).<br>
+2. AD FS authenticates the user against Active Directory.<br>
+3. AD FS returns a <strong>SAML assertion</strong> containing the user's identity and group memberships.<br>
+4. The browser posts the SAML assertion to the AWS Sign-In endpoint.<br>
+5. AWS calls <code>sts:AssumeRoleWithSAML</code> and returns temporary credentials.<br>
+6. Employee is redirected to the AWS Console with a time-limited session.<br><br>
+
+<em>Role Mapping</em> &mdash; AD groups map to IAM roles. For example: AD group "Developers" &rarr; IAM role "DeveloperRole"; AD group "SecurityTeam" &rarr; IAM role "SecurityAuditRole". Users get permissions based on their AD group membership.<br><br>
+
+<strong>Why B is correct:</strong> SAML 2.0 federation meets all requirements: employees use existing AD credentials (single sign-on), no IAM users are created, access is temporary (credentials expire), and permissions are managed through AD group-to-role mappings. This is the standard enterprise pattern for AWS access.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Sync AD users to IAM</em> &mdash; AWS Directory Service does not create IAM users from AD users. It provides managed Active Directory in AWS. Even if you could sync users, creating IAM users defeats the requirement of "without creating individual IAM users." Syncing also creates maintenance overhead and long-term credentials.<br>
+<em>C) Single shared IAM user</em> &mdash; Sharing credentials eliminates accountability (who did what?), violates least privilege (everyone has the same access), and is impossible to revoke for one person without affecting all. This is a critical security anti-pattern.<br>
+<em>D) Secrets Manager for AD credentials</em> &mdash; Secrets Manager stores secrets for applications. It doesn't help with user authentication or console access. Employees would still need a way to authenticate to AWS, and storing their AD passwords in Secrets Manager doesn't provide federated access &mdash; it just moves the credential storage problem.
+</div>
+</div>
+
+<!-- Q21 MC - S3 Bucket Policy + IAM -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q21.</span><span>A security engineer has an IAM policy allowing <code>s3:GetObject</code> on <code>arn:aws:s3:::sensitive-data/*</code>. The S3 bucket has a Bucket Policy that explicitly <strong>denies</strong> <code>s3:GetObject</code> if the request does NOT come from a specific VPC Endpoint (<code>vpce-abc123</code>). The engineer makes the request from that exact VPC Endpoint. Can they access the data?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">No, because the Bucket Policy is a resource-based policy and always overrides IAM policies.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Yes, because the Deny condition requires the request to NOT come from vpce-abc123 &mdash; since the engineer IS coming from that endpoint, the Deny condition is not met, so the IAM Allow takes effect.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">No, if there were any other Deny statements anywhere in the IAM policy.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Yes, because IAM policies and Bucket Policies are always additive and never conflict.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Yes &mdash; the Deny condition is not met, so the IAM Allow takes effect.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Read the Deny carefully: it denies <code>GetObject</code> when the request does <strong>NOT</strong> come from <code>vpce-abc123</code>. The engineer IS coming from <code>vpce-abc123</code>, so the condition <strong>does not match</strong>. The Deny statement <strong>does not fire</strong>. With no active Deny, the IAM policy's Allow is evaluated, and the request succeeds.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Conditional Deny</em> &mdash; A Deny with a condition is only active when the condition evaluates to true. The bucket policy likely uses:<br>
+<code>"Condition": {"StringNotEquals": {"aws:sourceVpce": "vpce-abc123"}}</code><br>
+This means: "Deny if the VPC Endpoint is NOT vpce-abc123." When the engineer uses vpce-abc123, <code>StringNotEquals</code> evaluates to false &rarr; the Deny does not apply.<br><br>
+
+<em>Policy Evaluation with Same-Account Requests</em> &mdash; For same-account access to S3:<br>
+1. AWS collects ALL applicable policies (IAM + bucket policy).<br>
+2. Check for explicit Deny &rarr; The conditional Deny doesn't match, so no explicit Deny.<br>
+3. Check for explicit Allow &rarr; The IAM policy allows <code>s3:GetObject</code>.<br>
+4. Result: <strong>ALLOWED</strong>.<br><br>
+
+<strong>Why B is correct:</strong> The Deny is conditional, and the condition is not satisfied because the engineer is using the correct VPC Endpoint. Without an active Deny, the IAM policy's explicit Allow is sufficient to grant access. This is a common pattern for restricting S3 access to specific VPC Endpoints while still allowing authorized users through that endpoint.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Bucket Policy always overrides IAM</em> &mdash; This is false. For same-account access, IAM policies and bucket policies are evaluated together. Neither automatically "overrides" the other. The standard Deny &gt; Allow &gt; Default Deny logic applies across all policies combined. (Note: for cross-account access, BOTH must explicitly allow.)<br>
+<em>C) Other Deny statements in IAM</em> &mdash; The question only describes the specific policies. If there were other Deny statements, they could change the outcome, but that's not what's described. The correct analysis is based on the policies given.<br>
+<em>D) Always additive and never conflict</em> &mdash; Policies can absolutely conflict. If the bucket policy had an unconditional Deny, it would override the IAM Allow. The fact that they "work together" doesn't mean they never conflict &mdash; the Deny &gt; Allow rule resolves conflicts.
+</div>
+</div>
+
+<!-- Q22 MC - PassRole -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q22.</span><span>A developer is trying to associate an IAM role with an EC2 instance but receives an "Unauthorized" error for the <code>iam:PassRole</code> action. Why is this permission required?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It allows the developer to change the password of the IAM role.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It ensures the user has explicit permission to "pass" that specific role's permissions to an AWS service (EC2), preventing privilege escalation.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It is required to allow the EC2 instance to communicate with the IAM service.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It is a legacy permission that has been replaced by iam:AssumeRole.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> <code>iam:PassRole</code> ensures the user has permission to pass a specific role to an AWS service, preventing privilege escalation.<br><br>
+
+<strong>How to Think About This:</strong><br>
+<code>iam:PassRole</code> is a <strong>privilege escalation guardrail</strong>. Without it, a user with limited permissions could create an EC2 instance with an AdministratorAccess role, SSH into it, and use the role's credentials to do anything &mdash; effectively escalating their own privileges through the service.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>iam:PassRole</em> &mdash; This permission controls whether a user can <strong>delegate</strong> a specific role to an AWS service. "Passing" a role means telling AWS: "Let this service (EC2, Lambda, ECS, etc.) operate with this role's permissions." It is NOT about the user assuming the role themselves &mdash; it's about handing the role to a service.<br><br>
+
+<em>The Escalation Scenario Without PassRole</em>:<br>
+1. Developer has limited permissions (e.g., only <code>ec2:RunInstances</code>).<br>
+2. Developer launches an EC2 instance with an <code>AdministratorAccess</code> role attached.<br>
+3. Developer SSHs into the instance and uses its role credentials.<br>
+4. Developer now has full admin access &mdash; privilege escalation complete.<br><br>
+
+<em>How PassRole Prevents This</em>:<br>
+The developer's IAM policy must explicitly include:<br>
+<code>"Action": "iam:PassRole", "Resource": "arn:aws:iam::123456789012:role/LimitedLambdaRole"</code><br>
+The developer can only pass <em>that specific role</em> to a service. Attempting to pass <code>AdministratorAccess</code> role fails with "Unauthorized."<br><br>
+
+<strong>Why B is correct:</strong> <code>iam:PassRole</code> is specifically designed to prevent privilege escalation by requiring explicit permission to delegate specific roles to AWS services. It's a critical security control that separates "what you can do" from "what you can assign to a service."<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Change the password of the IAM role</em> &mdash; IAM roles do not have passwords. Roles use trust policies and temporary credentials. <code>PassRole</code> has nothing to do with passwords.<br>
+<em>C) Allow EC2 to talk to IAM</em> &mdash; EC2 communicates with IAM through the AWS control plane automatically. <code>PassRole</code> is about the <em>user's</em> permission to assign a role, not about the EC2 instance's network connectivity.<br>
+<em>D) Legacy permission replaced by AssumeRole</em> &mdash; <code>PassRole</code> and <code>AssumeRole</code> are different actions for different purposes. <code>PassRole</code> = handing a role to a service. <code>AssumeRole</code> = temporarily becoming the role yourself. Both are current and actively used.
+</div>
+</div>
+
+<!-- Q23 MC - Access Analyzer External Finding -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q23.</span><span>Your Security Operations Center (SOC) receives an alert from IAM Access Analyzer. It identifies that a role in your production account can be assumed by an entity in a personal, unrecognized AWS account. What is the immediate recommended action?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Delete the personal AWS account via the AWS Organizations console.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Modify the Trust Policy of the production role to remove the external Principal.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Archive the finding in Access Analyzer to stop the alerts.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Apply a Permission Boundary to the external account.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Modify the Trust Policy to remove the unauthorized external Principal.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Access Analyzer found an <strong>unintended external trust</strong>. The fix is to remove the trust at the source &mdash; the role's trust policy. You control your role; you can't control external accounts.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>IAM Access Analyzer External Access Findings</em> &mdash; Access Analyzer continuously monitors resource policies to identify resources shared with external entities. When it finds a role whose trust policy allows an unknown external account, it generates a finding. This could indicate: a misconfiguration, a leftover from a vendor engagement, or a malicious backdoor.<br><br>
+
+<em>Incident Response</em>: For an unrecognized external principal:<br>
+1. <strong>Investigate</strong>: Check CloudTrail for <code>AssumeRole</code> events &mdash; has this role been assumed by the external account?<br>
+2. <strong>Remediate</strong>: Remove the external principal from the trust policy immediately.<br>
+3. <strong>Assess impact</strong>: If the role was assumed, review what actions were performed using the temporary credentials.<br><br>
+
+<strong>Why B is correct:</strong> The trust policy on your production role is the source of the vulnerability. Removing the external principal from the trust policy immediately prevents any future assumption of that role by the unauthorized account. This is the direct, immediate fix.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Delete the personal AWS account</em> &mdash; You cannot delete someone else's AWS account. Even if it were in your Organization, deleting an account is an extreme action. The fix is to remove the trust relationship, not to destroy accounts.<br>
+<em>C) Archive the finding</em> &mdash; Archiving a finding means marking it as "reviewed and accepted" &mdash; it tells Access Analyzer this external access is intentional. It silences the alert but does NOT fix the problem. The external account can still assume the role. This is the opposite of what you should do for an unrecognized entity.<br>
+<em>D) Apply Permission Boundary to external account</em> &mdash; You cannot apply Permission Boundaries to accounts you don't own. Permission Boundaries are applied to IAM entities within your own account. You have no control over an external personal account.
+</div>
+</div>
+
+<!-- Q24 MC - MFA Enforcement -->
+<div class="question" data-type="mc" data-answer="0">
+<div class="question-text"><span class="question-num">Q24.</span><span>You need to create an IAM policy that ensures users can only perform <code>ec2:TerminateInstances</code> if they have signed in using Multi-Factor Authentication (MFA). Which policy condition should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">"Condition": {"Bool": {"aws:MultiFactorAuthPresent": "true"}}</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">"Condition": {"StringEquals": {"iam:MFA": "active"}}</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">"Effect": "Deny" if the user is in the MFA-Only group.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use an SCP to block all EC2 actions globally.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Use <code>"Condition": {"Bool": {"aws:MultiFactorAuthPresent": "true"}}</code><br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"only if MFA is used"</strong>, the condition key is always <code>aws:MultiFactorAuthPresent</code>. This is a global condition key that evaluates to <code>true</code> when the request was authenticated with a second factor.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>aws:MultiFactorAuthPresent</em> &mdash; A Boolean condition key available in all AWS policies. It is <code>true</code> when the API caller authenticated with MFA. You can use it two ways:<br><br>
+
+<em>Pattern 1 &mdash; Allow only with MFA</em>:<br>
+<code>"Effect": "Allow", "Action": "ec2:TerminateInstances", "Condition": {"Bool": {"aws:MultiFactorAuthPresent": "true"}}</code><br>
+Only allows the action if MFA was used.<br><br>
+
+<em>Pattern 2 &mdash; Deny without MFA</em> (more common):<br>
+<code>"Effect": "Deny", "Action": "ec2:TerminateInstances", "Condition": {"BoolIfExists": {"aws:MultiFactorAuthPresent": "false"}}</code><br>
+Denies the action if MFA was NOT used. Using <code>BoolIfExists</code> handles cases where the key might not be present (e.g., programmatic access without MFA).<br><br>
+
+<strong>Why A is correct:</strong> <code>aws:MultiFactorAuthPresent</code> is the correct, official AWS condition key for MFA enforcement. The <code>Bool</code> operator checks its boolean value. This is the standard pattern used in AWS documentation and best practices.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) "iam:MFA": "active"</em> &mdash; <code>iam:MFA</code> is not a valid condition key. The correct key is <code>aws:MultiFactorAuthPresent</code>. AWS condition keys follow the format <code>aws:</code> for global keys and <code>service:</code> for service-specific keys. There is no <code>iam:MFA</code> key.<br>
+<em>C) Deny if user is in MFA-Only group</em> &mdash; IAM group membership is not a condition you can evaluate in a policy. Groups are for organizing users and attaching shared policies, not for use as condition values. Also, the description is vague and doesn't specify actual policy syntax.<br>
+<em>D) SCP to block all EC2 actions globally</em> &mdash; This would block ALL EC2 actions for ALL users, not just <code>TerminateInstances</code> without MFA. It's far too broad and would break all EC2 workloads in the organization.
+</div>
+</div>
+
+<!-- Q25 MC - CloudTrail Investigation -->
+<div class="question" data-type="mc" data-answer="0">
+<div class="question-text"><span class="question-num">Q25.</span><span>A security audit reveals several <code>UnauthorizedOperation</code> errors in CloudTrail logs related to <code>iam:CreateAccessKey</code>. You need to determine which IAM principal attempted these calls and from what IP address. Where do you find this information?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The userIdentity and sourceIPAddress fields in the CloudTrail log entry.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The accessKeyId field in the AWS Trusted Advisor report.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The IAM Credential Report.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The VPC Flow Logs for the IAM service endpoint.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> The <code>userIdentity</code> and <code>sourceIPAddress</code> fields in the CloudTrail log entry.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you need <strong>who + where + what</strong> for an API call, <em>CloudTrail</em> is always the answer. Every API call to AWS is recorded in CloudTrail with rich metadata. The log entry for each event contains everything you need for forensic investigation.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>CloudTrail Log Entry Fields</em>:<br>
+&bull; <code>userIdentity</code> &mdash; <strong>WHO</strong> made the call. Contains the IAM user ARN, role ARN, account ID, access key ID, and session context. Example: <code>"arn:aws:iam::123456789012:user/malicious-actor"</code><br>
+&bull; <code>sourceIPAddress</code> &mdash; <strong>WHERE</strong> the call came from. The IP address of the caller. Can reveal if the call came from an unexpected location or known malicious IP.<br>
+&bull; <code>eventName</code> &mdash; <strong>WHAT</strong> was attempted. In this case: <code>CreateAccessKey</code>.<br>
+&bull; <code>errorCode</code> &mdash; The result. <code>UnauthorizedOperation</code> or <code>AccessDenied</code> indicates a failed attempt.<br>
+&bull; <code>eventTime</code> &mdash; <strong>WHEN</strong> it happened. UTC timestamp.<br>
+&bull; <code>requestParameters</code> &mdash; Details of the request (e.g., which user they tried to create a key for).<br><br>
+
+<strong>Why A is correct:</strong> CloudTrail is the authoritative source for API call forensics. The <code>userIdentity</code> field tells you exactly which principal (user, role, or federated identity) made the call, and <code>sourceIPAddress</code> tells you where the request originated. Together, they answer "who tried this and from where?"<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) Trusted Advisor report</em> &mdash; Trusted Advisor provides best practice recommendations, not forensic investigation data. It doesn't log individual API calls or show IP addresses of callers. It can flag exposed access keys but cannot tell you who made a specific API call.<br>
+<em>C) IAM Credential Report</em> &mdash; The Credential Report is a CSV export showing the status of all IAM users' credentials (password age, MFA status, access key last used). It shows aggregate credential metadata, not individual API call details. It cannot tell you who attempted <code>CreateAccessKey</code> or from what IP.<br>
+<em>D) VPC Flow Logs</em> &mdash; VPC Flow Logs capture network-level traffic (source IP, destination IP, ports, protocol) for ENIs. IAM is a global AWS service &mdash; API calls to IAM are made over HTTPS to the AWS control plane, not through your VPC. Even if captured, Flow Logs show only network tuples, not API-level details like the action attempted or the IAM principal.
+</div>
+</div>
+
+<!-- Q26 MC - Access Advisor -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q26.</span><span>You are tasked with reducing the permissions of an IAM group that has had <code>PowerUserAccess</code> for a year. You want to identify which specific AWS services the group members have actually used in the last 90 days before tightening the policy. Which tool provides this data?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">IAM Policy Simulator.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">IAM Access Advisor (Service Last Accessed data).</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS CloudWatch Logs Insights.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Config managed rules.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> IAM Access Advisor (Service Last Accessed data).<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"which services were actually used" + "refine/reduce permissions" + "least privilege"</strong>, the answer is <em>Access Advisor</em>. It's the only tool that shows service-by-service last accessed timestamps for IAM entities, letting you identify and remove unused permissions with confidence.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>IAM Access Advisor</em> &mdash; Available in the IAM console under each user, group, or role. It shows:<br>
+&bull; Every AWS service the entity has permissions for.<br>
+&bull; Whether the service was accessed, and <strong>when</strong> it was last accessed.<br>
+&bull; Which specific Region the service was accessed from.<br><br>
+
+<em>Example</em>: The group has <code>PowerUserAccess</code> (grants access to ~200+ services). Access Advisor shows that in the last 90 days, they only used: S3, EC2, Lambda, DynamoDB, CloudWatch. You can now create a custom policy granting only those 5 services and remove PowerUserAccess.<br><br>
+
+<em>Access Analyzer Policy Generation</em> &mdash; IAM Access Analyzer can go further by analyzing CloudTrail logs and <strong>generating a least-privilege policy</strong> based on actual API calls (action-level, not just service-level). This complements Access Advisor for deeper refinement.<br><br>
+
+<strong>Why B is correct:</strong> Access Advisor directly answers the question: "Which services did this group actually use in the last 90 days?" It provides the data needed to make informed decisions about which permissions to keep and which to remove. This is the standard AWS workflow for achieving least privilege.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) IAM Policy Simulator</em> &mdash; The Policy Simulator tests whether a specific action would be allowed or denied under current policies. It answers "what CAN this user do?" not "what DID this user do?" It's useful for testing policies before deployment, but it doesn't show historical usage data.<br>
+<em>C) CloudWatch Logs Insights</em> &mdash; CloudWatch Logs Insights queries log data stored in CloudWatch Log Groups. You could theoretically query CloudTrail logs (if sent to CloudWatch), but it requires writing custom queries and doesn't provide the clean service-by-service last accessed view that Access Advisor offers out of the box.<br>
+<em>D) AWS Config managed rules</em> &mdash; Config rules evaluate resource compliance (e.g., "are S3 buckets encrypted?"). They don't track which IAM permissions are being used. Config monitors resource configuration, not IAM access patterns.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 16;
+var totalQuestions = 26;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
