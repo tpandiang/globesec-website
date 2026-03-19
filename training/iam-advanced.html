@@ -106,11 +106,11 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 <div class="score-banner">
     <div class="score-banner-left">
         <h2>IAM Advanced Practice Exam</h2>
-        <p>2 questions &mdash; complex IAM policy interpretation scenarios</p>
+        <p>4 questions &mdash; IAM policies, S3 security &amp; access control scenarios</p>
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/2</div>
+            <div class="score-big" id="overallScore">0/4</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -119,7 +119,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 
 <div class="progress-wrap">
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="progress-text" id="progressText">0 / 2 answered</div>
+    <div class="progress-text" id="progressText">0 / 4 answered</div>
 </div>
 
 <!-- Q1 MC -->
@@ -229,10 +229,70 @@ This denies all regional services outside us-east-1 and us-west-2, while leaving
 </div>
 </div>
 
+<!-- Q3 MC -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q3.</span><span>StreamWave Inc. runs a music streaming platform that serves audio files from an Amazon S3 bucket. The S3 bucket currently allows public read access so users can stream tracks directly. The engineering team discovers that dozens of third-party websites are embedding direct links to StreamWave's S3 objects, causing significant bandwidth costs without generating any ad revenue for the company.<br><br>Which approach would most effectively prevent unauthorized hotlinking while continuing to serve content to legitimate users?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Place a CloudFront distribution in front of the S3 bucket to cache the content at edge locations</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Migrate the audio files from S3 to an EBS volume attached to the web server</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Remove public read access from the S3 bucket and have the application generate pre-signed URLs with short expiry times for authorized users</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Identify the offending websites and block their IP addresses using Security Groups</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Remove public read access and use pre-signed URLs with short expiry times.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"external sites linking to your S3 content"</strong> + <strong>"unauthorized usage / bandwidth costs"</strong>, the problem is <em>hotlinking</em>. The mental model is: your bucket is publicly readable, so anyone with the URL can embed it. The fix must make the URL <strong>useless without authorization</strong>. Pre-signed URLs achieve this because they are cryptographically signed and expire after a set duration (e.g., 1 hour), meaning any link shared by a third-party site quickly becomes a dead link.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>S3 Pre-Signed URLs</em> &mdash; A pre-signed URL is generated server-side using your AWS credentials. It encodes the bucket, object key, expiration time, and a cryptographic signature into the URL itself. Anyone with the URL can access the object, but <strong>only until it expires</strong>. Your application generates a fresh pre-signed URL each time a legitimate user requests a track, so your own site always works while hotlinked URLs quickly die.<br><br>
+
+<em>How the attack works (Hotlinking)</em> &mdash; If your S3 bucket allows public read, the object URL is permanent and predictable (e.g., <code>https://bucket.s3.amazonaws.com/song.mp3</code>). Any website can embed this URL in an <code>&lt;audio&gt;</code> tag. Every play costs <em>you</em> S3 data transfer fees, but the third-party site earns the ad revenue from their visitors.<br><br>
+
+<strong>Why C is correct:</strong> By making the bucket private and serving content only through pre-signed URLs with short TTLs, you guarantee that: (1) Direct S3 URLs return <code>403 Forbidden</code>. (2) Only your application can generate valid access URLs. (3) Hotlinked URLs expire and become useless within minutes or hours. This is the <strong>industry-standard approach</strong> for protecting private content on S3.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) CloudFront distribution for caching</em> &mdash; CloudFront improves performance and reduces S3 egress costs through caching, but it does <strong>not solve the access control problem</strong>. If the origin bucket is still publicly readable (or CloudFront is configured with public access), external sites can hotlink through the CloudFront URL just as easily. CloudFront <em>can</em> help when paired with signed URLs or signed cookies, but on its own it does not prevent hotlinking.<br>
+<em>B) Migrate to EBS volume</em> &mdash; Moving audio files from S3 to an EBS volume is a step backwards in every dimension: EBS is <strong>single-AZ</strong> (no built-in redundancy), not designed for serving web content at scale, more expensive per GB, and requires managing an EC2 instance. It also does not inherently prevent hotlinking &mdash; the web server would still need access controls.<br>
+<em>D) Block IPs in Security Groups</em> &mdash; Security Groups are attached to <strong>EC2 instances and ENIs</strong>, not to S3 buckets. S3 is a fully managed service with no Security Group support. Even if you used S3 bucket policies to deny specific IPs, it would be a game of whack-a-mole &mdash; new offending sites appear constantly, and they may share IPs with legitimate users (CDNs, shared hosting).
+</div>
+</div>
+
+<!-- Q4 MC -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q4.</span><span>A development team has implemented pre-signed URLs for their S3-hosted media files to prevent hotlinking. However, a security engineer notices that some pre-signed URLs are being shared on social media and reused by unauthorized users before they expire. The current expiry time is set to 24 hours.<br><br>The team wants to tighten security while minimizing impact on the user experience for their paying subscribers. Which combination of actions best addresses this concern?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Switch from pre-signed URLs to a public bucket policy with an aws:Referer condition that only allows requests from the company's domain</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Reduce the pre-signed URL expiry to a short window (e.g., 5&ndash;15 minutes) and serve content through CloudFront with an Origin Access Control (OAC) so only CloudFront can reach the S3 bucket</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable S3 server-side encryption with AWS KMS so that only users with the KMS key can decrypt the files</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable S3 Object Lock in Governance mode to prevent the media files from being accessed by unauthorized users</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Reduce the pre-signed URL expiry and serve through CloudFront with Origin Access Control (OAC).<br><br>
+
+<strong>How to Think About This:</strong><br>
+This question builds on the hotlinking concept from Q3 but adds a twist: pre-signed URLs are <em>already</em> in place but the expiry window is too long (24 hours), giving shared links enough time to be reused. The fix requires <strong>two things</strong>: (1) shrink the time window, and (2) add a layer that prevents direct S3 access entirely.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Pre-Signed URL Expiry Tuning</em> &mdash; A 24-hour expiry means a leaked URL works for an entire day. Reducing it to 5&ndash;15 minutes drastically limits the reuse window. Your application simply generates a fresh URL each time a subscriber clicks play &mdash; legitimate users never notice the difference, but shared links become worthless within minutes.<br><br>
+
+<em>CloudFront + Origin Access Control (OAC)</em> &mdash; OAC is the modern replacement for Origin Access Identity (OAI). When configured, the S3 bucket policy is set to <strong>only allow requests from your CloudFront distribution</strong>. This means: (1) Direct S3 URLs always return 403 &mdash; even if someone constructs a valid pre-signed URL to S3 directly. (2) All content must flow through CloudFront, where you can add additional controls like signed URLs, signed cookies, geo-restrictions, and WAF rules. (3) CloudFront caching reduces S3 egress costs.<br><br>
+
+<em>Defense in Depth</em> &mdash; The combination of short-lived pre-signed URLs + CloudFront OAC creates <strong>two layers of protection</strong>: the URL expires quickly (time-based control) and only CloudFront can reach S3 (network-based control).<br><br>
+
+<strong>Why B is correct:</strong> Shortening the expiry window directly addresses the "shared URL reuse" problem, while CloudFront with OAC locks down S3 so that even if someone obtains a direct S3 URL, it is useless. Together they provide defense in depth without impacting legitimate subscribers (who get fresh URLs on every request).<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Public bucket with aws:Referer condition</em> &mdash; This is actually a <strong>downgrade</strong> in security. The <code>Referer</code> header is sent by the browser and can be <strong>easily spoofed</strong>. Any user can set a custom Referer header using browser extensions or command-line tools like <code>curl -H "Referer: https://yoursite.com"</code>. Moving from pre-signed URLs (cryptographic) to Referer checks (spoofable header) weakens the security posture significantly.<br>
+<em>C) S3 server-side encryption with KMS</em> &mdash; Server-side encryption (SSE-KMS) protects data <strong>at rest</strong> on S3's storage disks. It does not control <strong>who can download</strong> the file. When a user has <code>s3:GetObject</code> permission (or a valid pre-signed URL), S3 automatically decrypts the data before serving it. Encryption does not prevent hotlinking or URL sharing &mdash; it protects against a different threat (physical disk theft, unauthorized AWS account access to raw storage).<br>
+<em>D) S3 Object Lock in Governance mode</em> &mdash; Object Lock prevents objects from being <strong>deleted or overwritten</strong> (write protection / immutability). It is designed for compliance and data retention (e.g., WORM &mdash; Write Once Read Many). It has absolutely nothing to do with controlling read access or preventing unauthorized downloads.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 2;
+var totalQuestions = 4;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
