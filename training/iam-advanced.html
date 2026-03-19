@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IAM Advanced Practice Exam - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">IAM</span>
+            <span>Advanced Practice Exam</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <a href="../training.html" class="topbar-btn">Study Guide</a>
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>IAM Advanced Practice Exam</h2>
+        <p>2 questions &mdash; complex IAM policy interpretation scenarios</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/2</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 2 answered</div>
+</div>
+
+<!-- Q1 MC -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q1.</span><span>Matthew is reviewing the following IAM policy that has been attached to a developer role in his organization. He wants to understand what this policy enforces.<br><br>
+<div class="policy-block">{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "RegionLock",
+    "Effect": "Deny",
+    "NotAction": ["aws-portal:*", "iam:*", "organizations:*", "support:*", "sts:*"],
+    "Resource": "*",
+    "Condition": {
+      "StringNotEquals": {
+        "aws:RequestedRegion": ["eu-central-1", "eu-west-1"]
+      }
+    }
+  }]
+}</div>
+What does this policy do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It allows all actions only in eu-central-1 and eu-west-1, and explicitly allows billing, IAM, Organizations, Support, and STS in all regions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It denies billing, IAM, Organizations, Support, and STS actions unless they are performed in eu-central-1 or eu-west-1</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It denies all actions outside eu-central-1 and eu-west-1, except for billing, IAM, Organizations, Support, and STS which remain usable in any region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It denies all actions in eu-central-1 and eu-west-1, except for billing, IAM, Organizations, Support, and STS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> It denies all actions outside eu-central-1 and eu-west-1, except for billing, IAM, Organizations, Support, and STS which remain usable in any region.<br><br>
+
+<strong>How to Think About This:</strong><br>
+This policy stacks <strong>three negations</strong>: <em>Deny</em> + <em>NotAction</em> + <em>StringNotEquals</em>. The key to reading it is to resolve each negation step by step rather than trying to parse it all at once.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Effect: Deny</em> &mdash; This policy <strong>blocks</strong> actions. It does not grant any permissions. A separate Allow policy is still needed for users to actually do anything.<br><br>
+
+<em>NotAction</em> &mdash; This is the inverse of <code>Action</code>. Instead of specifying which actions to deny, it specifies which actions are <strong>exempt</strong> from the deny. The five exempted services (<em>aws-portal</em>, <em>iam</em>, <em>organizations</em>, <em>support</em>, <em>sts</em>) are all <strong>global services</strong> that do not operate in a specific region. Restricting them by region would break core account functionality.<br><br>
+
+<em>StringNotEquals on aws:RequestedRegion</em> &mdash; This condition triggers the deny only when the request is made <strong>outside</strong> the listed regions. If the region <em>is</em> eu-central-1 or eu-west-1, the condition does not match and the deny does not fire.<br><br>
+
+<strong>Resolving the logic:</strong><br>
+1. <strong>Deny</strong> applies to everything...<br>
+2. ...<strong>except</strong> the five global services (NotAction exempts them)...<br>
+3. ...but <strong>only when</strong> the region is NOT eu-central-1 or eu-west-1 (Condition).<br><br>
+
+Result: Regional services (EC2, S3, Lambda, etc.) are blocked outside the two EU regions. Global services work everywhere.<br><br>
+
+<strong>Why C is correct:</strong> This accurately describes the three-negation logic. Actions outside the two EU regions are denied, but the five global services are carved out so they continue to work regardless of region. This is a standard <strong>region-restriction policy</strong> used in AWS to enforce data residency or compliance requirements.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) It allows all actions only in eu-central-1 and eu-west-1</em> &mdash; This policy has Effect: <em>Deny</em>, not Allow. It does not grant any permissions. A deny-only policy acts as a guardrail; separate Allow policies are still required. Also, it does not "explicitly allow" the five services &mdash; it merely exempts them from the deny.<br>
+<em>B) It denies billing, IAM, Organizations, Support, and STS unless in EU regions</em> &mdash; This is backwards. <code>NotAction</code> means those five services are <strong>excluded</strong> from the deny. Everything <em>else</em> is denied outside the EU regions, not those five.<br>
+<em>D) It denies all actions in eu-central-1 and eu-west-1</em> &mdash; This reverses the region condition. <code>StringNotEquals</code> means the deny fires when the region is <strong>NOT</strong> in the list. Actions <em>inside</em> eu-central-1 and eu-west-1 are unaffected by this policy.
+</div>
+</div>
+
+<!-- Q2 MC -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q2.</span><span>A company wants to restrict all AWS usage to the us-east-1 and us-west-2 regions. A junior administrator creates the following SCP and attaches it to an organizational unit (OU):<br><br>
+<div class="policy-block">{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "RegionRestrict",
+    "Effect": "Deny",
+    "Action": "*",
+    "Resource": "*",
+    "Condition": {
+      "StringNotEquals": {
+        "aws:RequestedRegion": ["us-east-1", "us-west-2"]
+      }
+    }
+  }]
+}</div>
+After applying this policy, developers report that they can launch EC2 instances in us-east-1 but they <strong>cannot create IAM roles or view their AWS billing dashboard</strong>. What is the most likely cause and the correct fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The SCP is too restrictive because it uses "Action": "*". The fix is to replace it with specific service actions like "Action": ["ec2:*", "s3:*", "lambda:*"] for the services the developers need.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The policy uses "Action": "*" instead of "NotAction", which means it denies ALL services outside the two regions &mdash; including global services like IAM and Billing that don't operate in any specific region. The fix is to replace "Action": "*" with "NotAction" and list the global services that should be exempt (e.g., iam:*, aws-portal:*, sts:*, support:*, organizations:*).</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">IAM and Billing require a separate Allow statement in the SCP. The fix is to add a second statement with "Effect": "Allow" for "iam:*" and "aws-portal:*" with "Resource": "*".</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The Condition key "aws:RequestedRegion" does not apply to IAM or Billing. The fix is to add a second Condition using "aws:PrincipalOrgID" to allow IAM and Billing access.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The policy uses "Action": "*" instead of "NotAction", which denies global services outside the listed regions. The fix is to use "NotAction" to exempt global services.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see a <strong>region-restriction policy that breaks global services</strong>, the root cause is almost always that <code>Action: *</code> was used instead of <code>NotAction</code>. Global services like IAM, STS, Billing, and Organizations do not have a regional endpoint &mdash; their API calls are not considered to be "in" us-east-1 or us-west-2, so a region-based deny blocks them entirely.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Global Services vs. Regional Services</em> &mdash; Most AWS services (EC2, S3, Lambda, RDS) operate within specific regions. However, several services are <strong>global</strong> &mdash; they don't belong to any particular region:<br>
+&bull; <em>IAM</em> (Identity and Access Management) &mdash; roles, users, policies are global<br>
+&bull; <em>aws-portal / billing</em> &mdash; cost management is account-wide<br>
+&bull; <em>STS</em> (Security Token Service) &mdash; has global and regional endpoints<br>
+&bull; <em>AWS Organizations</em> &mdash; account management is global<br>
+&bull; <em>AWS Support</em> &mdash; support cases are not region-specific<br><br>
+
+<em>Action vs. NotAction</em> &mdash; <code>"Action": "*"</code> matches <strong>every</strong> AWS API call, including global services. <code>"NotAction": ["iam:*", "aws-portal:*", ...]</code> matches every API call <strong>except</strong> the listed ones, effectively carving out exemptions. In region-restriction policies, <code>NotAction</code> is critical for keeping global services functional.<br><br>
+
+<strong>The Correct Pattern:</strong><br>
+Replace <code>"Action": "*"</code> with:<br>
+<code>"NotAction": ["iam:*", "aws-portal:*", "sts:*", "support:*", "organizations:*"]</code><br>
+This denies all regional services outside us-east-1 and us-west-2, while leaving global services unaffected by the region condition.<br><br>
+
+<strong>Why B is correct:</strong> This correctly identifies both the root cause (global services blocked by <code>Action: *</code> combined with a region condition they can't satisfy) and the correct fix (<code>NotAction</code> to exempt global services). This is the AWS-recommended pattern for region-restriction SCPs.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Replace with specific service actions</em> &mdash; While listing specific services would technically work for those services, it misses the fundamental issue: global services need to be <strong>exempted</strong>, not just omitted. Also, maintaining a list of every regional service action is impractical and error-prone. <code>NotAction</code> is the correct mechanism because it automatically covers all current and future regional services while explicitly exempting only the small set of global ones.<br>
+<em>C) Add a separate Allow statement in the SCP</em> &mdash; SCPs work differently from IAM policies. An explicit <strong>Deny</strong> in an SCP <strong>always overrides</strong> any Allow &mdash; even within the same SCP. Adding an Allow for IAM and Billing would have no effect because the Deny with <code>Action: *</code> still matches those services and takes precedence. The deny must be scoped to not match global services in the first place.<br>
+<em>D) Use aws:PrincipalOrgID condition</em> &mdash; <code>aws:PrincipalOrgID</code> is a condition key that checks whether the calling principal belongs to a specific AWS Organization. It has nothing to do with region restrictions or global service access. This would not solve the problem of global services being denied by the region condition.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 2;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>
