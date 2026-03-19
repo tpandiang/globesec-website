@@ -106,11 +106,11 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
 <div class="score-banner">
     <div class="score-banner-left">
         <h2>IAM Advanced Practice Exam</h2>
-        <p>4 questions &mdash; IAM policies, S3 security &amp; access control scenarios</p>
+        <p>6 questions &mdash; IAM policies, S3 security &amp; access control scenarios</p>
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/4</div>
+            <div class="score-big" id="overallScore">0/6</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -289,10 +289,94 @@ This question builds on the hotlinking concept from Q3 but adds a twist: pre-sig
 </div>
 </div>
 
+<!-- Q5 MC -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q5.</span><span>NovaTech Solutions is migrating its development and QA environments to AWS using separate accounts for each environment. Both accounts are linked to a central management account through AWS Organizations with Consolidated Billing enabled.<br><br>To control costs, NovaTech wants administrators in the management account to be able to stop, terminate, or delete resources running in the Dev and QA accounts when spending thresholds are exceeded.<br><br>What is the best approach to grant this access?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create IAM users in the management account with full Administrator permissions. Create cross-account roles in the Dev and QA accounts that grant resource access by inheriting permissions from the management account.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create IAM users and a cross-account role in the management account that grants full Administrator access to the Dev and QA accounts.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create IAM users in the management account with permission to assume a role. Create cross-account roles in the Dev and QA accounts that have permission to stop, delete, and terminate resources. Configure the trust policy to allow the management account to assume these roles.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Link the accounts using Consolidated Billing. This will automatically give IAM users in the management account access to manage resources in the Dev and QA accounts.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Create IAM users with sts:AssumeRole permission in the management account, and create scoped cross-account roles in the target accounts.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"management account needs to manage resources in member accounts"</strong>, the pattern is always <em>cross-account IAM roles</em>. The key principle is <strong>least privilege</strong>: the roles in the target accounts should only have the specific permissions needed (stop, delete, terminate) &mdash; not full admin. The role lives in the <em>target</em> account (where the resources are), and the <em>trust policy</em> on that role specifies who can assume it.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Cross-Account Role Assumption (sts:AssumeRole)</em> &mdash; This is the standard AWS mechanism for granting access across accounts. It involves two pieces:<br>
+&bull; <strong>Trust policy</strong> (on the role in the target account) &mdash; specifies which AWS account or principal is <em>allowed</em> to assume the role. Example: <code>"Principal": {"AWS": "arn:aws:iam::123456789012:root"}</code><br>
+&bull; <strong>Permission policy</strong> (on the role in the target account) &mdash; defines what the role <em>can do</em> once assumed. In this case: <code>ec2:StopInstances</code>, <code>ec2:TerminateInstances</code>, etc.<br>
+&bull; <strong>IAM policy</strong> (on the user in the management account) &mdash; grants <code>sts:AssumeRole</code> for the target role ARN.<br><br>
+
+<em>Least Privilege</em> &mdash; The question asks administrators to stop, delete, and terminate resources &mdash; not to do <em>everything</em>. The cross-account role should be scoped to exactly those actions. Giving full Administrator access violates least privilege and creates unnecessary risk.<br><br>
+
+<em>Consolidated Billing vs. IAM Access</em> &mdash; These are completely separate concepts. Consolidated Billing groups multiple accounts under one payer for billing purposes (volume discounts, single invoice). It grants <strong>zero IAM permissions</strong> &mdash; no cross-account resource access whatsoever.<br><br>
+
+<strong>Why C is correct:</strong> This follows the AWS-recommended cross-account access pattern with least privilege. The roles in Dev and QA are scoped to only stop/delete/terminate permissions (not full admin). The management account users have only <code>sts:AssumeRole</code> permission. The trust policy explicitly grants the management account access. Every component follows least privilege.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Full Admin + inheriting permissions from management account</em> &mdash; Two problems: (1) Full Administrator permissions in the management account violates least privilege. (2) Cross-account roles do <strong>not inherit permissions</strong> from the source account. When you assume a role, you temporarily <em>give up</em> your original permissions and operate with <em>only</em> the permissions attached to the assumed role. There is no inheritance mechanism.<br>
+<em>B) Cross-account role in the management account with full Admin</em> &mdash; The role must be created in the <strong>target accounts</strong> (Dev and QA), not the management account. A role in the management account cannot grant access to resources in other accounts. Also, full Admin access violates least privilege &mdash; the requirement is only to stop, delete, and terminate.<br>
+<em>D) Consolidated Billing grants resource access</em> &mdash; This is a common misconception. Consolidated Billing is purely a <strong>billing feature</strong>. It combines usage across accounts for a single invoice and volume discounts. It does not create any IAM trust relationships, roles, or permissions. An IAM user in the management account has zero ability to manage resources in member accounts through billing alone.
+</div>
+</div>
+
+<!-- Q6 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q6.</span><span>A security architect is setting up cross-account access so that a security team in Account A (111111111111) can investigate incidents in Account B (222222222222). The following IAM role trust policy is configured in Account B:<br><br>
+<div class="policy-block">{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "AWS": "arn:aws:iam::111111111111:root"
+    },
+    "Action": "sts:AssumeRole",
+    "Condition": {
+      "Bool": {
+        "aws:MultiFactorAuthPresent": "true"
+      }
+    }
+  }]
+}</div>
+A security analyst in Account A tries to assume this role but receives an <strong>Access Denied</strong> error. The analyst has a valid IAM user with an <code>sts:AssumeRole</code> policy that targets the correct role ARN. What is the most likely cause?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The trust policy uses "root" as the principal, which only allows the root user of Account A to assume the role &mdash; not individual IAM users</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Cross-account role assumption requires the accounts to be in the same AWS Organization &mdash; these accounts are not in an organization together</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The role's permission policy is empty, so even though the analyst can assume it, the Access Denied occurs when trying to perform any action</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The trust policy requires MFA (aws:MultiFactorAuthPresent must be true), and the analyst has not authenticated with MFA before calling sts:AssumeRole</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The analyst has not authenticated with MFA before attempting to assume the role.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>Access Denied on sts:AssumeRole</strong> and the trust policy looks correct, check the <strong>Conditions</strong>. A condition like <code>aws:MultiFactorAuthPresent: true</code> means the caller must have an active MFA session. If the analyst is using long-term access keys (programmatic access) without an MFA token, this condition fails and the assume-role call is denied.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Trust Policy Conditions</em> &mdash; A trust policy can include conditions that must be met <em>in addition</em> to the principal match. <code>aws:MultiFactorAuthPresent</code> checks whether the API caller authenticated with a second factor. This is a common security hardening measure for cross-account roles that access sensitive environments.<br><br>
+
+<em>How MFA Works with AssumeRole</em> &mdash; To satisfy this condition, the analyst must:<br>
+1. Call <code>sts:GetSessionToken</code> with their MFA device serial number and current TOTP code.<br>
+2. Use the <strong>temporary credentials</strong> returned by GetSessionToken to call <code>sts:AssumeRole</code>.<br>
+If using the AWS Console, the console handles MFA at login time. If using the CLI, the analyst must explicitly pass <code>--serial-number</code> and <code>--token-code</code>.<br><br>
+
+<em>"root" in a Principal</em> &mdash; In a trust policy, <code>arn:aws:iam::111111111111:root</code> means <strong>the entire account</strong> &mdash; all IAM users and roles in Account A are eligible to assume this role (subject to their own IAM policies). It does <strong>not</strong> mean only the literal root user.<br><br>
+
+<strong>Why D is correct:</strong> The trust policy explicitly requires <code>aws:MultiFactorAuthPresent: true</code>. If the analyst calls <code>sts:AssumeRole</code> without an active MFA session (e.g., using plain access keys from the CLI), the condition evaluates to false and the request is denied &mdash; even though the principal and action match perfectly.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) "root" only allows the root user</em> &mdash; This is a very common misconception. In a trust policy, <code>:root</code> refers to the <strong>entire AWS account</strong> as a principal, not the literal root user. Any IAM user or role in Account A that has an <code>sts:AssumeRole</code> policy can assume this role. If you wanted to restrict to a specific user, you would use <code>arn:aws:iam::111111111111:user/username</code>.<br>
+<em>B) Accounts must be in the same Organization</em> &mdash; Cross-account role assumption works between <strong>any two AWS accounts</strong> regardless of whether they are in the same Organization. You just need a matching trust policy in the target account and an <code>sts:AssumeRole</code> permission in the source account. Organizations enable additional features (SCPs, organization trails) but are not required for cross-account roles.<br>
+<em>C) Empty permission policy</em> &mdash; An empty permission policy would cause Access Denied when the analyst tries to <em>do something</em> after assuming the role, not during the <code>sts:AssumeRole</code> call itself. The error described in the question occurs <em>when trying to assume the role</em>, which means the trust policy evaluation is failing &mdash; pointing to the MFA condition.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 4;
+var totalQuestions = 6;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
