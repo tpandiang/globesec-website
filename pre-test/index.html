@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/11</div>
+            <div class="score-big" id="overallScore">0/12</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -580,10 +580,46 @@ All fully managed, continuous, no custom code, no servers to maintain.<br><br>
 </div>
 </div>
 
+<!-- Q12 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q12.</span><span>An AWS Lambda function reads metadata from an Amazon S3 object and stores the metadata in an Amazon DynamoDB table. The function runs whenever an object is stored within the S3 bucket.<br><br>How should a security engineer give the Lambda function access to the DynamoDB table?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create a VPC endpoint for DynamoDB within a VPC. Configure the Lambda function to access resources in the VPC.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create a resource policy that grants the Lambda function permissions to write to the DynamoDB table. Attach the resource policy to the Lambda function.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create an IAM user with permissions to write to the DynamoDB table. Store an access key for that user in the Lambda environment variables.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create an IAM service role with permissions to write to the DynamoDB table. Associate that role with the Lambda function.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Create an IAM service role (Lambda execution role) with DynamoDB write permissions.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"Lambda needs access to another AWS service"</strong>, the answer is always <em>IAM execution role</em>. This is the same pattern as EC2 instance roles &mdash; AWS services get permissions through IAM roles, never through embedded credentials or IAM users.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Lambda Execution Role</em> &mdash; Every Lambda function has an <strong>execution role</strong> that defines what AWS services and resources the function can access. When Lambda runs your function, it assumes this role and receives temporary credentials automatically. The role needs:<br>
+&bull; A <strong>trust policy</strong> allowing <code>lambda.amazonaws.com</code> to assume it<br>
+&bull; A <strong>permission policy</strong> with the actions needed (in this case <code>dynamodb:PutItem</code>, <code>s3:GetObject</code>)<br><br>
+
+<em>How It Works</em>:<br>
+1. S3 event triggers Lambda (S3 notification configuration handles this)<br>
+2. Lambda assumes the execution role automatically<br>
+3. Function reads the S3 object metadata using the role's <code>s3:GetObject</code> permission<br>
+4. Function writes to DynamoDB using the role's <code>dynamodb:PutItem</code> permission<br>
+5. Temporary credentials are managed entirely by AWS &mdash; no secrets in code<br><br>
+
+<strong>Why D is correct:</strong> An IAM service role is the AWS-recommended and most secure way to grant Lambda access to other services. Credentials are temporary, auto-rotated, and never exposed. The role can be scoped to the exact DynamoDB table and actions needed (least privilege).<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) VPC endpoint for DynamoDB</em> &mdash; A VPC endpoint controls <strong>network routing</strong> (keeping traffic within the AWS network instead of the internet). It does NOT grant <strong>IAM permissions</strong>. Even with a VPC endpoint, Lambda still needs an execution role with <code>dynamodb:PutItem</code> permission. Also, Lambda doesn't need to be in a VPC to access DynamoDB &mdash; both are accessible over the AWS network by default. Adding VPC configuration to Lambda actually increases complexity and cold start times.<br>
+<em>B) Resource policy on Lambda function</em> &mdash; Lambda resource policies control <strong>who can invoke the function</strong> (e.g., allowing S3 to trigger it). They do NOT grant the function permissions to access other services. Also, DynamoDB does not support resource-based policies &mdash; access is controlled entirely through IAM identity policies and roles.<br>
+<em>C) IAM user with access key in environment variables</em> &mdash; This is a <strong>critical security anti-pattern</strong>. Storing access keys in environment variables means: (1) long-term credentials that don't auto-rotate, (2) credentials visible in the Lambda console and potentially in logs, (3) credentials that could be leaked through environment variable exposure. IAM roles provide the same access with temporary, auto-rotating credentials and zero secrets to manage.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 11;
+var totalQuestions = 12;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
