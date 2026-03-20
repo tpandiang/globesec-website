@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/10</div>
+            <div class="score-big" id="overallScore">0/11</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -543,10 +543,47 @@ All of this is <strong>fully managed</strong> &mdash; no servers, no custom auth
 </div>
 </div>
 
+<!-- Q11 MC -->
+<div class="question" data-type="mc" data-answer="0">
+<div class="question-text"><span class="question-num">Q11.</span><span>A company wants to deploy a legacy application on Amazon EC2 instances. The legacy application outputs all logs to a local text file. The company must continually monitor application logs for security-related messages.<br><br>Which solution will meet these requirements with the LEAST operational overhead?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Install the Amazon CloudWatch agent on the EC2 instances. Configure the CloudWatch agent to stream the log files to CloudWatch Logs. Create CloudWatch metric filters to detect security patterns. Set up CloudWatch alarms based on the metrics.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Install the Amazon CloudWatch agent on the EC2 instances. Create an AWS Lambda function to periodically scan the local log files. Configure Amazon EventBridge rules to trigger the Lambda function every 5 minutes to send findings to Amazon SNS.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Install the Amazon CloudWatch agent and the AWS Systems Manager Agent (SSM Agent) on the EC2 instances. Use Systems Manager Run Command to periodically collect logs and send the logs to CloudWatch Logs. Create CloudWatch Logs Insights queries to search for security events.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Install the Amazon CloudWatch agent on the EC2 instances and configure AWS Security Hub integration. Create custom log parsers in Security Hub to analyze the streamed logs and generate security findings based on detected patterns.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> CloudWatch agent &rarr; CloudWatch Logs &rarr; metric filters &rarr; alarms.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"EC2 local log files" + "continuous monitoring" + "least overhead"</strong>, the answer is the standard CloudWatch pipeline: agent streams logs &rarr; metric filters detect patterns &rarr; alarms notify. This is the native, fully managed approach with zero custom code.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>CloudWatch Agent Log Streaming</em> &mdash; The CloudWatch agent can be configured to <strong>tail</strong> local log files (just like <code>tail -f</code>) and continuously stream new log lines to CloudWatch Logs. You specify the file path in the agent config:<br>
+<code>"file_path": "/var/log/app/application.log"</code><br>
+The agent handles buffering, retries, and delivery automatically. The legacy app doesn't need any changes &mdash; it keeps writing to its text file as normal.<br><br>
+
+<em>CloudWatch Metric Filters</em> &mdash; Pattern-matching rules applied to log streams. You define a filter pattern (e.g., <code>"ERROR"</code>, <code>"unauthorized"</code>, <code>"failed login"</code>) and CloudWatch counts occurrences as a <strong>custom metric</strong>. Example: every time "SECURITY_VIOLATION" appears in the log, the metric increments by 1.<br><br>
+
+<em>CloudWatch Alarms</em> &mdash; Threshold-based alerts on metrics. When the security pattern metric exceeds a threshold (e.g., &gt; 5 occurrences in 5 minutes), the alarm triggers an SNS notification or auto-remediation action.<br><br>
+
+<em>The Complete Pipeline</em>:<br>
+<code>Log file &rarr; CW Agent &rarr; CW Logs &rarr; Metric Filter &rarr; Custom Metric &rarr; Alarm &rarr; SNS/Action</code><br>
+All fully managed, continuous, no custom code, no servers to maintain.<br><br>
+
+<strong>Why A is correct:</strong> This is the standard AWS pattern for monitoring application logs from EC2. Every component is fully managed: the agent streams logs continuously, metric filters detect patterns in real time, and alarms provide automated notifications. No Lambda functions, no Run Commands, no custom parsers &mdash; just configuration.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) Lambda scanning local log files every 5 minutes</em> &mdash; Two problems: (1) Lambda <strong>cannot access local files on EC2 instances</strong> &mdash; Lambda runs in its own isolated environment, not on the EC2 instance. (2) Even if it could, polling every 5 minutes is not "continuous" monitoring and adds a Lambda function to build and maintain. The CloudWatch agent already handles log streaming natively.<br>
+<em>C) SSM Run Command to periodically collect logs</em> &mdash; Run Command executes commands on instances on-demand or on a schedule. Using it to periodically collect logs is a <strong>polling approach</strong> (not continuous), requires scheduling and managing the command, and adds SSM as an unnecessary dependency. The CloudWatch agent already streams logs continuously without needing Run Command.<br>
+<em>D) Security Hub custom log parsers</em> &mdash; Security Hub aggregates security <strong>findings</strong> from AWS services (GuardDuty, Inspector, Config, etc.). It does <strong>not support custom log parsers</strong> or direct log analysis. Security Hub doesn't ingest raw application logs &mdash; it works with structured security findings in the AWS Security Finding Format (ASFF). This capability simply doesn't exist.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 10;
+var totalQuestions = 11;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
