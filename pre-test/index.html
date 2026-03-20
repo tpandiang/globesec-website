@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/15</div>
+            <div class="score-big" id="overallScore">0/16</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -741,10 +741,48 @@ This eliminates A and B (can't modify existing flow logs) and C (Athena pipeline
 </div>
 </div>
 
+<!-- Q16 MC -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q16.</span><span>A company has a web application that uses an Application Load Balancer (ALB) and an Auto Scaling group with multiple Amazon EC2 instances as the target group. A security engineer needs to analyze the EC2 instance logs and determine the <strong>real IP address of the originating client</strong> for specific requests.<br><br>Which solution will meet these requirements?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Analyze the EC2 instance logs to locate the client IP address under the "Client IP" field in the ALB settings.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Configure Amazon CloudWatch and enable detailed monitoring.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Modify the ALB listener rules to add forward actions with "X-Forwarded-For: Client IP" in the header.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable VPC Flow Logs for the subnets that contain the EC2 instances. Use Amazon Athena to query the logs for client IP addresses and request patterns.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Modify ALB listener rules to add the <code>X-Forwarded-For</code> header with the client IP.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"ALB" + "real client IP" + "EC2 instance logs"</strong>, the answer is <code>X-Forwarded-For</code> header. This is a fundamental concept: when traffic passes through a load balancer, the EC2 instance sees the <strong>ALB's IP</strong> as the source, not the client's. The <code>X-Forwarded-For</code> header preserves the original client IP through the proxy chain.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>The Problem</em> &mdash; When a client connects to an ALB, the ALB terminates the client's TCP connection and opens a <strong>new</strong> connection to the EC2 instance. From the EC2 instance's perspective, the source IP is the ALB's private IP &mdash; the real client IP is lost. This is the fundamental challenge with any reverse proxy or load balancer.<br><br>
+
+<em>X-Forwarded-For Header</em> &mdash; An HTTP header that ALBs add to requests before forwarding them to targets. It contains the <strong>original client IP address</strong>. Format:<br>
+<code>X-Forwarded-For: client-ip, proxy1-ip, proxy2-ip</code><br>
+The leftmost IP is the original client. By default, ALBs add this header, but you can explicitly configure it in listener rules to ensure consistent, standardized formatting.<br><br>
+
+<em>Related ALB Headers</em>:<br>
+&bull; <code>X-Forwarded-For</code> &mdash; Original client IP address<br>
+&bull; <code>X-Forwarded-Proto</code> &mdash; Original protocol (HTTP or HTTPS)<br>
+&bull; <code>X-Forwarded-Port</code> &mdash; Original port used by the client<br><br>
+
+Your application on EC2 must be configured to read the <code>X-Forwarded-For</code> header instead of the TCP source IP to get the real client address. Most web servers (Apache, Nginx) have modules for this.<br><br>
+
+<strong>Why C is correct:</strong> Modifying ALB listener rules to explicitly add the <code>X-Forwarded-For</code> header ensures the original client IP is consistently available in a standardized format. The EC2 instances can then parse this header from their application logs to determine the real client IP for any request.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) "Client IP" field in EC2 instance logs</em> &mdash; EC2 instance logs do <strong>not</strong> automatically contain a "Client IP" field from the ALB. The ALB doesn't inject this into EC2 system logs. The client IP information must be carried via the <code>X-Forwarded-For</code> HTTP header, which the application (not the OS) needs to parse from incoming requests.<br>
+<em>B) CloudWatch detailed monitoring</em> &mdash; Detailed monitoring provides <strong>metrics</strong> (CPU, network, disk) at 1-minute intervals instead of 5-minute. It does not provide application-level information like client IP addresses. CloudWatch metrics are aggregate numbers, not per-request data. You cannot determine which client IP made which request from CloudWatch metrics.<br>
+<em>D) VPC Flow Logs + Athena</em> &mdash; VPC Flow Logs capture <strong>Layer 3/4 network data</strong>: source IP, destination IP, ports, protocol, bytes. However, Flow Logs for the EC2 instances would show the <strong>ALB's IP</strong> as the source &mdash; not the original client IP. The original client IP is only visible in the ALB's Flow Logs (or ALB access logs), not the EC2 instance's Flow Logs. Additionally, Flow Logs cannot correlate client IPs with specific application-level HTTP requests.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 15;
+var totalQuestions = 16;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
