@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/16</div>
+            <div class="score-big" id="overallScore">0/17</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -779,10 +779,46 @@ Your application on EC2 must be configured to read the <code>X-Forwarded-For</co
 </div>
 </div>
 
+<!-- Q17 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q17.</span><span>A company configured AWS CloudTrail to send logs to an Amazon S3 bucket. The company determined that IAM users created unapproved AWS resources. A security engineer must design a solution to analyze all <strong>future</strong> CloudTrail logs to determine which API calls users made to create resources. The solution must use a <strong>single query</strong> to determine:<br><br>&bull; The user name of the IAM user<br>&bull; The IAM ARN that called the API<br>&bull; The name of the API event<br>&bull; The time at which the event occurred<br><br>Which solution will meet these requirements?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Configure Amazon CloudWatch Insights in the account. Query CloudWatch Insights to look for resource creation events.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use CloudTrail to send logs directly into an Amazon Athena table. Use an Athena query that can access nested fields within the CloudTrail event.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use CloudTrail to send logs directly into an external Amazon Redshift Spectrum table. Use a Redshift Spectrum query that can access nested fields within the CloudTrail event.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Configure CloudTrail Lake with an event data store. Create a CloudTrail Lake SQL query that can access nested fields within the CloudTrail event.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Configure CloudTrail Lake with an event data store and use SQL queries.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"analyze CloudTrail logs" + "single query" + "nested fields" + "future logs"</strong>, the answer is <em>CloudTrail Lake</em>. It's the native, purpose-built query engine for CloudTrail events with built-in SQL support for nested event fields like <code>userIdentity.userName</code> and <code>userIdentity.arn</code>.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>CloudTrail Lake</em> &mdash; A managed data lake within CloudTrail that lets you run SQL queries directly on CloudTrail events. Key features:<br>
+&bull; <strong>Event Data Store</strong> &mdash; A collection of CloudTrail events that you can query. You create one and it automatically collects future events.<br>
+&bull; <strong>SQL Queries</strong> &mdash; Write standard SQL with support for <strong>nested fields</strong>. Example:<br>
+<code>SELECT userIdentity.userName, userIdentity.arn, eventName, eventTime FROM event_data_store WHERE eventName LIKE 'Create%'</code><br>
+&bull; <strong>Single location</strong> &mdash; No need to set up S3, Athena tables, or external schemas. Query directly within CloudTrail.<br>
+&bull; <strong>Future logs only</strong> &mdash; CloudTrail Lake cannot query past logs. It collects events from the point the event data store is created onward. The question specifically asks about "all future CloudTrail logs," which aligns perfectly.<br><br>
+
+<em>CloudTrail Lake vs. Athena</em>:<br>
+&bull; <strong>CloudTrail Lake</strong>: Zero setup &mdash; create event data store, start querying. Built-in nested field support. No S3 bucket or table schema needed.<br>
+&bull; <strong>Athena</strong>: Requires creating a table definition, pointing to S3 bucket, managing partitions. Works on historical logs in S3 but requires more setup.<br><br>
+
+<strong>Why D is correct:</strong> CloudTrail Lake provides the simplest path: create an event data store, and immediately run SQL queries against future events. It natively supports nested fields (<code>userIdentity.userName</code>, <code>userIdentity.arn</code>, <code>eventName</code>, <code>eventTime</code>) in a single query. No additional services, no table schemas, no data pipelines.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) CloudWatch Insights</em> &mdash; CloudWatch Logs Insights can query logs, but CloudTrail logs must first be <strong>configured to send to CloudWatch Logs</strong> &mdash; they don't go there by default. The question says logs go to S3. Also, CloudWatch Insights cannot query CloudTrail logs directly from S3. This adds an extra configuration step (setting up CloudTrail &rarr; CloudWatch Logs integration) which is more operational overhead.<br>
+<em>B) CloudTrail to Athena table directly</em> &mdash; CloudTrail <strong>cannot send logs directly into an Athena table</strong>. Athena is a query engine that reads data from S3. You must first create an Athena table definition that points to your CloudTrail S3 bucket, define the schema, and manage partitions. This requires additional setup steps beyond what CloudTrail Lake needs.<br>
+<em>C) CloudTrail to Redshift Spectrum directly</em> &mdash; CloudTrail <strong>cannot send logs directly into a Redshift Spectrum table</strong>. Redshift Spectrum queries data in S3 through an external schema. You must create an external schema, define the table structure, and configure a Redshift cluster. This is the most complex option with the highest operational overhead.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 16;
+var totalQuestions = 17;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
