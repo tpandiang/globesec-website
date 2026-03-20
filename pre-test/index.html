@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/7</div>
+            <div class="score-big" id="overallScore">0/8</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -385,10 +385,84 @@ By selecting a policy that enforces TLS 1.2 minimum, the ALB will <strong>reject
 </div>
 </div>
 
+<!-- Q8 MC -->
+<div class="question" data-type="mc" data-answer="0">
+<div class="question-text"><span class="question-num">Q8.</span><span>A security team audits a role with the following identity policy attached:<br>
+<div class="policy-block">{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "s3:PutObject",
+      "s3:GetObjectAcl",
+      "s3:GetObject",
+      "s3:CreateBucket",
+      "rds:CreateDBSnapshot",
+      "rds:CopyDBSnapshot",
+      "ec2:CreateImage"
+    ],
+    "Resource": "*"
+  }]
+}</div>
+The security team then attaches the following <strong>permissions boundary</strong> to the role:<br>
+<div class="policy-block">{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "rds:*",
+      "iam:*"
+    ],
+    "Resource": "*"
+  }]
+}</div>
+Which actions will the updated permissions allow?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">rds:CreateDBSnapshot and rds:CopyDBSnapshot only.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">rds:*, iam:*, s3:PutObject, s3:GetObjectAcl, s3:GetObject, s3:CreateBucket, and ec2:CreateImage.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">rds:* and iam:* only.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">s3:PutObject, s3:GetObjectAcl, s3:GetObject, s3:CreateBucket, and ec2:CreateImage only.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Only <code>rds:CreateDBSnapshot</code> and <code>rds:CopyDBSnapshot</code>.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Permission Boundaries set the <strong>maximum ceiling</strong>. Effective permissions are the <strong>intersection</strong> (overlap) of the identity policy AND the boundary. Think of a Venn diagram &mdash; only actions that appear in <strong>BOTH</strong> circles are allowed.<br><br>
+
+<strong>Step-by-Step Evaluation:</strong><br>
+<em>Identity Policy allows</em>: s3:PutObject, s3:GetObjectAcl, s3:GetObject, s3:CreateBucket, rds:CreateDBSnapshot, rds:CopyDBSnapshot, ec2:CreateImage<br><br>
+
+<em>Permissions Boundary allows</em>: rds:* (all RDS actions), iam:* (all IAM actions)<br><br>
+
+<em>Intersection</em> (what's in BOTH):<br>
+&bull; <code>s3:PutObject</code> &mdash; in identity policy but <strong>NOT</strong> in boundary &rarr; <strong>BLOCKED</strong><br>
+&bull; <code>s3:GetObjectAcl</code> &mdash; in identity policy but <strong>NOT</strong> in boundary &rarr; <strong>BLOCKED</strong><br>
+&bull; <code>s3:GetObject</code> &mdash; in identity policy but <strong>NOT</strong> in boundary &rarr; <strong>BLOCKED</strong><br>
+&bull; <code>s3:CreateBucket</code> &mdash; in identity policy but <strong>NOT</strong> in boundary &rarr; <strong>BLOCKED</strong><br>
+&bull; <code>rds:CreateDBSnapshot</code> &mdash; in identity policy AND in boundary (<code>rds:*</code>) &rarr; <strong>ALLOWED</strong><br>
+&bull; <code>rds:CopyDBSnapshot</code> &mdash; in identity policy AND in boundary (<code>rds:*</code>) &rarr; <strong>ALLOWED</strong><br>
+&bull; <code>ec2:CreateImage</code> &mdash; in identity policy but <strong>NOT</strong> in boundary &rarr; <strong>BLOCKED</strong><br>
+&bull; <code>iam:*</code> &mdash; in boundary but <strong>NOT</strong> in identity policy &rarr; <strong>NOT GRANTED</strong> (boundaries don't grant permissions)<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Effective Permissions = Identity Policy &cap; Permissions Boundary</em><br>
+&bull; The boundary <strong>cannot grant</strong> permissions &mdash; it only sets the ceiling<br>
+&bull; The identity policy <strong>cannot exceed</strong> the boundary &mdash; even if it allows an action, the boundary must also allow it<br>
+&bull; <code>iam:*</code> in the boundary means IAM actions are <em>allowed to be granted</em>, but since the identity policy doesn't include any IAM actions, none are effective<br><br>
+
+<strong>Why A is correct:</strong> The only actions that exist in BOTH the identity policy and the permissions boundary are the two RDS snapshot actions. Everything else is either outside the boundary (S3, EC2) or outside the identity policy (IAM).<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) All actions combined</em> &mdash; This treats the boundary as <strong>additive</strong> (union), which is wrong. Boundaries are <strong>restrictive</strong> (intersection). The boundary doesn't add <code>iam:*</code> to the identity policy &mdash; it only caps what the identity policy can grant.<br>
+<em>C) rds:* and iam:*</em> &mdash; This assumes the boundary <strong>replaces</strong> the identity policy. Boundaries don't grant permissions. <code>iam:*</code> is in the boundary but not in the identity policy, so no IAM actions are effective. Also, <code>rds:*</code> in the boundary doesn't mean all RDS actions are granted &mdash; only the ones also in the identity policy (the two snapshot actions).<br>
+<em>D) S3 and EC2 actions only</em> &mdash; This is the inverse of the correct answer &mdash; these are exactly the actions that are <strong>blocked</strong> by the boundary. S3 and EC2 are in the identity policy but NOT in the boundary, so they are denied.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 7;
+var totalQuestions = 8;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
