@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/17</div>
+            <div class="score-big" id="overallScore">0/18</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -815,10 +815,59 @@ When you see <strong>"analyze CloudTrail logs" + "single query" + "nested fields
 </div>
 </div>
 
+<!-- Q18 MC -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q18.</span><span>A company has an AWS Lambda function that processes sensitive financial data from an Amazon S3 bucket. The security team notices suspicious patterns where miscalculations benefit one particular customer. The Lambda function has logging enabled at <strong>INFO level</strong>. The logs show successful execution but no details about data transformations:<br>
+<div class="policy-block">[INFO] Processing batch of 100 records
+[INFO] Successfully processed records
+[INFO] Processing completed
+REPORT RequestId: c2d62... Duration: 3287.49 ms</div>
+Despite successful execution messages, some processed records show unexpected modifications. A security engineer must provide a more thorough investigation of this issue.<br><br>Which action will meet this requirement?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Configure AWS Shield Advanced on the Lambda function. Enable Shield logging to analyze Lambda function behavior and potential security threats.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Change the Lambda function's logging level from INFO to DEBUG. Configure AWS X-Ray tracing in the Lambda function. Use Amazon CloudWatch Insights queries to analyze and discover patterns in the data transformations.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Move the Lambda function to a private VPC and attach a Network Load Balancer (NLB). Configure the NLB access logs and VPC Flow Logs to monitor function behavior and data transformations.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable Amazon GuardDuty on the S3 bucket and set up alerting rules. Configure GuardDuty findings to monitor for suspicious data access patterns and potential malicious activities.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Change logging to DEBUG + enable X-Ray tracing + use CloudWatch Insights queries.<br><br>
+
+<strong>How to Think About This:</strong><br>
+The clue is in the logs: <code>[INFO]</code> level shows "successfully processed" but gives <strong>zero detail about what actually happened to the data</strong>. The problem is <em>inside</em> the function (data transformations), not outside it (network, access patterns). You need <strong>application-level visibility</strong>, not network-level or threat-detection-level monitoring.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Lambda Logging Levels</em> &mdash; Lambda supports standard logging levels with increasing verbosity:<br>
+&bull; <strong>ERROR</strong> &mdash; Only errors<br>
+&bull; <strong>WARN</strong> &mdash; Warnings and errors<br>
+&bull; <strong>INFO</strong> &mdash; General operational messages (what's happening at a high level)<br>
+&bull; <strong>DEBUG</strong> &mdash; Detailed diagnostic information including <strong>variable values, calculation steps, and data transformations</strong><br><br>
+
+Switching from INFO to DEBUG reveals the actual processing logic: which records were modified, what calculations were performed, what values were used. This is exactly what's needed to investigate suspicious data modifications.<br><br>
+
+<em>AWS X-Ray Tracing</em> &mdash; X-Ray traces individual requests through your application. For Lambda, it shows:<br>
+&bull; How long each segment of processing took<br>
+&bull; Which downstream services were called (S3, DynamoDB, etc.)<br>
+&bull; Where errors or anomalies occurred in the transaction flow<br>
+X-Ray helps you trace <strong>specific transactions</strong> (e.g., the records for the suspicious customer) through the function to see exactly what happened.<br><br>
+
+<em>CloudWatch Logs Insights</em> &mdash; Once DEBUG logs are flowing, Insights lets you run queries to find patterns across thousands of log entries. Example: <code>filter @message like /customer_id=12345/ | stats count(*) by calculation_result</code>. This helps identify if certain records are being treated differently.<br><br>
+
+<em>The Investigation Pipeline</em>:<br>
+<code>DEBUG logs (see what happened) + X-Ray (trace specific transactions) + Insights (find patterns)</code><br><br>
+
+<strong>Why B is correct:</strong> This is the only option that provides <strong>application-level visibility</strong> into the Lambda function's internal operations. DEBUG logs show the actual data transformations, X-Ray traces specific transactions, and CloudWatch Insights identifies patterns across all executions. Together, they can reveal exactly how and why certain records are being modified differently.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) AWS Shield Advanced</em> &mdash; Shield Advanced protects against <strong>DDoS attacks</strong> (network layer). It monitors network traffic volume and patterns to detect and mitigate distributed attacks. It has zero visibility into a Lambda function's internal data processing logic. You can't investigate suspicious calculations with a DDoS protection service.<br>
+<em>C) VPC + NLB + Flow Logs</em> &mdash; NLB access logs and VPC Flow Logs capture <strong>network-level traffic</strong> (IPs, ports, bytes). They cannot see inside the Lambda function &mdash; they only see that a connection happened, not what the function did with the data. The problem is in the application logic, not in the network traffic. Moving Lambda to a VPC adds complexity without adding the needed visibility.<br>
+<em>D) GuardDuty on S3</em> &mdash; GuardDuty monitors for <strong>suspicious access patterns</strong> at the AWS account and service level (e.g., "who accessed the bucket from an unusual IP?"). It cannot see <strong>how</strong> the Lambda function processes data after retrieving it from S3. GuardDuty would detect if someone unauthorized accessed the bucket, but the issue here is what happens to the data <em>inside</em> the function, which GuardDuty has no visibility into.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 17;
+var totalQuestions = 18;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
