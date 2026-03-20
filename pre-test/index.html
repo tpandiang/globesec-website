@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/19</div>
+            <div class="score-big" id="overallScore">0/20</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -905,10 +905,46 @@ S3 access logs are written <strong>to the destination bucket</strong>, so focus 
 </div>
 </div>
 
+<!-- Q20 MC -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q20.</span><span>A global company uses AWS Organizations for its multi-account environment. The company needs an incident response framework that:<br><br>&bull; Automatically quarantines compromised resources across accounts<br>&bull; Preserves forensic evidence in an immutable format<br>&bull; Provides detailed analysis of the attack path<br>&bull; Maintains regulatory compliance<br><br>Which incident response framework configuration will meet these requirements?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Configure AWS Config with multi-account aggregators to detect noncompliant resources. Use AWS Control Tower to enforce controls during incidents. Store forensic evidence in Amazon S3 Glacier Flexible Retrieval with Vault Lock policies. Configure AWS X-Ray for attack path visualization.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Deploy AWS Security Hub as the central aggregation point with Organizations integration. Configure Security Hub automated response and remediation by using built-in AWS Systems Manager Automation runbooks. Store forensic data in Amazon S3 buckets with S3 Object Lock enabled. Implement Amazon Detective for attack path analysis.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Implement centralized Amazon CloudWatch Logs with subscription filters to detect incidents. Create an Amazon EventBridge rule to trigger AWS Step Functions workflows that orchestrate containment by using SCPs. Use AWS Backup with legal hold settings for forensic preservation.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Deploy Automated Forensics Orchestrator for Amazon EC2 with cross-account IAM roles. Use Amazon GuardDuty with delegated administrator for detection. Use Amazon EventBridge to trigger AWS Step Functions workflows that isolate affected resources by using VPC endpoint policies.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Security Hub + SSM Automation runbooks + S3 Object Lock + Amazon Detective.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Map each requirement to the correct service:<br>
+&bull; <strong>"Automatically quarantine across accounts"</strong> &rarr; Security Hub automated response with SSM Automation runbooks<br>
+&bull; <strong>"Immutable forensic evidence"</strong> &rarr; S3 Object Lock (WORM storage)<br>
+&bull; <strong>"Attack path analysis"</strong> &rarr; Amazon Detective<br>
+&bull; <strong>"Central aggregation"</strong> &rarr; Security Hub with Organizations integration<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Security Hub Automated Response &amp; Remediation</em> &mdash; Security Hub can trigger <strong>SSM Automation runbooks</strong> in response to findings. These runbooks can perform cross-account containment actions like isolating EC2 instances, revoking security group rules, or disabling access keys. Because SSM Automation supports cross-account execution, quarantine actions work consistently across all member accounts in the organization.<br><br>
+
+<em>S3 Object Lock (WORM)</em> &mdash; Provides <strong>Write Once, Read Many</strong> immutable storage. Two modes:<br>
+&bull; <strong>Governance mode</strong> &mdash; Protected but users with special permissions can override<br>
+&bull; <strong>Compliance mode</strong> &mdash; <strong>Nobody</strong> can delete or modify, not even root &mdash; for true forensic evidence preservation<br>
+Object Lock ensures forensic evidence (memory dumps, disk snapshots, log copies) cannot be tampered with, maintaining chain of custody for regulatory compliance.<br><br>
+
+<em>Amazon Detective</em> &mdash; Purpose-built for <strong>security investigation and attack path analysis</strong>. Detective automatically builds a behavior graph from CloudTrail logs, VPC Flow Logs, and GuardDuty findings. It visualizes relationships between users, IP addresses, and resources over time, making it possible to trace exactly how an attacker moved through your environment.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Config + Control Tower + S3 Glacier + X-Ray</em> &mdash; Multiple issues: (1) <strong>AWS Config</strong> monitors compliance but is not designed for real-time incident detection. (2) <strong>Control Tower guardrails</strong> are preventive/detective governance controls, not responsive incident handling tools. (3) <strong>S3 Glacier Flexible Retrieval</strong> has retrieval delays (minutes to hours) which impede timely forensic investigation. (4) <strong>X-Ray</strong> is for application performance tracing, NOT security attack path analysis. X-Ray traces API calls through microservices &mdash; it doesn't map attacker movement across accounts.<br>
+<em>C) CloudWatch Logs + SCPs + AWS Backup</em> &mdash; (1) <strong>Subscription filters</strong> alone could miss sophisticated attacks that don't match specific log patterns. (2) <strong>SCPs for containment</strong> are too broad &mdash; they apply at the account or OU level, potentially disrupting all legitimate operations in the account during an incident, not just the compromised resource. (3) <strong>AWS Backup with legal hold</strong> is for backup compliance, not forensic preservation &mdash; it lacks chain-of-custody features needed for proper digital forensics.<br>
+<em>D) Forensics Orchestrator + GuardDuty + VPC endpoint policies</em> &mdash; (1) <strong>Automated Forensics Orchestrator for EC2</strong> only handles EC2 instances, not other compromised resources (Lambda, S3, IAM). (2) <strong>VPC endpoint policies</strong> control access to AWS services, not to individual resources &mdash; they are not an effective isolation mechanism during incidents. (3) This configuration lacks immutable evidence storage, which is essential for forensic data integrity.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 19;
+var totalQuestions = 20;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
