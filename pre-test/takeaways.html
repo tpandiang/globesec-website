@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pre-Test Takeaways - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Theme cards */
+.theme-card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1rem; cursor: pointer;
+    border-left: 3px solid var(--accent);
+}
+.theme-card.orange { border-left-color: var(--aws); }
+.theme-card.green { border-left-color: var(--correct); }
+.theme-card.purple { border-left-color: var(--accent2); }
+.theme-header { display: flex; justify-content: space-between; align-items: center; }
+.theme-header h2 { font-size: 1rem; color: var(--white); font-weight: 700; }
+.theme-num { font-size: 0.7rem; color: var(--bg); background: var(--accent); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 800; }
+.theme-card.orange .theme-num { background: var(--aws); }
+.theme-card.green .theme-num { background: var(--correct); }
+.theme-card.purple .theme-num { background: var(--accent2); }
+.theme-toggle { font-size: 1.2rem; color: var(--text-muted); transition: transform 0.2s; }
+.theme-card.collapsed .theme-toggle { transform: rotate(-90deg); }
+.theme-card.collapsed .theme-body { display: none; }
+.theme-body { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+.theme-body p { font-size: 0.88rem; margin: 0.4rem 0; }
+.theme-body em { color: var(--accent); font-style: normal; }
+
+/* Section headers */
+.section-header {
+    font-size: 0.75rem; font-weight: 700; color: var(--aws); text-transform: uppercase;
+    letter-spacing: 1.5px; margin: 1.5rem 0 0.75rem; padding-bottom: 0.4rem;
+    border-bottom: 2px solid rgba(255, 153, 0, 0.2);
+}
+.section-header:first-of-type { margin-top: 0.5rem; }
+
+/* Tables */
+.ref-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; margin: 0.5rem 0; }
+.ref-table th {
+    background: var(--bg3); color: var(--accent); padding: 0.45rem 0.65rem;
+    text-align: left; font-weight: 600; font-size: 0.78rem;
+    text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid var(--accent);
+}
+.ref-table td { padding: 0.4rem 0.65rem; border-bottom: 1px solid var(--border); }
+.ref-table tr:hover td { background: rgba(0, 212, 255, 0.03); }
+
+/* Code blocks */
+pre {
+    background: #0d1b2a; color: #e2e8f0; padding: 0.8rem 1rem; border-radius: 6px;
+    overflow-x: auto; margin: 0.5rem 0; font-size: 0.78rem; line-height: 1.5;
+    border: 1px solid var(--border); font-family: 'Consolas', 'Courier New', monospace;
+}
+code {
+    background: rgba(0,212,255,0.08); color: #ff7eb6; padding: 0.1rem 0.35rem;
+    border-radius: 3px; font-size: 0.82rem; font-family: 'Consolas', monospace;
+}
+pre code { background: none; color: inherit; padding: 0; }
+
+ul { margin: 0.3rem 0 0.5rem 1.25rem; }
+li { font-size: 0.87rem; margin: 0.15rem 0; line-height: 1.5; }
+strong { color: var(--white); }
+
+/* Tool card */
+.tool-card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem 1.2rem; margin-bottom: 0.75rem;
+}
+.tool-card h3 { font-size: 0.95rem; color: var(--aws); margin-bottom: 0.3rem; border: none; padding: 0; }
+.tool-card .subtitle { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.6rem; font-style: italic; }
+
+/* Decision tree */
+.decision-tree {
+    background: #0d1b2a; border: 1px solid var(--border); border-radius: 8px;
+    padding: 1rem 1.2rem; margin: 0.75rem 0; font-family: 'Consolas', monospace;
+    font-size: 0.8rem; line-height: 1.8; color: #e2e8f0;
+}
+.decision-tree .q { color: var(--accent); }
+.decision-tree .a { color: var(--aws); }
+
+/* Pattern table */
+.pattern-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; margin: 0.75rem 0; }
+.pattern-table th {
+    background: var(--bg3); color: var(--aws); padding: 0.5rem 0.65rem;
+    text-align: left; font-weight: 700; font-size: 0.78rem; border-bottom: 2px solid var(--aws);
+}
+.pattern-table td { padding: 0.45rem 0.65rem; border-bottom: 1px solid var(--border); }
+.pattern-table tr:hover td { background: rgba(255, 153, 0, 0.04); }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SCS-C03</span>
+            <span>Pre-Test Takeaways</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <a href="index.html" class="topbar-btn">Take Pre-Test</a>
+        <a href="../training.html" class="topbar-btn">Study Guide</a>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<!-- ===== CORE THEMES ===== -->
+<div class="section-header">Core Themes</div>
+
+<div class="theme-card" onclick="this.classList.toggle('collapsed')">
+    <div class="theme-header">
+        <h2><span class="theme-num">T1</span> &nbsp; "Use the Native Feature"</h2>
+        <span class="theme-toggle">&#9660;</span>
+    </div>
+    <div class="theme-body">
+        <p><strong>AWS almost always has a built-in solution. Don't build pipelines when a checkbox exists.</strong></p>
+        <ul>
+            <li>Session Manager &rarr; built-in S3 logging (not CloudWatch &rarr; Firehose &rarr; S3)</li>
+            <li>AMI sharing &rarr; built-in launch permissions (not RAM, not copy)</li>
+            <li>Nitro v3 &rarr; built-in hardware encryption (not ALB, not Network Firewall)</li>
+        </ul>
+        <p><em>Exam pattern</em>: When you see "least operational overhead" or "minimum effort," pick the option with the <strong>fewest moving parts</strong>.</p>
+    </div>
+</div>
+
+<div class="theme-card orange" onclick="this.classList.toggle('collapsed')">
+    <div class="theme-header">
+        <h2><span class="theme-num">T2</span> &nbsp; "The Caller Pays" (Permission Responsibility)</h2>
+        <span class="theme-toggle">&#9660;</span>
+    </div>
+    <div class="theme-body">
+        <p><strong>Permissions are always checked against the entity making the call, not the service in the middle.</strong></p>
+<pre><code>EC2 instance role  &rarr;  calls SSM API  &rarr;  SSM calls KMS
+                                               &uarr;
+                                         KMS checks EC2 role
+                                         (not SSM service role)</code></pre>
+        <p>This is why reading a SecureString requires <code>kms:Decrypt</code> on the <strong>EC2 instance role</strong>, not on SSM. The same pattern applies to:</p>
+        <ul>
+            <li>Lambda reading encrypted S3 objects &rarr; Lambda role needs <code>kms:Decrypt</code></li>
+            <li>ECS task reading Secrets Manager &rarr; Task role needs both permissions</li>
+            <li>Any service reading encrypted data &rarr; the <strong>caller</strong> needs decrypt</li>
+        </ul>
+    </div>
+</div>
+
+<div class="theme-card green" onclick="this.classList.toggle('collapsed')">
+    <div class="theme-header">
+        <h2><span class="theme-num">T3</span> &nbsp; "Two-Key Access" (Read + Decrypt)</h2>
+        <span class="theme-toggle">&#9660;</span>
+    </div>
+    <div class="theme-body">
+        <p><strong>Encrypted data always requires two permissions. One to reach the data, one to unlock it.</strong></p>
+        <table class="ref-table">
+            <tr><th>Scenario</th><th>Permission 1 (Read)</th><th>Permission 2 (Decrypt)</th></tr>
+            <tr><td>SSM SecureString</td><td><code>ssm:GetParameter</code></td><td><code>kms:Decrypt</code></td></tr>
+            <tr><td>S3 object (KMS)</td><td><code>s3:GetObject</code></td><td><code>kms:Decrypt</code></td></tr>
+            <tr><td>Secrets Manager</td><td><code>secretsmanager:GetSecretValue</code></td><td><code>kms:Decrypt</code></td></tr>
+            <tr><td>DynamoDB (KMS)</td><td><code>dynamodb:GetItem</code></td><td><code>kms:Decrypt</code></td></tr>
+        </table>
+        <p>If either is missing &rarr; Access Denied.</p>
+    </div>
+</div>
+
+<div class="theme-card purple" onclick="this.classList.toggle('collapsed')">
+    <div class="theme-header">
+        <h2><span class="theme-num">T4</span> &nbsp; "Delegation, Not Centralization"</h2>
+        <span class="theme-toggle">&#9660;</span>
+    </div>
+    <div class="theme-body">
+        <p><strong>Keep the management account clean. Delegate service administration to member accounts.</strong></p>
+        <ul>
+            <li><strong>Delegated administrator</strong> &rarr; member account manages Config, GuardDuty, Security Hub across org</li>
+            <li><strong>Management account</strong> &rarr; billing only</li>
+            <li><strong>StackSets execution role</strong> &rarr; lives in target accounts, not the admin account</li>
+        </ul>
+        <p>The management account should touch as little as possible. The exam loves testing whether you know that delegation exists.</p>
+    </div>
+</div>
+
+<div class="theme-card" onclick="this.classList.toggle('collapsed')">
+    <div class="theme-header">
+        <h2><span class="theme-num">T5</span> &nbsp; "Error Messages Tell You the Problem Category"</h2>
+        <span class="theme-toggle">&#9660;</span>
+    </div>
+    <div class="theme-body">
+        <p><strong>Don't just know what's right &mdash; know how to diagnose from the error.</strong></p>
+        <table class="ref-table">
+            <tr><th>Error Message</th><th>Category</th><th>Look For</th></tr>
+            <tr><td><strong>"Access Denied"</strong></td><td>Permissions</td><td>IAM role, SCP, KMS key policy</td></tr>
+            <tr><td><strong>"Already Exists"</strong></td><td>Naming conflict</td><td>Duplicate resource name</td></tr>
+            <tr><td><strong>"UnauthorizedOperation"</strong></td><td>Missing IAM permission</td><td>Check caller's policies</td></tr>
+            <tr><td><strong>"Throttling"</strong></td><td>Rate limit</td><td>Too many API calls</td></tr>
+        </table>
+        <p>In Q3, "Access Denied" + "some accounts fail" = execution role permissions. If the error said "already exists," the answer would have been naming conflict.</p>
+    </div>
+</div>
+
+<div class="theme-card orange" onclick="this.classList.toggle('collapsed')">
+    <div class="theme-header">
+        <h2><span class="theme-num">T6</span> &nbsp; "Scope Matters" (Individual vs. Package vs. Standard)</h2>
+        <span class="theme-toggle">&#9660;</span>
+    </div>
+    <div class="theme-body">
+        <p><strong>AWS has different tools for different scopes. Know which tool matches which scope.</strong></p>
+        <table class="ref-table">
+            <tr><th>Scope</th><th>Tool</th></tr>
+            <tr><td>One Config rule across org</td><td><code>put-organization-config-rule</code></td></tr>
+            <tr><td>Package of Config rules across org</td><td><code>put-organization-conformance-pack</code></td></tr>
+            <tr><td>Predefined security standards</td><td>AWS Security Hub</td></tr>
+            <tr><td>Custom remediation + rules</td><td>Conformance pack with remediation actions</td></tr>
+        </table>
+        <p>The exam tests whether you read "as a package" or "individual rule" &mdash; one word changes the answer.</p>
+    </div>
+</div>
+
+<div class="theme-card green" onclick="this.classList.toggle('collapsed')">
+    <div class="theme-header">
+        <h2><span class="theme-num">T7</span> &nbsp; "Hardware vs. Software Security"</h2>
+        <span class="theme-toggle">&#9660;</span>
+    </div>
+    <div class="theme-body">
+        <p><strong>When AWS offers hardware-level security, it's usually the answer for "no overhead" questions.</strong></p>
+        <table class="ref-table">
+            <tr><th>Feature</th><th>Level</th><th>Overhead</th></tr>
+            <tr><td>Nitro v3 encryption</td><td>Hardware</td><td>Zero</td></tr>
+            <tr><td>TLS certificates (ACM)</td><td>Software</td><td>Low</td></tr>
+            <tr><td>Network Firewall TLS inspection</td><td>Software</td><td>High</td></tr>
+            <tr><td>Custom encryption in app code</td><td>Application</td><td>Highest</td></tr>
+        </table>
+    </div>
+</div>
+
+<!-- ===== TOOLS REFERENCE ===== -->
+<div class="section-header">Tools &amp; Services Reference</div>
+
+<div class="tool-card">
+    <h3>AWS Systems Manager (SSM)</h3>
+    <div class="subtitle">A remote control for all your servers</div>
+    <table class="ref-table">
+        <tr><th>Component</th><th>Purpose</th></tr>
+        <tr><td><strong>Session Manager</strong></td><td>SSH-like access to EC2 without opening port 22. Logs all commands.</td></tr>
+        <tr><td><strong>Parameter Store</strong></td><td>Key-value store for config data and secrets. Free tier available.</td></tr>
+        <tr><td><strong>Patch Manager</strong></td><td>Automated OS patching across fleets.</td></tr>
+        <tr><td><strong>Automation</strong></td><td>Runbooks for common tasks (restart instance, create AMI).</td></tr>
+        <tr><td><strong>Run Command</strong></td><td>Execute commands on multiple instances at once.</td></tr>
+    </table>
+    <p style="margin-top:0.6rem;font-size:0.85rem;"><strong>Parameter Store Types:</strong></p>
+    <ul>
+        <li><code>String</code> &mdash; plain text (e.g., database hostname)</li>
+        <li><code>StringList</code> &mdash; comma-separated values</li>
+        <li><code>SecureString</code> &mdash; encrypted with KMS (e.g., passwords, API keys)</li>
+    </ul>
+    <p style="margin-top:0.6rem;font-size:0.85rem;"><strong>Parameter Store vs. Secrets Manager:</strong></p>
+    <table class="ref-table">
+        <tr><th></th><th>Parameter Store</th><th>Secrets Manager</th></tr>
+        <tr><td><strong>Cost</strong></td><td>Free (standard)</td><td>$0.40/secret/month</td></tr>
+        <tr><td><strong>Auto-rotation</strong></td><td>No</td><td>Yes (built-in Lambda rotation)</td></tr>
+        <tr><td><strong>Cross-account</strong></td><td>No</td><td>Yes (resource policy)</td></tr>
+        <tr><td><strong>Best for</strong></td><td>Config values, non-rotating secrets</td><td>Database creds, rotating secrets</td></tr>
+    </table>
+</div>
+
+<div class="tool-card">
+    <h3>AWS KMS (Key Management Service)</h3>
+    <div class="subtitle">Create, manage, and use encryption keys &mdash; the backbone of all AWS encryption</div>
+    <p style="font-size:0.85rem;"><strong>Key Types:</strong></p>
+    <table class="ref-table">
+        <tr><th>Type</th><th>Who Manages</th><th>Example</th></tr>
+        <tr><td><strong>AWS-managed key</strong></td><td>AWS creates &amp; rotates</td><td><code>aws/ssm</code>, <code>aws/s3</code>, <code>aws/ebs</code></td></tr>
+        <tr><td><strong>Customer-managed key (CMK)</strong></td><td>You create, you control policy</td><td>Custom key for cross-account sharing</td></tr>
+        <tr><td><strong>AWS-owned key</strong></td><td>AWS uses internally</td><td>You never see these</td></tr>
+    </table>
+    <p style="margin-top:0.6rem;font-size:0.85rem;"><strong>Critical KMS Actions:</strong></p>
+    <table class="ref-table">
+        <tr><th>Action</th><th>What It Does</th></tr>
+        <tr><td><code>kms:Encrypt</code></td><td>Encrypt data with a key</td></tr>
+        <tr><td><code>kms:Decrypt</code></td><td>Decrypt data (needed to READ encrypted resources)</td></tr>
+        <tr><td><code>kms:GenerateDataKey</code></td><td>Create a data key for envelope encryption</td></tr>
+        <tr><td><code>kms:CreateGrant</code></td><td>Delegate key usage to another principal</td></tr>
+        <tr><td><code>kms:DescribeKey</code></td><td>View key metadata</td></tr>
+    </table>
+</div>
+
+<div class="tool-card">
+    <h3>AWS CloudFormation StackSets</h3>
+    <div class="subtitle">Deploy stacks across multiple accounts and regions in a single operation</div>
+<pre><code>Management Account                    Target Accounts
+&#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;               &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;
+&#9474; Admin Role           &#9474;&#9472;&#9472;assumes&#9472;&#9472;&#9654;  &#9474; Execution Role        &#9474;
+&#9474; (orchestrates)       &#9474;               &#9474; (creates resources)   &#9474;
+&#9474;                      &#9474;               &#9474;                       &#9474;
+&#9474; Stack Set Template   &#9474;               &#9474; Stack Instance        &#9474;
+&#9474; (what to deploy)     &#9474;               &#9474; (actual resources)    &#9474;
+&#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;               &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</code></pre>
+    <table class="ref-table">
+        <tr><th>Mode</th><th>Execution Role</th><th>Best For</th></tr>
+        <tr><td><strong>Service-managed</strong></td><td>AWS auto-creates roles via Organizations</td><td>Org-wide deployments</td></tr>
+        <tr><td><strong>Self-managed</strong></td><td>You manually create roles in each account</td><td>Specific account targeting</td></tr>
+    </table>
+    <p style="margin-top:0.5rem;font-size:0.85rem;"><strong>When StackSets fail in some accounts:</strong> Check the <strong>execution role</strong> in the failed accounts &mdash; it likely has missing permissions.</p>
+</div>
+
+<div class="tool-card">
+    <h3>AWS Config</h3>
+    <div class="subtitle">Continuously monitors and records resource configuration &mdash; "Is this resource compliant?"</div>
+    <table class="ref-table">
+        <tr><th>Component</th><th>Purpose</th></tr>
+        <tr><td><strong>Config Rules</strong></td><td>Evaluate if a resource is compliant (e.g., "are all S3 buckets encrypted?")</td></tr>
+        <tr><td><strong>Conformance Pack</strong></td><td>A package of multiple Config rules + remediation actions deployed together</td></tr>
+        <tr><td><strong>Config Recorder</strong></td><td>Records configuration changes to resources</td></tr>
+        <tr><td><strong>Aggregator</strong></td><td>Collects Config data across multiple accounts/regions into one view</td></tr>
+    </table>
+    <p style="margin-top:0.6rem;font-size:0.85rem;"><strong>Config vs. CloudTrail:</strong></p>
+    <table class="ref-table">
+        <tr><th></th><th>AWS Config</th><th>CloudTrail</th></tr>
+        <tr><td><strong>Answers</strong></td><td>"What does this resource look like?"</td><td>"Who did what and when?"</td></tr>
+        <tr><td><strong>Tracks</strong></td><td>Resource configuration state</td><td>API calls</td></tr>
+        <tr><td><strong>Example</strong></td><td>"Is this S3 bucket public?"</td><td>"Who made the bucket public at 3pm?"</td></tr>
+    </table>
+</div>
+
+<div class="tool-card">
+    <h3>AWS Organizations</h3>
+    <div class="subtitle">Centrally manage and govern multiple AWS accounts</div>
+    <table class="ref-table">
+        <tr><th>Component</th><th>Purpose</th></tr>
+        <tr><td><strong>Management Account</strong></td><td>Root account, pays the bills, creates the org</td></tr>
+        <tr><td><strong>Member Accounts</strong></td><td>Workload accounts grouped in OUs</td></tr>
+        <tr><td><strong>OUs</strong></td><td>Hierarchical grouping of accounts</td></tr>
+        <tr><td><strong>SCPs</strong></td><td>Guardrails &mdash; restrict maximum permissions</td></tr>
+        <tr><td><strong>Delegated Administrator</strong></td><td>Member account that manages a service for the org</td></tr>
+    </table>
+<pre><code>Management Account (billing only)
+    &#9500;&#9472;&#9472; Security Account (delegated admin)
+    &#9474;       &#9500;&#9472;&#9472; Manages: Config, GuardDuty, Security Hub
+    &#9474;       &#9500;&#9472;&#9472; Manages: Macie, Inspector, Access Analyzer
+    &#9474;       &#9492;&#9472;&#9472; Manages: Firewall Manager
+    &#9500;&#9472;&#9472; Log Archive Account
+    &#9474;       &#9492;&#9472;&#9472; Central S3 bucket for CloudTrail logs
+    &#9492;&#9472;&#9472; Workload Accounts (Dev, Staging, Production)</code></pre>
+    <p style="font-size:0.85rem;"><strong>SCPs &mdash; What They Do and Don't Do:</strong></p>
+    <table class="ref-table">
+        <tr><th>SCPs CAN</th><th>SCPs CANNOT</th></tr>
+        <tr><td>Restrict/deny actions</td><td>Grant permissions</td></tr>
+        <tr><td>Set maximum permission boundary</td><td>Override the management account</td></tr>
+        <tr><td>Apply to all users/roles in member accounts</td><td>Apply to service-linked roles</td></tr>
+    </table>
+</div>
+
+<div class="tool-card">
+    <h3>Amazon EC2 Nitro System</h3>
+    <div class="subtitle">Hardware platform that modern EC2 instances run on</div>
+    <table class="ref-table">
+        <tr><th>Version</th><th>Instances</th><th>Auto-Encryption</th></tr>
+        <tr><td>Nitro v1</td><td>C5, M5, R5</td><td>No</td></tr>
+        <tr><td>Nitro v2</td><td>C5n, M5n</td><td>No</td></tr>
+        <tr><td><strong>Nitro v3+</strong></td><td><strong>C6i, M6i, R6i, C7g, M7g</strong></td><td><strong>Yes &mdash; automatic</strong></td></tr>
+    </table>
+    <p style="margin-top:0.5rem;font-size:0.85rem;"><strong>What Nitro v3 encrypts:</strong> All traffic between Nitro v3+ instances in the same VPC. Hardware-level AEAD with 256-bit keys. Zero configuration, zero performance overhead, always on.</p>
+</div>
+
+<div class="tool-card">
+    <h3>AMI (Amazon Machine Image)</h3>
+    <div class="subtitle">Template containing OS + applications used to launch EC2 instances</div>
+    <table class="ref-table">
+        <tr><th>Method</th><th>What It Does</th></tr>
+        <tr><td><strong>Launch Permissions</strong></td><td>Share AMI with specific account IDs (same region)</td></tr>
+        <tr><td><strong>Copy</strong></td><td>Copy AMI to another region (within YOUR account)</td></tr>
+        <tr><td><strong>Public</strong></td><td>Make AMI available to everyone (not recommended)</td></tr>
+    </table>
+    <p style="margin-top:0.5rem;font-size:0.85rem;"><strong>NOT shared via:</strong> RAM, IAM roles, S3 bucket policies.<br>
+    <strong>If encrypted with custom KMS key:</strong> Share BOTH the AMI permissions AND the KMS key policy.</p>
+</div>
+
+<!-- ===== EXAM PATTERNS ===== -->
+<div class="section-header">Exam Trigger Words &rarr; Answers</div>
+
+<table class="pattern-table">
+    <tr><th>When You See This...</th><th>The Answer Is...</th></tr>
+    <tr><td>"Share AMI with other accounts"</td><td>Modify AMI launch permissions</td></tr>
+    <tr><td>"Log session commands to S3"</td><td>Session Manager S3 logging in preferences</td></tr>
+    <tr><td>"StackSets fails in some accounts"</td><td>Execution role permissions in failed accounts</td></tr>
+    <tr><td>"Non-management account manages org service"</td><td>Delegated administrator</td></tr>
+    <tr><td>"Deploy Config rules as a package"</td><td>Organization conformance pack</td></tr>
+    <tr><td>"EC2 reads SecureString"</td><td>Instance role needs <code>ssm:GetParameter</code> + <code>kms:Decrypt</code></td></tr>
+    <tr><td>"Automatic encryption, no overhead, between EC2s"</td><td>Nitro v3+ instances</td></tr>
+    <tr><td>"Least operational overhead"</td><td>Native/built-in feature, fewest services</td></tr>
+    <tr><td>"Access Denied" error</td><td>Permissions issue (IAM role, SCP, or KMS)</td></tr>
+    <tr><td>"Some accounts fail, others succeed"</td><td>Per-account config issue (roles, permissions)</td></tr>
+</table>
+
+<!-- ===== DECISION TREE ===== -->
+<div class="section-header">Quick Decision Tree</div>
+
+<div class="decision-tree">
+<span class="q">Need to share an AMI?</span><br>
+&nbsp;&nbsp;<span class="a">&rarr; Modify launch permissions</span><br><br>
+<span class="q">Need to encrypt traffic between EC2s?</span><br>
+&nbsp;&nbsp;<span class="a">&rarr; Nitro v3+ (automatic, no overhead)</span><br><br>
+<span class="q">Need to read encrypted parameter?</span><br>
+&nbsp;&nbsp;<span class="a">&rarr; Caller needs: read permission + kms:Decrypt</span><br><br>
+<span class="q">Need to deploy Config rules as a package?</span><br>
+&nbsp;&nbsp;<span class="a">&rarr; Organization conformance pack</span><br><br>
+<span class="q">Need non-management account to manage org services?</span><br>
+&nbsp;&nbsp;<span class="a">&rarr; Register delegated administrator</span><br><br>
+<span class="q">Need to log Session Manager commands?</span><br>
+&nbsp;&nbsp;<span class="a">&rarr; Enable S3 logging in Session Manager preferences</span><br><br>
+<span class="q">Need to figure out why StackSets failed in some accounts?</span><br>
+&nbsp;&nbsp;<span class="a">&rarr; Check execution role permissions in failed accounts</span>
+</div>
+
+</div>
+
+</body>
+</html>
