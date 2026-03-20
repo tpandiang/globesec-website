@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/9</div>
+            <div class="score-big" id="overallScore">0/10</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -504,10 +504,49 @@ The question deliberately tells you #1 and #2 are fine, and explicitly mentions 
 </div>
 </div>
 
+<!-- Q10 MC -->
+<div class="question" data-type="mc" data-answer="0">
+<div class="question-text"><span class="question-num">Q10.</span><span>A company is building a mobile app for users. The app must allow users to sign up and sign in with a password or social media login. Authenticated users should be able to upload files to Amazon S3.<br><br>Which authentication method will meet these requirements with the LEAST operational overhead?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Implement Amazon Cognito user pools. Use an Amazon Cognito identity pool to provide temporary access to Amazon S3 for authenticated users.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Generate Amazon S3 presigned URLs on the backend after verifying user authentication. Return the S3 presigned URLs to the client to upload files.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use AWS IAM Identity Center and configure an identity provider (IdP). Configure the app as a customer managed application.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Configure an IAM OpenID Connect (OIDC) identity provider (IdP) for social media logins. Use AWS Security Token Service (AWS STS) AssumeRoleWithWebIdentity to exchange tokens for temporary credentials.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon Cognito User Pools + Identity Pools.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"mobile app" + "sign up/sign in" + "social login" + "access AWS services" + "least overhead"</strong>, the answer is always <em>Amazon Cognito</em>. Cognito is purpose-built for exactly this use case &mdash; it handles user registration, authentication, social federation, AND temporary AWS credential vending in a single managed service.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Cognito Has Two Components</em>:<br>
+&bull; <strong>User Pools</strong> &mdash; A managed user directory. Handles: sign-up, sign-in, password policies, MFA, email/phone verification, and social identity federation (Google, Facebook, Apple, SAML). Think of it as <em>authentication</em> &mdash; "who is this user?"<br>
+&bull; <strong>Identity Pools</strong> (Federated Identities) &mdash; Exchanges authentication tokens (from User Pools or social providers) for <strong>temporary AWS credentials</strong>. Think of it as <em>authorization</em> &mdash; "what can this user do in AWS?"<br><br>
+
+<em>The Complete Flow</em>:<br>
+1. User signs up / signs in via Cognito User Pool (or social login)<br>
+2. User Pool returns a JWT token<br>
+3. App sends token to Cognito Identity Pool<br>
+4. Identity Pool calls <code>sts:AssumeRoleWithWebIdentity</code> behind the scenes<br>
+5. App receives temporary AWS credentials (scoped to an IAM role)<br>
+6. App uploads directly to S3 using those credentials<br><br>
+
+All of this is <strong>fully managed</strong> &mdash; no servers, no custom auth code, no token management. This is the least operational overhead possible.<br><br>
+
+<strong>Why A is correct:</strong> Cognito handles every requirement in one service: user sign-up/sign-in (User Pool), social media login (User Pool federation), and temporary S3 access (Identity Pool). No backend servers to manage, no custom authentication logic, no manual STS calls. Maximum functionality with minimum overhead.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) S3 presigned URLs from backend</em> &mdash; This requires you to build, deploy, and maintain a <strong>backend server</strong> that authenticates users and generates presigned URLs. You'd also need to build the user sign-up/sign-in system yourself (or use another service for it). More operational overhead than Cognito, which handles everything out of the box.<br>
+<em>C) IAM Identity Center</em> &mdash; Identity Center (formerly AWS SSO) is designed for <strong>workforce identity</strong> &mdash; employees accessing the AWS Console and business applications. It is NOT designed for consumer-facing mobile apps with public sign-up. It doesn't support social media login for end users or mobile app authentication flows.<br>
+<em>D) IAM OIDC provider + STS AssumeRoleWithWebIdentity</em> &mdash; This works technically but requires <strong>significantly more operational overhead</strong>. You must: (1) configure OIDC providers in IAM for each social platform, (2) manage token validation yourself, (3) call <code>AssumeRoleWithWebIdentity</code> manually in your app code, (4) handle token refresh and credential caching. Cognito Identity Pools do all of this automatically behind the scenes. Also, this doesn't provide a built-in sign-up/sign-in flow with passwords &mdash; you'd need to build that separately.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 9;
+var totalQuestions = 10;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
