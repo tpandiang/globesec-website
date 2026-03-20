@@ -121,7 +121,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/4</div>
+            <div class="score-big" id="overallScore">0/5</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -274,10 +274,50 @@ The question explicitly says "as a package," which maps to conformance packs.<br
 </div>
 </div>
 
+<!-- Q5 MA -->
+<div class="question" data-type="ma" data-answers="2,3">
+<div class="question-text"><span class="question-num">Q5.</span><span>An application running on Amazon EC2 instances must use a user name and password to access a legacy application. A developer has stored those secrets in AWS Systems Manager Parameter Store with type <code>SecureString</code> using the default AWS KMS key.<span class="q-type-badge">SELECT TWO</span><br><br>Which combination of configuration steps will allow the application to access the secrets through the API?</span></div>
+<div class="options">
+<div class="option" onclick="toggleMA(this)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add the EC2 instance role as a trusted service to the Systems Manager service role.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add a permission to the Systems Manager service role that allows it to decrypt the KMS encryption key.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add a permission to the EC2 instance role that allows it to read the Systems Manager parameter.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Add a permission to the EC2 instance role that allows it to decrypt the KMS encryption key.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="4"><span class="option-letter">E</span><span class="option-text">Add the SSM service role as a trusted service to the EC2 instance role.</span></div>
+</div>
+<button class="check-btn" onclick="checkMA(this)">Check Answer</button>
+<div class="explanation">
+<strong>&#10003; Correct: C and D.</strong> The EC2 instance role needs both <code>ssm:GetParameter</code> permission and <code>kms:Decrypt</code> permission.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"EC2 needs to read a SecureString from Parameter Store"</strong>, think about <em>two layers of access</em>: (1) permission to read the parameter itself, and (2) permission to decrypt the KMS-encrypted value. Both permissions must be on the <strong>caller's role</strong> (the EC2 instance role), not the SSM service role.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>How SecureString Retrieval Works</em>:<br>
+1. The application on EC2 calls <code>ssm:GetParameter</code> using the instance role's credentials.<br>
+2. Parameter Store receives the request and checks if the caller has <code>ssm:GetParameter</code> permission &rarr; <strong>Needs permission C</strong>.<br>
+3. Since the parameter is a SecureString, Parameter Store calls KMS to decrypt the value <strong>on behalf of the caller</strong>.<br>
+4. KMS checks if the <strong>caller</strong> (EC2 instance role) has <code>kms:Decrypt</code> permission on the KMS key &rarr; <strong>Needs permission D</strong>.<br>
+5. If both checks pass, the decrypted value is returned to the application.<br><br>
+
+<em>Key Insight</em>: Parameter Store does NOT use its own service role to decrypt. It passes the decryption request to KMS using the <strong>caller's identity</strong>. This means the EC2 instance role must have both <code>ssm:GetParameter</code> AND <code>kms:Decrypt</code>.<br><br>
+
+<em>Default KMS Key</em>: The question mentions the "default AWS KMS key" &mdash; this is the AWS-managed key <code>aws/ssm</code>. Even with the default key, the caller still needs <code>kms:Decrypt</code> permission on that key.<br><br>
+
+<strong>Why C is correct:</strong> The EC2 application calls the Parameter Store API directly. The instance role must include <code>ssm:GetParameter</code> (or <code>ssm:GetParameters</code>) with the resource scoped to the specific parameter ARN. Without this, the API call is rejected before decryption even happens.<br><br>
+
+<strong>Why D is correct:</strong> Since the parameter is encrypted as SecureString, KMS decryption occurs during retrieval. KMS evaluates the <strong>caller's</strong> permissions (the EC2 instance role), not the SSM service role's permissions. The instance role must include <code>kms:Decrypt</code> on the KMS key used to encrypt the parameter.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) EC2 role as trusted service to SSM service role</em> &mdash; The EC2 instance does not assume the SSM service role. The instance role calls the Parameter Store API directly using its own credentials. There is no trust relationship needed between the EC2 role and the SSM service role for parameter retrieval.<br>
+<em>B) SSM service role needs kms:Decrypt</em> &mdash; KMS permission is checked against the <strong>caller</strong> (EC2 instance role), not the SSM service role. Parameter Store acts as a pass-through &mdash; it calls KMS on behalf of the caller, and KMS evaluates the caller's identity for authorization.<br>
+<em>E) SSM service role as trusted service to EC2 role</em> &mdash; This relationship is backwards and unnecessary. The EC2 instance doesn't need SSM to assume its role. The application simply makes API calls using the instance role's credentials directly.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 4;
+var totalQuestions = 5;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
