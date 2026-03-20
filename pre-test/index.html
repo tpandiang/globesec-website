@@ -121,7 +121,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/0</div>
+            <div class="score-big" id="overallScore">0/1</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -133,12 +133,49 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     <div class="progress-text" id="progressText">0 / 0 answered</div>
 </div>
 
-<!-- QUESTIONS WILL BE ADDED HERE -->
+<!-- Q1 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q1.</span><span>A company uses AWS Organizations and generates an AMI of an Amazon EC2 instance. The company needs to share the AMI with other accounts in the same AWS Region.<br><br>How can the company share the AMI?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create IAM roles in each destination account with EC2 permissions. Create an RCP that automatically shares AMIs with member accounts based on tags.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use AWS Resource Access Manager (AWS RAM). Specify the AMI and the account IDs.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Copy the AMI to a new AMI. Specify the account IDs when configuring the copy.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Modify the AMI permissions. Indicate the private AMI availability and add the account IDs.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Modify the AMI permissions and add the destination account IDs.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"share an AMI with other accounts in the same region"</strong>, the mechanism is <em>AMI launch permissions</em>. You modify the AMI's permissions to add specific account IDs, which grants those accounts the ability to launch instances from your AMI. The AMI itself stays in your account &mdash; you're just granting others permission to use it.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>AMI Launch Permissions</em> &mdash; Every AMI has a launch permission attribute that controls who can use it:<br>
+&bull; <strong>Private</strong> (default) &mdash; Only your account can use the AMI<br>
+&bull; <strong>Shared with specific accounts</strong> &mdash; You add account IDs that can launch instances from the AMI<br>
+&bull; <strong>Public</strong> &mdash; Anyone can use the AMI (not recommended for custom images)<br><br>
+
+<em>How to Share</em>:<br>
+&bull; Console: EC2 &rarr; AMIs &rarr; Select AMI &rarr; Actions &rarr; Edit AMI Permissions &rarr; Add Account IDs<br>
+&bull; CLI: <code>aws ec2 modify-image-attribute --image-id ami-xxx --launch-permission "Add=[{UserId=123456789012}]"</code><br><br>
+
+<em>Important Constraints</em>:<br>
+&bull; The AMI must be in the <strong>same region</strong> as the target accounts want to use it (satisfied in this question)<br>
+&bull; If the AMI is encrypted with a custom KMS key, you must also share the KMS key with the target accounts<br>
+&bull; The AMI stays in the owner's account &mdash; recipients can use it but cannot modify or re-share it<br><br>
+
+<strong>Why D is correct:</strong> Modifying AMI launch permissions is the native, direct mechanism for sharing AMIs with specific accounts in the same region. It requires no additional services, no copying, and works immediately.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) IAM roles + RCP</em> &mdash; Resource Control Policies (RCPs) are guardrails that restrict permissions across an organization &mdash; they do not share resources. IAM roles in destination accounts don't control AMI sharing either. AMI sharing is managed through the AMI's own launch permissions, not through IAM or organizational policies.<br>
+<em>B) AWS Resource Access Manager (RAM)</em> &mdash; RAM is used to share resources like Subnets, Transit Gateways, License Manager configurations, and Route 53 Resolver rules. <strong>AMIs are not a supported resource type in RAM</strong>. AMI sharing uses EC2's native launch permission mechanism instead.<br>
+<em>C) Copy the AMI and specify account IDs</em> &mdash; The AMI copy operation (<code>CopyImage</code>) creates a copy of an AMI in the <strong>same or different region within your own account</strong>. It does not accept destination account IDs &mdash; you cannot copy an AMI directly into another account. To give another account their own copy, they must first have launch permissions (option D), then they can copy it themselves.
+</div>
+</div>
 
 </div>
 
 <script>
-var totalQuestions = 0;
+var totalQuestions = 1;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
