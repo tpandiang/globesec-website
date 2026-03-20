@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/14</div>
+            <div class="score-big" id="overallScore">0/15</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -704,10 +704,47 @@ Detective helps you <strong>analyze, investigate, and determine the root cause</
 </div>
 </div>
 
+<!-- Q15 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q15.</span><span>A company is concerned that its network security configuration might prevent legitimate IPv4 traffic from reaching resources in one of several VPCs. The company has configured VPC Flow Logs with the <strong>default</strong> flow log record format. The company wants to quickly identify excessive requests that have the type <strong>IPv4</strong> and where the action was <strong>REJECT</strong>.<br><br>Which solution will meet these requirements with the LEAST effort?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Customize the format of the existing flow log to include the type field. Configure the flow log to publish data to an Amazon S3 bucket. Create and schedule an AWS Lambda function to run an Amazon Athena query against the logs. Invoke an Amazon SNS notification based on the REJECT count.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Customize the format of the existing flow log to include the type field. Configure the flow log to publish data directly to an Amazon CloudWatch Logs log group. Create a custom CloudWatch metric from the flow log records by filtering on action = REJECT and type = IPv4. Create an alarm based on the custom metric.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a new flow log with a custom log format that includes the type field. Configure the flow log to publish data to an Amazon S3 bucket. Create and schedule an AWS Lambda function to run an Amazon Athena query against the logs. Invoke an Amazon SNS notification based on the REJECT count.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a new flow log with a custom log format that includes the type field. Configure the flow log to publish data directly to an Amazon CloudWatch Logs log group. Create a custom CloudWatch metric from the flow log records by filtering on action = REJECT and type = IPv4. Create an alarm based on the custom metric.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Create a new flow log with custom format &rarr; CloudWatch Logs &rarr; metric filter &rarr; alarm.<br><br>
+
+<strong>How to Think About This:</strong><br>
+This question tests <strong>two concepts</strong> simultaneously:<br>
+1. <strong>Can you modify an existing flow log's format?</strong> No &mdash; you must create a new one.<br>
+2. <strong>Least effort for alerting?</strong> CloudWatch metric filters + alarms (not S3 + Athena + Lambda + SNS).<br><br>
+
+This eliminates A and B (can't modify existing flow logs) and C (Athena pipeline is more effort).<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>VPC Flow Log Formats</em> &mdash; The <strong>default</strong> flow log format captures: version, account-id, interface-id, srcaddr, dstaddr, srcport, dstport, protocol, packets, bytes, start, end, action, log-status. Critically, the default format does <strong>NOT include the <code>type</code> field</strong> (IPv4 vs IPv6). To filter by type, you need a <strong>custom format</strong>.<br><br>
+
+<em>You Cannot Modify an Existing Flow Log</em> &mdash; Once a VPC Flow Log is created, its record format is <strong>immutable</strong>. You cannot add or remove fields from an existing flow log. To change the format, you must <strong>create a new flow log</strong> with the desired custom format. This immediately eliminates options A and B which say "customize the format of the existing flow log."<br><br>
+
+<em>CloudWatch Metric Filters vs. Athena</em> &mdash; For real-time alerting with least effort:<br>
+&bull; <strong>CloudWatch Logs + Metric Filter + Alarm</strong>: Flow logs stream directly to CloudWatch. A metric filter pattern matches <code>REJECT</code> + <code>IPv4</code> and increments a custom metric. An alarm fires when the count exceeds a threshold. All configuration, no code.<br>
+&bull; <strong>S3 + Athena + Lambda + SNS</strong>: Requires setting up an S3 bucket, creating Athena table schemas, writing SQL queries, building a Lambda function, scheduling it, and configuring SNS. Far more components and effort.<br><br>
+
+<strong>Why D is correct:</strong> It correctly identifies that a <strong>new</strong> flow log is needed (can't modify existing) and uses the <strong>least-effort alerting pipeline</strong> (CloudWatch metric filter + alarm). No Lambda functions, no Athena queries, no custom code &mdash; just configuration.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Customize existing flow log + S3/Athena/Lambda</em> &mdash; <strong>Two problems</strong>: (1) You cannot modify an existing flow log's format &mdash; you must create a new one. (2) The S3 &rarr; Athena &rarr; Lambda &rarr; SNS pipeline requires significantly more effort than CloudWatch metric filters.<br>
+<em>B) Customize existing flow log + CloudWatch</em> &mdash; Uses the right alerting approach (CloudWatch metric filters) but fails on the first step: you <strong>cannot</strong> customize an existing flow log. A new flow log is required.<br>
+<em>C) New flow log + S3/Athena/Lambda</em> &mdash; Correctly creates a new flow log, but uses the more complex S3 &rarr; Athena &rarr; Lambda pipeline. Scheduling Lambda functions, writing Athena queries, and managing SNS notifications is far more effort than a simple CloudWatch metric filter and alarm.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 14;
+var totalQuestions = 15;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
