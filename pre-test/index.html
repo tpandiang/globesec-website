@@ -121,7 +121,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/1</div>
+            <div class="score-big" id="overallScore">0/3</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -172,10 +172,75 @@ When you see <strong>"share an AMI with other accounts in the same region"</stro
 </div>
 </div>
 
+<!-- Q2 MC -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q2.</span><span>A company uses AWS Systems Manager Session Manager to connect to Amazon EC2 instances. The solution must log and store all session activity in Amazon S3 for security auditing and archival purposes. The logged session activity must include commands that are executed on the instances.<br><br>Which solution will meet these requirements with the LEAST operational overhead?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Configure Session Manager to send session output logs to Amazon CloudWatch Logs. Create a subscription filter to stream the logs to an Amazon Data Firehose delivery stream. Configure the delivery stream to deliver the logs to an S3 bucket.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Configure Session Manager to log session activity to an S3 bucket by enabling session logging. Specify the S3 bucket name in the Session Manager preferences.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable AWS CloudTrail data event logging for the EC2 instances. Configure CloudTrail to deliver the logs to an S3 bucket.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use EC2 instance-level shell scripts to capture command history and periodically upload the log files to Amazon S3 by using a Systems Manager Automation document.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Configure Session Manager to log session activity directly to an S3 bucket via Session Manager preferences.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When the question asks for <strong>"least operational overhead"</strong>, always look for the <em>native, built-in</em> feature first. Session Manager has built-in S3 logging &mdash; you just enable it and specify a bucket name. No additional services, no pipelines, no custom scripts.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Session Manager Logging</em> &mdash; Session Manager natively supports logging session activity (including all commands typed and their output) to two destinations:<br>
+&bull; <strong>Amazon S3</strong> &mdash; Session output is written directly to an S3 bucket you specify<br>
+&bull; <strong>Amazon CloudWatch Logs</strong> &mdash; Session output is streamed to a log group<br>
+Both options are configured in Session Manager Preferences with just a bucket name or log group &mdash; no additional infrastructure required.<br><br>
+
+<em>What Gets Logged</em>: Every command executed during the session, the command output, timestamps, and session metadata. This satisfies the "commands executed on the instances" requirement.<br><br>
+
+<strong>Why B is correct:</strong> Enabling S3 logging in Session Manager preferences is a single configuration change. It captures all session activity including commands, writes directly to S3, and requires zero additional services. This is the absolute minimum operational overhead.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) CloudWatch Logs &rarr; Data Firehose &rarr; S3</em> &mdash; This achieves the same result but adds two unnecessary intermediary services (CloudWatch Logs and Data Firehose). More services = more configuration, more cost, more failure points. Since Session Manager can write directly to S3, this pipeline is unnecessary overhead.<br>
+<em>C) CloudTrail data events</em> &mdash; CloudTrail logs <strong>API calls</strong> (e.g., <code>StartSession</code>, <code>TerminateSession</code>) but does <strong>not capture the commands typed during a session</strong>. CloudTrail records <em>who</em> started a session and <em>when</em>, but not <em>what they did</em> inside the session. This fails the "commands executed" requirement.<br>
+<em>D) Shell scripts + Automation documents</em> &mdash; Writing custom scripts to capture command history, scheduling periodic uploads, and maintaining Automation documents is the <strong>highest</strong> operational overhead option. It requires development, testing, scheduling, and ongoing maintenance. Session Manager provides this functionality out of the box.
+</div>
+</div>
+
+<!-- Q3 MC -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q3.</span><span>A security engineer is responsible for maintaining consistent security controls across a company's AWS infrastructure. The engineer implemented an AWS CloudFormation StackSets stack set across all of the company's AWS accounts in multiple AWS Regions. The stack set includes the creation of:<br><br>&bull; Amazon SQS queues with dead-letter queues<br>&bull; IAM roles and policies<br>&bull; AWS KMS keys<br>&bull; Amazon EventBridge rules<br>&bull; AWS Systems Manager Parameter Store parameters<br><br>When the stack set is created, stack instances fail to create in approximately <strong>one-third</strong> of the accounts. In the failed accounts, the stack set stopped at the Amazon SQS stage with the error message <strong>"Access is denied"</strong>.<br><br>What is the cause of this issue?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The KMS keys are missing the kms:GenerateDataKey permission and are failing on accounts that need additional service key operations.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The stack set tried to create an Amazon SQS resource that already has the same name as the one that the stack set is trying to create.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The target roles that are assumed by the execution role for the stack set are missing the proper permissions in the failed accounts.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The organization has an SCP attached that is preventing the stack sets from deploying to certain Regions.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The execution roles in the failed accounts are missing the necessary permissions.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Two key clues: (1) <strong>"one-third of accounts"</strong> fail, not all &mdash; this means the issue is <em>account-specific</em>, not template-wide or organization-wide. (2) The error is <strong>"Access is denied"</strong> &mdash; a permissions problem. When you combine "some accounts fail" + "Access Denied," the answer is always <em>inconsistent IAM roles/permissions across accounts</em>.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>CloudFormation StackSets Role Architecture</em> &mdash; StackSets uses two roles:<br>
+&bull; <strong>Administration Role</strong> (in the management/admin account) &mdash; <code>AWSCloudFormationStackSetAdministrationRole</code>. This role orchestrates the stack set deployment.<br>
+&bull; <strong>Execution Role</strong> (in each target account) &mdash; <code>AWSCloudFormationStackSetExecutionRole</code>. This role is assumed by the admin role and actually creates the resources in the target account. It needs permissions for <em>every</em> service being created (SQS, IAM, KMS, EventBridge, SSM).<br><br>
+
+<em>Why One-Third Fail</em>: If the execution role was set up manually (self-managed StackSets) or was modified in some accounts, those accounts may have execution roles with <strong>insufficient permissions</strong>. Accounts where the role has full permissions succeed; accounts where the role is missing SQS permissions fail at the SQS stage with "Access Denied."<br><br>
+
+<em>Service-Managed vs. Self-Managed</em>: With service-managed StackSets (using Organizations), AWS automatically creates and manages the execution roles with appropriate permissions. With self-managed StackSets, you must ensure the execution role exists and has correct permissions in every target account &mdash; which is where inconsistencies arise.<br><br>
+
+<strong>Why C is correct:</strong> The failure pattern (some accounts fail, others succeed) combined with "Access is denied" points directly to the execution role in the failed accounts lacking <code>sqs:CreateQueue</code> and related SQS permissions. The fix is to update the execution roles in the failed accounts to include all necessary service permissions.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) KMS missing kms:GenerateDataKey</em> &mdash; The error occurs at the <strong>SQS stage</strong>, which is processed before KMS keys in the stack. If KMS were the issue, SQS would have been created successfully and the stack would fail at the KMS resource. Also, <code>kms:GenerateDataKey</code> is a data-plane operation, not needed for key creation.<br>
+<em>B) SQS name conflict</em> &mdash; A naming conflict would produce a <strong>"resource already exists"</strong> or <strong>"QueueAlreadyExists"</strong> error, not "Access is denied." These are fundamentally different error types. Also, it's unlikely that exactly one-third of accounts happen to have the same queue name.<br>
+<em>D) SCP blocking certain Regions</em> &mdash; An SCP region restriction would affect <strong>all resources</strong> in those regions, not just SQS. More importantly, it would cause failures based on <em>region</em>, not on <em>which account</em>. The question states failures occur in one-third of <em>accounts</em> (across multiple regions), not in specific regions. This pattern points to per-account issues, not region-based SCPs.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 1;
+var totalQuestions = 3;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
