@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/18</div>
+            <div class="score-big" id="overallScore">0/19</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -864,10 +864,51 @@ X-Ray helps you trace <strong>specific transactions</strong> (e.g., the records 
 </div>
 </div>
 
+<!-- Q19 MA -->
+<div class="question" data-type="ma" data-answers="1,3">
+<div class="question-text"><span class="question-num">Q19.</span><span>A security engineer must troubleshoot S3 access logging. An existing source bucket is configured to write access logs to a destination bucket. However, the destination bucket does not receive the access logs.<span class="q-type-badge">SELECT TWO</span><br><br>Which combination of steps will validate the setup to troubleshoot the issue?</span></div>
+<div class="options">
+<div class="option" onclick="toggleMA(this)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Validate that access logs are disabled for the destination bucket.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Validate that the destination bucket does not have a default retention period configured.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Validate that the source bucket policy grants access to the logging service principal.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Validate that the destination bucket policy grants access to the logging service principal.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="4"><span class="option-letter">E</span><span class="option-text">Validate that the source bucket and destination bucket have versioning enabled.</span></div>
+</div>
+<button class="check-btn" onclick="checkMA(this)">Check Answer</button>
+<div class="explanation">
+<strong>&#10003; Correct: B and D.</strong> Check that the destination bucket has no default retention period AND that its bucket policy grants access to the logging service principal.<br><br>
+
+<strong>How to Think About This:</strong><br>
+S3 access logs are written <strong>to the destination bucket</strong>, so focus on what could prevent <em>writes to the destination bucket</em>. Two things block writes: (1) missing permissions for the logging service, and (2) bucket features that interfere with log delivery (like Object Lock retention).<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>S3 Server Access Logging</em> &mdash; When enabled, S3 records detailed information about requests made to a source bucket and delivers those logs to a destination bucket. The logging is performed by the <strong>S3 logging service principal</strong> (<code>logging.s3.amazonaws.com</code>), not by your IAM user or role.<br><br>
+
+<em>Destination Bucket Requirements</em>:<br>
+&bull; <strong>Bucket policy must grant write access</strong> to <code>logging.s3.amazonaws.com</code> &mdash; Without this, the logging service cannot write log files to the destination bucket. This is the most common cause of missing access logs.<br>
+&bull; <strong>No default retention period</strong> (Object Lock) &mdash; If the destination bucket has a default retention period configured via S3 Object Lock, it can interfere with log delivery. The logging service may not be able to write objects that comply with the retention settings.<br>
+&bull; Must be in the <strong>same AWS Region</strong> as the source bucket<br>
+&bull; Must <strong>not</strong> be the same bucket as the source (to avoid infinite loops, though technically possible)<br><br>
+
+<em>The Logging Flow</em>:<br>
+<code>Client request &rarr; Source bucket &rarr; S3 logging service (logging.s3.amazonaws.com) &rarr; Writes to Destination bucket</code><br><br>
+
+<strong>Why B is correct:</strong> If the destination bucket has a default retention period configured (via S3 Object Lock), it can prevent the logging service from delivering log files. The retention period creates constraints on how objects can be written, which can block log delivery. Removing the default retention period resolves this issue.<br><br>
+
+<strong>Why D is correct:</strong> The logging service principal (<code>logging.s3.amazonaws.com</code>) must have <code>s3:PutObject</code> permission on the <strong>destination</strong> bucket. Without this bucket policy, logs cannot be written. Example policy:<br>
+<code>{"Effect":"Allow","Principal":{"Service":"logging.s3.amazonaws.com"},"Action":"s3:PutObject","Resource":"arn:aws:s3:::destination-bucket/*"}</code><br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Disable access logs on the destination bucket</em> &mdash; AWS recommends disabling logging on the destination bucket to avoid infinite loops (destination logs its own writes, which generates more logs, etc.). However, having logging enabled on the destination bucket would NOT prevent logs from arriving &mdash; they would still be delivered. It's a best practice issue, not a blocking issue.<br>
+<em>C) Source bucket policy grants logging access</em> &mdash; The logging service writes to the <strong>destination</strong> bucket, not the source bucket. The source bucket doesn't need to grant the logging service any permissions. The source bucket only needs logging <em>enabled</em> (which the question confirms is already done).<br>
+<em>E) Versioning enabled on both buckets</em> &mdash; S3 server access logging does <strong>not require versioning</strong>. Versioning is an independent feature for maintaining multiple versions of objects. It has no impact on whether access logs are delivered.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 18;
+var totalQuestions = 19;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
