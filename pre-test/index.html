@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/8</div>
+            <div class="score-big" id="overallScore">0/9</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -459,10 +459,55 @@ Permission Boundaries set the <strong>maximum ceiling</strong>. Effective permis
 </div>
 </div>
 
+<!-- Q9 MC -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q9.</span><span>A security engineer is copying an encrypted Amazon RDS snapshot from one account to another within the same AWS Region in AWS Organizations. The role has the AWS managed <code>AdministratorAccess</code> policy, an inline policy, and a <strong>permissions boundary</strong> attached. The KMS resource policy has the correct permissions.<br><br>When attempting to copy the snapshot, the engineer receives an <strong>access denied</strong> error indicating the identity is missing the <code>kms:ListAliases</code> permission.<br><br>Which action will remediate this issue?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Review the KMS resource policy. Add the required permissions assigned for the role that is being used to perform the snapshot copy.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Review the SCP to verify if the failing permissions are included in the policy. Modify the SCP as needed.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Edit the permissions boundary policy with KMS permissions to allow the current failing permissions.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Change the KMS key used to encrypt the RDS instance to an enabled state.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Edit the permissions boundary to include <code>kms:ListAliases</code>.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Use the <strong>process of elimination</strong> based on what the question tells you:<br>
+&bull; Role has <code>AdministratorAccess</code> &rarr; identity policy is NOT the issue (it allows everything)<br>
+&bull; KMS resource policy has correct permissions &rarr; resource policy is NOT the issue<br>
+&bull; Role has a <strong>permissions boundary</strong> attached &rarr; this is the remaining suspect<br><br>
+
+Since effective permissions = Identity Policy &cap; Permissions Boundary, even <code>AdministratorAccess</code> (which allows <code>*</code>) is <strong>capped</strong> by the boundary. If the boundary doesn't include <code>kms:ListAliases</code>, the action is blocked regardless of the identity policy.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Access Denied Troubleshooting Checklist</em> &mdash; When you get Access Denied in an AWS Organizations environment, check these in order:<br>
+1. <strong>Identity Policy</strong> &mdash; Does the role/user have the permission? (Yes &mdash; AdministratorAccess)<br>
+2. <strong>Resource Policy</strong> &mdash; Does the resource allow the caller? (Yes &mdash; stated in question)<br>
+3. <strong>Permissions Boundary</strong> &mdash; Does the boundary allow the action? (<strong>This is the gap</strong>)<br>
+4. <strong>SCP</strong> &mdash; Does the organization allow the action?<br>
+5. <strong>Session Policy</strong> &mdash; If using temporary credentials with a session policy<br><br>
+
+The question deliberately tells you #1 and #2 are fine, and explicitly mentions a permissions boundary is attached. This narrows the answer to the boundary.<br><br>
+
+<em>Permissions Boundary Recap</em>:<br>
+&bull; Boundaries set the <strong>maximum</strong> permissions an IAM entity can have<br>
+&bull; Even <code>AdministratorAccess</code> is bounded &mdash; the boundary always wins<br>
+&bull; Effective = Identity Policy &cap; Boundary &cap; SCP (for org accounts)<br>
+&bull; If ANY layer is missing the permission, the action is denied<br><br>
+
+<strong>Why C is correct:</strong> The permissions boundary is the only policy layer not confirmed as correct. Adding <code>kms:ListAliases</code> to the boundary will allow the action to pass through all policy evaluation layers: the identity policy allows it (AdministratorAccess), the resource policy allows it (stated), and now the boundary will also allow it.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Review KMS resource policy</em> &mdash; The question explicitly states "the AWS KMS resource policy has the correct permissions." This option is already ruled out by the question itself. Always read the question carefully &mdash; when it tells you something is correct, don't pick an answer that fixes that thing.<br>
+<em>B) Review the SCP</em> &mdash; While SCPs can theoretically block KMS actions, the question is specifically testing your understanding of permissions boundaries. The clue is that the question mentions a permissions boundary is attached and the role has AdministratorAccess. The boundary is the most direct explanation for why a role with full admin access is being denied a specific action.<br>
+<em>D) Enable the KMS key</em> &mdash; A disabled KMS key would produce a <strong>"KMS key is disabled"</strong> or <code>DisabledException</code> error, not a "missing kms:ListAliases permission" error. The error message explicitly says the <em>permission</em> is missing, not that the key is in an invalid state. Always match the error message to the answer category.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 8;
+var totalQuestions = 9;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
