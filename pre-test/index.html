@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/28</div>
+            <div class="score-big" id="overallScore">0/29</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1269,10 +1269,48 @@ Select all four to confirm you understand each mapping.</span></div>
 </div>
 </div>
 
+<!-- Q29 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q29.</span><span>An ecommerce company identifies significant bot traffic on its website, specifically on the login and checkout pages. Some bot traffic comes from a specific country. The website is served by an Amazon CloudFront distribution. The company wants to implement controls to detect and mitigate <strong>advanced bots</strong>.<br><br>Which solution will meet this requirement?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable geo-restriction in CloudFront. Use CloudFront Functions to add additional header checks for the remaining traffic.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Set up an AWS WAF web ACL with rate-based rules. Enable geo-restriction in CloudFront. Associate the WAF web ACL with the CloudFront distribution.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Configure Amazon CloudWatch to monitor CloudFront access logs for bot patterns. Create an AWS Lambda function to analyze patterns and dynamically add IP addresses to AWS WAF block lists.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Set up an AWS WAF web ACL with an AWS managed rule for bot control for targeted bots. Associate the WAF web ACL with the CloudFront distribution.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS WAF Bot Control managed rule group for targeted bots.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"advanced bots" + "login/checkout pages" + "detect and mitigate"</strong>, the answer is <em>AWS WAF Bot Control</em>. Key word is "advanced" &mdash; simple rate limiting won't work against sophisticated bots that rotate IPs and mimic human behavior. You need ML-based behavioral detection.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>AWS WAF Bot Control</em> &mdash; A specialized managed rule group with two tiers:<br>
+&bull; <strong>Common bots</strong> &mdash; Detects self-identifying bots (scrapers, crawlers) using request signatures<br>
+&bull; <strong>Targeted bots</strong> (what this question asks for) &mdash; Uses advanced techniques to detect sophisticated bots that actively try to evade detection:<br>
+&nbsp;&nbsp;&mdash; <strong>Browser fingerprinting</strong> &mdash; verifies the client is a real browser<br>
+&nbsp;&nbsp;&mdash; <strong>Client-side JavaScript interrogation</strong> &mdash; challenges the client to execute JS (bots often can't)<br>
+&nbsp;&nbsp;&mdash; <strong>Machine learning</strong> &mdash; analyzes behavioral patterns across requests<br>
+&nbsp;&nbsp;&mdash; <strong>AWS global threat intelligence</strong> &mdash; automatically updated with new bot signatures<br><br>
+
+Bot Control is specifically designed to protect <strong>login pages</strong> (credential stuffing, account takeover) and <strong>checkout pages</strong> (inventory hoarding, card testing). It allows legitimate users through while blocking automated threats.<br><br>
+
+<em>Why Other Approaches Fail Against Advanced Bots</em>:<br>
+&bull; <strong>Geo-restriction</strong> &mdash; Blocks ALL traffic from a country, including legitimate customers. Bots can use VPNs to appear from other countries. Too broad, too easy to circumvent.<br>
+&bull; <strong>Rate-based rules</strong> &mdash; Advanced bots use distributed IP rotation (thousands of IPs, each making few requests). No single IP exceeds the rate threshold, so rate limiting is ineffective.<br>
+&bull; <strong>IP block lists</strong> &mdash; Reactive, not proactive. There's always a delay between detection and blocking. Sophisticated bots rotate IPs faster than you can block them.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Geo-restriction + CloudFront Functions</em> &mdash; Geo-restriction blocks <strong>all traffic</strong> from a country &mdash; including legitimate customers, which hurts business. CloudFront Functions can do basic header checks but cannot perform sophisticated bot detection (no ML, no browser fingerprinting, no JS challenges). Bots using VPNs bypass geo-restriction entirely.<br>
+<em>B) WAF rate-based rules + geo-restriction</em> &mdash; Rate-based rules count requests per IP. Advanced bots distribute attacks across <strong>thousands of IPs</strong>, each staying below the rate threshold. Combined with geo-restriction blocking legitimate users, this solution both misses sophisticated bots and impacts real customers.<br>
+<em>C) CloudWatch + Lambda + dynamic IP blocking</em> &mdash; This is a <strong>reactive</strong> system with significant delay: logs must be generated, collected, analyzed, and then WAF updated. During that delay, bots continue operating. IP-based blocking is also ineffective against bots that rotate IPs frequently. WAF Bot Control provides <strong>real-time, proactive</strong> detection with zero delay.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 28;
+var totalQuestions = 29;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
