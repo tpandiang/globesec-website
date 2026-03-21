@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/30</div>
+            <div class="score-big" id="overallScore">0/31</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1348,10 +1348,46 @@ By using <code>CloudFront-Viewer-Country-Region</code> in a <strong>Lambda@Edge<
 </div>
 </div>
 
+<!-- Q31 MC -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q31.</span><span>A security team needs to improve a daily compliance reporting process. The report must show which <strong>on-premises servers and EC2 instances</strong> are missing the latest security patches. All servers and instances have agents for CloudWatch, Systems Manager, and Inspector. The team must bring all into compliance <strong>within 24 hours</strong>.<br><br>Which solution will meet these requirements with the LEAST operational overhead?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use Amazon QuickSight and AWS CloudTrail to generate the report. Redeploy all noncompliant instances and servers by using an AMI with the latest patches.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use Systems Manager Patch Manager to generate the report of all noncompliant servers and instances. Use Patch Manager to install the missing patches.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use Systems Manager Patch Manager to generate the report. Redeploy all noncompliant instances and servers by using an AMI with the latest patches.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use AWS Trusted Advisor to generate the report. Use Systems Manager Patch Manager to install the missing patches.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Systems Manager Patch Manager for both reporting AND patching.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"patch compliance" + "report" + "install patches" + "on-premises + EC2" + "least overhead"</strong>, the answer is <em>SSM Patch Manager</em> for everything. It's a single service that does both: scan/report AND remediate. No additional services needed.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Systems Manager Patch Manager</em> &mdash; A fully managed patching service that handles the complete patch lifecycle:<br>
+&bull; <strong>Scan</strong> &mdash; Scans instances against patch baselines to identify missing patches<br>
+&bull; <strong>Report</strong> &mdash; Generates compliance reports showing which instances are noncompliant<br>
+&bull; <strong>Install</strong> &mdash; Automatically installs missing patches on demand or on a schedule<br>
+&bull; <strong>Supports both EC2 AND on-premises</strong> &mdash; Any server with the SSM Agent installed (managed node) can be patched, regardless of where it runs<br><br>
+
+<em>Patch Manager Components</em>:<br>
+&bull; <strong>Patch Baselines</strong> &mdash; Define which patches are approved/rejected (e.g., "auto-approve critical patches after 7 days")<br>
+&bull; <strong>Patch Groups</strong> &mdash; Group instances by tag for targeted patching (e.g., "production" vs "development")<br>
+&bull; <strong>Maintenance Windows</strong> &mdash; Schedule when patching occurs (e.g., "every Sunday 2-4 AM")<br><br>
+
+One service handles scan, report, and remediate &mdash; that's least operational overhead.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) QuickSight + CloudTrail + AMI redeployment</em> &mdash; Three problems: (1) <strong>CloudTrail</strong> logs API calls, not patch compliance status &mdash; it can't report which servers are missing patches. (2) <strong>QuickSight</strong> is a BI dashboarding tool &mdash; it can visualize data but doesn't have built-in patch compliance scanning. (3) <strong>AMI redeployment</strong> is slow for EC2 and <strong>doesn't work for on-premises servers</strong> at all. You can't re-image an on-premises server with an AMI.<br>
+<em>C) Patch Manager report + AMI redeployment</em> &mdash; Correctly uses Patch Manager for reporting, but <strong>AMI redeployment</strong> for remediation is problematic: it's slow (requires instance replacement), doesn't work for on-premises servers, and is far more operational overhead than simply having Patch Manager install the patches directly. Why redeploy when you can patch in place?<br>
+<em>D) Trusted Advisor + Patch Manager</em> &mdash; <strong>Trusted Advisor</strong> provides high-level best practice recommendations (cost, performance, security, fault tolerance). It <strong>cannot generate patch compliance reports</strong> for specific servers and instances. Trusted Advisor doesn't scan for missing OS patches &mdash; that's Patch Manager's job. The remediation half (Patch Manager) is correct, but the reporting half (Trusted Advisor) is wrong.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 30;
+var totalQuestions = 31;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
