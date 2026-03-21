@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/22</div>
+            <div class="score-big" id="overallScore">0/23</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1019,10 +1019,51 @@ This is the AWS-recommended approach for resilience testing and requires the abs
 </div>
 </div>
 
+<!-- Q23 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q23.</span><span>A security engineer receives findings from AWS Security Hub showing suspicious port scanning activity across multiple Amazon EC2 instances in several AWS accounts in AWS Organizations. The engineer needs to:<br><br>&bull; Quickly determine the <strong>scope</strong> of the potential security event<br>&bull; Identify all <strong>affected resources</strong><br>&bull; Understand the <strong>timeline</strong> of the activity<br><br>Which solution will meet these requirements?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use AWS Config to query resource configuration history and create rules to detect instances with open ports. Correlate the findings with AWS CloudTrail logs to identify unauthorized API calls.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use AWS Systems Manager to run compliance scans against all EC2 instances and report on instances with noncompliant security groups. Use Amazon EventBridge to monitor for subsequent port scanning alerts.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use the Amazon GuardDuty dedicated dashboard to filter findings by type. Export all findings to an Amazon S3 bucket. Use Amazon Athena to run queries to identify patterns and affected resources.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use Amazon Detective to create a behavior graph. Analyze relationships between the affected resources and investigate the timeline of activities across the involved accounts.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Use Amazon Detective to create a behavior graph for cross-account investigation.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"investigate" + "scope" + "timeline" + "relationships between resources" + "cross-account"</strong>, the answer is always <em>Amazon Detective</em>. Detective is purpose-built for security investigations. It automatically maps relationships, builds timelines, and visualizes attack paths.<br><br>
+
+Remember the security trifecta:<br>
+&bull; <strong>GuardDuty</strong> = "Something suspicious happened" (detection)<br>
+&bull; <strong>Security Hub</strong> = "Here's everything in one place" (aggregation)<br>
+&bull; <strong>Detective</strong> = "Let me trace exactly what happened" (investigation)<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Amazon Detective Behavior Graphs</em> &mdash; Detective automatically collects and analyzes data from three sources:<br>
+&bull; <strong>CloudTrail logs</strong> &mdash; API call history (who did what)<br>
+&bull; <strong>VPC Flow Logs</strong> &mdash; Network traffic patterns (who connected to whom)<br>
+&bull; <strong>GuardDuty findings</strong> &mdash; Threat intelligence correlations<br><br>
+
+From these sources, Detective builds a <strong>behavior graph</strong> that shows:<br>
+&bull; <strong>Entity relationships</strong> &mdash; connections between EC2 instances, IAM users, IP addresses, and accounts<br>
+&bull; <strong>Timeline of events</strong> &mdash; when each activity occurred and how events relate to each other<br>
+&bull; <strong>Anomalous patterns</strong> &mdash; deviations from normal behavior for each entity<br>
+&bull; <strong>Cross-account scope</strong> &mdash; traces activity across multiple accounts in an organization<br><br>
+
+For this port scanning scenario, Detective would show: which instances were scanned, from which source IPs, at what times, whether the scanning IPs connected to other resources, and if any instances exhibited unusual behavior after being scanned.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) AWS Config + CloudTrail correlation</em> &mdash; Config tracks resource <strong>configuration state</strong> (e.g., "this security group has port 22 open") but doesn't provide security intelligence or <strong>visual relationship mapping</strong>. Manually correlating Config history with CloudTrail logs is time-consuming and doesn't provide the timeline-based analysis and entity visualization needed for rapid incident investigation.<br>
+<em>B) Systems Manager compliance scans</em> &mdash; Systems Manager manages infrastructure and can check compliance, but it's <strong>not designed for security incident investigation</strong>. It cannot map relationships between resources involved in a security event or provide timeline analysis. Compliance scans tell you "is this configured correctly?" not "what happened during this attack?"<br>
+<em>C) GuardDuty dashboard + S3 + Athena</em> &mdash; GuardDuty <strong>detects</strong> threats but its dashboard is not designed for complex cross-account investigations with relationship mapping. Exporting to S3 and querying with Athena introduces delays and requires writing custom SQL queries. Detective does all of this automatically with prebuilt visualizations &mdash; no data export, no custom queries needed.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 22;
+var totalQuestions = 23;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
