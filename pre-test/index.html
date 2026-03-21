@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/27</div>
+            <div class="score-big" id="overallScore">0/28</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1227,10 +1227,52 @@ Together, B and D cover both layers of DDoS defense.<br><br>
 </div>
 </div>
 
+<!-- Q28 MA - Matching -->
+<div class="question" data-type="ma" data-answers="0,1,2,3">
+<div class="question-text"><span class="question-num">Q28.</span><span>A security engineer is designing proactive edge security controls. Match each anticipated threat to the correct security strategy.<span class="q-type-badge">SELECT ALL FOUR</span><br><br>
+<strong>A)</strong> Brute force attacks on a login page &rarr; <em>Set up rate-based rules in AWS WAF</em><br>
+<strong>B)</strong> Man-in-the-middle attacks intercepting data in transit &rarr; <em>Enforce HTTPS-only with ACM</em><br>
+<strong>C)</strong> DDoS attacks targeting network/transport layers &rarr; <em>Implement AWS Shield Advanced</em><br>
+<strong>D)</strong> SQL injection and cross-site scripting &rarr; <em>Configure AWS WAF with managed rule groups</em><br><br>
+Select all four to confirm you understand each mapping.</span></div>
+<div class="options">
+<div class="option" onclick="toggleMA(this)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Brute force login attacks &rarr; WAF rate-based rules (limit requests per IP)</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Man-in-the-middle attacks &rarr; HTTPS-only with ACM (encrypt data in transit)</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="2"><span class="option-letter">C</span><span class="option-text">DDoS (Layer 3/4) attacks &rarr; AWS Shield Advanced (enhanced DDoS protection)</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="3"><span class="option-letter">D</span><span class="option-text">SQLi and XSS attacks &rarr; WAF managed rule groups (preconfigured OWASP rules)</span></div>
+</div>
+<button class="check-btn" onclick="checkMA(this)">Check Answer</button>
+<div class="explanation">
+<strong>&#10003; All four mappings are correct.</strong> Each threat maps to a specific edge security strategy.<br><br>
+
+<strong>The Edge Security Matrix &mdash; Memorize This:</strong><br><br>
+
+<strong>1. Brute Force Attacks &rarr; WAF Rate-Based Rules</strong><br>
+<em>What it does</em>: Automatically counts requests from each IP address and <strong>blocks IPs that exceed a threshold</strong> you define (e.g., 100 login requests per 5 minutes). When the request rate drops below the threshold, the IP is automatically unblocked.<br>
+<em>Why it works</em>: Brute force attacks generate high-volume requests from individual IPs. Rate-based rules throttle these automated attacks while allowing legitimate users through. You can scope rules to specific URLs (like <code>/login</code>) for precision.<br>
+<em>Key detail</em>: Rate-based rules are <strong>different from regular WAF rules</strong>. Regular rules match patterns (like SQL injection strings). Rate-based rules count request volume per IP &mdash; they're specifically designed for volumetric abuse from single sources.<br><br>
+
+<strong>2. Man-in-the-Middle (MITM) &rarr; HTTPS with ACM</strong><br>
+<em>What it does</em>: AWS Certificate Manager (ACM) provides free SSL/TLS certificates with <strong>automatic renewal</strong>. Enforcing HTTPS-only ensures all client-server communication is encrypted in transit.<br>
+<em>Why it works</em>: MITM attacks intercept unencrypted traffic between client and server to steal credentials, session tokens, or sensitive data. TLS encryption makes intercepted data unreadable. Even if an attacker captures the packets, they can't decrypt the content without the private key.<br>
+<em>Key detail</em>: ACM handles certificate provisioning and renewal automatically &mdash; no manual certificate management, no expired certs causing outages.<br><br>
+
+<strong>3. DDoS (Layer 3/4) &rarr; AWS Shield Advanced</strong><br>
+<em>What it does</em>: Provides <strong>enhanced DDoS protection</strong> beyond the free Shield Standard. Includes: real-time attack visibility, 24/7 DDoS Response Team (DRT) access, cost protection (credits for scaling during attacks), and advanced detection for volumetric, state-exhaustion, and application-layer attacks.<br>
+<em>Why it works</em>: Layer 3/4 DDoS attacks (SYN floods, UDP amplification, DNS reflection) require infrastructure-level mitigation that goes beyond basic ALB/CloudFront protection. Shield Advanced provides dedicated mitigation capacity and expert support.<br>
+<em>Key detail</em>: Shield Standard is free and automatic for all AWS customers. Shield Advanced is paid ($3,000/month) and provides the enhanced protection, DRT access, and cost protection.<br><br>
+
+<strong>4. SQLi &amp; XSS &rarr; WAF Managed Rule Groups</strong><br>
+<em>What it does</em>: Pre-built rule sets that detect and block common web vulnerabilities including the <strong>OWASP Top 10</strong>: SQL injection, cross-site scripting, local file inclusion, remote code execution, and more. AWS and third-party vendors provide managed rule groups that are <strong>regularly updated</strong> for emerging threats.<br>
+<em>Why it works</em>: SQL injection and XSS exploit predictable patterns in HTTP requests (e.g., <code>' OR 1=1--</code> in form fields, <code>&lt;script&gt;</code> tags in input). Managed rule groups contain regex patterns that match these attack signatures and block the requests before they reach your application.<br>
+<em>Key detail</em>: You don't write these rules yourself. AWS provides the <strong>AWS Managed Rules</strong> (free with WAF) and marketplace vendors offer specialized rule groups. They update automatically as new attack vectors are discovered.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 27;
+var totalQuestions = 28;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
