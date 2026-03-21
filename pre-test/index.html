@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/20</div>
+            <div class="score-big" id="overallScore">0/21</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -941,10 +941,50 @@ Object Lock ensures forensic evidence (memory dumps, disk snapshots, log copies)
 </div>
 </div>
 
+<!-- Q21 MC -->
+<div class="question" data-type="mc" data-answer="0">
+<div class="question-text"><span class="question-num">Q21.</span><span>A security engineer is preparing for a potential security incident involving unauthorized access to an Amazon EC2 instance hosting sensitive customer data. The engineer developed a response plan and needs to <strong>test and validate</strong> the plan without impacting production data.<br><br>Which solution will validate the incident response plan with the LEAST operational overhead?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Replicate the EC2 environment in a testing account. Use sanitized data and simulate the incident by using AWS Fault Injection Service.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use AWS Config to capture configuration changes in the production environment during an actual incident. Apply the changes in a test environment.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable AWS CloudTrail in a testing account. Use production CloudTrail logs to simulate incident patterns in an AWS Lambda function that triggers the response plan.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Deploy an AWS CloudFormation stack in a testing account that simulates a security incident by exposing EC2 metadata. Observe the results and detection outcomes.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Replicate in a testing account with sanitized data and use AWS Fault Injection Service.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"test incident response" + "without impacting production" + "least overhead"</strong>, the answer needs three things: (1) <em>isolated environment</em> (separate account), (2) <em>safe data</em> (sanitized, not production), and (3) <em>managed simulation tool</em> (not custom scripts). AWS Fault Injection Service (FIS) is the purpose-built tool for controlled fault injection experiments.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>AWS Fault Injection Service (FIS)</em> &mdash; A fully managed service for running controlled fault injection experiments on AWS resources. Key capabilities:<br>
+&bull; <strong>Experiment templates</strong> &mdash; Define what disruptions to inject (e.g., terminate instances, block network, stress CPU)<br>
+&bull; <strong>Stop conditions</strong> &mdash; Automatically halt experiments if metrics exceed safe thresholds<br>
+&bull; <strong>Controlled blast radius</strong> &mdash; Target specific resources with tags or filters<br>
+&bull; <strong>Pre-built actions</strong> &mdash; AWS provides actions for EC2, ECS, EKS, RDS, and more<br><br>
+
+For incident response testing, FIS can simulate disruptions that trigger your detection and response workflows, validating that your plan works end-to-end without building custom simulation code.<br><br>
+
+<em>AWS Best Practice for IR Testing</em>:<br>
+1. Create an <strong>isolated testing account</strong> (separate from production)<br>
+2. Replicate the environment architecture<br>
+3. Use <strong>sanitized data</strong> (no real customer data)<br>
+4. Use <strong>controlled simulations</strong> to trigger response workflows<br>
+5. Validate detection, containment, eradication, and recovery steps<br><br>
+
+<strong>Why A is correct:</strong> This follows the AWS-recommended approach: separate testing account provides isolation, sanitized data prevents real data exposure, and FIS provides a managed, repeatable way to inject faults and validate detection/response workflows. No custom code to maintain, no production risk, least operational overhead.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) AWS Config during an actual incident</em> &mdash; This requires <strong>waiting for an actual incident</strong> to test the plan, which defeats the purpose of proactive testing. Config tracks configuration changes but cannot simulate incidents. You cannot validate a response plan by passively observing changes during a real breach &mdash; by then it's too late to fix gaps in the plan.<br>
+<em>C) Production CloudTrail logs in a Lambda function</em> &mdash; Using production logs to simulate incidents lacks the <strong>control and isolation</strong> needed for safe testing. Production logs may contain sensitive information, and replaying them through a Lambda function requires building and maintaining custom simulation code. This is not a controlled sandbox validation &mdash; it's a fragile custom solution with more operational overhead.<br>
+<em>D) CloudFormation stack that exposes EC2 metadata</em> &mdash; This <strong>actually creates vulnerable resources</strong> rather than simulating a controlled experiment. You'd need to develop and maintain custom CloudFormation templates, and the deployed resources are genuinely exposed &mdash; creating real security risk even in a test account. Also requires managing the lifecycle of these intentionally vulnerable resources. More overhead and more risk than using FIS.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 20;
+var totalQuestions = 21;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
