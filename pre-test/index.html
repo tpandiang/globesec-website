@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/25</div>
+            <div class="score-big" id="overallScore">0/26</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1149,10 +1149,45 @@ CloudTrail retains 90 days of management events by default, and indefinitely wit
 </div>
 </div>
 
+<!-- Q26 MC -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q26.</span><span>A security engineer discovers suspicious API calls from a compromised IAM role. The engineer must <strong>immediately stop all current activity</strong> that uses the IAM role.<br><br>Which solution provides the QUICKEST way to stop all current activity from the compromised IAM role?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Update the trust policy for the compromised IAM role to include a condition that denies access based on the source IP address.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Apply a deny all IAM policy to the compromised IAM role. Revoke all temporary security credentials. Block the source IP address by using a network ACL.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use IAM Access Analyzer to analyze the trust and permission policies for the compromised IAM role to identify potential misconfigurations.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a new IAM role with the same permissions. Instruct all legitimate users to switch to the new role immediately.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Apply deny-all policy + revoke temporary credentials + block source IP via NACL.<br><br>
+
+<strong>How to Think About This:</strong><br>
+The key phrase is <strong>"immediately stop ALL CURRENT activity."</strong> This means you need to kill <em>existing active sessions</em>, not just prevent new ones. This requires a <strong>three-pronged approach</strong>:<br>
+1. <strong>Deny all</strong> &mdash; blocks any further API calls from the role<br>
+2. <strong>Revoke credentials</strong> &mdash; invalidates existing temporary sessions<br>
+3. <strong>Block IP via NACL</strong> &mdash; network-level block prevents any access from the attacker's IP<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Why Deny-All Policy Alone Isn't Enough</em> &mdash; When someone assumes an IAM role, they receive <strong>temporary security credentials</strong> (access key + secret key + session token) that are valid for the session duration (up to 12 hours). Even if you attach a deny-all policy, previously issued temporary credentials may still be cached and usable until they expire. That's why you must also <strong>revoke the credentials</strong>.<br><br>
+
+<em>Revoking Temporary Credentials</em> &mdash; AWS provides a way to revoke all active sessions for a role. In the IAM console: Role &rarr; "Revoke active sessions." This adds an inline policy with an <code>aws:TokenIssueTime</code> condition that denies all actions for tokens issued before a specific timestamp. Any existing session tokens become immediately invalid.<br><br>
+
+<em>Network ACL for IP Blocking</em> &mdash; NACLs are <strong>stateless</strong> and take effect <strong>immediately</strong>. By adding a deny rule for the attacker's source IP, you block all network traffic from that IP to any resource in the subnet &mdash; even if they somehow obtain new credentials.<br><br>
+
+<em>The Complete Containment</em>:<br>
+<code>Deny-all policy (block API permissions) + Revoke sessions (kill active tokens) + NACL (block network access)</code><br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Update trust policy to deny source IP</em> &mdash; Trust policies control <strong>who can assume the role</strong> (new sessions). They do NOT affect <strong>existing active sessions</strong>. An attacker with already-issued temporary credentials continues to have access. Modifying the trust policy only prevents new role assumptions &mdash; it doesn't revoke current ones.<br>
+<em>C) IAM Access Analyzer</em> &mdash; Access Analyzer is a <strong>detective/advisory</strong> tool that identifies potential misconfigurations. It <strong>cannot stop active sessions</strong> or revoke credentials. During an active compromise, you need immediate containment, not analysis. Access Analyzer is useful after containment to understand how the misconfiguration occurred.<br>
+<em>D) Create a new role and switch users</em> &mdash; This does nothing to stop the attacker. The compromised role still exists with active sessions. Creating a replacement role helps legitimate users transition later, but it's a <strong>recovery step, not a containment step</strong>. The malicious actor maintains full access through the original role's active sessions.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 25;
+var totalQuestions = 26;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
