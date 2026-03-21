@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/21</div>
+            <div class="score-big" id="overallScore">0/22</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -981,10 +981,48 @@ For incident response testing, FIS can simulate disruptions that trigger your de
 </div>
 </div>
 
+<!-- Q22 MC -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q22.</span><span>A company needs to test an application's availability across multiple Availability Zones. The architecture uses a three-AZ deployment of Amazon EC2 instances in Auto Scaling groups behind an ALB, with an Amazon RDS MySQL database and Amazon EFS. The security team needs to perform <strong>controlled testing</strong> to verify high availability even if traffic is disrupted in one AZ.<br><br>Which solution will meet these requirements with the LEAST operational effort?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create two AWS Lambda functions. Configure the first to select an AZ, back up its network ACL to DynamoDB, and modify the NACL to simulate isolation. Configure the second to restore the original NACL from DynamoDB after testing.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create an AWS Step Functions state machine to read and store ALB, EC2, and RDS security group rules for the target AZ. Remove all rules, set a 15-minute wait state, then restore the rules after testing.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create an applicable tag to assign to your resources in the target AZ. Configure an AWS Fault Injection Service (FIS) "AZ Availability: Power Interruption" scenario using the defined tag. Execute and end the scenario after testing.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create an AWS Transit Gateway. Configure VPC routes through the Transit Gateway. Update the Transit Gateway route table for the target AZ to send all traffic to a blackhole route. Restore after testing.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Use AWS Fault Injection Service (FIS) with the built-in AZ power interruption scenario.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"test availability" + "simulate AZ disruption" + "least effort"</strong>, the answer is <em>AWS Fault Injection Service</em>. FIS has <strong>built-in AZ-level scenarios</strong> specifically designed for this exact use case. No custom code, no manual infrastructure changes. Tag your resources, pick the scenario, run it, stop it.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>AWS FIS AZ Scenarios</em> &mdash; FIS includes pre-built scenarios for Availability Zone testing:<br>
+&bull; <strong>"AZ Availability: Power Interruption"</strong> &mdash; Simulates a power disruption to an entire AZ, affecting tagged resources<br>
+&bull; Resources are targeted via <strong>tags</strong> &mdash; you assign a specific tag to resources in the AZ you want to disrupt<br>
+&bull; <strong>Automatic recovery</strong> &mdash; when the scenario is halted, resources recover to their original state<br>
+&bull; <strong>Stop conditions</strong> &mdash; CloudWatch alarms can automatically stop the experiment if critical metrics breach thresholds<br><br>
+
+<em>FIS Workflow</em>:<br>
+1. Tag resources in the target AZ<br>
+2. Select the "AZ Availability: Power Interruption" scenario<br>
+3. Execute &rarr; FIS simulates the power disruption<br>
+4. Observe: Does the ALB route traffic to healthy AZs? Does RDS failover? Does EFS remain accessible?<br>
+5. End scenario &rarr; resources recover automatically<br><br>
+
+This is the AWS-recommended approach for resilience testing and requires the absolute minimum operational effort.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Two Lambda functions + DynamoDB</em> &mdash; This requires: (1) writing two Lambda functions in a programming language, (2) maintaining a DynamoDB table for NACL backup/restore, (3) handling error scenarios and edge cases in code. All of this is custom development and maintenance. FIS does the same thing with zero code using a built-in scenario.<br>
+<em>B) Step Functions + security group manipulation</em> &mdash; Multiple problems: (1) Step Functions would need Lambda functions or other compute to make the actual API calls for security group modifications. (2) <strong>Removing ALL security group rules</strong> is dangerous &mdash; you lose network communication to the ALB, EC2 instances, AND the RDS database, not just in the target AZ. (3) Significant operational effort to build and maintain this workflow.<br>
+<em>D) Transit Gateway + blackhole routes</em> &mdash; This requires creating an entirely new Transit Gateway, reconfiguring all VPC routes to flow through it, and then managing blackhole route changes. This is a major infrastructure change with significant operational overhead. A Transit Gateway also adds cost. FIS provides the same AZ disruption simulation without any infrastructure changes.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 21;
+var totalQuestions = 22;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
