@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/23</div>
+            <div class="score-big" id="overallScore">0/24</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1060,10 +1060,55 @@ For this port scanning scenario, Detective would show: which instances were scan
 </div>
 </div>
 
+<!-- Q24 MA -->
+<div class="question" data-type="ma" data-answers="1,3,5">
+<div class="question-text"><span class="question-num">Q24.</span><span>The access key of an IAM user is compromised. Multiple new Amazon EC2 instances have been launched unexpectedly. A security engineer must immediately minimize the impact and isolate affected resources for offline forensic analysis.<span class="q-type-badge">SELECT THREE</span><br><br>Which combination of actions should the security engineer take, based on AWS recommendations?</span></div>
+<div class="options">
+<div class="option" onclick="toggleMA(this)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use SSH to access the new instances. Copy all logs to an Amazon S3 bucket. Terminate the instances.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Deactivate the compromised IAM access key for the IAM user.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Delete the compromised IAM access key for the IAM user.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create Amazon EBS snapshots for the EBS volumes attached to the new instances. Isolate the instances.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="4"><span class="option-letter">E</span><span class="option-text">Use AWS Config to evaluate the actions the compromised IAM user took under its resource timeline.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="5"><span class="option-letter">F</span><span class="option-text">Use AWS CloudTrail to discover any additional actions that were performed by using the compromised access key.</span></div>
+</div>
+<button class="check-btn" onclick="checkMA(this)">Check Answer</button>
+<div class="explanation">
+<strong>&#10003; Correct: B, D, and F.</strong> Deactivate the key + EBS snapshots &amp; isolate + CloudTrail investigation.<br><br>
+
+<strong>How to Think About This:</strong><br>
+AWS incident response follows three phases: <strong>Contain &rarr; Preserve &rarr; Investigate</strong>. Map each correct answer to a phase:<br>
+&bull; <strong>Contain</strong>: Deactivate the access key (B) &mdash; stop the attacker immediately<br>
+&bull; <strong>Preserve</strong>: EBS snapshots + isolate (D) &mdash; save forensic evidence<br>
+&bull; <strong>Investigate</strong>: CloudTrail analysis (F) &mdash; determine full scope of compromise<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Deactivate vs. Delete Access Keys (B vs. C)</em> &mdash; This is a critical distinction:<br>
+&bull; <strong>Deactivate</strong> (correct) &mdash; The key is disabled immediately but still exists. If applications break because they were using this key, you can temporarily reactivate it to remediate. AWS recommends deactivate first, test, then delete later.<br>
+&bull; <strong>Delete</strong> (incorrect) &mdash; Permanent and irreversible. If any application was legitimately using this key, it breaks with no rollback option. In the chaos of incident response, you don't want to add more fires.<br><br>
+
+<em>EBS Snapshots for Forensics (D)</em> &mdash; Creating EBS snapshots captures a <strong>point-in-time copy</strong> of all disk data. You can then:<br>
+1. Create new EBS volumes from the snapshots<br>
+2. Attach those volumes to a forensic EC2 instance in an <strong>isolated VPC</strong><br>
+3. Analyze malware, log files, and attacker artifacts offline<br>
+The original instances are isolated (e.g., move to a security group with no inbound/outbound rules) to prevent further damage while preserving the running state.<br><br>
+
+<em>CloudTrail for Investigation (F)</em> &mdash; CloudTrail records all API calls. By filtering event history for the compromised access key ID, you can discover:<br>
+&bull; What other resources the attacker created, modified, or accessed<br>
+&bull; Whether they created additional access keys or IAM users (persistence)<br>
+&bull; Whether they accessed S3 data, modified security groups, or changed IAM policies<br>
+CloudTrail maintains 90 days of management event history by default.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) SSH in, copy logs, terminate</em> &mdash; Two problems: (1) <strong>Manual SSH access</strong> during incident response is not a best practice &mdash; AWS recommends programmatic automation tools (SSM, Lambda) to avoid accidentally contaminating evidence or triggering attacker tripwires. (2) <strong>Terminating instances</strong> destroys volatile memory evidence (RAM, running processes, network connections). You should isolate, not terminate.<br>
+<em>C) Delete the access key</em> &mdash; Deleting is <strong>irreversible</strong>. If legitimate applications depend on this key, they break permanently with no rollback. AWS explicitly recommends <strong>deactivating first</strong>, testing impact on applications, then deleting after confirming no legitimate dependencies.<br>
+<em>E) AWS Config resource timeline</em> &mdash; Config tracks <strong>resource configuration changes</strong> (e.g., "security group rules changed at 3pm"). It does NOT track <strong>actions taken by IAM users</strong>. The resource timeline shows what happened to a resource, not what a user did. For tracking user actions, you need <strong>CloudTrail</strong>, not Config.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 23;
+var totalQuestions = 24;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
