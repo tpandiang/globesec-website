@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/50</div>
+            <div class="score-big" id="overallScore">0/51</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1558,10 +1558,10 @@ This is exactly what the question asks: "are insecure protocols running on EC2 i
 <div class="question" data-type="mc" data-answer="3">
 <div class="question-text"><span class="question-num">Q36.</span><span>A web application runs on EC2 instances behind an ALB, with an RDS MySQL database and a Linux bastion host for schema updates. Admins SSH to the bastion from corporate workstations. The following security groups are applied:<br><br>&bull; <strong>sgLB</strong> &mdash; Associated with the ALB<br>&bull; <strong>sgWeb</strong> &mdash; Associated with the EC2 instances<br>&bull; <strong>sgDB</strong> &mdash; Associated with the database<br>&bull; <strong>sgBastion</strong> &mdash; Associated with the bastion host<br><br>Which security group configuration is both secure and functional?</span></div>
 <div class="options">
-<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/503 from 0.0.0.0/0 | sgWeb: 80/503 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
-<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/503 from 0.0.0.0/0 | sgWeb: 80/503 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/503 from 0.0.0.0/0 | sgWeb: 80/503 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/503 from 0.0.0.0/0 | sgWeb: 80/503 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/513 from 0.0.0.0/0 | sgWeb: 80/513 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/513 from 0.0.0.0/0 | sgWeb: 80/513 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/513 from 0.0.0.0/0 | sgWeb: 80/513 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/513 from 0.0.0.0/0 | sgWeb: 80/513 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
 </div>
 <div class="explanation">
 <strong>&#10003; Correct: D.</strong> The only configuration where every security group follows least privilege correctly.<br><br>
@@ -1575,11 +1575,11 @@ Evaluate each security group independently. For each one, ask: "What is the <str
 
 <strong>Security Group Breakdown:</strong><br><br>
 
-<em>sgLB: Port 80/503 from 0.0.0.0/0</em> &#10004;<br>
+<em>sgLB: Port 80/513 from 0.0.0.0/0</em> &#10004;<br>
 The ALB is the public entry point. It must accept HTTP (80) and HTTPS (443) from the entire internet. This is correct for a public-facing load balancer.<br><br>
 
-<em>sgWeb: Port 80/503 from sgLB</em> &#10004;<br>
-EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/503 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
+<em>sgWeb: Port 80/513 from sgLB</em> &#10004;<br>
+EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/513 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
 
 <em>sgDB: Port 3306 from sgWeb and sgBastion</em> &#10004;<br>
 The MySQL database (port 3306) should only accept connections from:<br>
@@ -1591,7 +1591,7 @@ Allowing <code>sgLB</code> to reach the database (option B) is a security violat
 Admins SSH from corporate workstations. The bastion should only accept SSH (port 22) from the <strong>corporate IP address range</strong>. Using the VPC IP range (options B, C) is wrong because corporate workstations are <strong>on-premises</strong>, not inside the VPC. The corporate IP range refers to the company's public IP addresses that the workstations use to reach AWS over the internet.<br><br>
 
 <strong>Why others are wrong &mdash; one error each:</strong><br>
-<em>A)</em> sgWeb allows 80/503 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
+<em>A)</em> sgWeb allows 80/513 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
 <em>B)</em> sgDB allows 3306 from <strong>sgLB</strong> &mdash; The ALB should never have direct database access. Only the app servers and bastion need database access. Also, sgBastion allows SSH from VPC range (wrong &mdash; admins are on-premises).<br>
 <em>C)</em> sgBastion allows 22 from <strong>VPC IP range</strong> &mdash; Corporate workstations are on-premises, not in the VPC. SSH connections come from the corporate public IP range, not VPC internal IPs.
 </div>
@@ -2182,10 +2182,53 @@ You get the convenience of KMS APIs with the security of dedicated HSM hardware.
 </div>
 </div>
 
+<!-- Q51 MC -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q51.</span><span>A company has an <strong>unencrypted</strong> Amazon EFS file system with many files. The company must encrypt all existing and future files. The files must be encrypted with a key that is <strong>rotated every 90 days</strong>.<br><br>Which solution will meet these requirements?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create a KMS customer managed key with automatic rotation. Modify the existing EFS file system to turn on encryption. Use a Lambda function to copy existing files in place to encrypt them.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Modify the existing EFS file system to turn on encryption using the default KMS service key for EFS. Configure automatic rotation. Use a Lambda function to copy existing files in place.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a KMS customer managed key with automatic rotation. Create a new EFS file system with encryption enabled using the KMS key. Use AWS DataSync to transfer existing files to the new encrypted file system.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a new EFS file system with encryption enabled using the default KMS service key for EFS. Configure automatic rotation. Use AWS DataSync to transfer existing files to the new file system.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> New EFS file system with customer managed KMS key (auto-rotation) + DataSync to migrate files.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Three rules eliminate the wrong answers:<br>
+1. <strong>Cannot modify an existing EFS to add encryption</strong> &rarr; must create a NEW file system (eliminates A and B)<br>
+2. <strong>"Rotated every 90 days"</strong> &rarr; must be a customer managed key, not the default service key (eliminates D)<br>
+3. <strong>Move existing files</strong> &rarr; DataSync is the managed migration tool (not Lambda copy-in-place)<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>EFS Encryption Rules</em>:<br>
+&bull; Encryption must be enabled <strong>at file system creation time</strong><br>
+&bull; You <strong>cannot enable encryption on an existing unencrypted EFS</strong> file system<br>
+&bull; To encrypt existing data, you must: create a new encrypted EFS &rarr; migrate data &rarr; switch applications to the new file system<br><br>
+
+<em>KMS Key Types and Rotation</em>:<br>
+&bull; <strong>AWS-managed key</strong> (<code>aws/elasticfilesystem</code>) &mdash; AWS manages it. You <strong>cannot configure custom rotation</strong> periods. AWS rotates it automatically every year (365 days), and you cannot change this to 90 days.<br>
+&bull; <strong>Customer managed key</strong> &mdash; You create and control it. You <strong>can configure automatic rotation</strong> with a custom period (e.g., 90 days). This meets the "rotated every 90 days" requirement.<br><br>
+
+<em>AWS DataSync</em>:<br>
+&bull; A managed data transfer service for moving files between storage systems<br>
+&bull; Supports EFS-to-EFS, on-premises-to-EFS, S3-to-EFS, and more<br>
+&bull; Handles encryption, integrity verification, and scheduling automatically<br>
+&bull; The correct tool for migrating data between EFS file systems<br><br>
+
+<strong>Why C is correct:</strong> Creates a new EFS (required since you can't encrypt an existing one), uses a customer managed KMS key (supports custom 90-day rotation), and uses DataSync (managed migration tool) to transfer existing files. Every component is correct.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Modify existing EFS + Lambda copy</em> &mdash; You <strong>cannot modify an existing EFS</strong> to enable encryption. This is a hard AWS limitation. You must create a new file system. The customer managed key with rotation is correct, but the approach of modifying the existing file system is impossible.<br>
+<em>B) Modify existing EFS + default service key</em> &mdash; Two problems: (1) <strong>Cannot modify existing EFS</strong> to add encryption. (2) The default service key (<code>aws/elasticfilesystem</code>) does <strong>not support custom rotation periods</strong> &mdash; it rotates annually and you can't change it to 90 days.<br>
+<em>D) New EFS + default service key</em> &mdash; Correctly creates a new EFS and uses DataSync. However, the default service key <strong>cannot be configured for 90-day rotation</strong>. You must use a customer managed key to set custom rotation intervals.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 50;
+var totalQuestions = 51;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
