@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/45</div>
+            <div class="score-big" id="overallScore">0/46</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1558,10 +1558,10 @@ This is exactly what the question asks: "are insecure protocols running on EC2 i
 <div class="question" data-type="mc" data-answer="3">
 <div class="question-text"><span class="question-num">Q36.</span><span>A web application runs on EC2 instances behind an ALB, with an RDS MySQL database and a Linux bastion host for schema updates. Admins SSH to the bastion from corporate workstations. The following security groups are applied:<br><br>&bull; <strong>sgLB</strong> &mdash; Associated with the ALB<br>&bull; <strong>sgWeb</strong> &mdash; Associated with the EC2 instances<br>&bull; <strong>sgDB</strong> &mdash; Associated with the database<br>&bull; <strong>sgBastion</strong> &mdash; Associated with the bastion host<br><br>Which security group configuration is both secure and functional?</span></div>
 <div class="options">
-<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/453 from 0.0.0.0/0 | sgWeb: 80/453 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
-<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/453 from 0.0.0.0/0 | sgWeb: 80/453 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/453 from 0.0.0.0/0 | sgWeb: 80/453 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/453 from 0.0.0.0/0 | sgWeb: 80/453 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/463 from 0.0.0.0/0 | sgWeb: 80/463 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/463 from 0.0.0.0/0 | sgWeb: 80/463 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/463 from 0.0.0.0/0 | sgWeb: 80/463 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/463 from 0.0.0.0/0 | sgWeb: 80/463 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
 </div>
 <div class="explanation">
 <strong>&#10003; Correct: D.</strong> The only configuration where every security group follows least privilege correctly.<br><br>
@@ -1575,11 +1575,11 @@ Evaluate each security group independently. For each one, ask: "What is the <str
 
 <strong>Security Group Breakdown:</strong><br><br>
 
-<em>sgLB: Port 80/453 from 0.0.0.0/0</em> &#10004;<br>
+<em>sgLB: Port 80/463 from 0.0.0.0/0</em> &#10004;<br>
 The ALB is the public entry point. It must accept HTTP (80) and HTTPS (443) from the entire internet. This is correct for a public-facing load balancer.<br><br>
 
-<em>sgWeb: Port 80/453 from sgLB</em> &#10004;<br>
-EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/453 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
+<em>sgWeb: Port 80/463 from sgLB</em> &#10004;<br>
+EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/463 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
 
 <em>sgDB: Port 3306 from sgWeb and sgBastion</em> &#10004;<br>
 The MySQL database (port 3306) should only accept connections from:<br>
@@ -1591,7 +1591,7 @@ Allowing <code>sgLB</code> to reach the database (option B) is a security violat
 Admins SSH from corporate workstations. The bastion should only accept SSH (port 22) from the <strong>corporate IP address range</strong>. Using the VPC IP range (options B, C) is wrong because corporate workstations are <strong>on-premises</strong>, not inside the VPC. The corporate IP range refers to the company's public IP addresses that the workstations use to reach AWS over the internet.<br><br>
 
 <strong>Why others are wrong &mdash; one error each:</strong><br>
-<em>A)</em> sgWeb allows 80/453 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
+<em>A)</em> sgWeb allows 80/463 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
 <em>B)</em> sgDB allows 3306 from <strong>sgLB</strong> &mdash; The ALB should never have direct database access. Only the app servers and bastion need database access. Also, sgBastion allows SSH from VPC range (wrong &mdash; admins are on-premises).<br>
 <em>C)</em> sgBastion allows 22 from <strong>VPC IP range</strong> &mdash; Corporate workstations are on-premises, not in the VPC. SSH connections come from the corporate public IP range, not VPC internal IPs.
 </div>
@@ -1960,10 +1960,51 @@ User Alice might have a directly attached Deny for S3, while User Bob might have
 </div>
 </div>
 
+<!-- Q46 MC -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q46.</span><span>A company will deploy an application on Amazon EC2 instances in <strong>private subnets</strong>. The application will transfer sensitive data to and from an Amazon S3 bucket. According to compliance requirements, the <strong>data must not traverse the public internet</strong>.<br><br>Which solution meets the compliance requirement?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Access the S3 bucket through a proxy server.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Access the S3 bucket through a NAT gateway.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Access the S3 bucket through a VPC endpoint for S3.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Access the S3 bucket through the SSL-protected S3 endpoint.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Use a VPC endpoint for S3.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"private subnets" + "must not traverse public internet" + "access S3"</strong>, the answer is always <em>VPC endpoint</em>. A VPC endpoint keeps traffic entirely within the AWS private network &mdash; it never touches the public internet.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>VPC Endpoints for S3</em> &mdash; Two types exist:<br>
+&bull; <strong>Gateway endpoint</strong> (most common for S3) &mdash; Free, adds a route to your subnet route table that directs S3 traffic through the endpoint. Traffic stays on the AWS private network. No internet gateway, NAT gateway, or VPN needed.<br>
+&bull; <strong>Interface endpoint</strong> (powered by PrivateLink) &mdash; Creates an ENI with a private IP in your subnet. Costs per hour + per GB. Useful when you need DNS resolution from on-premises or specific security group controls.<br><br>
+
+<em>Gateway Endpoint Flow</em>:<br>
+<code>EC2 (private subnet) &rarr; Route table entry for S3 prefix list &rarr; Gateway Endpoint &rarr; S3 (all within AWS network)</code><br><br>
+
+No internet gateway, no NAT gateway, no public IP needed. The traffic <strong>never leaves the AWS private network</strong>.<br><br>
+
+<em>What Traverses the Internet vs. What Doesn't</em>:<br>
+&bull; <strong>NAT gateway</strong> &rarr; Routes traffic TO the internet (public) &mdash; data traverses the internet<br>
+&bull; <strong>Internet gateway</strong> &rarr; Direct internet access &mdash; data traverses the internet<br>
+&bull; <strong>SSL/HTTPS endpoint</strong> &rarr; Encrypted but still goes over the internet &mdash; data traverses the internet<br>
+&bull; <strong>VPC endpoint</strong> &rarr; Private AWS network only &mdash; <strong>data does NOT traverse the internet</strong><br>
+&bull; <strong>Direct Connect</strong> &rarr; Dedicated private link &mdash; data does NOT traverse the internet<br><br>
+
+<strong>Why C is correct:</strong> A VPC endpoint for S3 provides a private connection between your VPC and S3 without requiring an internet gateway, NAT device, VPN, or Direct Connect. Traffic between the VPC and S3 stays entirely within the Amazon network. This meets the compliance requirement that data must not traverse the public internet.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Proxy server</em> &mdash; A proxy server forwards requests on behalf of clients. Unless the proxy connects to S3 through a VPC endpoint, it would route traffic through the internet. A proxy alone doesn't guarantee private connectivity &mdash; it just adds an intermediary. The proxy itself would need a VPC endpoint to keep traffic private.<br>
+<em>B) NAT gateway</em> &mdash; A NAT gateway enables instances in <strong>private subnets to reach the public internet</strong>. Traffic from the instance goes through the NAT gateway, then the internet gateway, then the public internet to reach S3. This <strong>directly violates</strong> the "must not traverse the public internet" requirement.<br>
+<em>D) SSL-protected S3 endpoint</em> &mdash; SSL/TLS <strong>encrypts</strong> data in transit, but the traffic still travels <strong>over the public internet</strong>. Encryption protects confidentiality (no one can read the data), but it doesn't prevent the data from traversing the internet. The compliance requirement is about the <em>network path</em>, not just encryption.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 45;
+var totalQuestions = 46;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
