@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/41</div>
+            <div class="score-big" id="overallScore">0/42</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1797,10 +1797,52 @@ Only <em>trusted identity propagation</em> meets all three. It's a built-in IAM 
 </div>
 </div>
 
+<!-- Q42 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q42.</span><span>A company uses AWS Organizations and wants to secure root access to all member accounts. Requirements:<br><br>&bull; Prevent root credential recovery by unauthorized users<br>&bull; No long-term credentials for the root user<br>&bull; Credentials cannot be leaked<br>&bull; Root actions are controlled and restricted<br>&bull; Must be able to perform specific root user functions <strong>quickly</strong><br><br>Which solution will meet these requirements?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Remove existing root access keys. Update root passwords. Ensure only authorized users have root passwords. Create an SCP that denies all actions by the root user in all accounts.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Update root user email to a limited access mailbox in all accounts. Remove existing credentials. Update root passwords. Ensure only authorized users have mailbox and password access.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Apply hardware MFA to root user in all accounts. Remove existing credentials. Update root passwords. Ensure only authorized users have MFA tokens and passwords.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable root access management in the organization management account. Remove any existing credentials. Ensure only authorized users have access to the management account.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Enable centralized root access management in the organization management account.<br><br>
+
+<strong>How to Think About This:</strong><br>
+The question has a critical combination: <strong>"no long-term credentials" + "credentials cannot be leaked" + "perform root functions quickly."</strong> Options A, B, and C all involve root <em>passwords</em> &mdash; which are long-term credentials that can be leaked. Only option D eliminates root passwords entirely through centralized root management.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Centralized Root Access Management</em> &mdash; An AWS Organizations feature that allows the management account to:<br>
+&bull; <strong>Remove all root credentials</strong> from member accounts (passwords, access keys, MFA) &mdash; no long-term credentials exist<br>
+&bull; <strong>Disable account recovery</strong> for member accounts &mdash; no one can reset the root password from the member account<br>
+&bull; <strong>Perform specific root actions</strong> directly from IAM in the management account &mdash; without ever logging in as root in the member account<br>
+&bull; <strong>No SCP changes needed</strong> &mdash; the management account can perform root-privileged actions through IAM, not through the root user itself<br><br>
+
+<em>What Root Actions Can Be Performed</em>:<br>
+From the management account, authorized IAM users can perform limited root-only actions on member accounts:<br>
+&bull; Delete S3 bucket policies that deny all access (lockout recovery)<br>
+&bull; Delete SQS resource policies that deny all access<br>
+&bull; Other emergency root-required operations<br>
+These actions are quick &mdash; no MFA token retrieval, no SCP removal, no password lookup needed.<br><br>
+
+<em>Why This Is More Secure</em>:<br>
+&bull; <strong>No root password exists</strong> in member accounts &rarr; nothing to leak<br>
+&bull; <strong>No root login possible</strong> in member accounts &rarr; no credential stuffing attacks<br>
+&bull; <strong>No account recovery</strong> possible from member accounts &rarr; attackers can't reset root password via email<br>
+&bull; All root-like actions go through <strong>IAM in the management account</strong> &rarr; governed by IAM policies, logged in CloudTrail<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) SCP denying all root actions</em> &mdash; The SCP blocks root from acting, but <strong>root passwords still exist</strong> (can be leaked). When you need to perform a root action, you must <strong>remove the SCP first</strong> &mdash; temporarily exposing ALL member accounts in that OU. Also, removing and reapplying SCPs is slow, error-prone, and not "quick."<br>
+<em>B) Limited access mailbox + root passwords</em> &mdash; Root <strong>passwords still exist</strong> and can be leaked. Anyone with mailbox access can recover root credentials. This doesn't prevent root actions &mdash; just limits who knows the password. Doesn't meet "no long-term credentials" or "credentials cannot be leaked."<br>
+<em>C) Hardware MFA + root passwords</em> &mdash; More secure than B (requires physical MFA device), but root <strong>passwords still exist</strong>. Retrieving the physical MFA token is <strong>time-consuming</strong> (stored in a safe, requires physical access) &mdash; doesn't meet "quickly." Also doesn't limit which actions root can take once logged in &mdash; full unrestricted root access.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 41;
+var totalQuestions = 42;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
