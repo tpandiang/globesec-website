@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/40</div>
+            <div class="score-big" id="overallScore">0/41</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1758,10 +1758,49 @@ IAM Roles Anywhere uses <strong>X.509 certificates</strong> for authentication i
 </div>
 </div>
 
+<!-- Q41 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q41.</span><span>A company builds a web application using Amazon API Gateway with microservices on Amazon ECS. The company uses an external IdP and AWS IAM Identity Center for authentication. Microservices need to access Amazon S3 <strong>on behalf of authenticated users</strong>.<br><br>The solution must:<br>&bull; <strong>Preserve end user identity</strong> across service layers<br>&bull; Enforce <strong>least privilege</strong> access<br>&bull; <strong>No custom authorization logic</strong><br><br>Which solution will meet these requirements?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Configure IAM Identity Center Active Directory sync. Configure ECS tasks with a static IAM role that grants access to the S3 bucket. Enforce user-level access in the application code.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Attach a user identity token as a custom header in each request. Configure an AWS Lambda authorizer in API Gateway to validate the token and map permissions.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Configure each ECS task with an IAM role that uses attribute-based access control (ABAC). Include user attributes in request headers that pass from API Gateway.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Configure trusted identity propagation in IAM Identity Center. Configure ECS tasks to assume a user-specific role derived from the IAM Identity Center session to access Amazon S3.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> IAM Identity Center trusted identity propagation.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Three requirements narrow the answer:<br>
+&bull; <strong>"Preserve end user identity across service layers"</strong> &rarr; identity propagation (not static roles)<br>
+&bull; <strong>"Least privilege"</strong> &rarr; per-user permissions (not one shared role for all users)<br>
+&bull; <strong>"No custom authorization logic"</strong> &rarr; built-in feature (not Lambda authorizers or app code)<br><br>
+
+Only <em>trusted identity propagation</em> meets all three. It's a built-in IAM Identity Center feature that passes the authenticated user's identity through the entire service chain without custom code.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Trusted Identity Propagation</em> &mdash; A feature of IAM Identity Center that adds <strong>identity metadata</strong> to IAM role sessions. This means when an ECS task accesses S3, AWS knows <strong>which end user</strong> initiated the request &mdash; not just which service role. Key benefits:<br>
+&bull; <strong>User identity flows end-to-end</strong>: API Gateway &rarr; ECS &rarr; S3 all see the original user<br>
+&bull; <strong>S3 access policies can be user-specific</strong>: grant Alice access to her folder, Bob to his<br>
+&bull; <strong>No custom code needed</strong>: the identity propagation is handled by IAM Identity Center<br>
+&bull; <strong>Auditing shows the real user</strong>: CloudTrail logs show which user accessed S3, not just "ECS task role"<br><br>
+
+<em>The Flow</em>:<br>
+<code>User authenticates via IdP &rarr; IAM Identity Center session created &rarr; API Gateway receives request &rarr; ECS task assumes user-specific role from Identity Center session &rarr; S3 access is scoped to that user</code><br><br>
+
+<em>Without trusted identity propagation</em>, ECS tasks use a shared static IAM role. All users appear as the same principal. You'd need custom application code to enforce per-user access. CloudTrail can't distinguish which user made which S3 call.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Static IAM role + application code</em> &mdash; A static role grants the <strong>same permissions to all users</strong> &mdash; violates least privilege. Enforcing user-level access "in the application code" means writing <strong>custom authorization logic</strong> &mdash; which the question explicitly prohibits. Also, AD sync is specific to Microsoft AD, not a generic external IdP solution.<br>
+<em>B) Lambda authorizer with token validation</em> &mdash; A Lambda authorizer requires writing <strong>custom logic</strong> to validate tokens and map permissions. The question says "does not want to implement custom authorization logic." Lambda authorizers are useful but add operational overhead and custom code to maintain.<br>
+<em>C) ABAC with user attributes in headers</em> &mdash; ABAC uses tags/attributes to make authorization decisions. However, passing user attributes in request headers from API Gateway to ECS doesn't <strong>preserve the user's identity</strong> at the AWS level. The ECS task still uses a shared IAM role &mdash; AWS services like S3 don't see the individual user. ABAC defines permissions based on resource tags, but it doesn't propagate end-user identity through service layers.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 40;
+var totalQuestions = 41;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
