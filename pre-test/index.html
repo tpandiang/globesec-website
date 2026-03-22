@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/42</div>
+            <div class="score-big" id="overallScore">0/43</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1839,10 +1839,52 @@ These actions are quick &mdash; no MFA token retrieval, no SCP removal, no passw
 </div>
 </div>
 
+<!-- Q43 MC -->
+<div class="question" data-type="mc" data-answer="0">
+<div class="question-text"><span class="question-num">Q43.</span><span>A DevOps team has pipelines across several AWS accounts. A security team created a central identity account with IAM roles — each role manages a specific service (EC2, Lambda, API Gateway) in a specific account. The DevOps team finds switching roles cumbersome.<br><br>The team wants <strong>one role</strong> that can manage <strong>multiple services</strong> in a project, but is <strong>limited to only objects belonging to that project</strong>.<br><br>Which solution resolves this while following AWS best practices?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Implement an attribute-based access control (ABAC) authorization strategy with a role policy that allows the management of objects with a project-specific tag.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Implement an SCP that allows the use of the services the DevOps team uses. Allow the team to use a single role with the managed AdminAccess policy.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a new role with the AmazonDevOpsGuruFullAccess managed policy attached. Set a permissions boundary to allow only the services the DevOps team uses.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create an IAM group with permissions that allow the use of services the DevOps team uses. Add the DevOps users to the group.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Attribute-Based Access Control (ABAC) with project-specific tags.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"one role" + "multiple services" + "limited to specific project resources"</strong>, the answer is <em>ABAC</em>. ABAC uses tags to scope permissions: "you can manage any EC2 instance, Lambda function, or API Gateway — but ONLY if it has the tag <code>Project=MyProject</code>." One role, multiple services, project-scoped.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>ABAC (Attribute-Based Access Control)</em> &mdash; An authorization strategy where permissions are based on <strong>tags</strong> (attributes) rather than explicit resource ARNs. The core idea:<br>
+&bull; <strong>Tag resources</strong> with project identifiers: <code>Project=AlphaProject</code><br>
+&bull; <strong>Tag the IAM principal</strong> (user/role) with the same project: <code>Project=AlphaProject</code><br>
+&bull; <strong>Policy condition</strong> allows actions only when the principal's tag matches the resource's tag<br><br>
+
+<em>Example ABAC Policy</em>:<br>
+<code>"Condition": {"StringEquals": {"aws:ResourceTag/Project": "${aws:PrincipalTag/Project}"}}</code><br>
+This says: "Allow this action only if the resource's Project tag matches the caller's Project tag."<br><br>
+
+<em>Why ABAC Solves This Problem</em>:<br>
+&bull; <strong>One role, multiple services</strong> &mdash; The policy can allow <code>ec2:*</code>, <code>lambda:*</code>, <code>apigateway:*</code> all in one role<br>
+&bull; <strong>Project-scoped</strong> &mdash; The tag condition ensures the role can only touch resources tagged with the team's project<br>
+&bull; <strong>Scales automatically</strong> &mdash; New resources tagged with the project are automatically accessible; no policy updates needed<br>
+&bull; <strong>Least privilege</strong> &mdash; Cannot access resources from other projects, even if they use the same services<br><br>
+
+<em>ABAC vs. RBAC</em>:<br>
+&bull; <strong>RBAC</strong> (Role-Based) &mdash; One role per service per account. 5 services × 10 accounts = 50 roles to manage. Cumbersome.<br>
+&bull; <strong>ABAC</strong> (Attribute-Based) &mdash; One role per project. Tag-based conditions scope access. Scales without role explosion.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) SCP + AdminAccess role</em> &mdash; <code>AdminAccess</code> grants access to <strong>ALL resources</strong>, not just project-specific ones. SCPs can restrict which services are allowed, but they cannot scope access to specific project resources by tag. The DevOps team could access resources belonging to <em>other</em> projects. Violates least privilege.<br>
+<em>C) DevOps Guru + permissions boundary</em> &mdash; <code>AmazonDevOpsGuruFullAccess</code> is for the <strong>Amazon DevOps Guru</strong> service (an ML-powered operations service). It's NOT a general-purpose DevOps policy for managing EC2, Lambda, and API Gateway. This is a naming trap &mdash; "DevOps" in the policy name doesn't mean it's for DevOps teams.<br>
+<em>D) IAM group with service permissions</em> &mdash; An IAM group can grant permissions for EC2, Lambda, and API Gateway. However, without tag-based conditions, the group grants access to <strong>ALL</strong> EC2 instances, ALL Lambda functions, etc. — not just those belonging to the team's project. Violates "limited to only objects belonging to the project."
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 42;
+var totalQuestions = 43;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
