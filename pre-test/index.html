@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/33</div>
+            <div class="score-big" id="overallScore">0/34</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1472,10 +1472,52 @@ When you see <strong>"IPS" + "north-south traffic" + "VPC"</strong>, the answer 
 </div>
 </div>
 
+<!-- Q34 MC -->
+<div class="question" data-type="mc" data-answer="0">
+<div class="question-text"><span class="question-num">Q34.</span><span>A company needs a <strong>dedicated and isolated internet channel</strong> to connect an on-premises site to Amazon S3 buckets. The company's compliance policies require data in transit to be <strong>encrypted with IPsec</strong>.<br><br>Which solution will meet these requirements?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use an AWS Direct Connect link configured with a public virtual interface (VIF). Use an AWS Site-to-Site VPN tunnel with the Direct Connect link to comply with IPsec data encryption.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use an AWS Direct Connect link configured with a public virtual interface (VIF). No additional configuration is needed because IPsec encryption is already supported by default by Direct Connect.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use an AWS Direct Connect link configured with a private virtual interface (VIF). Use an AWS Site-to-Site VPN tunnel with the Direct Connect link to comply with IPsec data encryption.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use an AWS Direct Connect link configured with a private virtual interface (VIF). No additional configuration is needed because IPsec encryption is already supported by default by Direct Connect.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Direct Connect with <strong>public VIF</strong> + Site-to-Site VPN for IPsec encryption.<br><br>
+
+<strong>How to Think About This:</strong><br>
+This question tests two concepts simultaneously:<br>
+1. <strong>Public VIF vs. Private VIF</strong> &mdash; S3 is a public AWS service, so you need a <em>public</em> VIF<br>
+2. <strong>Direct Connect + IPsec</strong> &mdash; Direct Connect does NOT encrypt by default, so you must add a VPN tunnel<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Direct Connect Virtual Interfaces (VIFs)</em>:<br>
+&bull; <strong>Public VIF</strong> &mdash; Connects to <strong>public AWS services</strong> (S3, DynamoDB, STS, etc.) over Direct Connect. Uses public IP addresses and BGP. Required when accessing AWS services that have public endpoints.<br>
+&bull; <strong>Private VIF</strong> &mdash; Connects to resources inside a <strong>VPC</strong> (EC2 instances, RDS databases, etc.) using private IP addresses. Cannot reach public AWS service endpoints like S3 directly.<br>
+&bull; <strong>Transit VIF</strong> &mdash; Connects to a Transit Gateway for multi-VPC connectivity.<br><br>
+
+Since S3 is a <strong>public service</strong> (not inside a VPC), you must use a <strong>public VIF</strong>. This eliminates options C and D.<br><br>
+
+<em>Direct Connect Does NOT Encrypt by Default</em>:<br>
+Direct Connect provides a <strong>dedicated physical connection</strong> between your data center and AWS &mdash; it's isolated from the public internet. However, the traffic over that physical link is <strong>NOT encrypted</strong>. Direct Connect provides network isolation, not encryption.<br><br>
+
+To add IPsec encryption, you layer an <strong>AWS Site-to-Site VPN tunnel over the Direct Connect link</strong>. This gives you both:<br>
+&bull; <strong>Dedicated/isolated connection</strong> (from Direct Connect)<br>
+&bull; <strong>IPsec encryption</strong> (from the VPN tunnel)<br><br>
+
+<em>The Complete Solution</em>:<br>
+<code>On-premises &rarr; Direct Connect (dedicated link) &rarr; Public VIF (reaches S3) &rarr; VPN tunnel overlay (IPsec encryption) &rarr; S3</code><br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) Public VIF, no additional config</em> &mdash; Correct VIF type (public for S3), but <strong>wrong about encryption</strong>. Direct Connect does NOT support IPsec by default. The link is dedicated and isolated, but the data is unencrypted. You must add a Site-to-Site VPN tunnel for IPsec compliance.<br>
+<em>C) Private VIF + VPN</em> &mdash; Has the right idea about adding VPN for encryption, but <strong>wrong VIF type</strong>. Private VIFs connect to VPC resources (EC2, RDS), not public AWS services like S3. You cannot reach S3 directly through a private VIF &mdash; you need a public VIF for public service endpoints.<br>
+<em>D) Private VIF, no additional config</em> &mdash; Wrong on <strong>both counts</strong>: wrong VIF type (private can't reach S3) and wrong about encryption (Direct Connect doesn't encrypt by default).
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 33;
+var totalQuestions = 34;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
