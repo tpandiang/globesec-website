@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/32</div>
+            <div class="score-big" id="overallScore">0/33</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1430,10 +1430,52 @@ Two key requirements: (1) <strong>no SSH keys</strong> and (2) <strong>interacti
 </div>
 </div>
 
+<!-- Q33 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q33.</span><span>A company needs to implement an IPS within a VPC to protect against malicious traffic. Application servers are in public subnets across each Availability Zone. The security team must implement <strong>north-south traffic inspection</strong> to detect and prevent threats from internet traffic.<br><br>Which solution will meet these requirements?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create Gateway Load Balancer (GWLB) endpoints in public subnets and connect to a third-party IPS service. Update public subnet route tables to send traffic through the GWLB endpoints.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Deploy Application Load Balancers (ALBs) in public subnets. Configure AWS WAF with IPS rules. Place application servers behind the ALBs.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Configure AWS Network Firewall endpoints with IPS rules in each public subnet. Update public subnet route tables to send traffic through firewall endpoints.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Configure AWS Network Firewall endpoints with IPS rules in new dedicated subnets for each Availability Zone. Update public subnet route tables to send traffic through firewall endpoints. Configure new subnet route tables to route traffic locally and 0.0.0.0/0 to the internet gateway.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Network Firewall endpoints in <strong>dedicated subnets</strong> (not in the public subnets).<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"IPS" + "north-south traffic" + "VPC"</strong>, the answer is <em>AWS Network Firewall</em>. The critical detail is <strong>where</strong> the firewall endpoints go: they must be in <strong>dedicated subnets</strong>, never in the same subnets as the application servers or directly in public subnets. This provides proper security isolation and symmetric routing.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>North-South Traffic</em> &mdash; Traffic flowing between the internet and your VPC (in/out). This is distinct from <strong>east-west traffic</strong> (traffic between resources within the VPC). IPS for north-south traffic inspects everything entering and leaving your VPC through the internet gateway.<br><br>
+
+<em>AWS Network Firewall</em> &mdash; A managed IPS/IDS service for VPCs that provides:<br>
+&bull; <strong>Stateful packet inspection</strong> &mdash; deep packet inspection beyond Layer 4<br>
+&bull; <strong>Intrusion Prevention (IPS)</strong> &mdash; detect and block known attack signatures<br>
+&bull; <strong>Protocol detection</strong> &mdash; identify protocols regardless of port<br>
+&bull; <strong>Suricata-compatible rules</strong> &mdash; use open-source IPS rule format<br><br>
+
+<em>Why Dedicated Subnets Are Required</em>:<br>
+&bull; Firewall endpoints must be in their <strong>own subnets</strong> with dedicated route tables<br>
+&bull; This ensures <strong>symmetric routing</strong> &mdash; both inbound and outbound traffic pass through the firewall<br>
+&bull; Placing endpoints in public subnets creates <strong>routing loops</strong> and exposes the IPS directly to internet traffic<br>
+&bull; The dedicated subnet route table routes local VPC traffic normally and 0.0.0.0/0 to the internet gateway<br>
+&bull; The public subnet route table routes 0.0.0.0/0 through the firewall endpoints<br><br>
+
+<em>Correct Architecture</em>:<br>
+<code>Internet &rarr; IGW &rarr; Firewall Subnet (Network Firewall endpoint) &rarr; Public Subnet (application servers)</code><br>
+<code>Application servers &rarr; Firewall Subnet (inspected) &rarr; IGW &rarr; Internet</code><br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) GWLB endpoints in public subnets</em> &mdash; GWLB can deploy third-party IPS appliances, but placing endpoints <strong>in public subnets</strong> creates routing loops and security vulnerabilities. GWLB endpoints should be in dedicated subnets. Also, using a third-party IPS via GWLB adds more operational overhead than the managed Network Firewall service.<br>
+<em>B) ALB + AWS WAF</em> &mdash; WAF operates at <strong>Layer 7 (HTTP/HTTPS only)</strong>. It is NOT a full IPS solution. WAF cannot inspect non-HTTP traffic (SSH, DNS, database protocols, etc.). A true IPS needs deep packet inspection across all protocols and layers. WAF protects web applications; Network Firewall protects the entire network.<br>
+<em>C) Network Firewall in public subnets</em> &mdash; Correct service (Network Firewall) but <strong>wrong subnet placement</strong>. Placing firewall endpoints directly in the public subnets violates security best practices: exposes the IPS to direct internet traffic, creates potential routing issues, and doesn't ensure symmetric traffic inspection for both inbound and outbound flows. Dedicated subnets are required.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 32;
+var totalQuestions = 33;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
