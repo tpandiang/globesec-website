@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/51</div>
+            <div class="score-big" id="overallScore">0/52</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1558,10 +1558,10 @@ This is exactly what the question asks: "are insecure protocols running on EC2 i
 <div class="question" data-type="mc" data-answer="3">
 <div class="question-text"><span class="question-num">Q36.</span><span>A web application runs on EC2 instances behind an ALB, with an RDS MySQL database and a Linux bastion host for schema updates. Admins SSH to the bastion from corporate workstations. The following security groups are applied:<br><br>&bull; <strong>sgLB</strong> &mdash; Associated with the ALB<br>&bull; <strong>sgWeb</strong> &mdash; Associated with the EC2 instances<br>&bull; <strong>sgDB</strong> &mdash; Associated with the database<br>&bull; <strong>sgBastion</strong> &mdash; Associated with the bastion host<br><br>Which security group configuration is both secure and functional?</span></div>
 <div class="options">
-<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/513 from 0.0.0.0/0 | sgWeb: 80/513 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
-<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/513 from 0.0.0.0/0 | sgWeb: 80/513 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/513 from 0.0.0.0/0 | sgWeb: 80/513 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/513 from 0.0.0.0/0 | sgWeb: 80/513 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/523 from 0.0.0.0/0 | sgWeb: 80/523 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/523 from 0.0.0.0/0 | sgWeb: 80/523 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/523 from 0.0.0.0/0 | sgWeb: 80/523 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/523 from 0.0.0.0/0 | sgWeb: 80/523 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
 </div>
 <div class="explanation">
 <strong>&#10003; Correct: D.</strong> The only configuration where every security group follows least privilege correctly.<br><br>
@@ -1575,11 +1575,11 @@ Evaluate each security group independently. For each one, ask: "What is the <str
 
 <strong>Security Group Breakdown:</strong><br><br>
 
-<em>sgLB: Port 80/513 from 0.0.0.0/0</em> &#10004;<br>
+<em>sgLB: Port 80/523 from 0.0.0.0/0</em> &#10004;<br>
 The ALB is the public entry point. It must accept HTTP (80) and HTTPS (443) from the entire internet. This is correct for a public-facing load balancer.<br><br>
 
-<em>sgWeb: Port 80/513 from sgLB</em> &#10004;<br>
-EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/513 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
+<em>sgWeb: Port 80/523 from sgLB</em> &#10004;<br>
+EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/523 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
 
 <em>sgDB: Port 3306 from sgWeb and sgBastion</em> &#10004;<br>
 The MySQL database (port 3306) should only accept connections from:<br>
@@ -1591,7 +1591,7 @@ Allowing <code>sgLB</code> to reach the database (option B) is a security violat
 Admins SSH from corporate workstations. The bastion should only accept SSH (port 22) from the <strong>corporate IP address range</strong>. Using the VPC IP range (options B, C) is wrong because corporate workstations are <strong>on-premises</strong>, not inside the VPC. The corporate IP range refers to the company's public IP addresses that the workstations use to reach AWS over the internet.<br><br>
 
 <strong>Why others are wrong &mdash; one error each:</strong><br>
-<em>A)</em> sgWeb allows 80/513 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
+<em>A)</em> sgWeb allows 80/523 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
 <em>B)</em> sgDB allows 3306 from <strong>sgLB</strong> &mdash; The ALB should never have direct database access. Only the app servers and bastion need database access. Also, sgBastion allows SSH from VPC range (wrong &mdash; admins are on-premises).<br>
 <em>C)</em> sgBastion allows 22 from <strong>VPC IP range</strong> &mdash; Corporate workstations are on-premises, not in the VPC. SSH connections come from the corporate public IP range, not VPC internal IPs.
 </div>
@@ -2225,10 +2225,49 @@ Three rules eliminate the wrong answers:<br>
 </div>
 </div>
 
+<!-- Q52 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q52.</span><span>A financial services company uses an Amazon SNS topic to provide market updates to business partners. A security engineer discovers that some messages contain <strong>personally identifiable information (PII)</strong>. The engineer must ensure that any new PII is <strong>not made available</strong> to SNS subscribers.<br><br>Which solution will meet this requirement with the LEAST operational overhead?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Subscribe a Lambda function to the SNS topic to write all messages to an S3 bucket. Enable Amazon Macie on the S3 bucket. Upload sanitized information to a new SNS topic for business partners.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create an SNS access policy. Add a condition to deny subscriptions to PII. Attach the access policy to all SNS subscriptions.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create an SNS access policy. Add a condition to deny the publication of PII. Attach the access policy to the SNS topic.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a message data protection policy in Amazon SNS. Add a rule that denies the publication of PII. Attach the data protection policy to the SNS topic.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> SNS message data protection policy to block PII in messages.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"SNS" + "PII in messages" + "block/filter content" + "least overhead"</strong>, the answer is <em>SNS message data protection policy</em>. This is a built-in SNS feature that inspects message content &mdash; no Lambda, no S3, no additional services needed.<br><br>
+
+The key distinction: <strong>access policies</strong> control WHO can use the topic. <strong>Data protection policies</strong> control WHAT content flows through the topic.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>SNS Message Data Protection Policies</em> &mdash; A built-in Amazon SNS feature that can:<br>
+&bull; <strong>Audit</strong> &mdash; Log when PII is detected in messages (to CloudWatch)<br>
+&bull; <strong>Deny</strong> &mdash; Block messages containing PII from being published entirely<br>
+&bull; <strong>De-identify (mask)</strong> &mdash; Redact PII before delivering to subscribers (e.g., replace SSN with ***)<br><br>
+
+SNS uses <strong>managed data identifiers</strong> to detect PII types including: names, email addresses, phone numbers, SSNs, credit card numbers, passport numbers, and more. No custom regex needed &mdash; AWS maintains the detection patterns.<br><br>
+
+<em>Example Data Protection Policy</em>:<br>
+<code>{"Operation": "Deny", "DataIdentifier": ["arn:aws:dataprotection::aws:data-identifier/EmailAddress", "arn:aws:dataprotection::aws:data-identifier/CreditCardNumber"]}</code><br><br>
+
+This blocks any message containing email addresses or credit card numbers from being published. Completely built-in, zero custom code.<br><br>
+
+<strong>Why D is correct:</strong> SNS data protection policies are a native feature that inspects message content for PII before publication. You attach the policy to the topic, define which PII types to block, and SNS handles the rest. No Lambda functions, no S3 buckets, no additional services &mdash; least operational overhead possible.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Lambda + S3 + Macie + new topic</em> &mdash; This creates an entire pipeline: Lambda to capture messages, S3 to store them, Macie to scan for PII, then republish to a new topic. That's <strong>four additional services</strong> to build and maintain. Macie is designed for S3 data discovery, not real-time message filtering. Massive operational overhead compared to a single data protection policy.<br>
+<em>B) SNS access policy to deny subscriptions to PII</em> &mdash; Access policies control <strong>who can perform actions</strong> (publish, subscribe) on the topic. They operate on <strong>principals and resources</strong>, not on message content. You cannot write an access policy condition that inspects the actual content of messages for PII. Access policies don't see message payloads.<br>
+<em>C) SNS access policy to deny publication of PII</em> &mdash; Same problem as B. Access policies are <strong>not designed to filter message content</strong>. They control who can call <code>sns:Publish</code>, not what the message contains. An access policy can say "only this IAM role can publish" but cannot say "block messages containing SSNs." Content inspection requires a data protection policy, not an access policy.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 51;
+var totalQuestions = 52;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
