@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/49</div>
+            <div class="score-big" id="overallScore">0/50</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1558,10 +1558,10 @@ This is exactly what the question asks: "are insecure protocols running on EC2 i
 <div class="question" data-type="mc" data-answer="3">
 <div class="question-text"><span class="question-num">Q36.</span><span>A web application runs on EC2 instances behind an ALB, with an RDS MySQL database and a Linux bastion host for schema updates. Admins SSH to the bastion from corporate workstations. The following security groups are applied:<br><br>&bull; <strong>sgLB</strong> &mdash; Associated with the ALB<br>&bull; <strong>sgWeb</strong> &mdash; Associated with the EC2 instances<br>&bull; <strong>sgDB</strong> &mdash; Associated with the database<br>&bull; <strong>sgBastion</strong> &mdash; Associated with the bastion host<br><br>Which security group configuration is both secure and functional?</span></div>
 <div class="options">
-<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/493 from 0.0.0.0/0 | sgWeb: 80/493 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
-<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/493 from 0.0.0.0/0 | sgWeb: 80/493 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/493 from 0.0.0.0/0 | sgWeb: 80/493 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/493 from 0.0.0.0/0 | sgWeb: 80/493 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/503 from 0.0.0.0/0 | sgWeb: 80/503 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/503 from 0.0.0.0/0 | sgWeb: 80/503 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/503 from 0.0.0.0/0 | sgWeb: 80/503 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/503 from 0.0.0.0/0 | sgWeb: 80/503 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
 </div>
 <div class="explanation">
 <strong>&#10003; Correct: D.</strong> The only configuration where every security group follows least privilege correctly.<br><br>
@@ -1575,11 +1575,11 @@ Evaluate each security group independently. For each one, ask: "What is the <str
 
 <strong>Security Group Breakdown:</strong><br><br>
 
-<em>sgLB: Port 80/493 from 0.0.0.0/0</em> &#10004;<br>
+<em>sgLB: Port 80/503 from 0.0.0.0/0</em> &#10004;<br>
 The ALB is the public entry point. It must accept HTTP (80) and HTTPS (443) from the entire internet. This is correct for a public-facing load balancer.<br><br>
 
-<em>sgWeb: Port 80/493 from sgLB</em> &#10004;<br>
-EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/493 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
+<em>sgWeb: Port 80/503 from sgLB</em> &#10004;<br>
+EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/503 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
 
 <em>sgDB: Port 3306 from sgWeb and sgBastion</em> &#10004;<br>
 The MySQL database (port 3306) should only accept connections from:<br>
@@ -1591,7 +1591,7 @@ Allowing <code>sgLB</code> to reach the database (option B) is a security violat
 Admins SSH from corporate workstations. The bastion should only accept SSH (port 22) from the <strong>corporate IP address range</strong>. Using the VPC IP range (options B, C) is wrong because corporate workstations are <strong>on-premises</strong>, not inside the VPC. The corporate IP range refers to the company's public IP addresses that the workstations use to reach AWS over the internet.<br><br>
 
 <strong>Why others are wrong &mdash; one error each:</strong><br>
-<em>A)</em> sgWeb allows 80/493 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
+<em>A)</em> sgWeb allows 80/503 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
 <em>B)</em> sgDB allows 3306 from <strong>sgLB</strong> &mdash; The ALB should never have direct database access. Only the app servers and bastion need database access. Also, sgBastion allows SSH from VPC range (wrong &mdash; admins are on-premises).<br>
 <em>C)</em> sgBastion allows 22 from <strong>VPC IP range</strong> &mdash; Corporate workstations are on-premises, not in the VPC. SSH connections come from the corporate public IP range, not VPC internal IPs.
 </div>
@@ -2131,10 +2131,61 @@ The question says "no user should be able to modify the configuration" &mdash; o
 </div>
 </div>
 
+<!-- Q50 MA - Ordering -->
+<div class="question" data-type="ma" data-answers="0,1,2,3">
+<div class="question-text"><span class="question-num">Q50.</span><span>A financial services company needs to implement encryption for sensitive customer transaction data on AWS. Requirements:<br><br>&bull; Maintain control of encryption keys in <strong>FIPS 140-2 Level 3</strong> validated hardware<br>&bull; Support automated key rotation<br>&bull; Ability to import custom key material<span class="q-type-badge">SELECT ALL FOUR (correct order)</span><br><br>Select all four steps in the correct implementation order:</span></div>
+<div class="options">
+<div class="option" onclick="toggleMA(this)" data-idx="0"><span class="option-letter">1</span><span class="option-text">Set up an AWS CloudHSM cluster.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="1"><span class="option-letter">2</span><span class="option-text">Create a custom key store in AWS KMS and import custom key material into AWS CloudHSM.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="2"><span class="option-letter">3</span><span class="option-text">Generate data encryption keys by using the custom key store.</span></div>
+<div class="option" onclick="toggleMA(this)" data-idx="3"><span class="option-letter">4</span><span class="option-text">Encrypt the data by using the generated keys.</span></div>
+</div>
+<button class="check-btn" onclick="checkMA(this)">Check Answer</button>
+<div class="explanation">
+<strong>&#10003; Correct order: 1 &rarr; 2 &rarr; 3 &rarr; 4.</strong> CloudHSM cluster &rarr; Custom key store + import key material &rarr; Generate data keys &rarr; Encrypt data.<br><br>
+
+<strong>How to Think About This:</strong><br>
+This is a <strong>dependency chain</strong> &mdash; each step requires the previous step to be complete. Think of it as building layers: hardware first, then key management, then keys, then encryption.<br><br>
+
+<strong>Step-by-Step Breakdown:</strong><br><br>
+
+<em>Step 1: Set up an AWS CloudHSM cluster</em><br>
+<strong>Why first?</strong> CloudHSM provides the <strong>FIPS 140-2 Level 3</strong> validated hardware security module. This is the physical foundation &mdash; the tamper-resistant hardware where keys are generated and stored. Everything else depends on having an active HSM cluster. Without it, you can't create a custom key store or generate any keys.<br><br>
+
+<em>FIPS 140-2 Levels</em> (exam favorite):<br>
+&bull; <strong>Level 2</strong> &mdash; AWS KMS standard (software-based key management)<br>
+&bull; <strong>Level 3</strong> &mdash; AWS CloudHSM (dedicated hardware, tamper-resistant, tamper-evident)<br>
+When a question mentions "FIPS 140-2 Level 3," the answer always involves CloudHSM.<br><br>
+
+<em>Step 2: Create a custom key store in KMS + import key material into CloudHSM</em><br>
+<strong>Why second?</strong> A <strong>custom key store</strong> bridges KMS and CloudHSM. Instead of KMS managing keys in its default key store, it delegates key operations to your CloudHSM cluster. Importing custom key material gives the company full control over the cryptographic keys. This step requires the CloudHSM cluster to be active (Step 1).<br><br>
+
+<em>Custom Key Store Architecture</em>:<br>
+<code>Application &rarr; KMS API (familiar interface) &rarr; Custom Key Store &rarr; CloudHSM (hardware-backed)</code><br>
+You get the convenience of KMS APIs with the security of dedicated HSM hardware.<br><br>
+
+<em>Step 3: Generate data encryption keys using the custom key store</em><br>
+<strong>Why third?</strong> Now that the custom key store is connected to CloudHSM with imported key material, you can use <code>kms:GenerateDataKey</code> to create data encryption keys. These keys are generated inside the HSM hardware and wrapped by your imported master key material. This is <strong>envelope encryption</strong>: the data key encrypts your data, and the master key (in CloudHSM) encrypts the data key.<br><br>
+
+<em>Step 4: Encrypt the data using the generated keys</em><br>
+<strong>Why last?</strong> With data encryption keys generated, you can finally encrypt the customer transaction data. The application uses the plaintext data key to encrypt data, then discards the plaintext key and stores only the encrypted data key alongside the encrypted data. To decrypt later, KMS uses CloudHSM to unwrap the data key.<br><br>
+
+<strong>The Complete Architecture:</strong><br>
+<code>CloudHSM (FIPS 140-2 L3 hardware) &rarr; Custom Key Store (KMS ↔ CloudHSM bridge) &rarr; KMS GenerateDataKey (envelope encryption) &rarr; Encrypt transaction data</code><br><br>
+
+<strong>Key Exam Concepts:</strong><br>
+&bull; <strong>"FIPS 140-2 Level 3"</strong> = CloudHSM (always)<br>
+&bull; <strong>"FIPS 140-2 Level 2"</strong> = Standard KMS<br>
+&bull; <strong>"Custom key material"</strong> = Import into CloudHSM via custom key store<br>
+&bull; <strong>"Maintain control of keys"</strong> = CloudHSM (you own the hardware, AWS can't access keys)<br>
+&bull; <strong>"KMS convenience + HSM security"</strong> = Custom key store
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 49;
+var totalQuestions = 50;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
