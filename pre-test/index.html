@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/44</div>
+            <div class="score-big" id="overallScore">0/45</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1558,10 +1558,10 @@ This is exactly what the question asks: "are insecure protocols running on EC2 i
 <div class="question" data-type="mc" data-answer="3">
 <div class="question-text"><span class="question-num">Q36.</span><span>A web application runs on EC2 instances behind an ALB, with an RDS MySQL database and a Linux bastion host for schema updates. Admins SSH to the bastion from corporate workstations. The following security groups are applied:<br><br>&bull; <strong>sgLB</strong> &mdash; Associated with the ALB<br>&bull; <strong>sgWeb</strong> &mdash; Associated with the EC2 instances<br>&bull; <strong>sgDB</strong> &mdash; Associated with the database<br>&bull; <strong>sgBastion</strong> &mdash; Associated with the bastion host<br><br>Which security group configuration is both secure and functional?</span></div>
 <div class="options">
-<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/443 from 0.0.0.0/0 | sgWeb: 80/443 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
-<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/443 from 0.0.0.0/0 | sgWeb: 80/443 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/443 from 0.0.0.0/0 | sgWeb: 80/443 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/443 from 0.0.0.0/0 | sgWeb: 80/443 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/453 from 0.0.0.0/0 | sgWeb: 80/453 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/453 from 0.0.0.0/0 | sgWeb: 80/453 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/453 from 0.0.0.0/0 | sgWeb: 80/453 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/453 from 0.0.0.0/0 | sgWeb: 80/453 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
 </div>
 <div class="explanation">
 <strong>&#10003; Correct: D.</strong> The only configuration where every security group follows least privilege correctly.<br><br>
@@ -1575,11 +1575,11 @@ Evaluate each security group independently. For each one, ask: "What is the <str
 
 <strong>Security Group Breakdown:</strong><br><br>
 
-<em>sgLB: Port 80/443 from 0.0.0.0/0</em> &#10004;<br>
+<em>sgLB: Port 80/453 from 0.0.0.0/0</em> &#10004;<br>
 The ALB is the public entry point. It must accept HTTP (80) and HTTPS (443) from the entire internet. This is correct for a public-facing load balancer.<br><br>
 
-<em>sgWeb: Port 80/443 from sgLB</em> &#10004;<br>
-EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/443 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
+<em>sgWeb: Port 80/453 from sgLB</em> &#10004;<br>
+EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/453 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
 
 <em>sgDB: Port 3306 from sgWeb and sgBastion</em> &#10004;<br>
 The MySQL database (port 3306) should only accept connections from:<br>
@@ -1591,7 +1591,7 @@ Allowing <code>sgLB</code> to reach the database (option B) is a security violat
 Admins SSH from corporate workstations. The bastion should only accept SSH (port 22) from the <strong>corporate IP address range</strong>. Using the VPC IP range (options B, C) is wrong because corporate workstations are <strong>on-premises</strong>, not inside the VPC. The corporate IP range refers to the company's public IP addresses that the workstations use to reach AWS over the internet.<br><br>
 
 <strong>Why others are wrong &mdash; one error each:</strong><br>
-<em>A)</em> sgWeb allows 80/443 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
+<em>A)</em> sgWeb allows 80/453 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
 <em>B)</em> sgDB allows 3306 from <strong>sgLB</strong> &mdash; The ALB should never have direct database access. Only the app servers and bastion need database access. Also, sgBastion allows SSH from VPC range (wrong &mdash; admins are on-premises).<br>
 <em>C)</em> sgBastion allows 22 from <strong>VPC IP range</strong> &mdash; Corporate workstations are on-premises, not in the VPC. SSH connections come from the corporate public IP range, not VPC internal IPs.
 </div>
@@ -1917,10 +1917,53 @@ This is the <strong>only</strong> way to immediately stop active sessions. All o
 </div>
 </div>
 
+<!-- Q45 MC -->
+<div class="question" data-type="mc" data-answer="0">
+<div class="question-text"><span class="question-num">Q45.</span><span>A company has an IAM user group with a small set of IAM users. A security administrator plans to attach a new IAM policy to the group for restricted access to an Amazon S3 bucket. Before applying, the administrator wants to <strong>verify the overall effective access</strong> — including existing policies on each user.<br><br>Which solution will meet this requirement?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use the IAM policy simulator in Existing Policies mode. Select all existing policies for an IAM user in the group. Create the new policy in the simulator. Run the simulation with all S3 actions. Repeat for each IAM user.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use the IAM policy simulator in Existing Policies mode. Select all existing policies for the IAM user group. Create the new policy in the simulator. Run the simulation with all S3 actions.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use the IAM policy simulator in New Policy mode. Select all existing policies for an IAM user in the group. Create the new policy. Run the simulation with all S3 actions. Repeat for each user.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use the IAM policy simulator in New Policy mode. Select all existing policies for the IAM user group. Create the new policy. Run the simulation with all S3 actions.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> IAM Policy Simulator in <strong>Existing Policies</strong> mode, testing each user individually.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Two decisions to make:<br>
+1. <strong>Existing Policies mode vs. New Policy mode</strong> &rarr; Existing Policies mode lets you select specific IAM users and their attached policies. New Policy mode does not.<br>
+2. <strong>Per-user vs. per-group testing</strong> &rarr; Each IAM user may have different <em>directly attached</em> policies and permissions boundaries beyond the group policy. You must test each user individually to get the full effective access picture.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>IAM Policy Simulator</em> &mdash; A tool that lets you test and validate IAM policies <strong>before</strong> applying them. It answers: "If this user tries to do X, will it be allowed or denied?" Two modes:<br>
+&bull; <strong>Existing Policies mode</strong> &mdash; Select an existing IAM user/group/role and see their current policies. You can add a new policy to simulate the combined effect. This is what you need to verify "overall effective access."<br>
+&bull; <strong>New Policy mode</strong> &mdash; Write and test a standalone policy in isolation. You <strong>cannot</strong> select existing users or their attached policies. Only tests the new policy by itself.<br><br>
+
+<em>Why Test Each User Individually</em>:<br>
+IAM users can have permissions from multiple sources:<br>
+&bull; <strong>Group policies</strong> &mdash; shared by all group members<br>
+&bull; <strong>Directly attached policies</strong> &mdash; unique to each user<br>
+&bull; <strong>Permissions boundaries</strong> &mdash; may differ per user<br>
+&bull; <strong>Inline policies</strong> &mdash; may differ per user<br><br>
+
+User Alice might have a directly attached Deny for S3, while User Bob might have a broader Allow. Testing only the group policy misses these user-specific overrides. You must test each user to see their <strong>complete effective permissions</strong>.<br><br>
+
+<em>Policy Simulator vs. Access Analyzer</em>:<br>
+&bull; <strong>Policy Simulator</strong> &mdash; "Will this action be allowed?" (test before applying)<br>
+&bull; <strong>Access Advisor</strong> &mdash; "Which services were actually used?" (review after the fact)<br>
+&bull; <strong>Access Analyzer</strong> &mdash; "Is this resource shared externally?" (detect unintended access)<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) Existing Policies mode, group only</em> &mdash; Testing only the group's policies <strong>misses policies attached directly to individual users</strong>. A user might have a deny policy or permissions boundary that changes the effective access. You must test per-user to get accurate results.<br>
+<em>C) New Policy mode, per user</em> &mdash; New Policy mode does <strong>not allow you to select existing IAM users</strong> or their attached policies. You can only write and test a new policy in isolation. It cannot show the combined effect of existing + new policies.<br>
+<em>D) New Policy mode, group only</em> &mdash; Same problem as C (can't select existing users) plus same problem as B (misses user-specific policies). Wrong on both counts.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 44;
+var totalQuestions = 45;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
