@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/37</div>
+            <div class="score-big" id="overallScore">0/38</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1640,10 +1640,54 @@ This tells AWS: "If a SAML assertion comes from this IdP, allow the user to assu
 </div>
 </div>
 
+<!-- Q38 MC -->
+<div class="question" data-type="mc" data-answer="0">
+<div class="question-text"><span class="question-num">Q38.</span><span>A security engineer is developing a mobile app requiring user authentication. The app must support:<br><br>&bull; User sign-up with <strong>email verification</strong><br>&bull; Social identity provider (IdP) authentication<br>&bull; <strong>Multi-factor authentication (MFA)</strong><br>&bull; Secure storage of user attributes<br>&bull; <strong>Custom authentication logic</strong> for business rules<br>&bull; Access to AWS services (S3, DynamoDB) <strong>without storing credentials</strong> in the app<br><br>Which solution will meet these requirements with the LEAST operational overhead?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create an Amazon Cognito user pool with app clients. Configure email verification, MFA, and social IdP federation. Use an AWS Lambda function for custom authentication logic. Create an identity pool linked to the user pool.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create IAM users for each app user with access keys stored in the mobile app. Configure IAM roles for social federation. Use Amazon SNS for email verification and MFA. Use a Lambda function for custom authentication.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use Amazon API Gateway with a Lambda function authorizer for authentication. Store user credentials in DynamoDB with server-side encryption. Implement OAuth flows for social login. Use AWS STS for temporary credentials.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Set up AWS IAM Identity Center for user management. Configure social IdP federation. Use Amazon SES for email verification and Amazon SNS for MFA. Create permission sets for AWS service access.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Cognito User Pool (authentication) + Lambda trigger (custom logic) + Identity Pool (AWS credentials).<br><br>
+
+<strong>How to Think About This:</strong><br>
+This is an expanded version of Q10. When you see <strong>"mobile app" + "sign-up" + "social login" + "MFA" + "custom auth logic" + "access AWS services"</strong>, the answer is always <em>Cognito User Pools + Identity Pools</em>. The addition of "custom authentication logic" maps to <em>Lambda triggers</em> &mdash; a built-in Cognito feature.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Cognito User Pool Features</em> &mdash; A complete managed user directory:<br>
+&bull; <strong>Sign-up/sign-in</strong> &mdash; built-in user registration with customizable fields<br>
+&bull; <strong>Email/phone verification</strong> &mdash; built-in, no SES/SNS setup needed<br>
+&bull; <strong>MFA</strong> &mdash; built-in TOTP and SMS support<br>
+&bull; <strong>Social IdP federation</strong> &mdash; Google, Facebook, Apple, SAML, OIDC<br>
+&bull; <strong>User attribute storage</strong> &mdash; securely stores custom user attributes<br>
+&bull; <strong>Lambda triggers</strong> &mdash; hook custom code into the authentication flow<br><br>
+
+<em>Cognito Lambda Triggers</em> &mdash; Let you inject custom business logic at various points:<br>
+&bull; <strong>Pre sign-up</strong> &mdash; validate/reject registrations based on business rules<br>
+&bull; <strong>Pre authentication</strong> &mdash; run checks before allowing sign-in<br>
+&bull; <strong>Post authentication</strong> &mdash; log events, trigger workflows after sign-in<br>
+&bull; <strong>Custom message</strong> &mdash; customize verification emails/SMS<br>
+&bull; <strong>Pre token generation</strong> &mdash; add/modify claims in the JWT token<br>
+This addresses the "custom authentication logic" requirement without building a custom auth system.<br><br>
+
+<em>Cognito Identity Pool</em> &mdash; Links to the User Pool and exchanges authentication tokens for <strong>temporary AWS credentials</strong>. Users get scoped access to S3, DynamoDB, etc. without any credentials stored in the app. Credentials auto-rotate and expire.<br><br>
+
+<em>Complete Architecture</em>:<br>
+<code>User signs up/in &rarr; User Pool (auth + MFA + email verify) &rarr; Lambda trigger (custom rules) &rarr; JWT token &rarr; Identity Pool &rarr; Temporary AWS credentials &rarr; S3/DynamoDB</code><br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) IAM users + access keys in the app</em> &mdash; Multiple critical failures: (1) <strong>IAM users are not designed for end-user auth at scale</strong> &mdash; IAM has a 5,000 user limit per account. (2) <strong>Storing access keys in a mobile app</strong> is a critical security vulnerability &mdash; keys can be extracted by decompiling the app. (3) Building email verification and MFA with SNS requires custom development. Cognito does all of this out of the box.<br>
+<em>C) API Gateway + Lambda authorizer + DynamoDB for credentials</em> &mdash; This requires <strong>building an entire authentication system from scratch</strong>: OAuth flow implementation, credential storage, token management, MFA logic. Storing user credentials in DynamoDB (even encrypted) is less secure than Cognito's purpose-built credential storage. Massive operational overhead compared to using Cognito's managed service.<br>
+<em>D) IAM Identity Center</em> &mdash; Identity Center is for <strong>workforce identity</strong> (employees accessing AWS accounts and business applications). It is <strong>NOT designed for consumer-facing mobile apps</strong>. You cannot use Identity Center to provide sign-up, social login, or mobile app authentication for end users. It's the wrong tool entirely.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 37;
+var totalQuestions = 38;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
