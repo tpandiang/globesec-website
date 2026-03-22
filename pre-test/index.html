@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/34</div>
+            <div class="score-big" id="overallScore">0/35</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1514,10 +1514,50 @@ To add IPsec encryption, you layer an <strong>AWS Site-to-Site VPN tunnel over t
 </div>
 </div>
 
+<!-- Q35 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q35.</span><span>A company policy requires that no insecure server protocols (FTP, Telnet, HTTP) are used on its Amazon EC2 instances. The security team wants to evaluate compliance using a scheduled Amazon EventBridge event to review infrastructure and create regular reports.<br><br>Which process will check the compliance of the company's EC2 instances?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Invoke an AWS Config rules evaluation of the restricted-common-ports rule against every EC2 instance.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Query the AWS Trusted Advisor API for all AWS best practice security checks. Check for the "Action recommended" status.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable an Amazon GuardDuty threat detection analysis that targets the port configuration on every EC2 instance.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Run an Amazon Inspector assessment by using the Network Reachability rules package against the instances.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Amazon Inspector with the Network Reachability rules package.<br><br>
+
+<strong>How to Think About This:</strong><br>
+The key distinction: the question asks which protocols are <strong>actively running on the EC2 instances</strong>, not what the AWS configuration (security groups, NACLs) allows. This requires <strong>instance-level scanning</strong>, not configuration-level checking. Only Amazon Inspector actually scans what's running on the instance.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Amazon Inspector</em> &mdash; A vulnerability assessment service that scans EC2 instances for:<br>
+&bull; <strong>Software vulnerabilities</strong> (CVEs) &mdash; checks installed packages against vulnerability databases<br>
+&bull; <strong>Network Reachability</strong> &mdash; analyzes network configurations AND what ports/protocols are actually accessible on the instance<br><br>
+
+<em>Network Reachability Rules Package</em> &mdash; Specifically designed to find security vulnerabilities in EC2 network configurations. It checks:<br>
+&bull; Which TCP/UDP ports are <strong>listening</strong> on the instance (actual running services)<br>
+&bull; Whether those ports are <strong>reachable from the internet</strong> through security groups, NACLs, and route tables<br>
+&bull; Whether insecure protocols (FTP port 21, Telnet port 23, HTTP port 80) are exposed<br><br>
+
+This is exactly what the question asks: "are insecure protocols running on EC2 instances?"<br><br>
+
+<em>Configuration Checking vs. Instance Scanning</em>:<br>
+&bull; <strong>AWS Config</strong> &mdash; checks the AWS-level configuration (security group rules, NACL rules). Knows "port 21 is allowed in the security group" but doesn't know if FTP is actually running on the instance.<br>
+&bull; <strong>Amazon Inspector</strong> &mdash; scans the actual instance. Knows "FTP server is running and listening on port 21 AND it's reachable from the internet." This is a deeper, more accurate check.<br><br>
+
+<strong>Why D is correct:</strong> Inspector's Network Reachability package scans EC2 instances to determine which protocols are actively running and whether they're network-accessible. This directly answers "are insecure protocols running on our instances?" It can be triggered on a schedule via EventBridge for regular compliance reporting.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) AWS Config restricted-common-ports</em> &mdash; Config checks <strong>security group rules</strong> (AWS configuration), not what's actually running on the instance. An instance could have FTP running even if the security group blocks port 21 (the service is still installed and running, just not reachable). Conversely, a security group might allow port 21 but no FTP server is running. Config checks the <em>door</em>, Inspector checks what's <em>inside</em>.<br>
+<em>B) Trusted Advisor</em> &mdash; Provides high-level best practice recommendations about AWS configuration (open security groups, exposed access keys, MFA status). It <strong>cannot scan EC2 instances</strong> to determine which protocols are running. Trusted Advisor checks AWS configuration, not instance-level state.<br>
+<em>C) Amazon GuardDuty</em> &mdash; Analyzes VPC Flow Logs, CloudTrail, and DNS logs to detect <strong>threats and anomalies</strong> (port scanning, credential abuse, C2 communication). GuardDuty does <strong>not scan instances</strong> to check which TCP ports are active. It detects suspicious behavior, not running services.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 34;
+var totalQuestions = 35;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
