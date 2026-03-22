@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/38</div>
+            <div class="score-big" id="overallScore">0/39</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1684,10 +1684,48 @@ This addresses the "custom authentication logic" requirement without building a 
 </div>
 </div>
 
+<!-- Q39 MC -->
+<div class="question" data-type="mc" data-answer="0">
+<div class="question-text"><span class="question-num">Q39.</span><span>A company uses an external identity provider (IdP) for employee logins. Developers need access to <strong>multiple AWS accounts</strong> using their company credentials. The company needs a <strong>centralized SSO solution</strong> that integrates with AWS, avoids IAM user management, and follows best practices for multi-account access.<br><br>Which authentication strategy will meet these requirements with the LEAST operational overhead?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use AWS IAM Identity Center and integrate with the external IdP. Configure permission sets in IAM Identity Center. Assign the permission sets to AWS accounts for the user groups.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Configure a SAML IdP with the external IdP. Create IAM roles to allow sts:AssumeRole for SAML principals. Instruct developers to log in to each account by using role switching.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create Amazon Cognito user pools. Configure the user pools to use the IdP as an external OIDC provider for developers to sign in to each account console.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Set up AWS Directory Service. Create a trust with the company Active Directory to grant console access by using IAM roles federated with Active Directory.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AWS IAM Identity Center with external IdP integration and permission sets.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"employees" + "multiple AWS accounts" + "SSO" + "centralized" + "company credentials"</strong>, the answer is <em>AWS IAM Identity Center</em>. It's the purpose-built service for workforce SSO across multiple AWS accounts. Permission sets define what developers can do in each account.<br><br>
+
+Notice the contrast with Q38 (mobile app consumers = Cognito) vs. Q39 (employees accessing AWS Console = Identity Center). The exam frequently tests whether you can distinguish between these two services.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>AWS IAM Identity Center (formerly AWS SSO)</em> &mdash; A centralized service for managing workforce access to:<br>
+&bull; <strong>Multiple AWS accounts</strong> in your organization<br>
+&bull; <strong>Business applications</strong> (Salesforce, Slack, custom SAML apps)<br>
+&bull; <strong>AWS CLI/SDK access</strong> with temporary credentials<br><br>
+
+<em>How It Works</em>:<br>
+1. <strong>Integrate with external IdP</strong> &mdash; Connect to Okta, Azure AD, or any SAML 2.0/SCIM provider. Employees use existing company credentials.<br>
+2. <strong>Create permission sets</strong> &mdash; Define policies (e.g., "DeveloperAccess" = EC2 + S3 + Lambda). These are reusable across accounts.<br>
+3. <strong>Assign to accounts + groups</strong> &mdash; Map permission sets to AWS accounts for specific user groups (e.g., "Dev team gets DeveloperAccess in dev-account and staging-account").<br>
+4. <strong>Single portal</strong> &mdash; Developers log in once at the SSO portal and see all accounts/roles they have access to. Click to assume a role in any account.<br><br>
+
+No IAM users created. No IAM roles to manage per account. No SAML providers to configure per account. Everything is centralized.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) SAML IdP + IAM roles per account</em> &mdash; This works technically but is <strong>not centralized</strong>. You must: (1) create a SAML provider in each AWS account, (2) create IAM roles in each account, (3) developers must log in to each account individually through separate role switching. With 20 accounts, that's 20 SAML providers + 20+ IAM roles to manage. Identity Center does this with one configuration and one portal.<br>
+<em>C) Cognito user pools</em> &mdash; Cognito is for <strong>consumer/customer-facing applications</strong> (mobile apps, web apps). Cognito user pools issue tokens for applications &mdash; they do <strong>not provide AWS Management Console access</strong>. You cannot use Cognito to give employees SSO access to multiple AWS accounts.<br>
+<em>D) AWS Directory Service + AD trust</em> &mdash; This creates a managed Active Directory in AWS and establishes a trust with on-premises AD. While it can enable console access via IAM roles, it requires <strong>significant setup overhead</strong>: deploying Directory Service, configuring trust relationships, managing IAM federation per account. Identity Center provides built-in IdP integration without needing to deploy a directory service.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 38;
+var totalQuestions = 39;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
