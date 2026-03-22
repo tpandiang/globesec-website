@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/43</div>
+            <div class="score-big" id="overallScore">0/44</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1881,10 +1881,46 @@ This says: "Allow this action only if the resource's Project tag matches the cal
 </div>
 </div>
 
+<!-- Q44 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q44.</span><span>A company uses a SAML identity provider (IdP) to allow external users to access an Amazon S3 bucket. The security team suspects that a role's credentials have been compromised. The team must <strong>immediately stop users with active sessions</strong> to ensure compromised credentials are not in use.<br><br>Which step should the security team take?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Attach an S3 bucket policy with Effect "Deny", Action "s3:*", and Principal set to the role associated with the IdP.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Remove the IAM policy that is attached to the role associated with the IdP.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Delete the compromised role's access key and secret access key.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use the AWSRevokeOlderSessions policy to revoke active sessions for the role associated with the IdP.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Revoke active sessions using the <code>AWSRevokeOlderSessions</code> policy.<br><br>
+
+<strong>How to Think About This:</strong><br>
+The key phrase is <strong>"immediately stop users with active sessions."</strong> This means you need to invalidate <em>existing</em> temporary credentials that were already issued. Changing policies or bucket policies affects <em>future</em> API calls but doesn't invalidate the session tokens themselves. Only revoking sessions kills active tokens immediately.<br><br>
+
+This is the same concept as Q26 (compromised IAM role) but specifically for SAML-federated roles. The mechanism is identical: <strong>revoke active sessions</strong>.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>AWSRevokeOlderSessions</em> &mdash; When you "Revoke active sessions" for an IAM role (via console or API), AWS automatically attaches a policy called <code>AWSRevokeOlderSessions</code> to the role. This policy:<br>
+&bull; Contains a <strong>Deny all</strong> with a condition: <code>aws:TokenIssueTime</code> is before the revocation timestamp<br>
+&bull; Any temporary credentials issued <strong>before</strong> the revocation are immediately denied for all actions<br>
+&bull; Any credentials issued <strong>after</strong> the revocation work normally<br>
+&bull; Takes effect <strong>immediately</strong> &mdash; no propagation delay<br><br>
+
+<em>How It Works</em>:<br>
+<code>Revoke sessions at 3:00 PM &rarr; All tokens issued before 3:00 PM are denied &rarr; New AssumeRoleWithSAML calls after 3:00 PM get valid tokens</code><br><br>
+
+This is the <strong>only</strong> way to immediately stop active sessions. All other approaches affect future access but leave existing session tokens valid until they naturally expire (up to 12 hours).<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) S3 bucket policy with Deny</em> &mdash; Adding a Deny to the bucket policy blocks <strong>future S3 API calls</strong> from the role. However, this is not "immediate" in the same way &mdash; the compromised credentials could still be used for other AWS services (if the role has broader permissions). Also, bucket policies don't invalidate the <em>session tokens</em> &mdash; they block specific actions on one resource. Revoking sessions blocks <strong>all actions everywhere</strong> for compromised tokens.<br>
+<em>B) Remove the IAM policy from the role</em> &mdash; Removing the policy removes <strong>all future permissions</strong> for the role &mdash; including for legitimate users who assume the role after the incident. This is too broad (affects everyone, not just compromised sessions) and doesn't <strong>immediately invalidate</strong> existing session tokens. Cached temporary credentials may still work until they expire.<br>
+<em>C) Delete access key and secret key</em> &mdash; IAM roles don't have permanent access keys. Access keys belong to <strong>IAM users</strong>. SAML-federated users receive <strong>temporary session credentials</strong> via <code>AssumeRoleWithSAML</code>, not permanent access keys. There's nothing to delete. This option fundamentally misunderstands how SAML federation works.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 43;
+var totalQuestions = 44;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
