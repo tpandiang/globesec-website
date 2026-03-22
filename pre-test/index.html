@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/39</div>
+            <div class="score-big" id="overallScore">0/40</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1722,10 +1722,46 @@ No IAM users created. No IAM roles to manage per account. No SAML providers to c
 </div>
 </div>
 
+<!-- Q40 MC -->
+<div class="question" data-type="mc" data-answer="0">
+<div class="question-text"><span class="question-num">Q40.</span><span>A company used AWS IAM Roles Anywhere to grant access to a third-party security scanner. Now that scanning is complete, the company needs to revoke all access for the scanner.<br><br>What is the MOST secure way to remove this access?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Revoke the certificate issued to the security scanner.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Delete the role that is associated with the security scanner.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Remove the trust anchor for the company.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Add a condition to the trust policy that prevents the certificate by CN value.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Revoke the certificate issued to the security scanner.<br><br>
+
+<strong>How to Think About This:</strong><br>
+IAM Roles Anywhere uses <strong>X.509 certificates</strong> for authentication instead of access keys. When you revoke access, you must <strong>invalidate the certificate itself</strong> &mdash; not just remove the role or modify policies. A revoked certificate cannot be used to authenticate, period. Other approaches leave the certificate active, which means it could potentially be reused.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>IAM Roles Anywhere</em> &mdash; Extends IAM roles to workloads <strong>outside of AWS</strong> (on-premises servers, third-party tools, IoT devices). Instead of using long-term access keys, external workloads use <strong>X.509 certificates</strong> issued by a Certificate Authority (CA) to authenticate and receive temporary AWS credentials.<br><br>
+
+<em>How It Works</em>:<br>
+1. A <strong>trust anchor</strong> is created pointing to your CA (or AWS Private CA)<br>
+2. A <strong>profile</strong> specifies which IAM role to assume and session policies<br>
+3. The external workload presents its <strong>X.509 certificate</strong><br>
+4. IAM Roles Anywhere validates the certificate against the trust anchor<br>
+5. If valid, it returns <strong>temporary AWS credentials</strong> (like AssumeRole)<br><br>
+
+<em>Certificate Revocation List (CRL)</em> &mdash; The standard mechanism to invalidate certificates. When you add a certificate to the CRL, any authentication attempt using that certificate is <strong>immediately rejected</strong>. The certificate becomes permanently unusable for IAM Roles Anywhere, regardless of which role or policy it was associated with.<br><br>
+
+<strong>Why A is correct:</strong> Revoking the certificate is the <strong>most targeted and secure</strong> approach. It invalidates the specific certificate issued to the scanner. The certificate can never be used again for authentication, even if it's presented with a different role or policy. This follows the principle of revoking the authentication credential itself.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>B) Delete the associated role</em> &mdash; Deleting the role removes the permissions, but the <strong>certificate remains active and valid</strong>. If the certificate is later associated with a different role (or a new role with the same trust anchor), the scanner could regain access. The authentication credential (certificate) is not invalidated &mdash; only the authorization target (role) is removed.<br>
+<em>C) Remove the trust anchor</em> &mdash; A trust anchor references the <strong>Certificate Authority</strong> that issued the certificate. Removing it would invalidate <strong>ALL certificates</strong> issued by that CA &mdash; not just the scanner's. If other legitimate services use certificates from the same CA, they would all lose access. This is like revoking everyone's ID badge because one person's badge needs to be cancelled.<br>
+<em>D) Add a condition to block by CN value</em> &mdash; Adding a trust policy condition to block a specific Common Name (CN) prevents that certificate from assuming <em>this specific role</em>. However, the certificate <strong>remains active</strong> and could be referenced in other trust policies or roles. Certificate revocation is more secure because it invalidates the credential at the authentication layer, not just the authorization layer.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 39;
+var totalQuestions = 40;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
