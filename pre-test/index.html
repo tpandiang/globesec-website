@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/47</div>
+            <div class="score-big" id="overallScore">0/48</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1558,10 +1558,10 @@ This is exactly what the question asks: "are insecure protocols running on EC2 i
 <div class="question" data-type="mc" data-answer="3">
 <div class="question-text"><span class="question-num">Q36.</span><span>A web application runs on EC2 instances behind an ALB, with an RDS MySQL database and a Linux bastion host for schema updates. Admins SSH to the bastion from corporate workstations. The following security groups are applied:<br><br>&bull; <strong>sgLB</strong> &mdash; Associated with the ALB<br>&bull; <strong>sgWeb</strong> &mdash; Associated with the EC2 instances<br>&bull; <strong>sgDB</strong> &mdash; Associated with the database<br>&bull; <strong>sgBastion</strong> &mdash; Associated with the bastion host<br><br>Which security group configuration is both secure and functional?</span></div>
 <div class="options">
-<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/473 from 0.0.0.0/0 | sgWeb: 80/473 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
-<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/473 from 0.0.0.0/0 | sgWeb: 80/473 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/473 from 0.0.0.0/0 | sgWeb: 80/473 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/473 from 0.0.0.0/0 | sgWeb: 80/473 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/483 from 0.0.0.0/0 | sgWeb: 80/483 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/483 from 0.0.0.0/0 | sgWeb: 80/483 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/483 from 0.0.0.0/0 | sgWeb: 80/483 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/483 from 0.0.0.0/0 | sgWeb: 80/483 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
 </div>
 <div class="explanation">
 <strong>&#10003; Correct: D.</strong> The only configuration where every security group follows least privilege correctly.<br><br>
@@ -1575,11 +1575,11 @@ Evaluate each security group independently. For each one, ask: "What is the <str
 
 <strong>Security Group Breakdown:</strong><br><br>
 
-<em>sgLB: Port 80/473 from 0.0.0.0/0</em> &#10004;<br>
+<em>sgLB: Port 80/483 from 0.0.0.0/0</em> &#10004;<br>
 The ALB is the public entry point. It must accept HTTP (80) and HTTPS (443) from the entire internet. This is correct for a public-facing load balancer.<br><br>
 
-<em>sgWeb: Port 80/473 from sgLB</em> &#10004;<br>
-EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/473 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
+<em>sgWeb: Port 80/483 from sgLB</em> &#10004;<br>
+EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/483 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
 
 <em>sgDB: Port 3306 from sgWeb and sgBastion</em> &#10004;<br>
 The MySQL database (port 3306) should only accept connections from:<br>
@@ -1591,7 +1591,7 @@ Allowing <code>sgLB</code> to reach the database (option B) is a security violat
 Admins SSH from corporate workstations. The bastion should only accept SSH (port 22) from the <strong>corporate IP address range</strong>. Using the VPC IP range (options B, C) is wrong because corporate workstations are <strong>on-premises</strong>, not inside the VPC. The corporate IP range refers to the company's public IP addresses that the workstations use to reach AWS over the internet.<br><br>
 
 <strong>Why others are wrong &mdash; one error each:</strong><br>
-<em>A)</em> sgWeb allows 80/473 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
+<em>A)</em> sgWeb allows 80/483 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
 <em>B)</em> sgDB allows 3306 from <strong>sgLB</strong> &mdash; The ALB should never have direct database access. Only the app servers and bastion need database access. Also, sgBastion allows SSH from VPC range (wrong &mdash; admins are on-premises).<br>
 <em>C)</em> sgBastion allows 22 from <strong>VPC IP range</strong> &mdash; Corporate workstations are on-premises, not in the VPC. SSH connections come from the corporate public IP range, not VPC internal IPs.
 </div>
@@ -2040,10 +2040,55 @@ When you see <strong>"external certificates" + "Network Firewall TLS inspection"
 </div>
 </div>
 
+<!-- Q48 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q48.</span><span>A company maintains records in many Amazon S3 buckets and is currently involved in litigation. The company must preserve relevant data until the litigation has concluded (<strong>unknown duration</strong>). The data must be protected from deletion or overwriting. After the litigation, the company can remove the data.<br><br>Which solution will meet these requirements?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create a new S3 bucket to store litigation data. Place a legal hold on the new S3 bucket. Move all litigation data to the new bucket.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create a new S3 bucket. Configure the bucket to use S3 Object Lock compliance mode retention. Move all litigation data to the new bucket.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable versioning and S3 Object Lock for the existing S3 buckets that store litigation data. Use a manifest in S3 Batch Operations to add legal holds to the objects.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a new S3 bucket. Enable versioning and S3 Object Lock for the new bucket. Move all litigation data to the new bucket. Use a manifest in S3 Batch Operations to add legal holds to the objects.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> New bucket with versioning + Object Lock enabled, consolidate data, then apply legal holds via S3 Batch Operations.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Three requirements narrow the answer:<br>
+1. <strong>"Unknown duration"</strong> &rarr; Legal hold (indefinite), NOT compliance mode (fixed retention period)<br>
+2. <strong>"Many S3 buckets"</strong> &rarr; S3 Batch Operations manifest requires all objects in the <strong>same bucket</strong> &mdash; must consolidate first<br>
+3. <strong>"Protected from deletion"</strong> &rarr; Requires versioning + Object Lock enabled on the bucket<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>S3 Object Lock &mdash; Legal Hold vs. Retention</em>:<br>
+&bull; <strong>Legal Hold</strong> &mdash; Protects an object for an <strong>indefinite</strong> period. No expiration date. Stays in effect until manually removed. Perfect for litigation where the end date is unknown.<br>
+&bull; <strong>Compliance Mode Retention</strong> &mdash; Protects for a <strong>fixed period</strong> (e.g., 365 days). Nobody can delete or modify &mdash; not even root. Requires knowing the retention duration upfront.<br>
+&bull; <strong>Governance Mode Retention</strong> &mdash; Protects for a fixed period, but users with special permissions can override.<br><br>
+
+<em>Prerequisites for Object Lock</em>:<br>
+&bull; <strong>Versioning must be enabled</strong> on the bucket<br>
+&bull; <strong>Object Lock must be enabled</strong> when the bucket is created (cannot be added later to existing buckets)<br>
+&bull; Legal holds are applied <strong>per-object</strong>, not per-bucket<br><br>
+
+<em>S3 Batch Operations</em>:<br>
+&bull; Performs operations on large numbers of objects at once<br>
+&bull; Uses a <strong>manifest file</strong> listing all target objects<br>
+&bull; <strong>Constraint</strong>: All objects in the manifest must be in the <strong>same bucket</strong><br>
+&bull; This is why you must consolidate litigation data from multiple buckets into one bucket first<br><br>
+
+<em>The Complete Process</em>:<br>
+<code>Create new bucket (versioning + Object Lock) &rarr; Move litigation data from all buckets &rarr; Create manifest of all objects &rarr; Run S3 Batch Operations to apply legal holds &rarr; After litigation: remove legal holds &rarr; Delete data</code><br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Legal hold on the bucket</em> &mdash; Legal holds are applied to <strong>individual objects</strong>, not to the bucket itself. You cannot place a legal hold on a bucket. Also, this option doesn't mention enabling versioning or Object Lock &mdash; both are prerequisites for legal holds to work.<br>
+<em>B) Compliance mode retention</em> &mdash; Compliance mode requires a <strong>fixed retention period</strong> (e.g., 1 year, 7 years). The question says the duration is <strong>unknown</strong>. If you set 1 year and the litigation lasts 3 years, the data becomes deletable after year 1. If you set 10 years and it ends in 6 months, you're stuck with undeletable data for 9.5 years (compliance mode cannot be shortened, even by root). Legal hold is the correct choice for unknown durations.<br>
+<em>C) Enable Object Lock on existing buckets + Batch Operations across multiple buckets</em> &mdash; Two problems: (1) <strong>Object Lock cannot be enabled on existing buckets</strong> &mdash; it must be enabled at bucket creation time. (2) S3 Batch Operations manifest requires all objects in the <strong>same bucket</strong> &mdash; you can't run a single batch operation across multiple buckets.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 47;
+var totalQuestions = 48;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
