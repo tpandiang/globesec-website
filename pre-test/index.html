@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/31</div>
+            <div class="score-big" id="overallScore">0/32</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1384,10 +1384,56 @@ One service handles scan, report, and remediate &mdash; that's least operational
 </div>
 </div>
 
+<!-- Q32 MC -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q32.</span><span>A company does not allow the permanent storage of SSH keys on Amazon Linux 2 EC2 instances. Three employees with IAM user accounts require <strong>interactive command line access</strong> to make critical updates to an EC2 instance.<br><br>How can a security engineer provide the appropriate access?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use AWS Systems Manager Inventory to select and connect to the EC2 instance. Provide the IAM user accounts with permissions to use Inventory.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use AWS Systems Manager Run Command to open an SSH connection to the EC2 instance. Provide the IAM user accounts with permissions to use Run Command.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use AWS Systems Manager Session Manager. Provide the IAM user accounts with the permissions to use Session Manager.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use Amazon EC2 Instance Connect to connect to the EC2 instance. Provide the IAM user accounts with access to EC2 Instance Connect.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS Systems Manager Session Manager.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Two key requirements: (1) <strong>no SSH keys</strong> and (2) <strong>interactive command line access</strong>. Session Manager is the only SSM feature that provides both &mdash; a browser-based interactive shell without any SSH keys, controlled entirely through IAM policies.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Session Manager</em> &mdash; Provides secure, interactive command line access to EC2 instances <strong>without</strong>:<br>
+&bull; SSH keys on the instance<br>
+&bull; Open inbound ports (no port 22 needed)<br>
+&bull; Bastion hosts or jump boxes<br><br>
+
+<em>How It Works</em>:<br>
+&bull; SSM Agent (pre-installed on Amazon Linux 2) communicates <strong>outbound</strong> to the SSM service<br>
+&bull; Users authenticate via <strong>IAM</strong> &mdash; no SSH keys or passwords needed<br>
+&bull; Access is granted through IAM policies (e.g., <code>ssm:StartSession</code>)<br>
+&bull; Sessions are interactive &mdash; full shell access, just like SSH<br>
+&bull; All session activity can be <strong>logged to S3 or CloudWatch</strong> (as we learned in Q2)<br><br>
+
+<em>SSM Feature Comparison</em>:<br>
+<table style="width:100%;border-collapse:collapse;font-size:0.82rem;margin:0.5rem 0;">
+<tr style="border-bottom:2px solid var(--accent);"><th style="padding:0.3rem;text-align:left;color:var(--accent);">Feature</th><th style="padding:0.3rem;text-align:left;color:var(--accent);">Interactive?</th><th style="padding:0.3rem;text-align:left;color:var(--accent);">Purpose</th></tr>
+<tr style="border-bottom:1px solid var(--border);"><td style="padding:0.3rem;"><strong>Session Manager</strong></td><td style="padding:0.3rem;">Yes</td><td style="padding:0.3rem;">Interactive shell access</td></tr>
+<tr style="border-bottom:1px solid var(--border);"><td style="padding:0.3rem;">Run Command</td><td style="padding:0.3rem;">No</td><td style="padding:0.3rem;">Execute commands remotely (fire-and-forget)</td></tr>
+<tr style="border-bottom:1px solid var(--border);"><td style="padding:0.3rem;">Inventory</td><td style="padding:0.3rem;">No</td><td style="padding:0.3rem;">Collect metadata (installed software, patches)</td></tr>
+<tr style="border-bottom:1px solid var(--border);"><td style="padding:0.3rem;">Patch Manager</td><td style="padding:0.3rem;">No</td><td style="padding:0.3rem;">Scan and install patches</td></tr>
+</table><br>
+
+<strong>Why C is correct:</strong> Session Manager provides interactive command line access controlled by IAM policies. No SSH keys are stored on the instance. SSM Agent is pre-installed on Amazon Linux 2, so no additional setup is needed. The three employees just need IAM permissions for <code>ssm:StartSession</code>.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) SSM Inventory</em> &mdash; Inventory <strong>collects metadata</strong> from managed nodes (installed applications, OS version, network config). It does NOT provide any kind of connection or command line access. It's a data collection tool, not an access tool.<br>
+<em>B) SSM Run Command</em> &mdash; Run Command executes commands remotely but is <strong>not interactive</strong>. You submit a command, it runs, and you get the output back. You cannot type commands in real-time or interact with the shell. The question specifically requires "interactive command line access."<br>
+<em>D) EC2 Instance Connect</em> &mdash; Instance Connect pushes a <strong>temporary SSH public key</strong> to the instance metadata for 60 seconds, then you SSH using that key. However, this still requires SSH key infrastructure on the instance. The question says the company "does not allow the permanent storage of SSH keys" &mdash; while Instance Connect keys are temporary, the mechanism still relies on SSH key-based authentication on the instance.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 31;
+var totalQuestions = 32;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
