@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/56</div>
+            <div class="score-big" id="overallScore">0/57</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1558,10 +1558,10 @@ This is exactly what the question asks: "are insecure protocols running on EC2 i
 <div class="question" data-type="mc" data-answer="3">
 <div class="question-text"><span class="question-num">Q36.</span><span>A web application runs on EC2 instances behind an ALB, with an RDS MySQL database and a Linux bastion host for schema updates. Admins SSH to the bastion from corporate workstations. The following security groups are applied:<br><br>&bull; <strong>sgLB</strong> &mdash; Associated with the ALB<br>&bull; <strong>sgWeb</strong> &mdash; Associated with the EC2 instances<br>&bull; <strong>sgDB</strong> &mdash; Associated with the database<br>&bull; <strong>sgBastion</strong> &mdash; Associated with the bastion host<br><br>Which security group configuration is both secure and functional?</span></div>
 <div class="options">
-<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/563 from 0.0.0.0/0 | sgWeb: 80/563 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
-<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/563 from 0.0.0.0/0 | sgWeb: 80/563 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/563 from 0.0.0.0/0 | sgWeb: 80/563 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/563 from 0.0.0.0/0 | sgWeb: 80/563 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/573 from 0.0.0.0/0 | sgWeb: 80/573 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/573 from 0.0.0.0/0 | sgWeb: 80/573 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/573 from 0.0.0.0/0 | sgWeb: 80/573 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/573 from 0.0.0.0/0 | sgWeb: 80/573 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
 </div>
 <div class="explanation">
 <strong>&#10003; Correct: D.</strong> The only configuration where every security group follows least privilege correctly.<br><br>
@@ -1575,11 +1575,11 @@ Evaluate each security group independently. For each one, ask: "What is the <str
 
 <strong>Security Group Breakdown:</strong><br><br>
 
-<em>sgLB: Port 80/563 from 0.0.0.0/0</em> &#10004;<br>
+<em>sgLB: Port 80/573 from 0.0.0.0/0</em> &#10004;<br>
 The ALB is the public entry point. It must accept HTTP (80) and HTTPS (443) from the entire internet. This is correct for a public-facing load balancer.<br><br>
 
-<em>sgWeb: Port 80/563 from sgLB</em> &#10004;<br>
-EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/563 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
+<em>sgWeb: Port 80/573 from sgLB</em> &#10004;<br>
+EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/573 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
 
 <em>sgDB: Port 3306 from sgWeb and sgBastion</em> &#10004;<br>
 The MySQL database (port 3306) should only accept connections from:<br>
@@ -1591,7 +1591,7 @@ Allowing <code>sgLB</code> to reach the database (option B) is a security violat
 Admins SSH from corporate workstations. The bastion should only accept SSH (port 22) from the <strong>corporate IP address range</strong>. Using the VPC IP range (options B, C) is wrong because corporate workstations are <strong>on-premises</strong>, not inside the VPC. The corporate IP range refers to the company's public IP addresses that the workstations use to reach AWS over the internet.<br><br>
 
 <strong>Why others are wrong &mdash; one error each:</strong><br>
-<em>A)</em> sgWeb allows 80/563 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
+<em>A)</em> sgWeb allows 80/573 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
 <em>B)</em> sgDB allows 3306 from <strong>sgLB</strong> &mdash; The ALB should never have direct database access. Only the app servers and bastion need database access. Also, sgBastion allows SSH from VPC range (wrong &mdash; admins are on-premises).<br>
 <em>C)</em> sgBastion allows 22 from <strong>VPC IP range</strong> &mdash; Corporate workstations are on-premises, not in the VPC. SSH connections come from the corporate public IP range, not VPC internal IPs.
 </div>
@@ -2447,10 +2447,50 @@ This is the same concept as Q42 but from a different angle. When you see <strong
 </div>
 </div>
 
+<!-- Q57 MC -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q57.</span><span>A security team wants to more efficiently manage security findings across multiple AWS accounts in AWS Organizations. Currently they must assume IAM roles in each account to view findings. They want a <strong>central way to view and manage compliance</strong> with industry and security standards.<br><br>Which solution meets these requirements?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Configure AWS CloudTrail in each account to deliver logs to a central S3 bucket. Create an Amazon Athena table to query and analyze the logs from all accounts.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable AWS Security Hub. Designate a delegated administrator account. Ensure all other accounts are added as Organization members. View and manage all findings in the delegated admin account.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable Amazon Detective. Designate a delegated administrator account. Ensure all other accounts are added as Organization members. View and manage all findings in the delegated admin account.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Configure CloudTrail to deliver logs to CloudWatch log groups. Stream to a central Amazon Data Firehose. Deliver to Amazon Redshift. Query and analyze findings from all accounts.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS Security Hub with delegated administrator for centralized finding management.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"central view" + "manage findings" + "compliance standards" + "multiple accounts"</strong>, the answer is <em>Security Hub</em>. This is Security Hub's core purpose. The key words are "view AND manage" + "compliance standards" &mdash; only Security Hub does both.<br><br>
+
+Remember the security trifecta roles:<br>
+&bull; <strong>Security Hub</strong> = aggregate + manage + compliance standards (CIS, PCI, NIST)<br>
+&bull; <strong>Detective</strong> = investigate + correlate + attack paths<br>
+&bull; <strong>GuardDuty</strong> = detect threats<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Security Hub Delegated Administrator</em> &mdash; When enabled with Organizations:<br>
+&bull; <strong>Automatic member enrollment</strong> &mdash; All existing and new accounts automatically become members<br>
+&bull; <strong>Centralized findings</strong> &mdash; The delegated admin sees findings from ALL member accounts in one dashboard<br>
+&bull; <strong>Compliance management</strong> &mdash; Built-in security standards (CIS Benchmarks, PCI DSS, NIST 800-53, AWS FSBP) are evaluated across all accounts<br>
+&bull; <strong>Finding management</strong> &mdash; The admin can update finding status, add notes, trigger automated remediation, and manage findings across all accounts from one place<br>
+&bull; <strong>Cross-Region aggregation</strong> &mdash; Can aggregate findings from all Regions into one view (as we learned in Q13)<br><br>
+
+<em>What Security Hub Aggregates</em>:<br>
+Findings from GuardDuty, Inspector, Macie, Config, Firewall Manager, IAM Access Analyzer, and 60+ third-party integrations &mdash; all normalized into the <strong>AWS Security Finding Format (ASFF)</strong>.<br><br>
+
+<strong>Why B is correct:</strong> Security Hub is purpose-built for centralized security finding management with compliance standards. The delegated admin model allows a security account to view and manage findings across all 1,200+ member accounts without assuming roles in each. Built-in compliance standards (CIS, PCI, NIST) meet the "industry standards" requirement.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) CloudTrail + S3 + Athena</em> &mdash; CloudTrail logs API calls, not security findings. The logs are <strong>not normalized</strong> &mdash; you'd need to write custom SQL queries to extract security-relevant information. You <strong>cannot manage findings</strong> (update status, remediate) from Athena &mdash; it's a read-only query tool. Significant operational overhead compared to Security Hub's built-in dashboards.<br>
+<em>C) Amazon Detective delegated admin</em> &mdash; Detective is for <strong>investigation</strong>, not for centralized finding management or compliance. Detective can aggregate findings but it requires Security Hub as a source first. You cannot "manage" findings in Detective (update status, trigger remediation). Detective answers "what happened?" not "are we compliant?"<br>
+<em>D) CloudTrail + CloudWatch + Firehose + Redshift</em> &mdash; This builds a complex 4-service pipeline to achieve what Security Hub does out of the box. CloudTrail logs are not normalized security findings. Custom Redshift queries are needed. You cannot manage findings from Redshift. Massive operational overhead for an inferior result.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 56;
+var totalQuestions = 57;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
