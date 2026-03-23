@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-big" id="overallScore">0/61</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1558,10 +1558,10 @@ This is exactly what the question asks: "are insecure protocols running on EC2 i
 <div class="question" data-type="mc" data-answer="3">
 <div class="question-text"><span class="question-num">Q36.</span><span>A web application runs on EC2 instances behind an ALB, with an RDS MySQL database and a Linux bastion host for schema updates. Admins SSH to the bastion from corporate workstations. The following security groups are applied:<br><br>&bull; <strong>sgLB</strong> &mdash; Associated with the ALB<br>&bull; <strong>sgWeb</strong> &mdash; Associated with the EC2 instances<br>&bull; <strong>sgDB</strong> &mdash; Associated with the database<br>&bull; <strong>sgBastion</strong> &mdash; Associated with the bastion host<br><br>Which security group configuration is both secure and functional?</span></div>
 <div class="options">
-<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/603 from 0.0.0.0/0 | sgWeb: 80/603 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
-<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/603 from 0.0.0.0/0 | sgWeb: 80/603 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/603 from 0.0.0.0/0 | sgWeb: 80/603 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/603 from 0.0.0.0/0 | sgWeb: 80/603 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/613 from 0.0.0.0/0 | sgWeb: 80/613 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/613 from 0.0.0.0/0 | sgWeb: 80/613 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/613 from 0.0.0.0/0 | sgWeb: 80/613 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/613 from 0.0.0.0/0 | sgWeb: 80/613 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
 </div>
 <div class="explanation">
 <strong>&#10003; Correct: D.</strong> The only configuration where every security group follows least privilege correctly.<br><br>
@@ -1575,11 +1575,11 @@ Evaluate each security group independently. For each one, ask: "What is the <str
 
 <strong>Security Group Breakdown:</strong><br><br>
 
-<em>sgLB: Port 80/603 from 0.0.0.0/0</em> &#10004;<br>
+<em>sgLB: Port 80/613 from 0.0.0.0/0</em> &#10004;<br>
 The ALB is the public entry point. It must accept HTTP (80) and HTTPS (443) from the entire internet. This is correct for a public-facing load balancer.<br><br>
 
-<em>sgWeb: Port 80/603 from sgLB</em> &#10004;<br>
-EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/603 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
+<em>sgWeb: Port 80/613 from sgLB</em> &#10004;<br>
+EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/613 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
 
 <em>sgDB: Port 3306 from sgWeb and sgBastion</em> &#10004;<br>
 The MySQL database (port 3306) should only accept connections from:<br>
@@ -1591,7 +1591,7 @@ Allowing <code>sgLB</code> to reach the database (option B) is a security violat
 Admins SSH from corporate workstations. The bastion should only accept SSH (port 22) from the <strong>corporate IP address range</strong>. Using the VPC IP range (options B, C) is wrong because corporate workstations are <strong>on-premises</strong>, not inside the VPC. The corporate IP range refers to the company's public IP addresses that the workstations use to reach AWS over the internet.<br><br>
 
 <strong>Why others are wrong &mdash; one error each:</strong><br>
-<em>A)</em> sgWeb allows 80/603 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
+<em>A)</em> sgWeb allows 80/613 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
 <em>B)</em> sgDB allows 3306 from <strong>sgLB</strong> &mdash; The ALB should never have direct database access. Only the app servers and bastion need database access. Also, sgBastion allows SSH from VPC range (wrong &mdash; admins are on-premises).<br>
 <em>C)</em> sgBastion allows 22 from <strong>VPC IP range</strong> &mdash; Corporate workstations are on-premises, not in the VPC. SSH connections come from the corporate public IP range, not VPC internal IPs.
 </div>
@@ -2626,10 +2626,55 @@ No ongoing manual effort for AMI maintenance.<br><br>
 </div>
 </div>
 
+<!-- Q61 MC -->
+<div class="question" data-type="mc" data-answer="1">
+<div class="question-text"><span class="question-num">Q61.</span><span>A company uses AWS Private Certificate Authority (CA) to manage internal certificates. A development team in a <strong>separate AWS account</strong> needs to request and issue certificates from the company's CA, following security best practices.<br><br>Which solution meets these requirements with the LEAST operational overhead?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create a cross-account IAM role in the CA account with certificate issuance permissions. Allow the development account to assume the role. Configure AWS Private CA to require MFA for certificate issuance.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Share the AWS Private CA resource using AWS Resource Access Manager (AWS RAM) with the development team's account. Grant appropriate certificate issuance permissions using IAM policies in the development account.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Export the AWS Private CA root certificate and private key to the development team's account. Allow them to issue certificates locally.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a public ACM certificate with AWS Private CA as the root authority. Import the certificate into the development account. Allow the team to create certificate requests from the imported certificate.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Share AWS Private CA via AWS RAM + IAM policies in the development account.<br><br>
+
+<strong>How to Think About This:</strong><br>
+When you see <strong>"share an AWS resource cross-account" + "least operational overhead"</strong>, check if <em>AWS RAM</em> supports that resource type. AWS Private CA is a <strong>RAM-shareable resource</strong>. RAM provides controlled sharing without complex cross-account role setups.<br><br>
+
+Remember from Q1: AMIs are NOT shareable via RAM. But Private CA IS. Know which resources RAM supports.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>AWS Resource Access Manager (RAM)</em> &mdash; Lets you share AWS resources across accounts within or outside your organization. For AWS Private CA:<br>
+&bull; The CA owner shares the Private CA via RAM with the development account<br>
+&bull; The development team can then request certificates directly from the shared CA<br>
+&bull; IAM policies in the development account control who can issue certificates and with what parameters<br>
+&bull; No cross-account role assumption needed for each request<br>
+&bull; The CA owner maintains full control &mdash; can revoke sharing at any time<br><br>
+
+<em>RAM-Shareable Resources</em> (exam favorites):<br>
+&bull; <strong>AWS Private CA</strong> &mdash; Share certificate authorities<br>
+&bull; <strong>VPC Subnets</strong> &mdash; Share subnets for VPC sharing<br>
+&bull; <strong>Transit Gateway</strong> &mdash; Share for multi-VPC connectivity<br>
+&bull; <strong>Route 53 Resolver rules</strong> &mdash; Share DNS resolution<br>
+&bull; <strong>License Manager configs</strong> &mdash; Share license configurations<br>
+&bull; <strong>NOT shareable via RAM</strong>: AMIs, S3 buckets, KMS keys (use native mechanisms)<br><br>
+
+<em>The Flow</em>:<br>
+<code>CA Account creates RAM share (Private CA) &rarr; Dev Account accepts share &rarr; Dev team uses IAM policy to request certs &rarr; CA issues certs centrally</code><br><br>
+
+<strong>Why B is correct:</strong> RAM provides native, secure cross-account resource sharing for Private CA. The development team can request certificates without assuming roles each time. IAM policies in the dev account precisely control permissions. Centralized CA management is maintained. Least operational overhead &mdash; no custom roles, no key export, no complex setups.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Cross-account IAM role + MFA</em> &mdash; Two issues: (1) Developers must <strong>assume a role for each certificate request</strong> &mdash; more operational overhead than RAM sharing. (2) AWS Private CA does <strong>not directly support MFA requirements</strong> for certificate issuance. This solution doesn't follow AWS best practices for resource sharing.<br>
+<em>C) Export root certificate and private key</em> &mdash; This is a <strong>critical security violation</strong>. Exporting the CA's private key creates copies of the most sensitive cryptographic material. If the private key is compromised, the entire certificate chain is compromised. You lose centralized control, audit capability, and the ability to revoke access. Never export CA private keys.<br>
+<em>D) Public ACM certificate from Private CA</em> &mdash; This is technically incorrect. Public ACM certificates are issued by <strong>public CAs</strong> (Amazon Trust Services), not private CAs. You cannot "create certificate requests from an imported certificate" &mdash; imported certificates are end-entity certificates, not CA certificates. The trust chain doesn't work this way.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 60;
+var totalQuestions = 61;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
