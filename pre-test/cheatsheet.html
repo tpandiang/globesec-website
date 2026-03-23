@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exam Cheat Sheet - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+.section-header {
+    font-size: 0.75rem; font-weight: 700; color: var(--aws); text-transform: uppercase;
+    letter-spacing: 1.5px; margin: 1.5rem 0 0.75rem; padding-bottom: 0.4rem;
+    border-bottom: 2px solid rgba(255, 153, 0, 0.2);
+}
+.section-header:first-of-type { margin-top: 0.5rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; margin: 0.5rem 0; }
+th { background: var(--bg3); color: var(--accent); padding: 0.45rem 0.65rem; text-align: left; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid var(--accent); }
+td { padding: 0.4rem 0.65rem; border-bottom: 1px solid var(--border); }
+tr:hover td { background: rgba(0, 212, 255, 0.03); }
+strong { color: var(--white); }
+code { background: rgba(0,212,255,0.08); color: #ff7eb6; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.82rem; font-family: 'Consolas', monospace; }
+pre { background: #0d1b2a; color: #e2e8f0; padding: 0.8rem 1rem; border-radius: 6px; overflow-x: auto; margin: 0.5rem 0; font-size: 0.78rem; line-height: 1.5; border: 1px solid var(--border); font-family: 'Consolas', monospace; }
+pre code { background: none; color: inherit; padding: 0; }
+ul { margin: 0.3rem 0 0.5rem 1.25rem; }
+li { font-size: 0.87rem; margin: 0.15rem 0; line-height: 1.5; }
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.card h3 { font-size: 0.95rem; color: var(--aws); margin-bottom: 0.4rem; border: none; padding: 0; }
+.card.cyan h3 { color: var(--accent); }
+.card.purple h3 { color: var(--accent2); }
+.card.green h3 { color: var(--correct); }
+p { margin: 0.4rem 0; font-size: 0.88rem; }
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin: 0.75rem 0; }
+.stat-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; text-align: center; }
+.stat-num { font-size: 1.8rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+.highlight { background: rgba(255, 153, 0, 0.08); border-left: 3px solid var(--aws); padding: 0.6rem 0.8rem; border-radius: 0 6px 6px 0; margin: 0.5rem 0; font-size: 0.85rem; }
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .topbar-title span:last-child { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SCS-C03</span>
+            <span>Exam Cheat Sheet</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <a href="index.html" class="topbar-btn">Take Pre-Test</a>
+        <a href="takeaways.html" class="topbar-btn">Takeaways</a>
+        <a href="../training.html" class="topbar-btn">Study Guide</a>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<!-- EXAM OVERVIEW -->
+<div class="section-header">What to Expect</div>
+
+<div class="stat-grid">
+    <div class="stat-box"><div class="stat-num">63</div><div class="stat-label">Questions Analyzed</div></div>
+    <div class="stat-box"><div class="stat-num">31</div><div class="stat-label">AWS Services</div></div>
+    <div class="stat-box"><div class="stat-num">24%</div><div class="stat-label">IAM/Access Control</div></div>
+    <div class="stat-box"><div class="stat-num">13%</div><div class="stat-label">Network + Encryption</div></div>
+</div>
+
+<div class="card">
+<h3>Domain Weight Distribution</h3>
+<table>
+<tr><th>Domain</th><th>Weight</th><th>Focus Areas</th></tr>
+<tr><td><strong>Access Control &amp; Authentication</strong></td><td><strong>24%</strong></td><td>IAM policies, SAML, Cognito, Identity Center, ABAC, Permission Boundaries, SCPs</td></tr>
+<tr><td><strong>Network &amp; Transport Security</strong></td><td>13%</td><td>ALB/NLB TLS, VPC endpoints, Network Firewall, Direct Connect, Security Groups</td></tr>
+<tr><td><strong>Data Protection &amp; Encryption</strong></td><td>13%</td><td>KMS, CloudHSM, S3 Object Lock, EFS encryption, SNS data protection</td></tr>
+<tr><td><strong>Operations &amp; Logging</strong></td><td>10%</td><td>CloudWatch, CloudTrail, Session Manager, Lambda logging</td></tr>
+<tr><td><strong>Compliance &amp; Monitoring</strong></td><td>10%</td><td>Config rules, Inspector, Patch Manager, proactive evaluation</td></tr>
+<tr><td><strong>Threat Detection &amp; Response</strong></td><td>6%</td><td>Security Hub, GuardDuty, Detective</td></tr>
+<tr><td><strong>DDoS &amp; Bot Protection</strong></td><td>5%</td><td>WAF, Shield Advanced, Bot Control, CloudFront</td></tr>
+<tr><td><strong>Governance</strong></td><td>5%</td><td>Organizations, SCPs, RCPs, Tag policies</td></tr>
+<tr><td><strong>Incident Response</strong></td><td>5%</td><td>Credential revocation, forensics, FIS testing</td></tr>
+<tr><td><strong>Other</strong></td><td>9%</td><td>AMI sharing, StackSets, Service Catalog, Image Builder</td></tr>
+</table>
+</div>
+
+<!-- TRIGGER WORDS -->
+<div class="section-header">Trigger Words &rarr; Instant Answers</div>
+
+<div class="card">
+<h3>Identity &amp; Access</h3>
+<table>
+<tr><th>When You See...</th><th>The Answer Is...</th></tr>
+<tr><td>"Mobile app" + "social login" + "consumers"</td><td><strong>Amazon Cognito</strong> (User Pool + Identity Pool)</td></tr>
+<tr><td>"Employees" + "multiple AWS accounts" + "SSO"</td><td><strong>IAM Identity Center</strong></td></tr>
+<tr><td>"On-premises AD" + "AWS Console"</td><td><strong>SAML 2.0 Federation</strong> (AD FS)</td></tr>
+<tr><td>"Custom auth logic" + "mobile app"</td><td><strong>Cognito Lambda triggers</strong></td></tr>
+<tr><td>"Preserve end user identity across services"</td><td><strong>Trusted identity propagation</strong></td></tr>
+<tr><td>"One role" + "multiple services" + "project-scoped"</td><td><strong>ABAC</strong> (tag-based access)</td></tr>
+<tr><td>"Delegate IAM admin safely" + "prevent escalation"</td><td><strong>Permission Boundaries</strong></td></tr>
+<tr><td>"100 users, own folder in S3"</td><td><strong>Policy variables</strong> (<code>${aws:username}</code>)</td></tr>
+<tr><td>"Third-party cross-account role" + "confused deputy"</td><td><strong>sts:ExternalId</strong></td></tr>
+<tr><td>"EC2/Lambda needs AWS service access"</td><td><strong>IAM execution role</strong> (never access keys)</td></tr>
+<tr><td>"Associate role with EC2" + unauthorized error</td><td><strong>iam:PassRole</strong> permission needed</td></tr>
+<tr><td>"Revoke SAML role active sessions"</td><td><strong>AWSRevokeOlderSessions</strong></td></tr>
+<tr><td>"External workload, no access keys"</td><td><strong>IAM Roles Anywhere</strong> (X.509 certificates)</td></tr>
+<tr><td>"Revoke Roles Anywhere access"</td><td><strong>Revoke the certificate</strong> (CRL)</td></tr>
+</table>
+</div>
+
+<div class="card cyan">
+<h3>Encryption &amp; Data Protection</h3>
+<table>
+<tr><th>When You See...</th><th>The Answer Is...</th></tr>
+<tr><td>"FIPS 140-2 Level 3"</td><td><strong>CloudHSM</strong></td></tr>
+<tr><td>"FIPS 140-2 Level 2"</td><td><strong>KMS</strong> (standard)</td></tr>
+<tr><td>"KMS convenience + HSM security"</td><td><strong>Custom key store</strong> (KMS + CloudHSM)</td></tr>
+<tr><td>"Import own keys" (BYOK)</td><td><strong>Import to KMS</strong> from HSM</td></tr>
+<tr><td>"Custom key rotation period (e.g., 90 days)"</td><td><strong>Customer managed key</strong> (not AWS-managed)</td></tr>
+<tr><td>"Encrypt existing unencrypted EFS"</td><td><strong>New EFS file system</strong> (can't add encryption to existing)</td></tr>
+<tr><td>"Litigation" + "unknown retention duration"</td><td><strong>S3 Object Lock Legal Hold</strong></td></tr>
+<tr><td>"Known retention" + "nobody can modify, not even root"</td><td><strong>S3 Object Lock Compliance Mode</strong></td></tr>
+<tr><td>"End-to-end encryption" + load balancer</td><td><strong>NLB TCP listener</strong> + third-party cert on EC2</td></tr>
+<tr><td>"PII in SNS messages"</td><td><strong>SNS message data protection policy</strong></td></tr>
+<tr><td>"Read encrypted parameter/secret"</td><td>Need BOTH <strong>read permission + kms:Decrypt</strong></td></tr>
+<tr><td>"External certs for Network Firewall TLS"</td><td><strong>Import to ACM first</strong></td></tr>
+</table>
+</div>
+
+<div class="card green">
+<h3>Network &amp; Infrastructure Security</h3>
+<table>
+<tr><th>When You See...</th><th>The Answer Is...</th></tr>
+<tr><td>"ALB" + "enforce TLS version"</td><td><strong>Predefined ELBSecurityPolicy</strong></td></tr>
+<tr><td>"Automatic encryption between EC2s, no overhead"</td><td><strong>Nitro v3+</strong> instances</td></tr>
+<tr><td>"Must not traverse public internet" + S3</td><td><strong>VPC endpoint</strong> (Gateway)</td></tr>
+<tr><td>"Dedicated channel" + "IPsec" + S3</td><td><strong>Direct Connect (public VIF)</strong> + Site-to-Site VPN</td></tr>
+<tr><td>"IPS" + "north-south traffic" + VPC</td><td><strong>Network Firewall</strong> in dedicated subnets</td></tr>
+<tr><td>"Real client IP behind ALB"</td><td><strong>X-Forwarded-For</strong> header</td></tr>
+<tr><td>"Block bots" + advanced</td><td><strong>WAF Bot Control</strong> (targeted bots)</td></tr>
+<tr><td>"Block part of country" (not whole)</td><td><strong>CloudFront geo headers + Lambda@Edge</strong></td></tr>
+<tr><td>"DDoS Layer 3/4"</td><td><strong>ALB + Auto Scaling</strong> (or Shield Advanced)</td></tr>
+<tr><td>"DDoS Layer 7"</td><td><strong>CloudFront + WAF</strong></td></tr>
+<tr><td>"SQLi / XSS protection"</td><td><strong>WAF managed rule groups</strong></td></tr>
+<tr><td>"Brute force login"</td><td><strong>WAF rate-based rules</strong></td></tr>
+<tr><td>"MITM attack prevention"</td><td><strong>HTTPS with ACM</strong></td></tr>
+</table>
+</div>
+
+<div class="card purple">
+<h3>Detection, Logging &amp; Investigation</h3>
+<table>
+<tr><th>When You See...</th><th>The Answer Is...</th></tr>
+<tr><td>"Central view" + "manage findings" + "compliance"</td><td><strong>Security Hub</strong></td></tr>
+<tr><td>"Investigate" + "scope" + "timeline" + "attack path"</td><td><strong>Amazon Detective</strong></td></tr>
+<tr><td>"Detect threats" + "anomalies" automatically</td><td><strong>GuardDuty</strong></td></tr>
+<tr><td>"Automated remediation of findings"</td><td><strong>Security Hub custom actions</strong> &rarr; EventBridge &rarr; Lambda</td></tr>
+<tr><td>"All Regions" + Security Hub</td><td><strong>Cross-Region aggregation</strong></td></tr>
+<tr><td>"Log session commands to S3"</td><td><strong>Session Manager preferences</strong> (built-in)</td></tr>
+<tr><td>"EC2 local log files" + "monitor"</td><td><strong>CloudWatch agent + metric filters + alarms</strong></td></tr>
+<tr><td>"Query future CloudTrail logs" + "single query"</td><td><strong>CloudTrail Lake</strong></td></tr>
+<tr><td>"When did resource change?"</td><td><strong>Config resource timeline</strong></td></tr>
+<tr><td>"Who made the API call?"</td><td><strong>CloudTrail</strong></td></tr>
+<tr><td>"What protocols running on instance?"</td><td><strong>Inspector</strong> (Network Reachability)</td></tr>
+<tr><td>"Lambda internal processing issue"</td><td><strong>DEBUG logging + X-Ray + CloudWatch Insights</strong></td></tr>
+<tr><td>"VPC Flow Log needs type field"</td><td><strong>Create NEW flow log</strong> (can't modify existing)</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h3>Governance &amp; Organizations</h3>
+<table>
+<tr><th>When You See...</th><th>The Answer Is...</th></tr>
+<tr><td>"Prevent action" + "admin users can't bypass"</td><td><strong>SCP</strong> on the specific OU</td></tr>
+<tr><td>"Non-management account manages org service"</td><td><strong>Delegated administrator</strong></td></tr>
+<tr><td>"Deploy Config rules as a package"</td><td><strong>Organization conformance pack</strong></td></tr>
+<tr><td>"Enforce tag values"</td><td><strong>Tag policy</strong> (enforce mode)</td></tr>
+<tr><td>"Force tag to exist"</td><td><strong>SCP</strong> (deny without tag)</td></tr>
+<tr><td>"Both tag value AND presence"</td><td><strong>Tag policy + SCP</strong> together</td></tr>
+<tr><td>"Cross-account resource sharing" (S3, KMS)</td><td><strong>RCP</strong></td></tr>
+<tr><td>"Eliminate root credentials" + "maintain actions"</td><td><strong>Centralized root access management</strong></td></tr>
+<tr><td>"Share Private CA cross-account"</td><td><strong>AWS RAM</strong></td></tr>
+<tr><td>"Standardized EC2 deployment across accounts"</td><td><strong>Image Builder + Service Catalog</strong></td></tr>
+<tr><td>"Patch compliance" + "report + install"</td><td><strong>SSM Patch Manager</strong></td></tr>
+<tr><td>"Interactive shell, no SSH keys"</td><td><strong>Session Manager</strong></td></tr>
+</table>
+</div>
+
+<div class="card green">
+<h3>Incident Response</h3>
+<table>
+<tr><th>When You See...</th><th>The Answer Is...</th></tr>
+<tr><td>"Compromised access key"</td><td><strong>Deactivate</strong> (not delete) + CloudTrail investigation</td></tr>
+<tr><td>"Stop ALL current sessions" + role</td><td><strong>Deny-all + revoke sessions + NACL block</strong></td></tr>
+<tr><td>"Forensic evidence preservation"</td><td><strong>EBS snapshots + isolate</strong> (not terminate)</td></tr>
+<tr><td>"Immutable evidence storage"</td><td><strong>S3 Object Lock</strong> (Compliance mode)</td></tr>
+<tr><td>"Test incident response plan"</td><td><strong>AWS FIS</strong> (Fault Injection Service)</td></tr>
+<tr><td>"Test AZ availability"</td><td><strong>FIS AZ power interruption</strong> scenario</td></tr>
+<tr><td>"Attack path analysis"</td><td><strong>Amazon Detective</strong></td></tr>
+<tr><td>"Auto-quarantine across accounts"</td><td><strong>Security Hub + SSM Automation runbooks</strong></td></tr>
+</table>
+</div>
+
+<!-- GOLDEN RULES -->
+<div class="section-header">Golden Rules to Memorize</div>
+
+<div class="highlight"><strong>Rule 1: The Caller Pays</strong> &mdash; Permissions are checked against the entity making the call, not the service in the middle. EC2 role needs kms:Decrypt, not SSM service role.</div>
+
+<div class="highlight"><strong>Rule 2: Two-Key Access</strong> &mdash; Encrypted data always needs TWO permissions: read the resource + decrypt the key. If either is missing = Access Denied.</div>
+
+<div class="highlight"><strong>Rule 3: Effective Permissions = Identity Policy &cap; Permissions Boundary &cap; SCP</strong> &mdash; All three must allow the action. Any layer blocking = denied.</div>
+
+<div class="highlight"><strong>Rule 4: Explicit Deny ALWAYS Wins</strong> &mdash; No amount of Allow statements override a single Deny. Deny &gt; Allow &gt; Default Deny.</div>
+
+<div class="highlight"><strong>Rule 5: Use the Native Feature</strong> &mdash; "Least overhead" = fewest services. Don't build pipelines when a checkbox exists. Config &rarr; Security Hub is automatic.</div>
+
+<div class="highlight"><strong>Rule 6: Deactivate, Don't Delete</strong> &mdash; Compromised access keys: deactivate first (reversible), test, then delete. Instances: isolate, don't terminate (preserve evidence).</div>
+
+<div class="highlight"><strong>Rule 7: SCP &gt; IAM</strong> &mdash; Users with admin access can remove IAM policies. They CANNOT remove SCPs. For unbypassable guardrails, use SCPs.</div>
+
+<div class="highlight"><strong>Rule 8: Proactive &gt; Reactive</strong> &mdash; "Prevent creation" = SCP, Config proactive eval, Service Catalog. "Detect after creation" = Config detective, EventBridge + Lambda.</div>
+
+<!-- SECURITY SERVICE TRIFECTA -->
+<div class="section-header">The Security Trifecta</div>
+
+<div class="card">
+<h3>Detection &rarr; Aggregation &rarr; Investigation</h3>
+<pre><code>GuardDuty (DETECT)  &rarr;  Security Hub (AGGREGATE)  &rarr;  Detective (INVESTIGATE)
+  "Something suspicious"    "Here's everything"         "Trace what happened"
+  ML-based, automatic       Central dashboard           Behavior graphs
+  Findings                  Compliance standards        Attack path analysis</code></pre>
+</div>
+
+<!-- COMMON TRAPS -->
+<div class="section-header">Common Exam Traps</div>
+
+<div class="card">
+<h3>Things That DON'T Work</h3>
+<table>
+<tr><th>Trap</th><th>Reality</th></tr>
+<tr><td>Share AMIs via RAM</td><td>AMIs use <strong>launch permissions</strong>, not RAM</td></tr>
+<tr><td>Modify existing flow log format</td><td>Must create a <strong>new</strong> flow log</td></tr>
+<tr><td>Add encryption to existing EFS</td><td>Must create a <strong>new</strong> encrypted EFS</td></tr>
+<tr><td>Enable Object Lock on existing bucket</td><td>Must enable at <strong>bucket creation time</strong></td></tr>
+<tr><td>Export ACM-generated certificate private key</td><td><strong>Cannot export</strong> &mdash; use third-party cert</td></tr>
+<tr><td>GuardDuty blocks traffic</td><td>GuardDuty only <strong>detects</strong>, doesn't prevent</td></tr>
+<tr><td>WAF inspects TLS version</td><td>TLS handshake happens <strong>before</strong> WAF sees request</td></tr>
+<tr><td>Inspector examines live traffic</td><td>Inspector scans for <strong>vulnerabilities</strong>, not traffic</td></tr>
+<tr><td>Config tracks user actions</td><td>Config tracks <strong>resource state</strong>; CloudTrail tracks actions</td></tr>
+<tr><td>CloudTrail logs session commands</td><td>CloudTrail logs <strong>API calls</strong>; Session Manager logs commands</td></tr>
+<tr><td>Trusted Advisor generates compliance reports</td><td>Trusted Advisor gives <strong>best practice recommendations</strong></td></tr>
+<tr><td>SNS access policy filters message content</td><td>Access policies control <strong>WHO</strong>; data protection policies control <strong>WHAT</strong></td></tr>
+<tr><td>AWS-managed key custom rotation</td><td>AWS-managed keys rotate at <strong>365 days fixed</strong>; use customer managed for custom</td></tr>
+<tr><td>S3 Batch Operations across multiple buckets</td><td>Manifest requires all objects in <strong>same bucket</strong></td></tr>
+<tr><td>Legal hold on S3 bucket</td><td>Legal holds are <strong>per-object</strong>, not per-bucket</td></tr>
+</table>
+</div>
+
+<!-- POLICY TYPES -->
+<div class="section-header">Organization Policy Quick Reference</div>
+
+<div class="card">
+<h3>Five Policy Types</h3>
+<table>
+<tr><th>Policy</th><th>Controls</th><th>Example</th></tr>
+<tr><td><strong>SCP</strong></td><td>What principals can <strong>DO</strong></td><td>Deny DeleteTrail, restrict instance types</td></tr>
+<tr><td><strong>RCP</strong></td><td>How resources are <strong>SHARED</strong></td><td>Share KMS keys, S3 cross-account access</td></tr>
+<tr><td><strong>Tag policy</strong></td><td>How resources are <strong>TAGGED</strong></td><td>Enforce billing code values</td></tr>
+<tr><td><strong>Backup policy</strong></td><td>How resources are <strong>BACKED UP</strong></td><td>Enforce backup schedules</td></tr>
+<tr><td><strong>AI opt-out</strong></td><td>AI service <strong>DATA USAGE</strong></td><td>Opt out of AI training</td></tr>
+</table>
+</div>
+
+<!-- ERROR MESSAGES -->
+<div class="section-header">Error Message Decoder</div>
+
+<div class="card">
+<h3>Match the Error to the Cause</h3>
+<table>
+<tr><th>Error</th><th>Category</th><th>Check</th></tr>
+<tr><td><strong>"Access Denied"</strong></td><td>Permissions</td><td>IAM role, SCP, permissions boundary, KMS key policy</td></tr>
+<tr><td><strong>"Explicit Deny"</strong></td><td>SCP or explicit deny</td><td>Organization-level restriction</td></tr>
+<tr><td><strong>"Already Exists"</strong></td><td>Naming conflict</td><td>Duplicate resource name</td></tr>
+<tr><td><strong>"UnauthorizedOperation"</strong></td><td>Missing IAM permission</td><td>Check caller's policies</td></tr>
+<tr><td><strong>"KMS key is disabled"</strong></td><td>Key state</td><td>Enable the KMS key</td></tr>
+<tr><td><strong>"Missing kms:ListAliases"</strong></td><td>Permissions boundary</td><td>Check boundary allows KMS actions</td></tr>
+</table>
+</div>
+
+<!-- FINAL TIP -->
+<div class="section-header">The #1 Exam Strategy</div>
+
+<div class="card green">
+<h3>Read the Question for These Clues</h3>
+<ul>
+<li><strong>"Least operational overhead"</strong> = fewest services, native/built-in features</li>
+<li><strong>"Most secure"</strong> = technical controls (policies), not procedural (SOPs)</li>
+<li><strong>"Prevent"</strong> = proactive controls (SCP, Config proactive, Service Catalog)</li>
+<li><strong>"Detect"</strong> = reactive controls (Config detective, GuardDuty, EventBridge + Lambda)</li>
+<li><strong>"Before provisioning"</strong> = Config proactive evaluation or SCP</li>
+<li><strong>"After provisioning"</strong> = Config detective evaluation or remediation</li>
+<li><strong>"Regardless of provisioning method"</strong> = SCP or tag policy (not CloudFormation hooks)</li>
+<li><strong>"Fewest configuration steps"</strong> = check for automatic integrations (Config &rarr; Security Hub)</li>
+<li><strong>"Immediately"</strong> = revoke sessions, deny-all policy, NACL block</li>
+<li><strong>"Eliminate credentials"</strong> = must NOT EXIST (rotation ≠ elimination)</li>
+</ul>
+</div>
+
+</div>
+</body>
+</html>
