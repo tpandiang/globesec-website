@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/57</div>
+            <div class="score-big" id="overallScore">0/58</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1558,10 +1558,10 @@ This is exactly what the question asks: "are insecure protocols running on EC2 i
 <div class="question" data-type="mc" data-answer="3">
 <div class="question-text"><span class="question-num">Q36.</span><span>A web application runs on EC2 instances behind an ALB, with an RDS MySQL database and a Linux bastion host for schema updates. Admins SSH to the bastion from corporate workstations. The following security groups are applied:<br><br>&bull; <strong>sgLB</strong> &mdash; Associated with the ALB<br>&bull; <strong>sgWeb</strong> &mdash; Associated with the EC2 instances<br>&bull; <strong>sgDB</strong> &mdash; Associated with the database<br>&bull; <strong>sgBastion</strong> &mdash; Associated with the bastion host<br><br>Which security group configuration is both secure and functional?</span></div>
 <div class="options">
-<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/573 from 0.0.0.0/0 | sgWeb: 80/573 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
-<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/573 from 0.0.0.0/0 | sgWeb: 80/573 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/573 from 0.0.0.0/0 | sgWeb: 80/573 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/573 from 0.0.0.0/0 | sgWeb: 80/573 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/583 from 0.0.0.0/0 | sgWeb: 80/583 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/583 from 0.0.0.0/0 | sgWeb: 80/583 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/583 from 0.0.0.0/0 | sgWeb: 80/583 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/583 from 0.0.0.0/0 | sgWeb: 80/583 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
 </div>
 <div class="explanation">
 <strong>&#10003; Correct: D.</strong> The only configuration where every security group follows least privilege correctly.<br><br>
@@ -1575,11 +1575,11 @@ Evaluate each security group independently. For each one, ask: "What is the <str
 
 <strong>Security Group Breakdown:</strong><br><br>
 
-<em>sgLB: Port 80/573 from 0.0.0.0/0</em> &#10004;<br>
+<em>sgLB: Port 80/583 from 0.0.0.0/0</em> &#10004;<br>
 The ALB is the public entry point. It must accept HTTP (80) and HTTPS (443) from the entire internet. This is correct for a public-facing load balancer.<br><br>
 
-<em>sgWeb: Port 80/573 from sgLB</em> &#10004;<br>
-EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/573 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
+<em>sgWeb: Port 80/583 from sgLB</em> &#10004;<br>
+EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/583 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
 
 <em>sgDB: Port 3306 from sgWeb and sgBastion</em> &#10004;<br>
 The MySQL database (port 3306) should only accept connections from:<br>
@@ -1591,7 +1591,7 @@ Allowing <code>sgLB</code> to reach the database (option B) is a security violat
 Admins SSH from corporate workstations. The bastion should only accept SSH (port 22) from the <strong>corporate IP address range</strong>. Using the VPC IP range (options B, C) is wrong because corporate workstations are <strong>on-premises</strong>, not inside the VPC. The corporate IP range refers to the company's public IP addresses that the workstations use to reach AWS over the internet.<br><br>
 
 <strong>Why others are wrong &mdash; one error each:</strong><br>
-<em>A)</em> sgWeb allows 80/573 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
+<em>A)</em> sgWeb allows 80/583 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
 <em>B)</em> sgDB allows 3306 from <strong>sgLB</strong> &mdash; The ALB should never have direct database access. Only the app servers and bastion need database access. Also, sgBastion allows SSH from VPC range (wrong &mdash; admins are on-premises).<br>
 <em>C)</em> sgBastion allows 22 from <strong>VPC IP range</strong> &mdash; Corporate workstations are on-premises, not in the VPC. SSH connections come from the corporate public IP range, not VPC internal IPs.
 </div>
@@ -2487,10 +2487,58 @@ Findings from GuardDuty, Inspector, Macie, Config, Firewall Manager, IAM Access 
 </div>
 </div>
 
+<!-- Q58 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q58.</span><span>A company has Developer, Test, and Production OUs in AWS Organizations. Developers have <strong>full administrative privileges</strong> in their accounts. The company wants to allow only certain EC2 instance types in the <strong>Developer OU only</strong>.<br><br>How can the company prevent developer accounts from launching unapproved EC2 instance types?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create a launch template in each Developer OU account to deny ec2:RunInstances for unapproved instance types. Associate the templates with all IAM principals.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create an IAM policy to deny ec2:RunInstances for unapproved instance types. Attach the policy to all IAM principals in all Developer OU accounts.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use a managed SCP attached to the organization's root account to deny ec2:RunInstances for unapproved instance types.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create an SCP to deny ec2:RunInstances for unapproved instance types. Attach the policy to the Developer OU.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> SCP attached to the <strong>Developer OU</strong> (not the root).<br><br>
+
+<strong>How to Think About This:</strong><br>
+Two key requirements:<br>
+1. <strong>"Full administrative privileges"</strong> &mdash; Developers can remove any IAM policy, so IAM-level controls won't work (eliminates B)<br>
+2. <strong>"Developer OU only"</strong> &mdash; Restriction must apply only to the Developer OU, not Test or Production (eliminates C)<br><br>
+
+Only SCPs provide guardrails that developers with admin access <strong>cannot bypass</strong>, and SCPs can be scoped to a <strong>specific OU</strong>.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Why SCPs Over IAM Policies?</em><br>
+Developers have <code>AdministratorAccess</code>. They can:<br>
+&bull; Detach any IAM policy from their own user/role<br>
+&bull; Delete IAM policies<br>
+&bull; Modify permissions boundaries<br><br>
+
+But they <strong>cannot modify or detach SCPs</strong>. SCPs are managed at the <strong>organization level</strong>, not the account level. Only someone with access to the management account can change SCPs. This makes SCPs the only effective guardrail when users have admin privileges.<br><br>
+
+<em>SCP Attachment Scope</em>:<br>
+&bull; <strong>Attached to Root</strong> &mdash; Affects ALL OUs and ALL accounts in the organization<br>
+&bull; <strong>Attached to specific OU</strong> &mdash; Affects only accounts in that OU and child OUs<br>
+&bull; <strong>Attached to specific account</strong> &mdash; Affects only that account<br><br>
+
+SCPs <strong>inherit downward</strong>. An SCP on the Developer OU affects all accounts in the Developer OU but NOT accounts in the Test or Production OUs.<br><br>
+
+<em>Example SCP</em>:<br>
+<code>"Effect": "Deny", "Action": "ec2:RunInstances", "Resource": "*", "Condition": {"StringNotEquals": {"ec2:InstanceType": ["t3.micro", "t3.small", "t3.medium"]}}</code><br>
+This denies RunInstances unless the instance type is in the approved list.<br><br>
+
+<strong>Why D is correct:</strong> An SCP on the Developer OU creates an unbypassable guardrail that restricts instance types only for developer accounts. Developers cannot remove or modify the SCP regardless of their admin privileges. Test and Production OUs are unaffected.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Launch templates</em> &mdash; Launch templates define instance configurations for launching, primarily used with Auto Scaling groups. They <strong>cannot deny</strong> API calls &mdash; they're templates, not policies. You cannot attach launch templates to IAM principals to enforce restrictions. Also, the question says "auto scaling is not required."<br>
+<em>B) IAM policy on all principals</em> &mdash; Since developers have <strong>full administrative privileges</strong>, any developer can simply <strong>detach the IAM policy</strong> from their own user/role. IAM policies are ineffective when users have admin access. The restriction must come from above the account level (SCPs).<br>
+<em>C) SCP on organization root</em> &mdash; Attaching to the root affects <strong>ALL OUs</strong>: Developer, Test, AND Production. The requirement is to restrict only the Developer OU. Production accounts may need to use larger instance types. Attaching to the root is too broad.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 57;
+var totalQuestions = 58;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
