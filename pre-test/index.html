@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/53</div>
+            <div class="score-big" id="overallScore">0/54</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1558,10 +1558,10 @@ This is exactly what the question asks: "are insecure protocols running on EC2 i
 <div class="question" data-type="mc" data-answer="3">
 <div class="question-text"><span class="question-num">Q36.</span><span>A web application runs on EC2 instances behind an ALB, with an RDS MySQL database and a Linux bastion host for schema updates. Admins SSH to the bastion from corporate workstations. The following security groups are applied:<br><br>&bull; <strong>sgLB</strong> &mdash; Associated with the ALB<br>&bull; <strong>sgWeb</strong> &mdash; Associated with the EC2 instances<br>&bull; <strong>sgDB</strong> &mdash; Associated with the database<br>&bull; <strong>sgBastion</strong> &mdash; Associated with the bastion host<br><br>Which security group configuration is both secure and functional?</span></div>
 <div class="options">
-<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/533 from 0.0.0.0/0 | sgWeb: 80/533 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
-<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/533 from 0.0.0.0/0 | sgWeb: 80/533 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/533 from 0.0.0.0/0 | sgWeb: 80/533 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/533 from 0.0.0.0/0 | sgWeb: 80/533 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/543 from 0.0.0.0/0 | sgWeb: 80/543 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/543 from 0.0.0.0/0 | sgWeb: 80/543 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/543 from 0.0.0.0/0 | sgWeb: 80/543 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/543 from 0.0.0.0/0 | sgWeb: 80/543 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
 </div>
 <div class="explanation">
 <strong>&#10003; Correct: D.</strong> The only configuration where every security group follows least privilege correctly.<br><br>
@@ -1575,11 +1575,11 @@ Evaluate each security group independently. For each one, ask: "What is the <str
 
 <strong>Security Group Breakdown:</strong><br><br>
 
-<em>sgLB: Port 80/533 from 0.0.0.0/0</em> &#10004;<br>
+<em>sgLB: Port 80/543 from 0.0.0.0/0</em> &#10004;<br>
 The ALB is the public entry point. It must accept HTTP (80) and HTTPS (443) from the entire internet. This is correct for a public-facing load balancer.<br><br>
 
-<em>sgWeb: Port 80/533 from sgLB</em> &#10004;<br>
-EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/533 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
+<em>sgWeb: Port 80/543 from sgLB</em> &#10004;<br>
+EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/543 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
 
 <em>sgDB: Port 3306 from sgWeb and sgBastion</em> &#10004;<br>
 The MySQL database (port 3306) should only accept connections from:<br>
@@ -1591,7 +1591,7 @@ Allowing <code>sgLB</code> to reach the database (option B) is a security violat
 Admins SSH from corporate workstations. The bastion should only accept SSH (port 22) from the <strong>corporate IP address range</strong>. Using the VPC IP range (options B, C) is wrong because corporate workstations are <strong>on-premises</strong>, not inside the VPC. The corporate IP range refers to the company's public IP addresses that the workstations use to reach AWS over the internet.<br><br>
 
 <strong>Why others are wrong &mdash; one error each:</strong><br>
-<em>A)</em> sgWeb allows 80/533 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
+<em>A)</em> sgWeb allows 80/543 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
 <em>B)</em> sgDB allows 3306 from <strong>sgLB</strong> &mdash; The ALB should never have direct database access. Only the app servers and bastion need database access. Also, sgBastion allows SSH from VPC range (wrong &mdash; admins are on-premises).<br>
 <em>C)</em> sgBastion allows 22 from <strong>VPC IP range</strong> &mdash; Corporate workstations are on-premises, not in the VPC. SSH connections come from the corporate public IP range, not VPC internal IPs.
 </div>
@@ -2307,10 +2307,51 @@ Traffic is encrypted the entire way. The NLB never sees the plaintext.<br><br>
 </div>
 </div>
 
+<!-- Q54 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q54.</span><span>A company requires all departments to use <strong>custom encryption keys generated by an internal HSM</strong> to encrypt objects in Amazon S3. There are multiple AWS accounts per department. The security team must distribute and <strong>enforce</strong> the use of department-specific keys.<br><br>Which solution meets these requirements in the MOST secure way?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create an SOP for SSE-C encryption with department keys. Distribute a copy of the department key to each member. Create a bucket policy that allows only encrypted uploads.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Generate new encryption keys in AWS KMS for each department with unique aliases. Create key policies limiting use to department accounts. Create bucket and IAM policies enforcing encryption with the department's KMS key.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create an SOP stating users can only store encrypted objects. Enable SSE-C on existing buckets. Create a bucket policy that allows only encrypted uploads.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Upload each department's HSM-generated key to AWS KMS with a unique alias. Create key policies allowing only department accounts to use their key. Create bucket and IAM policies enforcing encryption with the department's KMS key.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Import HSM-generated keys into KMS + key policies + bucket/IAM policies for enforcement.<br><br>
+
+<strong>How to Think About This:</strong><br>
+Three requirements narrow the answer:<br>
+1. <strong>"Custom keys from internal HSM"</strong> &rarr; Must use the company's own keys, not AWS-generated (eliminates B)<br>
+2. <strong>"Enforce"</strong> &rarr; Must use technical controls (policies), not SOPs/procedures (eliminates A and C)<br>
+3. <strong>"Most secure"</strong> &rarr; Don't distribute keys to individuals; use centralized KMS management<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Importing Custom Key Material into KMS (BYOK)</em> &mdash; KMS supports <strong>"Bring Your Own Key"</strong>: you can import key material generated by your own HSM into a KMS key. This gives you:<br>
+&bull; <strong>Your HSM-generated key</strong> &mdash; meets the custom key requirement<br>
+&bull; <strong>KMS management</strong> &mdash; key policies, aliases, audit via CloudTrail, integration with S3/EBS/etc.<br>
+&bull; <strong>Centralized distribution</strong> &mdash; departments use KMS key IDs/aliases in their API calls, never handling raw key material<br><br>
+
+<em>Three Layers of Enforcement</em>:<br>
+1. <strong>KMS Key Policy</strong> &mdash; Controls WHO can use the key. Only department accounts are allowed to use their respective department key. Other departments can't even call <code>kms:Encrypt</code> with the wrong key.<br>
+2. <strong>S3 Bucket Policy</strong> &mdash; Denies <code>s3:PutObject</code> unless the request includes encryption. Ensures nothing goes unencrypted.<br>
+3. <strong>IAM Policy</strong> &mdash; Allows <code>s3:PutObject</code> only when the encryption header specifies the correct department KMS key ARN. Ensures the RIGHT key is used, not just any encryption.<br><br>
+
+<em>Example IAM Policy Condition</em>:<br>
+<code>"Condition": {"StringEquals": {"s3:x-amz-server-side-encryption-aws-kms-key-id": "arn:aws:kms:us-east-1:123456789012:key/dept-key-id"}}</code><br><br>
+
+<strong>Why D is correct:</strong> Uploading the HSM-generated keys to KMS preserves the company's custom key material while leveraging KMS for secure distribution, access control, and policy enforcement. Key policies restrict usage to authorized departments. Bucket and IAM policies enforce that the correct department key is used for every upload. This is the most secure approach &mdash; centralized, auditable, and technically enforced.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) SOP + distribute keys to members + SSE-C</em> &mdash; Multiple security issues: (1) <strong>Distributing raw encryption keys</strong> to individuals increases exposure risk (keys on laptops, email, etc.). (2) <strong>SOPs are procedural controls</strong>, not technical controls &mdash; there's no enforcement mechanism. A user can ignore the SOP and upload unencrypted objects or use the wrong key. (3) The bucket policy ensures encryption but doesn't enforce WHICH key is used.<br>
+<em>B) Generate NEW keys in KMS</em> &mdash; Technically sound enforcement (key policies + IAM policies), but uses <strong>AWS-generated keys instead of the company's HSM-generated keys</strong>. The question specifically requires "custom encryption keys" generated by the company's "internal key management infrastructure." Generating new keys in KMS doesn't use the company's existing keys.<br>
+<em>C) SOP + SSE-C on existing buckets</em> &mdash; Same SOP weakness as A (procedural, not enforceable). Also, SSE-C doesn't enforce which key is used &mdash; any customer-provided key would be accepted. You cannot "enable SSE-C on a bucket" as a default &mdash; SSE-C must be provided per-request. This solution has no mechanism to ensure department-specific keys are used.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 53;
+var totalQuestions = 54;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
