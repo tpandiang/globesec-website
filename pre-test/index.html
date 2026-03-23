@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/62</div>
+            <div class="score-big" id="overallScore">0/63</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1558,10 +1558,10 @@ This is exactly what the question asks: "are insecure protocols running on EC2 i
 <div class="question" data-type="mc" data-answer="3">
 <div class="question-text"><span class="question-num">Q36.</span><span>A web application runs on EC2 instances behind an ALB, with an RDS MySQL database and a Linux bastion host for schema updates. Admins SSH to the bastion from corporate workstations. The following security groups are applied:<br><br>&bull; <strong>sgLB</strong> &mdash; Associated with the ALB<br>&bull; <strong>sgWeb</strong> &mdash; Associated with the EC2 instances<br>&bull; <strong>sgDB</strong> &mdash; Associated with the database<br>&bull; <strong>sgBastion</strong> &mdash; Associated with the bastion host<br><br>Which security group configuration is both secure and functional?</span></div>
 <div class="options">
-<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/623 from 0.0.0.0/0 | sgWeb: 80/623 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
-<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/623 from 0.0.0.0/0 | sgWeb: 80/623 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/623 from 0.0.0.0/0 | sgWeb: 80/623 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/623 from 0.0.0.0/0 | sgWeb: 80/623 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/633 from 0.0.0.0/0 | sgWeb: 80/633 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/633 from 0.0.0.0/0 | sgWeb: 80/633 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/633 from 0.0.0.0/0 | sgWeb: 80/633 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/633 from 0.0.0.0/0 | sgWeb: 80/633 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
 </div>
 <div class="explanation">
 <strong>&#10003; Correct: D.</strong> The only configuration where every security group follows least privilege correctly.<br><br>
@@ -1575,11 +1575,11 @@ Evaluate each security group independently. For each one, ask: "What is the <str
 
 <strong>Security Group Breakdown:</strong><br><br>
 
-<em>sgLB: Port 80/623 from 0.0.0.0/0</em> &#10004;<br>
+<em>sgLB: Port 80/633 from 0.0.0.0/0</em> &#10004;<br>
 The ALB is the public entry point. It must accept HTTP (80) and HTTPS (443) from the entire internet. This is correct for a public-facing load balancer.<br><br>
 
-<em>sgWeb: Port 80/623 from sgLB</em> &#10004;<br>
-EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/623 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
+<em>sgWeb: Port 80/633 from sgLB</em> &#10004;<br>
+EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/633 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
 
 <em>sgDB: Port 3306 from sgWeb and sgBastion</em> &#10004;<br>
 The MySQL database (port 3306) should only accept connections from:<br>
@@ -1591,7 +1591,7 @@ Allowing <code>sgLB</code> to reach the database (option B) is a security violat
 Admins SSH from corporate workstations. The bastion should only accept SSH (port 22) from the <strong>corporate IP address range</strong>. Using the VPC IP range (options B, C) is wrong because corporate workstations are <strong>on-premises</strong>, not inside the VPC. The corporate IP range refers to the company's public IP addresses that the workstations use to reach AWS over the internet.<br><br>
 
 <strong>Why others are wrong &mdash; one error each:</strong><br>
-<em>A)</em> sgWeb allows 80/623 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
+<em>A)</em> sgWeb allows 80/633 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
 <em>B)</em> sgDB allows 3306 from <strong>sgLB</strong> &mdash; The ALB should never have direct database access. Only the app servers and bastion need database access. Also, sgBastion allows SSH from VPC range (wrong &mdash; admins are on-premises).<br>
 <em>C)</em> sgBastion allows 22 from <strong>VPC IP range</strong> &mdash; Corporate workstations are on-premises, not in the VPC. SSH connections come from the corporate public IP range, not VPC internal IPs.
 </div>
@@ -2717,10 +2717,53 @@ Compare this to option A which uses <code>list-users</code> + <code>list-groups-
 </div>
 </div>
 
+<!-- Q63 MC -->
+<div class="question" data-type="mc" data-answer="3">
+<div class="question-text"><span class="question-num">Q63.</span><span>A security architect must confirm that subnets in Amazon VPC are not assigned a public IP address <strong>before the subnets are provisioned</strong>. The architect also wants to automatically detect and centralize security findings.<br><br>What should the security architect do with the FEWEST configuration steps?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use AWS Config with detective evaluation triggered by VPC configuration changes. Use AWS Lambda to send Config rule evaluations to AWS Security Hub.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use AWS Config with detective evaluation running periodically. Use Amazon EventBridge to send Config rule evaluations to AWS Security Hub.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Write code in AWS Lambda to invoke when a VPC is launched. Use AWS Step Functions to coordinate sending Config rule evaluations to AWS Security Hub.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use AWS Config with proactive evaluation. Use AWS Security Hub to view managed and custom rule evaluation results from AWS Config.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Config <strong>proactive evaluation</strong> + Security Hub (automatic integration).<br><br>
+
+<strong>How to Think About This:</strong><br>
+Two key phrases:<br>
+1. <strong>"Before the subnets are provisioned"</strong> &rarr; Proactive evaluation (not detective &mdash; detective evaluates AFTER provisioning)<br>
+2. <strong>"Fewest configuration steps"</strong> &rarr; Use built-in integration (Config &rarr; Security Hub is automatic, no Lambda/EventBridge needed)<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>AWS Config Evaluation Modes</em> &mdash; This is a critical distinction:<br>
+&bull; <strong>Detective evaluation</strong> &mdash; Evaluates resources <strong>AFTER</strong> they are provisioned. Triggered by configuration changes or runs periodically. It tells you "this existing resource is non-compliant." Reactive.<br>
+&bull; <strong>Proactive evaluation</strong> &mdash; Evaluates resources <strong>BEFORE</strong> they are provisioned. Checks resource configurations against rules before CloudFormation creates them. It tells you "this resource WOULD BE non-compliant if created." Preventive.<br><br>
+
+The question says "before the subnets are provisioned" &mdash; only proactive evaluation does this. Detective evaluation (options A and B) checks resources after they already exist.<br><br>
+
+<em>Config &rarr; Security Hub Integration</em> &mdash; This is <strong>automatic and built-in</strong>. When Config evaluates a rule (whether proactive or detective), the results are automatically sent to Security Hub as security findings. No Lambda function, no EventBridge rule, no Step Functions needed. Just enable both services.<br><br>
+
+This means:<br>
+&bull; Option A is wrong: Lambda to send Config results to Security Hub is unnecessary (it's automatic)<br>
+&bull; Option B is wrong: EventBridge to send Config results to Security Hub is unnecessary (it's automatic)<br>
+&bull; Option C is wrong: Lambda + Step Functions is a completely custom solution for something that's built-in<br><br>
+
+<em>Proactive Evaluation with CloudFormation</em>:<br>
+Proactive Config rules work with <strong>CloudFormation hooks</strong>. Before CloudFormation creates a resource, the hook triggers the Config rule to evaluate the proposed configuration. If the resource would be non-compliant (e.g., subnet with public IP), the creation can be blocked.<br><br>
+
+<strong>Why D is correct:</strong> Proactive evaluation checks resources before provisioning (meets "before provisioned"). Security Hub automatically receives Config results (meets "centralize findings" with fewest steps). Two services, zero custom code, zero middleware.<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) Detective evaluation + Lambda to Security Hub</em> &mdash; Two problems: (1) <strong>Detective evaluation</strong> checks resources AFTER provisioning, not before. (2) <strong>Lambda is unnecessary</strong> &mdash; Config sends results to Security Hub automatically. More steps, wrong evaluation mode.<br>
+<em>B) Detective evaluation (periodic) + EventBridge to Security Hub</em> &mdash; Same two problems: (1) <strong>Periodic detective evaluation</strong> only checks existing resources, not resources being created. (2) <strong>EventBridge is unnecessary</strong> &mdash; the Config-to-Security Hub integration is built-in. Also, periodic means there's a delay between checks.<br>
+<em>C) Lambda + Step Functions</em> &mdash; Building a custom solution with Lambda code and Step Functions orchestration when Config proactive evaluation + Security Hub does it natively. Maximum configuration steps for a problem that has a two-service built-in solution.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 62;
+var totalQuestions = 63;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
