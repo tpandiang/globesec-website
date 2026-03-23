@@ -122,7 +122,7 @@ body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background
     </div>
     <div class="score-banner-right" style="display:flex;align-items:center;">
         <div>
-            <div class="score-big" id="overallScore">0/58</div>
+            <div class="score-big" id="overallScore">0/59</div>
             <div class="score-label">Correct Answers</div>
         </div>
         <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
@@ -1558,10 +1558,10 @@ This is exactly what the question asks: "are insecure protocols running on EC2 i
 <div class="question" data-type="mc" data-answer="3">
 <div class="question-text"><span class="question-num">Q36.</span><span>A web application runs on EC2 instances behind an ALB, with an RDS MySQL database and a Linux bastion host for schema updates. Admins SSH to the bastion from corporate workstations. The following security groups are applied:<br><br>&bull; <strong>sgLB</strong> &mdash; Associated with the ALB<br>&bull; <strong>sgWeb</strong> &mdash; Associated with the EC2 instances<br>&bull; <strong>sgDB</strong> &mdash; Associated with the database<br>&bull; <strong>sgBastion</strong> &mdash; Associated with the bastion host<br><br>Which security group configuration is both secure and functional?</span></div>
 <div class="options">
-<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/583 from 0.0.0.0/0 | sgWeb: 80/583 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
-<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/583 from 0.0.0.0/0 | sgWeb: 80/583 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/583 from 0.0.0.0/0 | sgWeb: 80/583 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
-<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/583 from 0.0.0.0/0 | sgWeb: 80/583 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">sgLB: 80/593 from 0.0.0.0/0 | sgWeb: 80/593 from 0.0.0.0/0 | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">sgLB: 80/593 from 0.0.0.0/0 | sgWeb: 80/593 from sgLB | sgDB: 3306 from sgWeb, sgLB | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">sgLB: 80/593 from 0.0.0.0/0 | sgWeb: 80/593 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from VPC IP range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sgLB: 80/593 from 0.0.0.0/0 | sgWeb: 80/593 from sgLB | sgDB: 3306 from sgWeb, sgBastion | sgBastion: 22 from corporate IP range</span></div>
 </div>
 <div class="explanation">
 <strong>&#10003; Correct: D.</strong> The only configuration where every security group follows least privilege correctly.<br><br>
@@ -1575,11 +1575,11 @@ Evaluate each security group independently. For each one, ask: "What is the <str
 
 <strong>Security Group Breakdown:</strong><br><br>
 
-<em>sgLB: Port 80/583 from 0.0.0.0/0</em> &#10004;<br>
+<em>sgLB: Port 80/593 from 0.0.0.0/0</em> &#10004;<br>
 The ALB is the public entry point. It must accept HTTP (80) and HTTPS (443) from the entire internet. This is correct for a public-facing load balancer.<br><br>
 
-<em>sgWeb: Port 80/583 from sgLB</em> &#10004;<br>
-EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/583 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
+<em>sgWeb: Port 80/593 from sgLB</em> &#10004;<br>
+EC2 instances are <strong>behind</strong> the ALB. They should only accept traffic <strong>from the ALB</strong>, not directly from the internet. Using the security group ID (<code>sgLB</code>) as the source is the best practice &mdash; it means only traffic forwarded by the ALB can reach the instances. Opening 80/593 from 0.0.0.0/0 (option A) would bypass the ALB entirely, defeating its purpose.<br><br>
 
 <em>sgDB: Port 3306 from sgWeb and sgBastion</em> &#10004;<br>
 The MySQL database (port 3306) should only accept connections from:<br>
@@ -1591,7 +1591,7 @@ Allowing <code>sgLB</code> to reach the database (option B) is a security violat
 Admins SSH from corporate workstations. The bastion should only accept SSH (port 22) from the <strong>corporate IP address range</strong>. Using the VPC IP range (options B, C) is wrong because corporate workstations are <strong>on-premises</strong>, not inside the VPC. The corporate IP range refers to the company's public IP addresses that the workstations use to reach AWS over the internet.<br><br>
 
 <strong>Why others are wrong &mdash; one error each:</strong><br>
-<em>A)</em> sgWeb allows 80/583 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
+<em>A)</em> sgWeb allows 80/593 from <strong>0.0.0.0/0</strong> &mdash; EC2 instances behind an ALB should only accept traffic from the ALB, not the entire internet.<br>
 <em>B)</em> sgDB allows 3306 from <strong>sgLB</strong> &mdash; The ALB should never have direct database access. Only the app servers and bastion need database access. Also, sgBastion allows SSH from VPC range (wrong &mdash; admins are on-premises).<br>
 <em>C)</em> sgBastion allows 22 from <strong>VPC IP range</strong> &mdash; Corporate workstations are on-premises, not in the VPC. SSH connections come from the corporate public IP range, not VPC internal IPs.
 </div>
@@ -2535,10 +2535,58 @@ This denies RunInstances unless the instance type is in the approved list.<br><b
 </div>
 </div>
 
+<!-- Q59 MC -->
+<div class="question" data-type="mc" data-answer="2">
+<div class="question-text"><span class="question-num">Q59.</span><span>A security team must allocate EC2 instance charges to specific cost centers for all accounts in the Production OU. They want to use a tag named <code>costcenter</code> with a list of allowed values. If the tag is <strong>not set with an appropriate value</strong>, resource creation of EC2 instances must be <strong>prevented</strong> regardless of the provisioning method.<br><br>What should the security engineer do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use Amazon EventBridge to detect EC2 instance launches. Configure a Lambda function to verify the costcenter tag. If invalid, terminate the instance.</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use AWS Config with the "required-tags" managed rule for costcenter. Deploy across Production OU with put-organization-config-rule. Create an SCP that denies EC2 creation if the costcenter tag is not present.</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a tag policy in AWS Organizations defining the costcenter tag with allowed values in enforce mode. Attach to the Production OU. Create an SCP that denies EC2 creation if the costcenter tag is not present. Attach the SCP to the Production OU.</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use AWS CloudFormation Guard to write a policy verifying costcenter tags. Use the preCreate CloudFormation hook in each production account with FailureMode set to FAIL.</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Tag policy (enforce allowed values) + SCP (deny creation if tag is missing). Both attached to Production OU.<br><br>
+
+<strong>How to Think About This:</strong><br>
+This question requires <strong>two controls working together</strong> because no single policy handles both requirements:<br>
+&bull; <strong>"Allowed values only"</strong> &rarr; Tag policy in enforce mode (controls what values are acceptable)<br>
+&bull; <strong>"Tag must be present"</strong> &rarr; SCP denying creation without the tag (controls that the tag exists)<br><br>
+
+Neither control alone is sufficient. Tag policies enforce <em>values</em> but not <em>presence</em>. SCPs enforce <em>presence</em> but not specific <em>values</em>.<br><br>
+
+<strong>Key Concepts:</strong><br>
+<em>Tag Policy + SCP Combination</em> &mdash; The two-layer approach:<br>
+
+<strong>Layer 1: Tag Policy (enforce mode)</strong><br>
+&bull; Defines acceptable values for <code>costcenter</code> tag (e.g., "Engineering", "Marketing", "Finance")<br>
+&bull; In <strong>enforce mode</strong>, if a user tries to tag an EC2 instance with <code>costcenter=FreeStuff</code>, it's <strong>rejected</strong><br>
+&bull; <strong>Limitation</strong>: Tag policies enforce the VALUE when a tag is applied, but they don't force the tag to be present. An instance can still be created without any <code>costcenter</code> tag at all.<br><br>
+
+<strong>Layer 2: SCP (deny without tag)</strong><br>
+&bull; Denies <code>ec2:RunInstances</code> if the <code>costcenter</code> tag is not present in the request<br>
+&bull; Uses condition: <code>"Condition": {"Null": {"aws:RequestTag/costcenter": "true"}}</code> (deny if tag is null/missing)<br>
+&bull; <strong>Limitation</strong>: The SCP ensures the tag exists but doesn't validate the value &mdash; any value would pass<br><br>
+
+<strong>Together</strong>: SCP forces the tag to exist + Tag policy forces the value to be valid = complete enforcement.<br><br>
+
+<em>Proactive vs. Reactive</em>:<br>
+&bull; <strong>Proactive</strong> (prevent creation) &mdash; SCP + Tag policy. The resource is never created if non-compliant.<br>
+&bull; <strong>Reactive</strong> (detect after creation) &mdash; EventBridge + Lambda, Config rules. The resource is created first, then checked.<br>
+The question says "prevent resource creation" &mdash; must be proactive.<br><br>
+
+<strong>Why C is correct:</strong> The tag policy enforces that <code>costcenter</code> can only use approved values. The SCP ensures that <code>costcenter</code> must be present on all EC2 instances. Both are attached to the Production OU, so they only affect production accounts. Together they provide complete proactive enforcement regardless of provisioning method (console, CLI, SDK, CloudFormation).<br><br>
+
+<strong>Why others are wrong:</strong><br>
+<em>A) EventBridge + Lambda to terminate</em> &mdash; This is <strong>reactive</strong>. The instance is created first, THEN the Lambda function checks the tag and terminates it. There's a window where a non-compliant instance exists. The question requires <strong>preventing</strong> creation, not detecting and cleaning up after.<br>
+<em>B) Config rule + SCP</em> &mdash; The SCP denies creation without the tag &mdash; but only checks tag <strong>presence</strong>, not <strong>value</strong>. An instance with <code>costcenter=AnythingAtAll</code> would pass the SCP. Config would detect the invalid value, but that's <strong>reactive</strong> (the resource already exists). Config alerts on non-compliance; it doesn't prevent creation.<br>
+<em>D) CloudFormation Guard hook</em> &mdash; This works ONLY for CloudFormation deployments. Users can still create instances via the <strong>AWS Console, CLI, SDK, or Terraform</strong> and bypass the CloudFormation hook entirely. The question says "regardless of the provisioning method" &mdash; CloudFormation Guard doesn't cover all methods.
+</div>
+</div>
+
 </div>
 
 <script>
-var totalQuestions = 58;
+var totalQuestions = 59;
 var totalCorrect = 0;
 var totalAnswered = 0;
 
