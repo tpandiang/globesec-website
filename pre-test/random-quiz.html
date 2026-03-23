@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Random Quiz - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-decoration: none; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; }
+.question-num { color: var(--aws); font-weight: 700; }
+.q-type-badge { font-size: 0.65rem; background: var(--accent2); color: #fff; padding: 0.1rem 0.4rem; border-radius: 3px; font-weight: 700; margin-left: 0.4rem; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option.ma-selected { border-color: var(--accent); background: rgba(0,212,255,0.08); }
+.option.ma-selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option-text { flex: 1; }
+.check-btn { margin-top: 0.6rem; background: var(--gradient); color: var(--bg); border: none; padding: 0.45rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+.check-btn.disabled { opacity: 0.4; cursor: default; }
+.new-quiz-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.7rem 2rem; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; display: block; margin: 2rem auto; transition: opacity 0.2s; }
+.new-quiz-btn:hover { opacity: 0.85; }
+.result-banner { background: linear-gradient(135deg, var(--bg2), var(--bg3)); border: 1px solid var(--border); border-radius: 10px; padding: 2rem; text-align: center; margin: 1.5rem 0; }
+.result-banner h2 { color: var(--white); font-size: 1.5rem; margin-bottom: 0.5rem; }
+.result-banner .big-score { font-size: 3rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.result-banner .grade { font-size: 1.1rem; margin-top: 0.5rem; }
+.timer { font-family: 'Consolas', monospace; font-size: 0.9rem; color: var(--accent); background: var(--bg3); padding: 0.3rem 0.8rem; border-radius: 4px; border: 1px solid var(--border); }
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SCS-C03</span>
+            <span>Random Quiz</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <span class="timer" id="timer">00:00</span>
+        <a href="index.html" class="topbar-btn">Full Pre-Test</a>
+        <a href="cheatsheet.html" class="topbar-btn">Cheat Sheet</a>
+        <button class="topbar-btn" onclick="startNewQuiz()">New Quiz</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+    <div class="score-banner">
+        <div class="score-banner-left">
+            <h2>Random 10-Question Quiz</h2>
+            <p>Random selection from 63 pre-test questions. New set every time.</p>
+        </div>
+        <div style="display:flex;align-items:center;">
+            <div style="text-align:center;">
+                <div class="score-big" id="scoreDisplay">0/10</div>
+                <div class="score-label">Correct Answers</div>
+            </div>
+        </div>
+    </div>
+    <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-text" id="progressText">0 / 10 answered</div>
+    </div>
+    <div id="quizContainer"></div>
+</div>
+
+<script>
+var QUESTIONS=[];var picked=[];var correct=0;var answered=0;var timerInterval=null;var seconds=0;
+
+function startTimer(){clearInterval(timerInterval);seconds=0;document.getElementById('timer').textContent='00:00';timerInterval=setInterval(function(){seconds++;var m=Math.floor(seconds/60);var s=seconds%60;document.getElementById('timer').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;},1000);}
+
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+function updateScore(){
+    document.getElementById('scoreDisplay').textContent=correct+'/10';
+    document.getElementById('progressFill').style.width=(answered/10*100)+'%';
+    document.getElementById('progressText').textContent=answered+' / 10 answered';
+    if(answered===10){clearInterval(timerInterval);showResult();}
+}
+
+function showResult(){
+    var pct=Math.round(correct/10*100);
+    var grade=pct>=90?'Excellent!':pct>=70?'Good job!':pct>=50?'Keep studying!':'Review the cheat sheet!';
+    var color=pct>=70?'var(--correct)':'var(--wrong)';
+    var el=document.createElement('div');
+    el.className='result-banner';
+    el.innerHTML='<h2>Quiz Complete!</h2><div class="big-score">'+correct+'/10</div><div class="grade" style="color:'+color+'">'+pct+'% — '+grade+'</div><div style="color:var(--text-muted);margin-top:0.5rem;">Time: '+document.getElementById('timer').textContent+'</div>';
+    var container=document.getElementById('quizContainer');
+    container.insertBefore(el,container.firstChild);
+    var btn=document.createElement('button');
+    btn.className='new-quiz-btn';
+    btn.textContent='Take Another Quiz';
+    btn.onclick=startNewQuiz;
+    container.appendChild(btn);
+}
+
+function selectMC(optEl,idx,qIdx){
+    var qDiv=optEl.closest('.question');
+    if(qDiv.dataset.done)return;
+    qDiv.dataset.done='1';
+    var correctIdx=picked[qIdx].answer;
+    var opts=qDiv.querySelectorAll('.option');
+    opts.forEach(function(o){o.classList.add('disabled');});
+    opts[correctIdx].classList.add('correct');
+    if(idx===correctIdx){correct++;}else{optEl.classList.add('wrong');}
+    answered++;updateScore();
+}
+
+function toggleMA(optEl){
+    var qDiv=optEl.closest('.question');
+    if(qDiv.dataset.done)return;
+    optEl.classList.toggle('ma-selected');
+}
+
+function checkMA(btn,qIdx){
+    var qDiv=btn.closest('.question');
+    if(qDiv.dataset.done)return;
+    qDiv.dataset.done='1';
+    btn.classList.add('disabled');
+    var correctArr=picked[qIdx].answers;
+    var opts=qDiv.querySelectorAll('.option');
+    var allRight=true;
+    opts.forEach(function(o){
+        var i=parseInt(o.dataset.idx);
+        var isCorrect=correctArr.indexOf(i)!==-1;
+        var isSel=o.classList.contains('ma-selected');
+        o.classList.add('disabled');o.classList.remove('ma-selected');
+        if(isCorrect)o.classList.add('correct');
+        if(isSel&&!isCorrect){o.classList.add('wrong');allRight=false;}
+        if(!isSel&&isCorrect)allRight=false;
+    });
+    if(allRight)correct++;
+    answered++;updateScore();
+}
+
+function renderQuiz(){
+    var container=document.getElementById('quizContainer');
+    container.innerHTML='';
+    var letters='ABCDEFGH';
+    picked.forEach(function(q,qi){
+        var isMA=q.type==='ma';
+        var badge=isMA?'<span class="q-type-badge">SELECT '+(q.answers.length===2?'TWO':q.answers.length===3?'THREE':'ALL')+'</span>':'';
+        var optsHtml='';
+        q.options.forEach(function(opt,oi){
+            var clickFn=isMA?'toggleMA(this)':'selectMC(this,'+oi+','+qi+')';
+            optsHtml+='<div class="option" onclick="'+clickFn+'" data-idx="'+oi+'"><span class="option-letter">'+letters[oi]+'</span><span class="option-text">'+opt+'</span></div>';
+        });
+        var checkBtn=isMA?'<button class="check-btn" onclick="checkMA(this,'+qi+')">Check Answer</button>':'';
+        container.innerHTML+='<div class="question"><div class="question-text"><span class="question-num">Q'+(qi+1)+'.</span> '+q.text+badge+'</div><div class="options">'+optsHtml+'</div>'+checkBtn+'</div>';
+    });
+}
+
+function startNewQuiz(){
+    correct=0;answered=0;
+    var indices=[];for(var i=0;i<QUESTIONS.length;i++)indices.push(i);
+    shuffle(indices);
+    picked=[];
+    for(var i=0;i<10&&i<indices.length;i++)picked.push(QUESTIONS[indices[i]]);
+    updateScore();renderQuiz();startTimer();
+}
+
+// Load questions from the JSON file
+fetch('questions_data.json').then(function(r){return r.json();}).then(function(data){
+    QUESTIONS=data;
+    startNewQuiz();
+}).catch(function(){
+    document.getElementById('quizContainer').innerHTML='<div style="text-align:center;padding:2rem;color:var(--wrong);">Error loading questions. Make sure questions_data.json exists.</div>';
+});
+</script>
+</body>
+</html>
