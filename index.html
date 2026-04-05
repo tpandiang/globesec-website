@@ -109,7 +109,7 @@ nav {
     text-transform: uppercase;
 }
 .nav-links { display: flex; gap: 1.8rem; list-style: none; align-items: center; }
-.nav-links a {
+.nav-links a, .nav-links .dropdown-toggle {
     color: var(--text-dim);
     text-decoration: none;
     font-family: var(--mono);
@@ -118,8 +118,12 @@ nav {
     letter-spacing: 1px;
     text-transform: uppercase;
     transition: color 0.3s;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
 }
-.nav-links a:hover { color: var(--cyan); }
+.nav-links a:hover, .nav-links .dropdown-toggle:hover { color: var(--cyan); }
 .nav-cta {
     background: var(--orange) !important;
     color: var(--bg) !important;
@@ -128,6 +132,64 @@ nav {
     font-weight: 700 !important;
 }
 .nav-cta:hover { opacity: 0.9; }
+
+/* ─── Dropdown ─── */
+.nav-dropdown { position: relative; }
+.dropdown-toggle::after {
+    content: ' ▾';
+    font-size: 0.6rem;
+}
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 17, 20, 0.98);
+    border: 1px solid rgba(0, 240, 255, 0.12);
+    min-width: 240px;
+    padding: 0.5rem 0;
+    z-index: 1001;
+}
+.nav-dropdown:hover .dropdown-menu { display: block; }
+.dropdown-menu::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 0; right: 0;
+    height: 12px;
+}
+.dropdown-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0.6rem 1.2rem 0.3rem;
+    display: block;
+}
+.dropdown-menu a {
+    display: block;
+    color: var(--text) !important;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    text-transform: none;
+    padding: 0.5rem 1.2rem 0.5rem 1.8rem;
+    transition: background 0.2s, color 0.2s;
+    white-space: nowrap;
+}
+.dropdown-menu a:hover {
+    background: rgba(0, 240, 255, 0.06);
+    color: var(--cyan) !important;
+}
+.dropdown-divider {
+    height: 1px;
+    background: rgba(0, 240, 255, 0.08);
+    margin: 0.3rem 0;
+}
 
 /* Hamburger */
 .hamburger {
@@ -805,7 +867,24 @@ footer {
             </div>
         </a>
         <ul class="nav-links">
-            <li><a href="training.html">Training</a></li>
+            <li class="nav-dropdown">
+                <span class="dropdown-toggle">AWS Security</span>
+                <div class="dropdown-menu">
+                    <span class="dropdown-label">Quizzes</span>
+                    <a href="quiz.html">Fundamentals (150 Qs)</a>
+                    <a href="aws-security-exam.html">Scenario — Exam SC-02 (63 Qs)</a>
+                    <a href="pre-test/index.html">Scenario — Pre-Test (63 Qs)</a>
+                    <a href="training/iam-advanced.html">Scenario — IAM Advanced (26 Qs)</a>
+                    <a href="pre-test/random-quiz.html">Quick 10-Question Quiz</a>
+                    <a href="udemy-course/index.html">Official Practice (360 Qs)</a>
+                    <div class="dropdown-divider"></div>
+                    <span class="dropdown-label">Notes</span>
+                    <a href="training.html">Study Guide (SCS-C03)</a>
+                    <a href="pre-test/cheatsheet.html">Cheat Sheet</a>
+                    <a href="pre-test/takeaways.html">Key Takeaways</a>
+                    <a href="practice-guide.html">Practice Guide</a>
+                </div>
+            </li>
             <li><a href="#services">Services</a></li>
             <li><a href="#how">Process</a></li>
             <li><a href="#research">Research</a></li>
@@ -817,7 +896,19 @@ footer {
     </div>
 </nav>
 <div class="mobile-menu">
-    <a href="training.html">Training</a>
+    <div class="mobile-section-label" style="color:var(--cyan);font-family:var(--mono);font-size:0.6rem;letter-spacing:2px;padding:0.5rem 0 0.2rem;font-weight:700;">AWS SECURITY — QUIZZES</div>
+    <a href="quiz.html">Fundamentals (150 Qs)</a>
+    <a href="aws-security-exam.html">Scenario — Exam SC-02</a>
+    <a href="pre-test/index.html">Scenario — Pre-Test</a>
+    <a href="training/iam-advanced.html">Scenario — IAM Advanced</a>
+    <a href="pre-test/random-quiz.html">Quick 10-Question Quiz</a>
+    <a href="udemy-course/index.html">Official Practice (360 Qs)</a>
+    <div class="mobile-section-label" style="color:var(--cyan);font-family:var(--mono);font-size:0.6rem;letter-spacing:2px;padding:0.5rem 0 0.2rem;font-weight:700;">AWS SECURITY — NOTES</div>
+    <a href="training.html">Study Guide (SCS-C03)</a>
+    <a href="pre-test/cheatsheet.html">Cheat Sheet</a>
+    <a href="pre-test/takeaways.html">Key Takeaways</a>
+    <a href="practice-guide.html">Practice Guide</a>
+    <div style="height:1px;background:rgba(0,240,255,0.08);margin:0.3rem 0;"></div>
     <a href="#services" onclick="this.parentElement.classList.remove('active')">Services</a>
     <a href="#how" onclick="this.parentElement.classList.remove('active')">Process</a>
     <a href="#research" onclick="this.parentElement.classList.remove('active')">Research</a>
