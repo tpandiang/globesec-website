@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSP Scanner — GlobeSec.ai</title>
+<meta name="description" content="Cash-secured put scanner: optionable stocks under $300 with a 30-day normalized yield of 0.7%-1.0%.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root{
+  --bg:#0a0a0c; --bg2:#0f1114; --bg3:#141619;
+  --cyan:#00f0ff; --cyan-dim:rgba(0,240,255,0.15);
+  --orange:#ff6a2f; --orange-glow:rgba(255,106,47,0.25);
+  --text:#c8ccd0; --text-dim:#5a6270; --white:#eef0f2;
+  --green:#2ecc71;
+  --mono:'JetBrains Mono','Fira Code','Consolas',monospace;
+  --sans:'Inter',system-ui,-apple-system,sans-serif;
+}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans); background:var(--bg); color:var(--text); line-height:1.6; min-height:100vh;}
+body::before{content:''; position:fixed; inset:0;
+  background-image:linear-gradient(rgba(0,240,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,240,255,0.02) 1px,transparent 1px);
+  background-size:50px 50px; pointer-events:none; z-index:0;}
+
+/* Nav */
+nav{position:fixed; top:0; width:100%; z-index:1000; background:rgba(10,10,12,0.95); border-bottom:1px solid rgba(0,240,255,0.08); padding:0 1.5rem;}
+.nav-inner{max-width:1300px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; height:64px;}
+.logo{display:flex; align-items:center; gap:0.75rem; text-decoration:none; color:var(--white);}
+.logo-diamond{width:40px; height:40px; background:var(--cyan); transform:rotate(45deg); display:flex; align-items:center; justify-content:center; border-radius:4px;}
+.logo-diamond span{transform:rotate(-45deg); font-weight:900; font-size:1.1rem; color:var(--bg);}
+.logo-text{font-weight:800; font-size:1.3rem; letter-spacing:1px; color:var(--white); line-height:1.1;}
+.logo-sub{font-family:var(--mono); font-size:0.6rem; font-weight:500; color:var(--cyan); letter-spacing:2px; text-transform:uppercase;}
+.nav-links{display:flex; gap:1.8rem; list-style:none; align-items:center;}
+.nav-links a{color:var(--text-dim); text-decoration:none; font-family:var(--mono); font-size:0.75rem; font-weight:500; letter-spacing:1px; text-transform:uppercase; transition:color .3s;}
+.nav-links a:hover{color:var(--cyan);}
+
+/* Header block */
+.wrap{max-width:1300px; margin:0 auto; padding:6rem 1.5rem 4rem; position:relative; z-index:1;}
+.label{display:inline-flex; align-items:center; gap:.5rem; margin-bottom:.75rem;}
+.label .bar{width:3px; height:18px; background:var(--orange);}
+.label .text{font-family:var(--mono); font-size:.7rem; font-weight:700; color:var(--orange); letter-spacing:2px; text-transform:uppercase;}
+h1{font-size:clamp(2rem,5vw,3rem); font-weight:900; color:var(--white); letter-spacing:-1px; margin-bottom:.5rem;}
+h1 .cyan{color:var(--cyan); text-shadow:0 0 40px rgba(0,240,255,.3);}
+.subtitle{font-family:var(--mono); font-size:.8rem; color:var(--text-dim); letter-spacing:.5px; margin-bottom:2rem; max-width:760px; line-height:1.8;}
+
+/* Toolbar */
+.toolbar{display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-bottom:1.5rem;}
+.toolbar input{background:var(--bg2); border:1px solid rgba(0,240,255,.12); color:var(--text); font-family:var(--mono); font-size:.8rem; padding:.6rem .9rem; outline:none; min-width:200px;}
+.toolbar input:focus{border-color:var(--cyan); box-shadow:0 0 10px rgba(0,240,255,.08);}
+.btn{background:var(--orange); color:var(--bg); border:none; cursor:pointer; font-family:var(--mono); font-weight:700; font-size:.8rem; letter-spacing:1px; text-transform:uppercase; padding:.6rem 1.2rem; transition:box-shadow .3s;}
+.btn:hover{box-shadow:0 0 25px var(--orange-glow);}
+.spacer{flex:1;}
+
+/* Stat cards */
+.stats{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:rgba(0,240,255,.06); margin-bottom:1.5rem;}
+.stat{background:var(--bg2); padding:1rem 1.25rem;}
+.stat .n{font-family:var(--mono); font-size:1.4rem; font-weight:800; color:var(--cyan);}
+.stat .l{font-family:var(--mono); font-size:.62rem; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; margin-top:.2rem;}
+
+/* Table */
+.tablewrap{border:1px solid rgba(0,240,255,.1); background:var(--bg2); overflow-x:auto;}
+table{width:100%; border-collapse:collapse; font-size:.8rem;}
+th,td{padding:.6rem .8rem; text-align:right; white-space:nowrap; border-bottom:1px solid rgba(0,240,255,.05);}
+th:first-child,td:first-child,th:nth-child(3),td:nth-child(3){text-align:left;}
+th{font-family:var(--mono); color:var(--text-dim); font-size:.62rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; user-select:none; position:sticky; top:0; background:var(--bg3);}
+th:hover{color:var(--cyan);}
+td{font-family:var(--mono);}
+tr:hover td{background:rgba(0,240,255,.03);}
+.sym{font-weight:800; color:var(--white); font-family:var(--mono);}
+.yield{color:var(--green); font-weight:800;}
+.empty{padding:3rem; text-align:center; color:var(--text-dim); font-family:var(--mono); font-size:.8rem;}
+.err{color:#f85149; font-family:var(--mono); font-size:.8rem; padding:1rem 0;}
+.disc{font-family:var(--mono); font-size:.65rem; color:var(--text-dim); line-height:1.9; margin-top:1.5rem; border-left:2px solid rgba(255,106,47,.3); padding-left:1rem;}
+@media(max-width:900px){ .stats{grid-template-columns:repeat(2,1fr);} .nav-links{display:none;} }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo">
+      <div class="logo-diamond"><span>G</span></div>
+      <div><div class="logo-text">GLOBESEC</div><div class="logo-sub">protocol.ai</div></div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/#services">Services</a></li>
+      <li><a href="/csp/">CSP Scanner</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="label"><div class="bar"></div><div class="text">Options Lab</div></div>
+  <h1>Cash-Secured <span class="cyan">Put</span> Scanner</h1>
+  <div class="subtitle">
+    Optionable underlyings under $300, filtered to puts whose <b style="color:var(--text)">30-day normalized yield</b>
+    sits between 0.7% and 1.0%. Out-of-the-money only &middot; |delta| &le; 0.35 &middot; open interest &ge; 50.
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <input id="filter" placeholder="filter symbol…" oninput="render()">
+    <span class="spacer"></span>
+    <button class="btn" onclick="loadResults()">↻ Refresh</button>
+  </div>
+
+  <div class="err" id="err" style="display:none"></div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr id="head"></tr></thead>
+      <tbody id="body"></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none">No data yet — the scheduled scan has not published results.</div>
+  </div>
+
+  <div class="disc">
+    DISCLAIMER: For educational/informational purposes only. Not investment advice.<br>
+    Data is published by a scheduled scan (not live/real-time) and may be delayed. Verify all quotes with your broker before trading.
+  </div>
+</div>
+
+<script>
+const COLS=[
+  ["symbol","Symbol"],["price","Price"],["expiration","Expiry"],["dte","DTE"],
+  ["strike","Strike"],["bid","Bid"],["delta","Δ"],["open_interest","OI"],
+  ["collateral","Collateral"],["premium","Premium"],["yield_30d_pct","Yield 30d"],["annualized_pct","Annual"]
+];
+let DATA={results:[]}, sortKey="yield_30d_pct", sortDir=-1;
+
+function money(v){return "$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmt(k,v){
+  if(v===null||v===undefined) return "—";
+  if(["price","strike","bid","collateral","premium"].includes(k)) return money(v);
+  if(k==="yield_30d_pct") return Number(v).toFixed(3)+"%";
+  if(k==="annualized_pct") return Number(v).toFixed(1)+"%";
+  return v;
+}
+function render(){
+  document.getElementById("head").innerHTML=COLS.map(([k,l])=>
+    `<th onclick="sortBy('${k}')">${l}${sortKey===k?(sortDir<0?" ▼":" ▲"):""}</th>`).join("");
+  const q=document.getElementById("filter").value.trim().toUpperCase();
+  let rows=DATA.results.slice();
+  if(q) rows=rows.filter(r=>r.symbol.includes(q));
+  rows.sort((a,b)=>{const x=a[sortKey],y=b[sortKey]; if(x===y)return 0; return (x>y?1:-1)*sortDir;});
+  document.getElementById("body").innerHTML=rows.map(r=>"<tr>"+COLS.map(([k])=>{
+    const cls=k==="symbol"?"sym":k==="yield_30d_pct"?"yield":""; return `<td class="${cls}">${fmt(k,r[k])}</td>`;
+  }).join("")+"</tr>").join("");
+  document.getElementById("empty").style.display=rows.length?"none":"block";
+}
+function sortBy(k){ if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=-1;} render(); }
+
+function setStats(){
+  const p=DATA.params||{};
+  const cells=[
+    [DATA.result_count??0,"Contracts found"],
+    [DATA.scanned_under_price??"—","Scanned < $"+(p.max_underlying_price||300)],
+    [(p.yield_band_30d_pct?p.yield_band_30d_pct.join("–")+"%":"0.7–1.0%"),"30-day yield band"],
+    [DATA.generated_at?DATA.generated_at.replace("T"," "):"never","Last scan"]
+  ];
+  document.getElementById("stats").innerHTML=cells.map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
+}
+async function loadResults(){
+  const err=document.getElementById("err"); err.style.display="none";
+  try{
+    const r=await fetch("results.json?_="+Date.now());
+    if(!r.ok) throw new Error("results.json not found ("+r.status+")");
+    DATA=await r.json();
+  }catch(e){ err.style.display="block"; err.textContent="Could not load data: "+e.message; DATA={results:[]}; }
+  setStats(); render();
+}
+loadResults();
+</script>
+</body>
+</html>
