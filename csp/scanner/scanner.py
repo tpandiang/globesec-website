@@ -72,6 +72,7 @@ def _eval_underlying(client: Tradier, symbol: str, price: float, today: dt.date)
             rows.append(
                 {
                     "symbol": symbol,
+                    "option_symbol": opt.get("symbol"),  # OCC symbol, for live quotes
                     "price": round(price, 2),
                     "expiration": expiration,
                     "dte": dte,
