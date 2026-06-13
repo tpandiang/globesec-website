@@ -58,8 +58,20 @@ th{font-family:var(--mono); color:var(--text-dim); font-size:.62rem; font-weight
 th:hover{color:var(--cyan);}
 td{font-family:var(--mono);}
 tr:hover td{background:rgba(0,240,255,.03);}
-.sym{font-weight:800; color:var(--white); font-family:var(--mono);}
+.sym{font-weight:800; color:var(--white); font-family:var(--mono); cursor:pointer;}
+.sym:hover{color:var(--cyan);}
+.sym .caret{color:var(--cyan); display:inline-block; width:.8em;}
 .yield{color:var(--green); font-weight:800;}
+tr.detail td{background:var(--bg3); padding:1rem 1rem 1.3rem;}
+.detail-head{font-family:var(--mono); font-size:.68rem; color:var(--text-dim); letter-spacing:.5px; margin-bottom:.7rem;}
+.weeks{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:1rem;}
+.wk{border:1px solid rgba(0,240,255,.1); background:var(--bg2);}
+.wk h4{font-family:var(--mono); font-size:.68rem; color:var(--cyan); letter-spacing:1px; text-transform:uppercase; padding:.5rem .7rem; border-bottom:1px solid rgba(0,240,255,.1);}
+.wk table{font-size:.72rem; width:100%;}
+.wk th,.wk td{padding:.32rem .6rem; text-align:right; white-space:nowrap; border-bottom:1px solid rgba(0,240,255,.04);}
+.wk th{position:static; background:transparent; color:var(--text-dim); cursor:default;}
+.wk th:first-child,.wk td:first-child{text-align:left;}
+.wk td{color:var(--text);}
 .empty{padding:3rem; text-align:center; color:var(--text-dim); font-family:var(--mono); font-size:.8rem;}
 .err{color:#f85149; font-family:var(--mono); font-size:.8rem; padding:1rem 0;}
 .disc{font-family:var(--mono); font-size:.65rem; color:var(--text-dim); line-height:1.9; margin-top:1.5rem; border-left:2px solid rgba(255,106,47,.3); padding-left:1rem;}
@@ -123,6 +135,8 @@ const COLS=[
   ["collateral","Collateral"],["premium","Premium"],["yield_30d_pct","Yield 30d"],["annualized_pct","Annual"]
 ];
 let DATA={results:[]}, sortKey="premium", sortDir=-1;
+const expanded=new Set();
+function toggle(sym){ expanded.has(sym)?expanded.delete(sym):expanded.add(sym); render(); }
 
 function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmt(k,v){
@@ -139,11 +153,34 @@ function render(){
   let rows=DATA.results.slice();
   if(q) rows=rows.filter(r=>r.symbol.includes(q));
   rows.sort((a,b)=>{const x=a[sortKey],y=b[sortKey]; if(x===y)return 0; return (x>y?1:-1)*sortDir;});
-  document.getElementById("body").innerHTML=rows.map(r=>"<tr>"+COLS.map(([k])=>{
-    const cls=k==="symbol"?"sym":k==="yield_30d_pct"?"yield":""; return `<td class="${cls}">${fmt(k,r[k])}</td>`;
-  }).join("")+"</tr>").join("");
+  document.getElementById("body").innerHTML=rows.map(r=>{
+    const main="<tr>"+COLS.map(([k])=>{
+      if(k==="symbol"){
+        const c=expanded.has(r.symbol)?"▾":"▸";
+        return `<td class="sym" onclick="toggle('${r.symbol}')"><span class="caret">${c}</span>${r.symbol}</td>`;
+      }
+      const cls=k==="yield_30d_pct"?"yield":""; return `<td class="${cls}">${fmt(k,r[k])}</td>`;
+    }).join("")+"</tr>";
+    return main + (expanded.has(r.symbol)?renderDetail(r):"");
+  }).join("");
   document.getElementById("empty").style.display=rows.length?"none":"block";
   setStats();
+}
+function renderDetail(r){
+  const wks=r.weeklies||[];
+  if(!wks.length) return `<tr class="detail"><td colspan="${COLS.length}">No upcoming-expiration detail available for ${r.symbol}.</td></tr>`;
+  const blocks=wks.map(w=>{
+    const body=w.puts.map(p=>
+      `<tr><td>$${p.strike.toFixed(2)}</td><td>$${p.premium.toFixed(2)}</td>`+
+      `<td class="yield">${p.yield_30d_pct.toFixed(2)}%</td>`+
+      `<td>${p.delta==null?"—":p.delta}</td><td>${p.open_interest.toLocaleString()}</td></tr>`).join("");
+    return `<div class="wk"><h4>${w.expiration} &middot; ${w.dte}d</h4>`+
+      `<table><thead><tr><th>Strike</th><th>Premium</th><th>Yld30</th><th>Δ</th><th>OI</th></tr></thead>`+
+      `<tbody>${body}</tbody></table></div>`;
+  }).join("");
+  return `<tr class="detail"><td colspan="${COLS.length}">`+
+    `<div class="detail-head">${r.symbol} — next ${wks.length} expirations &middot; spot $${r.price.toFixed(2)} &middot; OTM puts, nearest-the-money first &middot; premium = per contract (×100)</div>`+
+    `<div class="weeks">${blocks}</div></td></tr>`;
 }
 function sortBy(k){ if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=-1;} render(); }
 function setStats(){

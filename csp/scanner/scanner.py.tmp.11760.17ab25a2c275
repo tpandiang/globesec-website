@@ -171,12 +171,6 @@ def run_scan(symbols: list[str], progress=None) -> dict:
         best_per_symbol.append(r)
     rows = best_per_symbol[: config.TOP_N]
 
-    # Attach the next-few-expirations detail (weekly/bi-weekly view) to each symbol.
-    for r in rows:
-        ch = chains_by_symbol.get(r["symbol"])
-        if ch:
-            r["weeklies"] = build_weeklies(ch[0], ch[1], today)
-
     return {
         "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
         "data_source": "CBOE delayed (~15 min)",
