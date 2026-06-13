@@ -65,7 +65,14 @@ tr:hover td{background:#f5f8fc;}
 .yield{color:var(--green); font-weight:800;}
 tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
 .detail-head{font-family:var(--mono); font-size:.68rem; color:var(--text-dim); letter-spacing:.3px; margin-bottom:.7rem;}
-.weeks{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1rem;}
+.stock-info{background:#fff; border:1px solid var(--line); border-radius:6px; padding:.9rem 1.1rem; margin-bottom:1rem;}
+.stock-info .co{font-family:var(--sans); font-weight:800; font-size:1.05rem; color:var(--white);}
+.stock-info .metrics{display:flex; gap:1.8rem; flex-wrap:wrap; font-family:var(--mono); font-size:.72rem; color:var(--text-dim); margin:.5rem 0 .7rem;}
+.stock-info .metrics b{color:var(--text); font-weight:700;}
+.range{position:relative; height:6px; background:linear-gradient(90deg,#cfe8d8,#e9d9c0,#f0cdc0); border-radius:3px; max-width:460px;}
+.range .pos{position:absolute; top:-4px; width:3px; height:14px; background:var(--orange); border-radius:2px;}
+.range-lbl{display:flex; justify-content:space-between; max-width:460px; font-family:var(--mono); font-size:.6rem; color:var(--text-dim); margin-top:.25rem;}
+.weeks{display:flex; flex-direction:column; gap:1rem;}
 .wk-card{border:1px solid var(--line); background:#fff; border-radius:6px; overflow:hidden;}
 .wk-card h4{font-family:var(--mono); font-size:.68rem; color:var(--cyan); letter-spacing:1px; text-transform:uppercase; padding:.5rem .7rem; border-bottom:1px solid var(--line);}
 .wk-card table{font-size:.72rem; width:100%;}
@@ -170,9 +177,24 @@ function render(){
   document.getElementById("empty").style.display=rows.length?"none":"block";
   setStats();
 }
+function stockInfo(r){
+  const pe = r.pe!=null ? Number(r.pe).toFixed(1) : "—";
+  const lo = r.week52_low!=null ? "$"+Number(r.week52_low).toFixed(2) : "—";
+  const hi = r.week52_high!=null ? "$"+Number(r.week52_high).toFixed(2) : "—";
+  let bar = "";
+  if(r.week52_low!=null && r.week52_high!=null && r.week52_high>r.week52_low){
+    const pct=Math.max(0,Math.min(100,(r.price-r.week52_low)/(r.week52_high-r.week52_low)*100));
+    bar = `<div class="range"><div class="pos" style="left:${pct}%"></div></div>`+
+          `<div class="range-lbl"><span>52wk low ${lo}</span><span>spot $${r.price.toFixed(2)}</span><span>52wk high ${hi}</span></div>`;
+  }
+  return `<div class="stock-info">`+
+    `<div class="co">${r.company_name||r.symbol} <span style="color:var(--text-dim);font-weight:600">(${r.symbol})</span></div>`+
+    `<div class="metrics"><span>P/E <b>${pe}</b></span><span>52wk Low <b>${lo}</b></span><span>52wk High <b>${hi}</b></span><span>Spot <b>$${r.price.toFixed(2)}</b></span></div>`+
+    bar + `</div>`;
+}
 function renderDetail(r){
   const wks=r.weeklies||[];
-  if(!wks.length) return `<tr class="detail"><td colspan="${COLS.length}">No upcoming-expiration detail for ${r.symbol}.</td></tr>`;
+  if(!wks.length) return `<tr class="detail"><td colspan="${COLS.length}">${stockInfo(r)}No upcoming-expiration detail for ${r.symbol}.</td></tr>`;
   const blocks=wks.map(w=>{
     const body=w.puts.length ? w.puts.map(p=>{
       const badge=p.recommended?'<span class="pick">★ PICK</span>':'';
@@ -187,7 +209,8 @@ function renderDetail(r){
       `<tbody>${body}</tbody></table></div>`;
   }).join("");
   return `<tr class="detail"><td colspan="${COLS.length}">`+
-    `<div class="detail-head">${r.symbol} — spot $${r.price.toFixed(2)} &middot; next 3 Friday expirations &middot; top 3 strikes per week (premium 0.7–1.0%, safest first) &middot; premium per contract (×100)</div>`+
+    stockInfo(r)+
+    `<div class="detail-head">Next 3 weekly expirations &middot; top 3 strikes per week (premium 0.7–1.0%, safest first) &middot; premium per contract (×100)</div>`+
     `<div class="weeks">${blocks}</div></td></tr>`;
 }
 function sortBy(k){ if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=-1;} render(); }

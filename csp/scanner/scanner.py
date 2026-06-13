@@ -16,6 +16,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import config
 from cboe import Cboe
+from fundamentals import fetch_fundamentals
 
 
 def _dte(expiration: str, today: dt.date) -> int:
@@ -183,8 +184,16 @@ def run_scan(symbols: list[str], progress=None) -> dict:
         best_per_symbol.append(r)
     rows = best_per_symbol[: config.TOP_N]
 
-    # Attach the next-few-expirations detail (weekly/bi-weekly view) to each symbol.
+    # Fundamentals (name, P/E, 52-week range) for the shortlist — best-effort.
+    fundamentals = fetch_fundamentals([r["symbol"] for r in rows])
+
+    # Attach detail + fundamentals to each symbol.
     for r in rows:
+        f = fundamentals.get(r["symbol"]) or {}
+        r["company_name"] = f.get("name")
+        r["pe"] = f.get("pe")
+        r["week52_low"] = f.get("week52_low")
+        r["week52_high"] = f.get("week52_high")
         ch = chains_by_symbol.get(r["symbol"])
         if ch:
             r["weeklies"] = build_weeklies(ch[0], ch[1], today)
