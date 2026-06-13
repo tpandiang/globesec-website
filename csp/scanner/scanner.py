@@ -152,12 +152,11 @@ def build_account_picks(rows: list[dict]) -> list[dict]:
     cands: list[dict] = []
     for r in rows:
         for w in (r.get("weeklies") or [])[: config.ACCOUNT_WEEKS]:
-            for p in w["puts"]:
-                if not p.get("recommended"):     # only the safest-in-band strike per week
-                    continue
+            for p in w["puts"]:               # all top in-band strikes (income choice for wheel)
                 cands.append(
                     {
                         "symbol": r["symbol"],
+                        "preferred": bool(r.get("preferred")),
                         "company_name": r.get("company_name"),
                         "expiration": w["expiration"],
                         "dte": w["dte"],
@@ -199,13 +198,19 @@ def build_account_picks(rows: list[dict]) -> list[dict]:
         def _risk(p):
             return abs(p["delta"]) if p["delta"] is not None else 1.0
 
-        # Goal: clear 0.7% on the account; among those, pick the safest (lowest
-        # assignment risk), tie-break by higher account yield.
+        # Goal: clear 0.7% on the account. Prefer watchlist stocks (happy to own if
+        # assigned) and, for those, favor INCOME (highest account yield). If no
+        # watchlist trade fits, fall back to the safest non-watchlist trade.
         meeting = [p for p in sized if p["account_yield_pct"] >= config.TARGET_YIELD_MIN]
-        pool = meeting if meeting else sized
+        pref_meeting = [p for p in meeting if p["preferred"]]
         best = None
-        if pool:
-            best = min(pool, key=lambda p: (_risk(p), -p["account_yield_pct"]))
+        if pref_meeting:                         # watchlist + clears 0.7%: maximize income
+            best = max(pref_meeting, key=lambda p: (p["account_yield_pct"], -_risk(p)))
+        elif meeting:                            # any stock clearing 0.7%: safest
+            best = min(meeting, key=lambda p: (_risk(p), -p["account_yield_pct"]))
+        elif sized:                              # nothing clears 0.7%: best available (flag)
+            best = max(sized, key=lambda p: p["account_yield_pct"])
+        if best:
             best["meets_target"] = best["account_yield_pct"] >= config.TARGET_YIELD_MIN
         out.append({"account": acct["name"], "balance": bal, "pick": best})
     return out
@@ -256,6 +261,7 @@ def run_scan(symbols: list[str], progress=None) -> dict:
 
     # Attach detail + fundamentals to each symbol.
     for r in rows:
+        r["preferred"] = r["symbol"] in config.PREFERRED
         f = fundamentals.get(r["symbol"]) or {}
         r["company_name"] = f.get("name")
         r["pe"] = f.get("pe")

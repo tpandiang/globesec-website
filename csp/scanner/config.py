@@ -33,6 +33,14 @@ MAX_ABS_DELTA = _f("MAX_ABS_DELTA", 0.35)                  # only sell puts at/u
 MIN_OPEN_INTEREST = _i("MIN_OPEN_INTEREST", 50)           # liquidity floor
 MIN_BID = _f("MIN_BID", 0.05)                             # ignore no-bid contracts
 
+# --- Preferred watchlist: stocks you're happy to own if assigned (wheel) ---
+# For these, account picks favor income (highest yield >=0.7%) since assignment is OK.
+PREFERRED = [
+    s.strip().upper()
+    for s in os.getenv("PREFERRED", "DAL,NVDA,AMZN,ORCL,INTC,OSS,SMCI").split(",")
+    if s.strip()
+]
+
 # --- Accounts (for per-account picks at the top of the page) ---
 ACCOUNTS = [
     {"name": "OPT-J", "balance": 46000.0},

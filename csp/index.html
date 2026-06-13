@@ -73,6 +73,7 @@ tr:hover td{background:#f5f8fc;}
 .sym{font-weight:800; color:var(--white); font-family:var(--mono); cursor:pointer;}
 .sym:hover{color:var(--cyan);}
 .sym .caret{color:var(--cyan); display:inline-block; width:.8em;}
+.watch{display:inline-block; background:var(--cyan); color:#fff; font-size:.5rem; font-weight:800; letter-spacing:.5px; padding:.06rem .3rem; border-radius:3px; margin-left:.4rem; vertical-align:middle;}
 .yield{color:var(--green); font-weight:800;}
 tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
 .detail-head{font-family:var(--mono); font-size:.68rem; color:var(--text-dim); letter-spacing:.3px; margin-bottom:.7rem;}
@@ -179,7 +180,7 @@ function renderAccounts(){
     return `<div class="acct-card" style="${ay>=0.7?'':'border-left-color:#c0392b'}">`+
       `<div class="acct-name"><span>${a.account}</span><b>${usd0(a.balance)}</b></div>`+
       `<div class="acct-trade">SELL ${p.contracts}× ${p.symbol} $${p.strike} PUT</div>`+
-      `<div class="acct-sub">${p.company_name||p.symbol} &middot; exp ${shortDate(p.expiration)} (${p.dte}d)</div>`+
+      `<div class="acct-sub">${p.company_name||p.symbol} &middot; exp ${shortDate(p.expiration)} (${p.dte}d)${p.preferred?' &middot; <span style="color:var(--cyan)">★ watchlist</span>':''}</div>`+
       `<div class="acct-metrics">`+
         `<div><span>Acct yield</span><b style="color:${ayColor}">${ay.toFixed(2)}%</b>${flag}</div>`+
         `<div><span>Premium</span><b>$${p.total_premium.toLocaleString()}</b></div>`+
@@ -208,7 +209,8 @@ function render(){
     const main="<tr>"+COLS.map(([k])=>{
       if(k==="symbol"){
         const c=expanded.has(r.symbol)?"▾":"▸";
-        return `<td class="sym" onclick="toggle('${r.symbol}')"><span class="caret">${c}</span>${r.symbol}</td>`;
+        const w=r.preferred?'<span class="watch">WATCH</span>':'';
+        return `<td class="sym" onclick="toggle('${r.symbol}')"><span class="caret">${c}</span>${r.symbol}${w}</td>`;
       }
       const cls=k==="yield_30d_pct"?"yield":""; return `<td class="${cls}">${fmt(k,r[k])}</td>`;
     }).join("")+"</tr>";
