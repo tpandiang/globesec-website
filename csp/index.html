@@ -40,8 +40,10 @@ h1{font-size:clamp(2rem,5vw,3rem); font-weight:900; color:var(--white); letter-s
 h1 .cyan{color:var(--cyan);}
 .subtitle{font-family:var(--mono); font-size:.8rem; color:var(--text-dim); letter-spacing:.3px; margin-bottom:2rem; max-width:820px; line-height:1.8;}
 .toolbar{display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-bottom:1.5rem;}
-.toolbar input{background:#fff; border:1px solid var(--line); color:var(--text); font-family:var(--mono); font-size:.8rem; padding:.6rem .9rem; outline:none; min-width:200px; border-radius:5px;}
-.toolbar input:focus{border-color:var(--cyan); box-shadow:0 0 0 3px rgba(14,138,166,.12);}
+.toolbar input,.toolbar select{background:#fff; border:1px solid var(--line); color:var(--text); font-family:var(--mono); font-size:.8rem; padding:.6rem .9rem; outline:none; border-radius:5px;}
+.toolbar input{min-width:200px;}
+.toolbar select{cursor:pointer;}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--cyan); box-shadow:0 0 0 3px rgba(14,138,166,.12);}
 .btn{background:var(--orange); color:#fff; border:none; cursor:pointer; font-family:var(--mono); font-weight:700; font-size:.8rem; letter-spacing:1px; text-transform:uppercase; padding:.6rem 1.2rem; border-radius:5px; transition:box-shadow .3s;}
 .btn:hover{box-shadow:0 4px 14px var(--orange-glow);}
 .spacer{flex:1;}
@@ -132,6 +134,12 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
 
   <div class="toolbar">
     <input id="filter" placeholder="filter symbol…" oninput="render()">
+    <select id="sortMode" onchange="setSort(this.value)">
+      <option value="price_prem">Sort: Price ↑ · Premium ↓</option>
+      <option value="premium">Sort: Premium ↓</option>
+      <option value="yield">Sort: Yield 30d ↓</option>
+      <option value="price">Sort: Price ↑</option>
+    </select>
     <span class="pill"><span class="dot"></span>Delayed ~15 min</span>
     <span class="spacer"></span>
     <button class="btn" onclick="loadResults()">↻ Refresh</button>
@@ -160,9 +168,10 @@ const COLS=[
   ["strike","Strike"],["bid","Bid"],["delta","Δ"],["open_interest","OI"],
   ["collateral","Collateral"],["premium","Premium"],["yield_30d_pct","Yield 30d"],["annualized_pct","Annual"]
 ];
-let DATA={results:[]}, sortKey="premium", sortDir=-1;
+let DATA={results:[]}, sortKey="premium", sortDir=-1, sortMode="price_prem";
 const expanded=new Set();
 function toggle(sym){ expanded.has(sym)?expanded.delete(sym):expanded.add(sym); render(); }
+function setSort(m){ sortMode=m; render(); }
 
 function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
 function usd0(v){return "$"+Number(v).toLocaleString(undefined,{maximumFractionDigits:0});}
@@ -200,11 +209,15 @@ function fmt(k,v){
 }
 function render(){
   document.getElementById("head").innerHTML=COLS.map(([k,l])=>
-    `<th onclick="sortBy('${k}')">${l}${sortKey===k?(sortDir<0?" ▼":" ▲"):""}</th>`).join("");
+    `<th onclick="sortBy('${k}')">${l}${(sortMode==="col"&&sortKey===k)?(sortDir<0?" ▼":" ▲"):""}</th>`).join("");
   const q=document.getElementById("filter").value.trim().toUpperCase();
   let rows=DATA.results.slice();
   if(q) rows=rows.filter(r=>r.symbol.includes(q));
-  rows.sort((a,b)=>{const x=a[sortKey],y=b[sortKey]; if(x===y)return 0; return (x>y?1:-1)*sortDir;});
+  if(sortMode==="price_prem") rows.sort((a,b)=> (a.price-b.price) || (b.premium-a.premium));
+  else if(sortMode==="premium") rows.sort((a,b)=> b.premium-a.premium);
+  else if(sortMode==="yield") rows.sort((a,b)=> b.yield_30d_pct-a.yield_30d_pct);
+  else if(sortMode==="price") rows.sort((a,b)=> a.price-b.price);
+  else rows.sort((a,b)=>{const x=a[sortKey],y=b[sortKey]; if(x===y)return 0; return (x>y?1:-1)*sortDir;});
   document.getElementById("body").innerHTML=rows.map(r=>{
     const main="<tr>"+COLS.map(([k])=>{
       if(k==="symbol"){
@@ -255,7 +268,7 @@ function renderDetail(r){
     `<div class="detail-head">Next 3 weekly expirations &middot; top 3 strikes per week (premium 0.7–1.0%, safest first) &middot; premium per contract (×100)</div>`+
     `<div class="weeks">${blocks}</div></td></tr>`;
 }
-function sortBy(k){ if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=-1;} render(); }
+function sortBy(k){ if(sortMode==="col" && sortKey===k) sortDir*=-1; else {sortMode="col"; sortKey=k; sortDir=-1;} render(); }
 function setStats(){
   const p=DATA.params||{};
   const cells=[
