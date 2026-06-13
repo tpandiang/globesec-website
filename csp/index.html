@@ -173,15 +173,18 @@ function renderAccounts(){
     const p=a.pick;
     if(!p) return `<div class="acct-card" style="border-left-color:var(--text-dim)"><div class="acct-name"><span>${a.account}</span><b>${usd0(a.balance)}</b></div><div class="acct-none">No CSP fits this balance.</div></div>`;
     const assign=p.delta==null?"—":(Math.abs(p.delta)*100).toFixed(0)+"%";
-    return `<div class="acct-card">`+
+    const ay=p.account_yield_pct;
+    const ayColor = (ay>=0.7) ? "var(--green)" : "#c0392b";
+    const flag = (ay>=0.7) ? "" : ` <span style="color:#c0392b">⚠ below 0.7%</span>`;
+    return `<div class="acct-card" style="${ay>=0.7?'':'border-left-color:#c0392b'}">`+
       `<div class="acct-name"><span>${a.account}</span><b>${usd0(a.balance)}</b></div>`+
       `<div class="acct-trade">SELL ${p.contracts}× ${p.symbol} $${p.strike} PUT</div>`+
       `<div class="acct-sub">${p.company_name||p.symbol} &middot; exp ${shortDate(p.expiration)} (${p.dte}d)</div>`+
       `<div class="acct-metrics">`+
+        `<div><span>Acct yield</span><b style="color:${ayColor}">${ay.toFixed(2)}%</b>${flag}</div>`+
         `<div><span>Premium</span><b>$${p.total_premium.toLocaleString()}</b></div>`+
-        `<div><span>Yield/wk</span><b>${p.pct_of_collateral.toFixed(2)}%</b></div>`+
         `<div><span>Assign~</span><b>${assign}</b></div>`+
-        `<div><span>Capital</span><b>${usd0(p.capital_used)}</b></div>`+
+        `<div><span>Yield/wk</span><b>${p.pct_of_collateral.toFixed(2)}%</b></div>`+
         `<div><span>Util</span><b>${p.utilization_pct}%</b></div>`+
         `<div><span>Cash left</span><b>${usd0(p.cash_left)}</b></div>`+
       `</div></div>`;

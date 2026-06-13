@@ -174,8 +174,7 @@ def build_account_picks(rows: list[dict]) -> list[dict]:
     out: list[dict] = []
     for acct in config.ACCOUNTS:
         bal = float(acct["balance"])
-        best = None
-        best_key = None
+        sized = []
         for c in cands:
             if c["collateral"] > bal:
                 continue
@@ -184,18 +183,30 @@ def build_account_picks(rows: list[dict]) -> list[dict]:
                 continue
             total_premium = round(contracts * c["premium"], 2)
             used = round(contracts * c["collateral"], 2)
-            risk = abs(c["delta"]) if c["delta"] is not None else 1.0
-            key = (total_premium, -risk)         # max income, then lower assignment risk
-            if best_key is None or key > best_key:
-                best_key = key
-                best = {
+            sized.append(
+                {
                     **c,
                     "contracts": contracts,
                     "total_premium": total_premium,
                     "capital_used": used,
                     "utilization_pct": round(used / bal * 100, 1),
                     "cash_left": round(bal - used, 2),
+                    # yield on the WHOLE account (this is the "0.7% minimum" target)
+                    "account_yield_pct": round(total_premium / bal * 100, 3),
                 }
+            )
+
+        def _risk(p):
+            return abs(p["delta"]) if p["delta"] is not None else 1.0
+
+        # Goal: clear 0.7% on the account; among those, pick the safest (lowest
+        # assignment risk), tie-break by higher account yield.
+        meeting = [p for p in sized if p["account_yield_pct"] >= config.TARGET_YIELD_MIN]
+        pool = meeting if meeting else sized
+        best = None
+        if pool:
+            best = min(pool, key=lambda p: (_risk(p), -p["account_yield_pct"]))
+            best["meets_target"] = best["account_yield_pct"] >= config.TARGET_YIELD_MIN
         out.append({"account": acct["name"], "balance": bal, "pick": best})
     return out
 
