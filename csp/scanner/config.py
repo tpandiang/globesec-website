@@ -22,7 +22,7 @@ def _i(name: str, default: int) -> int:
 
 
 # --- Screen criteria ---
-MAX_UNDERLYING_PRICE = _f("MAX_UNDERLYING_PRICE", 500.0)   # only stocks under this price
+MAX_UNDERLYING_PRICE = _f("MAX_UNDERLYING_PRICE", 300.0)   # only stocks under this price
 TOP_N = _i("TOP_N", 20)                                    # keep only the top N (by premium)
 DTE_MIN = _i("DTE_MIN", 21)                                # "monthly" expiration window (days)
 DTE_MAX = _i("DTE_MAX", 45)

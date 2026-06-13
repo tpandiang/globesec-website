@@ -100,10 +100,10 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
   <div class="label"><div class="bar"></div><div class="text">Options Lab</div></div>
   <h1>Cash-Secured <span class="cyan">Put</span> Scanner</h1>
   <div class="subtitle">
-    Top 20 cash-secured puts on underlyings under $500, ranked by premium ($) received.
+    Top 20 cash-secured puts on underlyings under $300, ranked by premium ($) received.
     Quotes from CBOE (delayed ~15 min).<br>
-    <span style="color:var(--cyan)">▸ Click a ticker</span> to see its next 4 weekly/bi-weekly expirations. Each one flags the
-    <b style="color:var(--green)">★ optimal strike</b> — premium 0.7–1.0% that week with the lowest assignment risk.
+    <span style="color:var(--cyan)">▸ Click a ticker</span> to see the next 3 <b>Friday</b> expirations, each with the
+    <b style="color:var(--green)">top 3 optimal strikes</b> (premium 0.7–1.0% that week, ranked safest-first / lowest assignment risk).
   </div>
 
   <div class="stats" id="stats"></div>
@@ -174,20 +174,20 @@ function renderDetail(r){
   const wks=r.weeklies||[];
   if(!wks.length) return `<tr class="detail"><td colspan="${COLS.length}">No upcoming-expiration detail for ${r.symbol}.</td></tr>`;
   const blocks=wks.map(w=>{
-    const body=w.puts.map(p=>{
+    const body=w.puts.length ? w.puts.map(p=>{
       const badge=p.recommended?'<span class="pick">★ PICK</span>':'';
       const assign=p.delta==null?"—":(Math.abs(p.delta)*100).toFixed(0)+"%";
       return `<tr class="${p.recommended?'rec':''}"><td>${badge}$${p.strike.toFixed(2)}</td>`+
         `<td>$${p.premium.toFixed(2)}</td>`+
         `<td class="wkpct">${p.pct_of_collateral.toFixed(2)}%</td>`+
         `<td>${assign}</td><td>${p.open_interest.toLocaleString()}</td></tr>`;
-    }).join("");
+    }).join("") : `<tr><td colspan="5" style="color:var(--text-dim);text-align:center">No strike in 0.7–1.0% this week</td></tr>`;
     return `<div class="wk-card"><h4>${w.expiration} &middot; ${w.dte}d</h4>`+
       `<table><thead><tr><th>Strike</th><th>Premium</th><th>Wk %</th><th>Assign~</th><th>OI</th></tr></thead>`+
       `<tbody>${body}</tbody></table></div>`;
   }).join("");
   return `<tr class="detail"><td colspan="${COLS.length}">`+
-    `<div class="detail-head">${r.symbol} — spot $${r.price.toFixed(2)} &middot; ★ optimal strike = premium 0.7–1.0% that week with lowest assignment risk &middot; premium per contract (×100)</div>`+
+    `<div class="detail-head">${r.symbol} — spot $${r.price.toFixed(2)} &middot; next 3 Friday expirations &middot; top 3 strikes per week (premium 0.7–1.0%, safest first) &middot; premium per contract (×100)</div>`+
     `<div class="weeks">${blocks}</div></td></tr>`;
 }
 function sortBy(k){ if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=-1;} render(); }

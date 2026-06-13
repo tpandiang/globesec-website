@@ -26,72 +26,61 @@ def build_weeklies(
     chain: dict,
     price: float,
     today: dt.date,
-    max_exps: int = 4,
-    max_strikes: int = 14,
-    floor_pct: float = 0.70,
+    weeks_ahead: int = 3,
+    per_week: int = 3,
 ) -> list[dict]:
-    """Next few expirations with their near-the-money OTM puts (for the click-to-expand
-    weekly/bi-weekly view). For each expiration, flags the OPTIMAL strike: the one least
-    likely to be assigned (lowest |delta| / furthest OTM) whose premium for THAT contract
-    is 0.7%-1.0% of the collateral. That strike is pinned to the top of the list."""
+    """For the click-to-expand view: the weekly (Friday) expiration for each of the next
+    `weeks_ahead` weeks, each with the top `per_week` OPTIMAL strikes whose premium is
+    0.7%-1.0% of collateral for that week, ranked by lowest assignment risk (lowest |delta|).
+    On market-holiday weeks (e.g. Juneteenth, July 4) the week's last expiration is Thursday;
+    we use that as the week's expiration so no week is skipped. Safest strike is flagged."""
+    # Group all put expirations by ISO week, then take the latest (end-of-week) expiration each.
     by_exp: dict[str, list] = {}
     for o in chain["options"]:
         if o["type"] != "put":
             continue
-        dte = _dte(o["expiration"], today)
-        if dte < 1:
+        if (dt.date.fromisoformat(o["expiration"]) - today).days < 1:
             continue
-        by_exp.setdefault(o["expiration"], []).append((dte, o))
+        by_exp.setdefault(o["expiration"], []).append(o)
+
+    weeks: dict[tuple, str] = {}
+    for exp in by_exp:
+        y, w, _ = dt.date.fromisoformat(exp).isocalendar()
+        if (y, w) not in weeks or exp > weeks[(y, w)]:
+            weeks[(y, w)] = exp                # latest expiration in that ISO week
+    chosen = [weeks[k] for k in sorted(weeks)][:weeks_ahead]
 
     out: list[dict] = []
-    for exp in sorted(by_exp):
-        items = by_exp[exp]
-        dte = items[0][0]
-        puts = []
-        for _d, o in items:
+    for exp in chosen:
+        dte = (dt.date.fromisoformat(exp) - today).days
+        cands = []
+        for o in by_exp[exp]:
             strike, bid = o["strike"], o["bid"]
             if strike is None or bid is None:
                 continue
             strike, bid = float(strike), float(bid)
-            if bid <= 0 or strike >= price or strike < price * floor_pct:
+            if bid <= 0 or strike >= price:        # OTM puts only
                 continue
-            raw = bid / strike
-            puts.append(
+            pct = bid / strike * 100               # premium % of collateral, this week
+            if not (config.TARGET_YIELD_MIN <= pct <= config.TARGET_YIELD_MAX):
+                continue
+            cands.append(
                 {
                     "strike": round(strike, 2),
                     "bid": round(bid, 2),
                     "premium": round(bid * 100, 2),
-                    "pct_of_collateral": round(raw * 100, 3),  # premium % for THIS week
-                    "yield_30d_pct": round(raw * (config.NORMALIZE_DAYS / dte) * 100, 3),
+                    "pct_of_collateral": round(pct, 3),
                     "delta": round(float(o["delta"]), 3) if o.get("delta") is not None else None,
                     "open_interest": int(o.get("open_interest") or 0),
                     "recommended": False,
                 }
             )
-        if not puts:
-            continue
-        puts.sort(key=lambda p: p["strike"], reverse=True)  # nearest-the-money first
-        puts = puts[:max_strikes]
-
-        # Optimal strike: premium 0.7%-1.0% this week, lowest assignment risk (min |delta|).
-        def _risk(p):
-            return abs(p["delta"]) if p["delta"] is not None else (price - p["strike"])
-
-        in_band = [p for p in puts if config.TARGET_YIELD_MIN <= p["pct_of_collateral"] <= config.TARGET_YIELD_MAX]
-        pick = None
-        if in_band:
-            pick = min(in_band, key=_risk)
-        else:  # fallback: closest to the band without exceeding 1.0%, else the safest
-            below = [p for p in puts if p["pct_of_collateral"] <= config.TARGET_YIELD_MAX]
-            pick = max(below, key=lambda p: p["pct_of_collateral"]) if below else min(puts, key=_risk)
-        if pick:
-            pick["recommended"] = True
-            puts.remove(pick)
-            puts.insert(0, pick)  # pin the optimal strike to the top
-
-        out.append({"expiration": exp, "dte": dte, "puts": puts})
-        if len(out) >= max_exps:
-            break
+        # rank "optimal" = least likely to be assigned first
+        cands.sort(key=lambda p: abs(p["delta"]) if p["delta"] is not None else (price - p["strike"]))
+        cands = cands[:per_week]
+        if cands:
+            cands[0]["recommended"] = True         # safest of the top picks
+        out.append({"expiration": exp, "dte": dte, "puts": cands})
     return out
 
 
