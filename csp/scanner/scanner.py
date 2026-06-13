@@ -104,7 +104,19 @@ def run_scan(symbols: list[str], progress=None) -> dict:
             if progress:
                 progress(done, total, "chains")
 
-    rows.sort(key=lambda r: r["yield_30d_pct"], reverse=True)
+    # Rank by premium ($ received), highest first.
+    rows.sort(key=lambda r: (r["premium"], r["yield_30d_pct"]), reverse=True)
+    total_found = len(rows)
+
+    # One row per symbol (its best/highest-premium contract), then keep top N symbols.
+    best_per_symbol: list[dict] = []
+    seen: set[str] = set()
+    for r in rows:
+        if r["symbol"] in seen:
+            continue
+        seen.add(r["symbol"])
+        best_per_symbol.append(r)
+    rows = best_per_symbol[: config.TOP_N]
 
     return {
         "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
@@ -115,9 +127,12 @@ def run_scan(symbols: list[str], progress=None) -> dict:
             "yield_band_30d_pct": [config.TARGET_YIELD_MIN, config.TARGET_YIELD_MAX],
             "max_abs_delta": config.MAX_ABS_DELTA,
             "min_open_interest": config.MIN_OPEN_INTEREST,
+            "top_n": config.TOP_N,
+            "sorted_by": "premium",
         },
         "universe_size": len(symbols),
         "scanned_under_price": under,
+        "total_qualifying": total_found,
         "result_count": len(rows),
         "results": rows,
     }

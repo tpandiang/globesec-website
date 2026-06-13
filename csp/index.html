@@ -85,8 +85,9 @@ tr:hover td{background:rgba(0,240,255,.03);}
   <div class="label"><div class="bar"></div><div class="text">Options Lab</div></div>
   <h1>Cash-Secured <span class="cyan">Put</span> Scanner</h1>
   <div class="subtitle">
-    Optionable underlyings under $300, filtered to puts whose <b style="color:var(--text)">30-day normalized yield</b>
-    sits between 0.7% and 1.0%. Out-of-the-money only &middot; |delta| &le; 0.35 &middot; open interest &ge; 50.
+    Top 20 cash-secured puts on underlyings under $500, ranked by premium ($) received,
+    where the <b style="color:var(--text)">30-day normalized yield</b> sits between 0.7% and 1.0%.
+    Out-of-the-money only &middot; |delta| &le; 0.35 &middot; open interest &ge; 50.
     Quotes sourced from CBOE (delayed ~15 min).
   </div>
 
@@ -121,7 +122,7 @@ const COLS=[
   ["strike","Strike"],["bid","Bid"],["delta","Δ"],["open_interest","OI"],
   ["collateral","Collateral"],["premium","Premium"],["yield_30d_pct","Yield 30d"],["annualized_pct","Annual"]
 ];
-let DATA={results:[]}, sortKey="yield_30d_pct", sortDir=-1;
+let DATA={results:[]}, sortKey="premium", sortDir=-1;
 
 function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmt(k,v){
@@ -148,8 +149,8 @@ function sortBy(k){ if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=-1;} r
 function setStats(){
   const p=DATA.params||{};
   const cells=[
-    [DATA.result_count??0,"Contracts found"],
-    [DATA.scanned_under_price??"—","Scanned < $"+(p.max_underlying_price||300)],
+    [DATA.result_count??0,"Symbols shown (top "+(p.top_n||20)+")"],
+    [DATA.total_qualifying??DATA.scanned_under_price??"—","Qualifying contracts < $"+(p.max_underlying_price||500)],
     [(p.yield_band_30d_pct?p.yield_band_30d_pct.join("–")+"%":"0.7–1.0%"),"30-day yield band"],
     [DATA.generated_at?DATA.generated_at.replace("T"," "):"never","Last scan"]
   ];
