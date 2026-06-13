@@ -45,7 +45,7 @@ PREFERRED = [
 ACCOUNTS = [
     {"name": "OPT-J", "balance": 46000.0},
     {"name": "OPT-C", "balance": 34000.0},
-    {"name": "OPT-3", "balance": 20000.0},   # rename when you give it a name
+    {"name": "OPT-H", "balance": 40000.0},
 ]
 ACCOUNT_WEEKS = _i("ACCOUNT_WEEKS", 2)                     # pick horizon: next N weeks
 
