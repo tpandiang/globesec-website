@@ -37,7 +37,7 @@ MIN_BID = _f("MIN_BID", 0.05)                             # ignore no-bid contra
 ACCOUNTS = [
     {"name": "OPT-J", "balance": 46000.0},
     {"name": "OPT-C", "balance": 34000.0},
-    # add the third account here, e.g. {"name": "OPT-X", "balance": 25000.0},
+    {"name": "OPT-3", "balance": 20000.0},   # rename when you give it a name
 ]
 ACCOUNT_WEEKS = _i("ACCOUNT_WEEKS", 2)                     # pick horizon: next N weeks
 
