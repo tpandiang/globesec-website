@@ -99,6 +99,9 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
 .empty{padding:3rem; text-align:center; color:var(--text-dim); font-family:var(--mono); font-size:.8rem;}
 .err{color:#c0392b; font-family:var(--mono); font-size:.8rem; padding:1rem 0;}
 .disc{font-family:var(--mono); font-size:.65rem; color:var(--text-dim); line-height:1.9; margin-top:1.5rem; border-left:2px solid var(--orange); padding-left:1rem;}
+/* scoped alignment for the top-10 and losers tables */
+#top10 th,#top10 td,#losers th,#losers td{text-align:right;}
+#top10 th:nth-child(2),#top10 td:nth-child(2),#losers th:nth-child(1),#losers td:nth-child(1),#losers th:nth-child(2),#losers td:nth-child(2){text-align:left;}
 @media(max-width:900px){ .stats{grid-template-columns:repeat(2,1fr);} .nav-links{display:none;} }
 </style>
 </head>
@@ -158,6 +161,9 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
     <div class="empty" id="empty" style="display:none">No data yet — the scheduled scan has not published results.</div>
   </div>
 
+  <div class="acct-hd" id="losersHd" style="display:none; margin-top:2rem">▸ Biggest Losers Today — quality names that dipped (potential dip-buys)</div>
+  <div class="tablewrap" id="losers"></div>
+
   <div class="disc">
     DISCLAIMER: For educational/informational purposes only. Not investment advice.<br>
     "Assign~" is the option delta as a rough probability of finishing in-the-money (being assigned); lower is safer.
@@ -206,6 +212,21 @@ function renderTop10(){
   document.getElementById("top10").innerHTML=
     `<table><thead><tr><th>#</th><th>Symbol</th><th>Spot</th><th>Strike</th><th>% OTM</th><th>Expiry</th><th>Premium</th><th>Wk %</th><th>Assign~</th></tr></thead><tbody>${body}</tbody></table>`;
 }
+function renderLosers(){
+  const ms=DATA.losers||[];
+  document.getElementById("losersHd").style.display=ms.length?"block":"none";
+  if(!ms.length){ document.getElementById("losers").innerHTML=""; return; }
+  const body=ms.map(m=>{
+    const pe=m.pe!=null?Number(m.pe).toFixed(1):"—";
+    const bh=m.pct_below_high!=null?m.pct_below_high.toFixed(1)+"%":"—";
+    return `<tr><td class="sym">${m.symbol}${m.preferred?'<span class="watch">WATCH</span>':''}</td>`+
+      `<td>${m.company_name||""}</td><td>${money(m.price)}</td>`+
+      `<td style="color:#c0392b;font-weight:700">${m.change_pct.toFixed(2)}%</td>`+
+      `<td>${pe}</td><td>${bh}</td></tr>`;
+  }).join("");
+  document.getElementById("losers").innerHTML=
+    `<table><thead><tr><th>Symbol</th><th>Company</th><th>Price</th><th>Day %</th><th>P/E</th><th>Below 52wk high</th></tr></thead><tbody>${body}</tbody></table>`;
+}
 function renderAccounts(){
   const aps=DATA.account_picks||[];
   document.getElementById("acctHd").style.display = aps.length?"block":"none";
@@ -216,7 +237,7 @@ function renderAccounts(){
     const ay=p.account_yield_pct;
     const ayColor = (ay>=0.7) ? "var(--green)" : "#c0392b";
     const flag = (ay>=0.7) ? "" : ` <span style="color:#c0392b">⚠ below 0.7%</span>`;
-    const spot=priceBySym[p.symbol];
+    const spot=(p.price!=null)?p.price:priceBySym[p.symbol];
     const otm=spot?otmPct(spot,p.strike):null;
     return `<div class="acct-card" style="${ay>=0.7?'':'border-left-color:#c0392b'}">`+
       `<div class="acct-name"><span>${a.account}</span><b>${usd0(a.balance)}</b></div>`+
@@ -324,6 +345,7 @@ async function loadResults(){
   priceBySym=Object.fromEntries((DATA.results||[]).map(r=>[r.symbol,r.price]));
   renderAccounts();
   renderTop10();
+  renderLosers();
   render();
 }
 loadResults();

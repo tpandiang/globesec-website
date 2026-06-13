@@ -70,6 +70,7 @@ class Cboe:
     @staticmethod
     def _parse(data: dict) -> dict:
         price = data.get("current_price") or data.get("close") or 0
+        change_pct = data.get("price_change_percent")
         out = []
         for o in data.get("options") or []:
             occ = o.get("option") or ""
@@ -92,4 +93,8 @@ class Cboe:
                     "last": o.get("last_trade_price"),
                 }
             )
-        return {"price": float(price) if price else 0.0, "options": out}
+        try:
+            change_pct = float(change_pct) if change_pct is not None else None
+        except (TypeError, ValueError):
+            change_pct = None
+        return {"price": float(price) if price else 0.0, "change_pct": change_pct, "options": out}

@@ -158,6 +158,7 @@ def build_account_picks(rows: list[dict]) -> list[dict]:
                         "symbol": r["symbol"],
                         "preferred": bool(r.get("preferred")),
                         "company_name": r.get("company_name"),
+                        "price": r.get("price"),
                         "expiration": w["expiration"],
                         "dte": w["dte"],
                         "strike": p["strike"],
@@ -216,6 +217,35 @@ def build_account_picks(rows: list[dict]) -> list[dict]:
     return out
 
 
+def build_losers(chains_by_symbol: dict, top_n: int = 10) -> list[dict]:
+    """Biggest daily decliners among the scanned (optionable, < $300) universe — i.e.
+    quality companies that dropped today (potential dip-buys / richer CSP premium).
+    Enriched with name / P/E / distance below 52-week high."""
+    movers = []
+    for sym, (chain, price) in chains_by_symbol.items():
+        chg = chain.get("change_pct")
+        if chg is None or chg >= 0 or price <= 0:
+            continue
+        movers.append({"symbol": sym, "price": round(price, 2), "change_pct": round(chg, 2)})
+
+    movers.sort(key=lambda m: m["change_pct"])      # most negative first
+    movers = movers[:top_n]
+    if not movers:
+        return []
+
+    fund = fetch_fundamentals([m["symbol"] for m in movers])
+    for m in movers:
+        f = fund.get(m["symbol"]) or {}
+        hi = f.get("week52_high")
+        m["company_name"] = f.get("name")
+        m["pe"] = f.get("pe")
+        m["week52_high"] = hi
+        m["week52_low"] = f.get("week52_low")
+        m["pct_below_high"] = round((hi - m["price"]) / hi * 100, 1) if hi else None
+        m["preferred"] = m["symbol"] in config.PREFERRED
+    return movers
+
+
 def run_scan(symbols: list[str], progress=None) -> dict:
     """Full scan. `progress(done, total, stage)` is an optional callback."""
     client = Cboe()
@@ -256,10 +286,15 @@ def run_scan(symbols: list[str], progress=None) -> dict:
         best_per_symbol.append(r)
     rows = best_per_symbol[: config.TOP_N]
 
-    # Fundamentals (name, P/E, 52-week range) for the shortlist — best-effort.
-    fundamentals = fetch_fundamentals([r["symbol"] for r in rows])
+    # Always evaluate the full watchlist for account picks, even if a name didn't
+    # crack the top-20 (you wheel these regardless).
+    present = {r["symbol"] for r in rows}
+    extra_watch = [s for s in config.PREFERRED if s in chains_by_symbol and s not in present]
 
-    # Attach detail + fundamentals to each symbol.
+    # Fundamentals (name, P/E, 52-week range) — for the shortlist + extra watchlist.
+    fundamentals = fetch_fundamentals([r["symbol"] for r in rows] + extra_watch)
+
+    # Attach detail + fundamentals to each top-20 symbol.
     for r in rows:
         r["preferred"] = r["symbol"] in config.PREFERRED
         f = fundamentals.get(r["symbol"]) or {}
@@ -271,12 +306,32 @@ def run_scan(symbols: list[str], progress=None) -> dict:
         if ch:
             r["weeklies"] = build_weeklies(ch[0], ch[1], today)
 
-    account_picks = build_account_picks(rows)
+    # Build extra watchlist rows (not shown in the top-20 table, only used for picks).
+    extra_rows: list[dict] = []
+    for s in extra_watch:
+        ch, pr = chains_by_symbol[s]
+        f = fundamentals.get(s) or {}
+        extra_rows.append(
+            {
+                "symbol": s,
+                "preferred": True,
+                "price": pr,
+                "company_name": f.get("name"),
+                "pe": f.get("pe"),
+                "week52_low": f.get("week52_low"),
+                "week52_high": f.get("week52_high"),
+                "weeklies": build_weeklies(ch, pr, today),
+            }
+        )
+
+    account_picks = build_account_picks(rows + extra_rows)
+    losers = build_losers(chains_by_symbol)
 
     return {
         "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
         "data_source": "CBOE delayed (~15 min)",
         "account_picks": account_picks,
+        "losers": losers,
         "params": {
             "max_underlying_price": config.MAX_UNDERLYING_PRICE,
             "dte_window": [config.DTE_MIN, config.DTE_MAX],
