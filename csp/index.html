@@ -10,22 +10,23 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 :root{
-  --bg:#0a0a0c; --bg2:#0f1114; --bg3:#141619;
-  --cyan:#00f0ff; --orange:#ff6a2f; --orange-glow:rgba(255,106,47,0.25);
-  --text:#c8ccd0; --text-dim:#5a6270; --white:#eef0f2; --green:#2ecc71;
+  --bg:#eaeef3; --bg2:#ffffff; --bg3:#eef2f7;
+  --cyan:#0e8aa6; --orange:#e2622a; --orange-glow:rgba(226,98,42,.25);
+  --text:#222b38; --text-dim:#5e6b7e; --white:#0c1422; --green:#12a150;
+  --line:#d7dee8; --rec:#e6f7ee;
   --mono:'JetBrains Mono','Fira Code','Consolas',monospace;
   --sans:'Inter',system-ui,-apple-system,sans-serif;
 }
 html{scroll-behavior:smooth;}
 body{font-family:var(--sans); background:var(--bg); color:var(--text); line-height:1.6; min-height:100vh;}
 body::before{content:''; position:fixed; inset:0;
-  background-image:linear-gradient(rgba(0,240,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,240,255,0.02) 1px,transparent 1px);
+  background-image:linear-gradient(rgba(120,140,170,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(120,140,170,0.05) 1px,transparent 1px);
   background-size:50px 50px; pointer-events:none; z-index:0;}
-nav{position:fixed; top:0; width:100%; z-index:1000; background:rgba(10,10,12,0.95); border-bottom:1px solid rgba(0,240,255,0.08); padding:0 1.5rem;}
+nav{position:fixed; top:0; width:100%; z-index:1000; background:rgba(255,255,255,0.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--line); padding:0 1.5rem;}
 .nav-inner{max-width:1300px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; height:64px;}
 .logo{display:flex; align-items:center; gap:0.75rem; text-decoration:none; color:var(--white);}
 .logo-diamond{width:40px; height:40px; background:var(--cyan); transform:rotate(45deg); display:flex; align-items:center; justify-content:center; border-radius:4px;}
-.logo-diamond span{transform:rotate(-45deg); font-weight:900; font-size:1.1rem; color:var(--bg);}
+.logo-diamond span{transform:rotate(-45deg); font-weight:900; font-size:1.1rem; color:#fff;}
 .logo-text{font-weight:800; font-size:1.3rem; letter-spacing:1px; color:var(--white); line-height:1.1;}
 .logo-sub{font-family:var(--mono); font-size:0.6rem; font-weight:500; color:var(--cyan); letter-spacing:2px; text-transform:uppercase;}
 .nav-links{display:flex; gap:1.8rem; list-style:none; align-items:center;}
@@ -36,45 +37,47 @@ nav{position:fixed; top:0; width:100%; z-index:1000; background:rgba(10,10,12,0.
 .label .bar{width:3px; height:18px; background:var(--orange);}
 .label .text{font-family:var(--mono); font-size:.7rem; font-weight:700; color:var(--orange); letter-spacing:2px; text-transform:uppercase;}
 h1{font-size:clamp(2rem,5vw,3rem); font-weight:900; color:var(--white); letter-spacing:-1px; margin-bottom:.5rem;}
-h1 .cyan{color:var(--cyan); text-shadow:0 0 40px rgba(0,240,255,.3);}
-.subtitle{font-family:var(--mono); font-size:.8rem; color:var(--text-dim); letter-spacing:.5px; margin-bottom:2rem; max-width:780px; line-height:1.8;}
+h1 .cyan{color:var(--cyan);}
+.subtitle{font-family:var(--mono); font-size:.8rem; color:var(--text-dim); letter-spacing:.3px; margin-bottom:2rem; max-width:820px; line-height:1.8;}
 .toolbar{display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-bottom:1.5rem;}
-.toolbar input{background:var(--bg2); border:1px solid rgba(0,240,255,.12); color:var(--text); font-family:var(--mono); font-size:.8rem; padding:.6rem .9rem; outline:none; min-width:200px;}
-.toolbar input:focus{border-color:var(--cyan); box-shadow:0 0 10px rgba(0,240,255,.08);}
-.btn{background:var(--orange); color:var(--bg); border:none; cursor:pointer; font-family:var(--mono); font-weight:700; font-size:.8rem; letter-spacing:1px; text-transform:uppercase; padding:.6rem 1.2rem; transition:box-shadow .3s;}
-.btn:hover{box-shadow:0 0 25px var(--orange-glow);}
+.toolbar input{background:#fff; border:1px solid var(--line); color:var(--text); font-family:var(--mono); font-size:.8rem; padding:.6rem .9rem; outline:none; min-width:200px; border-radius:5px;}
+.toolbar input:focus{border-color:var(--cyan); box-shadow:0 0 0 3px rgba(14,138,166,.12);}
+.btn{background:var(--orange); color:#fff; border:none; cursor:pointer; font-family:var(--mono); font-weight:700; font-size:.8rem; letter-spacing:1px; text-transform:uppercase; padding:.6rem 1.2rem; border-radius:5px; transition:box-shadow .3s;}
+.btn:hover{box-shadow:0 4px 14px var(--orange-glow);}
 .spacer{flex:1;}
-.pill{display:inline-flex; align-items:center; gap:.5rem; font-family:var(--mono); font-size:.65rem; letter-spacing:1px; text-transform:uppercase; padding:.45rem .8rem; border:1px solid rgba(255,106,47,.3); background:var(--bg2); color:var(--orange);}
+.pill{display:inline-flex; align-items:center; gap:.5rem; font-family:var(--mono); font-size:.65rem; letter-spacing:1px; text-transform:uppercase; padding:.45rem .8rem; border:1px solid var(--line); background:#fff; color:var(--orange); border-radius:5px;}
 .pill .dot{width:8px; height:8px; border-radius:50%; background:var(--orange);}
-.stats{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:rgba(0,240,255,.06); margin-bottom:1.5rem;}
-.stat{background:var(--bg2); padding:1rem 1.25rem;}
+.stats{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); margin-bottom:1.5rem; border:1px solid var(--line); border-radius:6px; overflow:hidden;}
+.stat{background:#fff; padding:1rem 1.25rem;}
 .stat .n{font-family:var(--mono); font-size:1.4rem; font-weight:800; color:var(--cyan);}
 .stat .l{font-family:var(--mono); font-size:.62rem; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; margin-top:.2rem;}
-.tablewrap{border:1px solid rgba(0,240,255,.1); background:var(--bg2); overflow-x:auto;}
+.tablewrap{border:1px solid var(--line); background:#fff; overflow-x:auto; border-radius:6px;}
 table{width:100%; border-collapse:collapse; font-size:.8rem;}
-th,td{padding:.6rem .8rem; text-align:right; white-space:nowrap; border-bottom:1px solid rgba(0,240,255,.05);}
+th,td{padding:.6rem .8rem; text-align:right; white-space:nowrap; border-bottom:1px solid var(--line);}
 th:first-child,td:first-child,th:nth-child(3),td:nth-child(3){text-align:left;}
 th{font-family:var(--mono); color:var(--text-dim); font-size:.62rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; user-select:none; position:sticky; top:0; background:var(--bg3);}
 th:hover{color:var(--cyan);}
-td{font-family:var(--mono);}
-tr:hover td{background:rgba(0,240,255,.03);}
+td{font-family:var(--mono); color:var(--text);}
+tr:hover td{background:#f5f8fc;}
 .sym{font-weight:800; color:var(--white); font-family:var(--mono); cursor:pointer;}
 .sym:hover{color:var(--cyan);}
 .sym .caret{color:var(--cyan); display:inline-block; width:.8em;}
 .yield{color:var(--green); font-weight:800;}
-tr.detail td{background:var(--bg3); padding:1rem 1rem 1.3rem;}
-.detail-head{font-family:var(--mono); font-size:.68rem; color:var(--text-dim); letter-spacing:.5px; margin-bottom:.7rem;}
-.weeks{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:1rem;}
-.wk{border:1px solid rgba(0,240,255,.1); background:var(--bg2);}
-.wk h4{font-family:var(--mono); font-size:.68rem; color:var(--cyan); letter-spacing:1px; text-transform:uppercase; padding:.5rem .7rem; border-bottom:1px solid rgba(0,240,255,.1);}
-.wk table{font-size:.72rem; width:100%;}
-.wk th,.wk td{padding:.32rem .6rem; text-align:right; white-space:nowrap; border-bottom:1px solid rgba(0,240,255,.04);}
-.wk th{position:static; background:transparent; color:var(--text-dim); cursor:default;}
-.wk th:first-child,.wk td:first-child{text-align:left;}
-.wk td{color:var(--text);}
+tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
+.detail-head{font-family:var(--mono); font-size:.68rem; color:var(--text-dim); letter-spacing:.3px; margin-bottom:.7rem;}
+.weeks{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1rem;}
+.wk-card{border:1px solid var(--line); background:#fff; border-radius:6px; overflow:hidden;}
+.wk-card h4{font-family:var(--mono); font-size:.68rem; color:var(--cyan); letter-spacing:1px; text-transform:uppercase; padding:.5rem .7rem; border-bottom:1px solid var(--line);}
+.wk-card table{font-size:.72rem; width:100%;}
+.wk-card th,.wk-card td{padding:.32rem .6rem; text-align:right; white-space:nowrap; border-bottom:1px solid var(--line);}
+.wk-card th{position:static; background:transparent; color:var(--text-dim); cursor:default;}
+.wk-card th:first-child,.wk-card td:first-child{text-align:left;}
+.wk-card tr.rec td{background:var(--rec); font-weight:700;}
+.wkpct{color:var(--green); font-weight:700;}
+.pick{display:inline-block; background:var(--green); color:#fff; font-size:.55rem; font-weight:800; letter-spacing:.5px; padding:.05rem .35rem; border-radius:3px; margin-right:.35rem; vertical-align:middle;}
 .empty{padding:3rem; text-align:center; color:var(--text-dim); font-family:var(--mono); font-size:.8rem;}
-.err{color:#f85149; font-family:var(--mono); font-size:.8rem; padding:1rem 0;}
-.disc{font-family:var(--mono); font-size:.65rem; color:var(--text-dim); line-height:1.9; margin-top:1.5rem; border-left:2px solid rgba(255,106,47,.3); padding-left:1rem;}
+.err{color:#c0392b; font-family:var(--mono); font-size:.8rem; padding:1rem 0;}
+.disc{font-family:var(--mono); font-size:.65rem; color:var(--text-dim); line-height:1.9; margin-top:1.5rem; border-left:2px solid var(--orange); padding-left:1rem;}
 @media(max-width:900px){ .stats{grid-template-columns:repeat(2,1fr);} .nav-links{display:none;} }
 </style>
 </head>
@@ -97,11 +100,10 @@ tr.detail td{background:var(--bg3); padding:1rem 1rem 1.3rem;}
   <div class="label"><div class="bar"></div><div class="text">Options Lab</div></div>
   <h1>Cash-Secured <span class="cyan">Put</span> Scanner</h1>
   <div class="subtitle">
-    Top 20 cash-secured puts on underlyings under $500, ranked by premium ($) received,
-    where the <b style="color:var(--text)">30-day normalized yield</b> sits between 0.7% and 1.0%.
-    Out-of-the-money only &middot; |delta| &le; 0.35 &middot; open interest &ge; 50.
-    Quotes sourced from CBOE (delayed ~15 min).<br>
-    <span style="color:var(--cyan)">▸ Tip: click a ticker to see its next 4 weekly/bi-weekly expirations and premiums.</span>
+    Top 20 cash-secured puts on underlyings under $500, ranked by premium ($) received.
+    Quotes from CBOE (delayed ~15 min).<br>
+    <span style="color:var(--cyan)">▸ Click a ticker</span> to see its next 4 weekly/bi-weekly expirations. Each one flags the
+    <b style="color:var(--green)">★ optimal strike</b> — premium 0.7–1.0% that week with the lowest assignment risk.
   </div>
 
   <div class="stats" id="stats"></div>
@@ -125,7 +127,8 @@ tr.detail td{background:var(--bg3); padding:1rem 1rem 1.3rem;}
 
   <div class="disc">
     DISCLAIMER: For educational/informational purposes only. Not investment advice.<br>
-    Data is from CBOE delayed quotes (~15 min) and refreshed by a scheduled scan. Verify all quotes with your broker before trading.
+    "Assign~" is the option delta as a rough probability of finishing in-the-money (being assigned); lower is safer.
+    Data is CBOE delayed (~15 min). Verify all quotes with your broker before trading.
   </div>
 </div>
 
@@ -169,18 +172,22 @@ function render(){
 }
 function renderDetail(r){
   const wks=r.weeklies||[];
-  if(!wks.length) return `<tr class="detail"><td colspan="${COLS.length}">No upcoming-expiration detail available for ${r.symbol}.</td></tr>`;
+  if(!wks.length) return `<tr class="detail"><td colspan="${COLS.length}">No upcoming-expiration detail for ${r.symbol}.</td></tr>`;
   const blocks=wks.map(w=>{
-    const body=w.puts.map(p=>
-      `<tr><td>$${p.strike.toFixed(2)}</td><td>$${p.premium.toFixed(2)}</td>`+
-      `<td class="yield">${p.yield_30d_pct.toFixed(2)}%</td>`+
-      `<td>${p.delta==null?"—":p.delta}</td><td>${p.open_interest.toLocaleString()}</td></tr>`).join("");
-    return `<div class="wk"><h4>${w.expiration} &middot; ${w.dte}d</h4>`+
-      `<table><thead><tr><th>Strike</th><th>Premium</th><th>Yld30</th><th>Δ</th><th>OI</th></tr></thead>`+
+    const body=w.puts.map(p=>{
+      const badge=p.recommended?'<span class="pick">★ PICK</span>':'';
+      const assign=p.delta==null?"—":(Math.abs(p.delta)*100).toFixed(0)+"%";
+      return `<tr class="${p.recommended?'rec':''}"><td>${badge}$${p.strike.toFixed(2)}</td>`+
+        `<td>$${p.premium.toFixed(2)}</td>`+
+        `<td class="wkpct">${p.pct_of_collateral.toFixed(2)}%</td>`+
+        `<td>${assign}</td><td>${p.open_interest.toLocaleString()}</td></tr>`;
+    }).join("");
+    return `<div class="wk-card"><h4>${w.expiration} &middot; ${w.dte}d</h4>`+
+      `<table><thead><tr><th>Strike</th><th>Premium</th><th>Wk %</th><th>Assign~</th><th>OI</th></tr></thead>`+
       `<tbody>${body}</tbody></table></div>`;
   }).join("");
   return `<tr class="detail"><td colspan="${COLS.length}">`+
-    `<div class="detail-head">${r.symbol} — next ${wks.length} expirations &middot; spot $${r.price.toFixed(2)} &middot; OTM puts, nearest-the-money first &middot; premium = per contract (×100)</div>`+
+    `<div class="detail-head">${r.symbol} — spot $${r.price.toFixed(2)} &middot; ★ optimal strike = premium 0.7–1.0% that week with lowest assignment risk &middot; premium per contract (×100)</div>`+
     `<div class="weeks">${blocks}</div></td></tr>`;
 }
 function sortBy(k){ if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=-1;} render(); }
@@ -189,7 +196,7 @@ function setStats(){
   const cells=[
     [DATA.result_count??0,"Symbols shown (top "+(p.top_n||20)+")"],
     [DATA.total_qualifying??DATA.scanned_under_price??"—","Qualifying contracts < $"+(p.max_underlying_price||500)],
-    [(p.yield_band_30d_pct?p.yield_band_30d_pct.join("–")+"%":"0.7–1.0%"),"30-day yield band"],
+    [(p.yield_band_30d_pct?p.yield_band_30d_pct.join("–")+"%":"0.7–1.0%"),"Premium band"],
     [DATA.generated_at?DATA.generated_at.replace("T"," "):"never","Last scan"]
   ];
   document.getElementById("stats").innerHTML=cells.map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
@@ -204,7 +211,7 @@ async function loadResults(){
   render();
 }
 loadResults();
-setInterval(loadResults, 300000);  // pick up new scans every 5 min
+setInterval(loadResults, 300000);
 </script>
 </body>
 </html>
