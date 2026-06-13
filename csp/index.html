@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CSP Scanner — GlobeSec.ai</title>
-<meta name="description" content="Cash-secured put scanner: optionable stocks under $300 with a 30-day normalized yield of 0.7%-1.0%. CBOE delayed data.">
+<meta name="description" content="Cash-secured put scanner: optionable stocks under $500 with a 30-day normalized yield of 0.7%-1.0%. CBOE delayed data.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -100,7 +100,8 @@ tr.detail td{background:var(--bg3); padding:1rem 1rem 1.3rem;}
     Top 20 cash-secured puts on underlyings under $500, ranked by premium ($) received,
     where the <b style="color:var(--text)">30-day normalized yield</b> sits between 0.7% and 1.0%.
     Out-of-the-money only &middot; |delta| &le; 0.35 &middot; open interest &ge; 50.
-    Quotes sourced from CBOE (delayed ~15 min).
+    Quotes sourced from CBOE (delayed ~15 min).<br>
+    <span style="color:var(--cyan)">▸ Tip: click a ticker to see its next 4 weekly/bi-weekly expirations and premiums.</span>
   </div>
 
   <div class="stats" id="stats"></div>
