@@ -130,6 +130,9 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
   <div class="acct-hd" id="acctHd" style="display:none">▸ Account Picks — next 2 weeks</div>
   <div class="accounts" id="accounts"></div>
 
+  <div class="acct-hd" id="topHd" style="display:none">▸ Top 10 Picks</div>
+  <div class="tablewrap" id="top10" style="margin-bottom:2rem"></div>
+
   <div class="stats" id="stats"></div>
 
   <div class="toolbar">
@@ -175,7 +178,34 @@ function setSort(m){ sortMode=m; render(); }
 
 function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
 function usd0(v){return "$"+Number(v).toLocaleString(undefined,{maximumFractionDigits:0});}
-function shortDate(s){const d=new Date(s+"T00:00:00");return d.toLocaleDateString(undefined,{month:"short",day:"numeric"});}
+function fmtFull(s){ if(!s) return "—"; const d=new Date(s+"T00:00:00"); return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}); }
+let priceBySym={};
+function otmPct(spot,strike){ return spot ? ((spot-strike)/spot*100) : null; }
+function nearestPick(r){
+  for(const w of (r.weeklies||[])){
+    const rec=(w.puts||[]).find(p=>p.recommended);
+    if(rec) return {...rec, expiration:w.expiration, dte:w.dte};
+  }
+  return null;
+}
+function renderTop10(){
+  const rows=(DATA.results||[]).slice(0,10);
+  document.getElementById("topHd").style.display = rows.length?"block":"none";
+  if(!rows.length){ document.getElementById("top10").innerHTML=""; return; }
+  const body=rows.map((r,i)=>{
+    const p=nearestPick(r) || {strike:r.strike, expiration:r.expiration, premium:r.premium, pct_of_collateral:null, delta:r.delta};
+    const otm=otmPct(r.price,p.strike);
+    const assign=p.delta==null?"—":(Math.abs(p.delta)*100).toFixed(0)+"%";
+    const wk=p.pct_of_collateral!=null?p.pct_of_collateral.toFixed(2)+"%":(r.yield_30d_pct.toFixed(2)+"%");
+    return `<tr><td>${i+1}</td><td class="sym">${r.symbol}${r.preferred?'<span class="watch">WATCH</span>':''}</td>`+
+      `<td>${money(r.price)}</td><td>$${p.strike.toFixed(2)}</td>`+
+      `<td>${otm==null?"—":otm.toFixed(1)+"%"}</td>`+
+      `<td>${fmtFull(p.expiration)}</td><td>$${p.premium.toFixed(2)}</td>`+
+      `<td class="wkpct">${wk}</td><td>${assign}</td></tr>`;
+  }).join("");
+  document.getElementById("top10").innerHTML=
+    `<table><thead><tr><th>#</th><th>Symbol</th><th>Spot</th><th>Strike</th><th>% OTM</th><th>Expiry</th><th>Premium</th><th>Wk %</th><th>Assign~</th></tr></thead><tbody>${body}</tbody></table>`;
+}
 function renderAccounts(){
   const aps=DATA.account_picks||[];
   document.getElementById("acctHd").style.display = aps.length?"block":"none";
@@ -186,14 +216,18 @@ function renderAccounts(){
     const ay=p.account_yield_pct;
     const ayColor = (ay>=0.7) ? "var(--green)" : "#c0392b";
     const flag = (ay>=0.7) ? "" : ` <span style="color:#c0392b">⚠ below 0.7%</span>`;
+    const spot=priceBySym[p.symbol];
+    const otm=spot?otmPct(spot,p.strike):null;
     return `<div class="acct-card" style="${ay>=0.7?'':'border-left-color:#c0392b'}">`+
       `<div class="acct-name"><span>${a.account}</span><b>${usd0(a.balance)}</b></div>`+
       `<div class="acct-trade">SELL ${p.contracts}× ${p.symbol} $${p.strike} PUT</div>`+
-      `<div class="acct-sub">${p.company_name||p.symbol} &middot; exp ${shortDate(p.expiration)} (${p.dte}d)${p.preferred?' &middot; <span style="color:var(--cyan)">★ watchlist</span>':''}</div>`+
+      `<div class="acct-sub">${p.company_name||p.symbol} &middot; exp ${fmtFull(p.expiration)} (${p.dte}d)${p.preferred?' &middot; <span style="color:var(--cyan)">★ watchlist</span>':''}</div>`+
       `<div class="acct-metrics">`+
         `<div><span>Acct yield</span><b style="color:${ayColor}">${ay.toFixed(2)}%</b>${flag}</div>`+
         `<div><span>Premium</span><b>$${p.total_premium.toLocaleString()}</b></div>`+
         `<div><span>Assign~</span><b>${assign}</b></div>`+
+        `<div><span>Spot price</span><b>${spot?money(spot):"—"}</b></div>`+
+        `<div><span>Strike vs spot</span><b>${otm==null?"—":otm.toFixed(1)+"% OTM"}</b></div>`+
         `<div><span>Yield/wk</span><b>${p.pct_of_collateral.toFixed(2)}%</b></div>`+
         `<div><span>Util</span><b>${p.utilization_pct}%</b></div>`+
         `<div><span>Cash left</span><b>${usd0(p.cash_left)}</b></div>`+
@@ -205,6 +239,7 @@ function fmt(k,v){
   if(["price","strike","bid","collateral","premium"].includes(k)) return money(v);
   if(k==="yield_30d_pct") return Number(v).toFixed(3)+"%";
   if(k==="annualized_pct") return Number(v).toFixed(1)+"%";
+  if(k==="expiration") return fmtFull(v);
   return v;
 }
 function render(){
@@ -259,7 +294,7 @@ function renderDetail(r){
         `<td class="wkpct">${p.pct_of_collateral.toFixed(2)}%</td>`+
         `<td>${assign}</td><td>${p.open_interest.toLocaleString()}</td></tr>`;
     }).join("") : `<tr><td colspan="5" style="color:var(--text-dim);text-align:center">No strike in 0.7–1.0% this week</td></tr>`;
-    return `<div class="wk-card"><h4>${w.expiration} &middot; ${w.dte}d</h4>`+
+    return `<div class="wk-card"><h4>${fmtFull(w.expiration)} &middot; ${w.dte}d</h4>`+
       `<table><thead><tr><th>Strike</th><th>Premium</th><th>Wk %</th><th>Assign~</th><th>OI</th></tr></thead>`+
       `<tbody>${body}</tbody></table></div>`;
   }).join("");
@@ -275,7 +310,7 @@ function setStats(){
     [DATA.result_count??0,"Symbols shown (top "+(p.top_n||20)+")"],
     [DATA.total_qualifying??DATA.scanned_under_price??"—","Qualifying contracts < $"+(p.max_underlying_price||500)],
     [(p.yield_band_30d_pct?p.yield_band_30d_pct.join("–")+"%":"0.7–1.0%"),"Premium band"],
-    [DATA.generated_at?DATA.generated_at.replace("T"," "):"never","Last scan"]
+    [DATA.generated_at?(fmtFull(DATA.generated_at.slice(0,10))+" "+DATA.generated_at.slice(11,16)):"never","Last scan"]
   ];
   document.getElementById("stats").innerHTML=cells.map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
 }
@@ -286,7 +321,9 @@ async function loadResults(){
     if(!r.ok) throw new Error("results.json "+r.status);
     DATA=await r.json();
   }catch(e){ err.style.display="block"; err.textContent="Could not load data: "+e.message; DATA={results:[]}; }
+  priceBySym=Object.fromEntries((DATA.results||[]).map(r=>[r.symbol,r.price]));
   renderAccounts();
+  renderTop10();
   render();
 }
 loadResults();
