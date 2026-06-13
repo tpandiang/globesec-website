@@ -33,6 +33,14 @@ MAX_ABS_DELTA = _f("MAX_ABS_DELTA", 0.35)                  # only sell puts at/u
 MIN_OPEN_INTEREST = _i("MIN_OPEN_INTEREST", 50)           # liquidity floor
 MIN_BID = _f("MIN_BID", 0.05)                             # ignore no-bid contracts
 
+# --- Accounts (for per-account picks at the top of the page) ---
+ACCOUNTS = [
+    {"name": "OPT-J", "balance": 46000.0},
+    {"name": "OPT-C", "balance": 34000.0},
+    # add the third account here, e.g. {"name": "OPT-X", "balance": 25000.0},
+]
+ACCOUNT_WEEKS = _i("ACCOUNT_WEEKS", 2)                     # pick horizon: next N weeks
+
 # --- Runtime ---
 SCAN_WORKERS = _i("SCAN_WORKERS", 6)                      # concurrent underlyings
 REQUESTS_PER_MINUTE = _i("REQUESTS_PER_MINUTE", 240)      # politeness limit for CBOE

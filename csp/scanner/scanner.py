@@ -144,6 +144,62 @@ def _eval_underlying(client: Cboe, symbol: str, today: dt.date) -> dict:
     return {"under": True, "rows": rows, "chain": chain, "price": price}
 
 
+def build_account_picks(rows: list[dict]) -> list[dict]:
+    """For each configured account, choose the best-fit cash-secured put among the
+    OPTIMAL (safest in-band) strikes in the next ACCOUNT_WEEKS weekly expirations:
+    the one that deploys the most capital / earns the most total premium while the
+    per-contract collateral fits the account balance. Returns one pick per account."""
+    cands: list[dict] = []
+    for r in rows:
+        for w in (r.get("weeklies") or [])[: config.ACCOUNT_WEEKS]:
+            for p in w["puts"]:
+                if not p.get("recommended"):     # only the safest-in-band strike per week
+                    continue
+                cands.append(
+                    {
+                        "symbol": r["symbol"],
+                        "company_name": r.get("company_name"),
+                        "expiration": w["expiration"],
+                        "dte": w["dte"],
+                        "strike": p["strike"],
+                        "bid": p["bid"],
+                        "premium": p["premium"],
+                        "pct_of_collateral": p["pct_of_collateral"],
+                        "delta": p["delta"],
+                        "open_interest": p["open_interest"],
+                        "collateral": round(p["strike"] * 100, 2),
+                    }
+                )
+
+    out: list[dict] = []
+    for acct in config.ACCOUNTS:
+        bal = float(acct["balance"])
+        best = None
+        best_key = None
+        for c in cands:
+            if c["collateral"] > bal:
+                continue
+            contracts = int(bal // c["collateral"])
+            if contracts < 1:
+                continue
+            total_premium = round(contracts * c["premium"], 2)
+            used = round(contracts * c["collateral"], 2)
+            risk = abs(c["delta"]) if c["delta"] is not None else 1.0
+            key = (total_premium, -risk)         # max income, then lower assignment risk
+            if best_key is None or key > best_key:
+                best_key = key
+                best = {
+                    **c,
+                    "contracts": contracts,
+                    "total_premium": total_premium,
+                    "capital_used": used,
+                    "utilization_pct": round(used / bal * 100, 1),
+                    "cash_left": round(bal - used, 2),
+                }
+        out.append({"account": acct["name"], "balance": bal, "pick": best})
+    return out
+
+
 def run_scan(symbols: list[str], progress=None) -> dict:
     """Full scan. `progress(done, total, stage)` is an optional callback."""
     client = Cboe()
@@ -198,9 +254,12 @@ def run_scan(symbols: list[str], progress=None) -> dict:
         if ch:
             r["weeklies"] = build_weeklies(ch[0], ch[1], today)
 
+    account_picks = build_account_picks(rows)
+
     return {
         "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
         "data_source": "CBOE delayed (~15 min)",
+        "account_picks": account_picks,
         "params": {
             "max_underlying_price": config.MAX_UNDERLYING_PRICE,
             "dte_window": [config.DTE_MIN, config.DTE_MAX],

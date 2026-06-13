@@ -47,6 +47,17 @@ h1 .cyan{color:var(--cyan);}
 .spacer{flex:1;}
 .pill{display:inline-flex; align-items:center; gap:.5rem; font-family:var(--mono); font-size:.65rem; letter-spacing:1px; text-transform:uppercase; padding:.45rem .8rem; border:1px solid var(--line); background:#fff; color:var(--orange); border-radius:5px;}
 .pill .dot{width:8px; height:8px; border-radius:50%; background:var(--orange);}
+.acct-hd{font-family:var(--mono); font-size:.7rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--orange); margin-bottom:.6rem;}
+.accounts{display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:1rem; margin-bottom:2rem;}
+.acct-card{background:#fff; border:1px solid var(--line); border-left:4px solid var(--green); border-radius:8px; padding:1rem 1.2rem; box-shadow:0 1px 4px rgba(20,40,80,.05);}
+.acct-name{font-family:var(--mono); font-size:.72rem; font-weight:700; letter-spacing:1px; color:var(--text-dim); text-transform:uppercase; display:flex; justify-content:space-between; align-items:center;}
+.acct-name b{color:var(--cyan); font-size:.85rem;}
+.acct-trade{font-family:var(--sans); font-weight:800; font-size:1.15rem; color:var(--white); margin:.55rem 0 .15rem;}
+.acct-sub{font-family:var(--mono); font-size:.7rem; color:var(--text-dim); margin-bottom:.8rem;}
+.acct-metrics{display:grid; grid-template-columns:repeat(3,1fr); gap:.6rem .4rem; font-family:var(--mono);}
+.acct-metrics span{display:block; color:var(--text-dim); font-size:.56rem; text-transform:uppercase; letter-spacing:.5px;}
+.acct-metrics b{color:var(--text); font-size:.85rem; font-weight:700;}
+.acct-none{font-family:var(--mono); font-size:.78rem; color:var(--text-dim); padding:.6rem 0;}
 .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); margin-bottom:1.5rem; border:1px solid var(--line); border-radius:6px; overflow:hidden;}
 .stat{background:#fff; padding:1rem 1.25rem;}
 .stat .n{font-family:var(--mono); font-size:1.4rem; font-weight:800; color:var(--cyan);}
@@ -113,6 +124,9 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
     <b style="color:var(--green)">top 3 optimal strikes</b> (premium 0.7–1.0% that week, ranked safest-first / lowest assignment risk).
   </div>
 
+  <div class="acct-hd" id="acctHd" style="display:none">▸ Account Picks — next 2 weeks</div>
+  <div class="accounts" id="accounts"></div>
+
   <div class="stats" id="stats"></div>
 
   <div class="toolbar">
@@ -150,6 +164,29 @@ const expanded=new Set();
 function toggle(sym){ expanded.has(sym)?expanded.delete(sym):expanded.add(sym); render(); }
 
 function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function usd0(v){return "$"+Number(v).toLocaleString(undefined,{maximumFractionDigits:0});}
+function shortDate(s){const d=new Date(s+"T00:00:00");return d.toLocaleDateString(undefined,{month:"short",day:"numeric"});}
+function renderAccounts(){
+  const aps=DATA.account_picks||[];
+  document.getElementById("acctHd").style.display = aps.length?"block":"none";
+  document.getElementById("accounts").innerHTML = aps.map(a=>{
+    const p=a.pick;
+    if(!p) return `<div class="acct-card" style="border-left-color:var(--text-dim)"><div class="acct-name"><span>${a.account}</span><b>${usd0(a.balance)}</b></div><div class="acct-none">No CSP fits this balance.</div></div>`;
+    const assign=p.delta==null?"—":(Math.abs(p.delta)*100).toFixed(0)+"%";
+    return `<div class="acct-card">`+
+      `<div class="acct-name"><span>${a.account}</span><b>${usd0(a.balance)}</b></div>`+
+      `<div class="acct-trade">SELL ${p.contracts}× ${p.symbol} $${p.strike} PUT</div>`+
+      `<div class="acct-sub">${p.company_name||p.symbol} &middot; exp ${shortDate(p.expiration)} (${p.dte}d)</div>`+
+      `<div class="acct-metrics">`+
+        `<div><span>Premium</span><b>$${p.total_premium.toLocaleString()}</b></div>`+
+        `<div><span>Yield/wk</span><b>${p.pct_of_collateral.toFixed(2)}%</b></div>`+
+        `<div><span>Assign~</span><b>${assign}</b></div>`+
+        `<div><span>Capital</span><b>${usd0(p.capital_used)}</b></div>`+
+        `<div><span>Util</span><b>${p.utilization_pct}%</b></div>`+
+        `<div><span>Cash left</span><b>${usd0(p.cash_left)}</b></div>`+
+      `</div></div>`;
+  }).join("");
+}
 function fmt(k,v){
   if(v===null||v===undefined) return "—";
   if(["price","strike","bid","collateral","premium"].includes(k)) return money(v);
@@ -231,6 +268,7 @@ async function loadResults(){
     if(!r.ok) throw new Error("results.json "+r.status);
     DATA=await r.json();
   }catch(e){ err.style.display="block"; err.textContent="Could not load data: "+e.message; DATA={results:[]}; }
+  renderAccounts();
   render();
 }
 loadResults();
