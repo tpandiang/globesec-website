@@ -1,5 +1,6 @@
-"""Central configuration. All values can be overridden via environment variables
-(loaded from a .env file in development)."""
+"""Central configuration. Values can be overridden via environment variables
+(loaded from a .env file in development). Data source is CBOE delayed quotes —
+no API key or account required."""
 import os
 from dotenv import load_dotenv
 
@@ -20,11 +21,6 @@ def _i(name: str, default: int) -> int:
         return default
 
 
-# --- Tradier API ---
-TRADIER_TOKEN = os.getenv("TRADIER_TOKEN", "")
-# Production: https://api.tradier.com  |  Sandbox (delayed): https://sandbox.tradier.com
-TRADIER_BASE_URL = os.getenv("TRADIER_BASE_URL", "https://api.tradier.com").rstrip("/")
-
 # --- Screen criteria ---
 MAX_UNDERLYING_PRICE = _f("MAX_UNDERLYING_PRICE", 300.0)   # only stocks under this price
 DTE_MIN = _i("DTE_MIN", 21)                                # "monthly" expiration window (days)
@@ -37,9 +33,8 @@ MIN_OPEN_INTEREST = _i("MIN_OPEN_INTEREST", 50)           # liquidity floor
 MIN_BID = _f("MIN_BID", 0.05)                             # ignore no-bid contracts
 
 # --- Runtime ---
-SCAN_WORKERS = _i("SCAN_WORKERS", 4)                      # concurrent underlyings
-REQUESTS_PER_MINUTE = _i("REQUESTS_PER_MINUTE", 110)      # Tradier rate limit guard
-QUOTE_BATCH_SIZE = _i("QUOTE_BATCH_SIZE", 100)            # symbols per quotes call
+SCAN_WORKERS = _i("SCAN_WORKERS", 6)                      # concurrent underlyings
+REQUESTS_PER_MINUTE = _i("REQUESTS_PER_MINUTE", 240)      # politeness limit for CBOE
 
 DATA_DIR = os.getenv("DATA_DIR", os.path.join(os.path.dirname(__file__), "data"))
 RESULTS_FILE = os.path.join(DATA_DIR, "results.json")

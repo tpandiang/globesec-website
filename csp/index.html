@@ -4,17 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CSP Scanner — GlobeSec.ai</title>
-<meta name="description" content="Cash-secured put scanner: optionable stocks under $300 with a 30-day normalized yield of 0.7%-1.0%.">
+<meta name="description" content="Cash-secured put scanner: optionable stocks under $300 with a 30-day normalized yield of 0.7%-1.0%. CBOE delayed data.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 :root{
   --bg:#0a0a0c; --bg2:#0f1114; --bg3:#141619;
-  --cyan:#00f0ff; --cyan-dim:rgba(0,240,255,0.15);
-  --orange:#ff6a2f; --orange-glow:rgba(255,106,47,0.25);
-  --text:#c8ccd0; --text-dim:#5a6270; --white:#eef0f2;
-  --green:#2ecc71;
+  --cyan:#00f0ff; --orange:#ff6a2f; --orange-glow:rgba(255,106,47,0.25);
+  --text:#c8ccd0; --text-dim:#5a6270; --white:#eef0f2; --green:#2ecc71;
   --mono:'JetBrains Mono','Fira Code','Consolas',monospace;
   --sans:'Inter',system-ui,-apple-system,sans-serif;
 }
@@ -39,21 +37,15 @@ nav{position:fixed; top:0; width:100%; z-index:1000; background:rgba(10,10,12,0.
 .label .text{font-family:var(--mono); font-size:.7rem; font-weight:700; color:var(--orange); letter-spacing:2px; text-transform:uppercase;}
 h1{font-size:clamp(2rem,5vw,3rem); font-weight:900; color:var(--white); letter-spacing:-1px; margin-bottom:.5rem;}
 h1 .cyan{color:var(--cyan); text-shadow:0 0 40px rgba(0,240,255,.3);}
-.subtitle{font-family:var(--mono); font-size:.8rem; color:var(--text-dim); letter-spacing:.5px; margin-bottom:2rem; max-width:760px; line-height:1.8;}
+.subtitle{font-family:var(--mono); font-size:.8rem; color:var(--text-dim); letter-spacing:.5px; margin-bottom:2rem; max-width:780px; line-height:1.8;}
 .toolbar{display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-bottom:1.5rem;}
 .toolbar input{background:var(--bg2); border:1px solid rgba(0,240,255,.12); color:var(--text); font-family:var(--mono); font-size:.8rem; padding:.6rem .9rem; outline:none; min-width:200px;}
 .toolbar input:focus{border-color:var(--cyan); box-shadow:0 0 10px rgba(0,240,255,.08);}
 .btn{background:var(--orange); color:var(--bg); border:none; cursor:pointer; font-family:var(--mono); font-weight:700; font-size:.8rem; letter-spacing:1px; text-transform:uppercase; padding:.6rem 1.2rem; transition:box-shadow .3s;}
 .btn:hover{box-shadow:0 0 25px var(--orange-glow);}
 .spacer{flex:1;}
-/* live pill */
-.pill{display:inline-flex; align-items:center; gap:.5rem; font-family:var(--mono); font-size:.65rem; letter-spacing:1px; text-transform:uppercase; padding:.45rem .8rem; border:1px solid rgba(0,240,255,.12); background:var(--bg2);}
-.pill .dot{width:8px; height:8px; border-radius:50%; background:var(--text-dim);}
-.pill.live .dot{background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 1.6s ease-in-out infinite;}
-.pill.live{color:var(--green); border-color:rgba(46,204,113,.3);}
-.pill.snap{color:var(--orange);}
-.pill.snap .dot{background:var(--orange);}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pill{display:inline-flex; align-items:center; gap:.5rem; font-family:var(--mono); font-size:.65rem; letter-spacing:1px; text-transform:uppercase; padding:.45rem .8rem; border:1px solid rgba(255,106,47,.3); background:var(--bg2); color:var(--orange);}
+.pill .dot{width:8px; height:8px; border-radius:50%; background:var(--orange);}
 .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:rgba(0,240,255,.06); margin-bottom:1.5rem;}
 .stat{background:var(--bg2); padding:1rem 1.25rem;}
 .stat .n{font-family:var(--mono); font-size:1.4rem; font-weight:800; color:var(--cyan);}
@@ -68,8 +60,6 @@ td{font-family:var(--mono);}
 tr:hover td{background:rgba(0,240,255,.03);}
 .sym{font-weight:800; color:var(--white); font-family:var(--mono);}
 .yield{color:var(--green); font-weight:800;}
-.flash{animation:flash .8s ease-out;}
-@keyframes flash{from{background:rgba(0,240,255,.18)}to{background:transparent}}
 .empty{padding:3rem; text-align:center; color:var(--text-dim); font-family:var(--mono); font-size:.8rem;}
 .err{color:#f85149; font-family:var(--mono); font-size:.8rem; padding:1rem 0;}
 .disc{font-family:var(--mono); font-size:.65rem; color:var(--text-dim); line-height:1.9; margin-top:1.5rem; border-left:2px solid rgba(255,106,47,.3); padding-left:1rem;}
@@ -97,15 +87,16 @@ tr:hover td{background:rgba(0,240,255,.03);}
   <div class="subtitle">
     Optionable underlyings under $300, filtered to puts whose <b style="color:var(--text)">30-day normalized yield</b>
     sits between 0.7% and 1.0%. Out-of-the-money only &middot; |delta| &le; 0.35 &middot; open interest &ge; 50.
+    Quotes sourced from CBOE (delayed ~15 min).
   </div>
 
   <div class="stats" id="stats"></div>
 
   <div class="toolbar">
     <input id="filter" placeholder="filter symbol…" oninput="render()">
-    <span id="livePill" class="pill"><span class="dot"></span><span id="liveTxt">connecting…</span></span>
+    <span class="pill"><span class="dot"></span>Delayed ~15 min</span>
     <span class="spacer"></span>
-    <button class="btn" onclick="fullReload()">↻ Refresh</button>
+    <button class="btn" onclick="loadResults()">↻ Refresh</button>
   </div>
 
   <div class="err" id="err" style="display:none"></div>
@@ -120,8 +111,7 @@ tr:hover td{background:rgba(0,240,255,.03);}
 
   <div class="disc">
     DISCLAIMER: For educational/informational purposes only. Not investment advice.<br>
-    Qualifying contracts come from a scheduled scan; quote columns update live via the Tradier proxy when available.
-    Verify all quotes with your broker before trading.
+    Data is from CBOE delayed quotes (~15 min) and refreshed by a scheduled scan. Verify all quotes with your broker before trading.
   </div>
 </div>
 
@@ -131,36 +121,9 @@ const COLS=[
   ["strike","Strike"],["bid","Bid"],["delta","Δ"],["open_interest","OI"],
   ["collateral","Collateral"],["premium","Premium"],["yield_30d_pct","Yield 30d"],["annualized_pct","Annual"]
 ];
-const LIVE_ENDPOINT = "/api/quotes";   // Cloudflare Worker
-const REFRESH_MS = 20000;              // live quote poll interval
-
-let DATA={results:[]};                 // snapshot from results.json
-let LIVE={};                           // {optionSymbol|underlying: {last,bid,ask}}
-let liveOk=false, lastLiveAt=null, prevYield={};
-let sortKey="yield_30d_pct", sortDir=-1;
+let DATA={results:[]}, sortKey="yield_30d_pct", sortDir=-1;
 
 function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
-function daysTo(exp){ const d=Math.round((new Date(exp+"T00:00:00")-new Date())/86400000); return Math.max(1,d); }
-
-// Merge snapshot row with any live quote -> effective values
-function effective(r){
-  const oq = r.option_symbol ? LIVE[r.option_symbol] : null;
-  const uq = LIVE[r.symbol];
-  const bid = (oq && oq.bid!=null) ? oq.bid : r.bid;
-  const price = (uq && uq.last!=null) ? uq.last : r.price;
-  const dte = daysTo(r.expiration);
-  const raw = bid / r.strike;
-  return {
-    ...r,
-    price: price,
-    bid: bid,
-    dte: dte,
-    premium: Math.round(bid*100*100)/100,
-    yield_30d_pct: Math.round(raw*(30/dte)*100*1000)/1000,
-    annualized_pct: Math.round(raw*(365/dte)*100*100)/100,
-    _live: !!(oq && oq.bid!=null),
-  };
-}
 function fmt(k,v){
   if(v===null||v===undefined) return "—";
   if(["price","strike","bid","collateral","premium"].includes(k)) return money(v);
@@ -172,71 +135,37 @@ function render(){
   document.getElementById("head").innerHTML=COLS.map(([k,l])=>
     `<th onclick="sortBy('${k}')">${l}${sortKey===k?(sortDir<0?" ▼":" ▲"):""}</th>`).join("");
   const q=document.getElementById("filter").value.trim().toUpperCase();
-  let rows=DATA.results.map(effective);
+  let rows=DATA.results.slice();
   if(q) rows=rows.filter(r=>r.symbol.includes(q));
   rows.sort((a,b)=>{const x=a[sortKey],y=b[sortKey]; if(x===y)return 0; return (x>y?1:-1)*sortDir;});
-  document.getElementById("body").innerHTML=rows.map(r=>{
-    const key=r.option_symbol||r.symbol;
-    const changed = r._live && prevYield[key]!==undefined && prevYield[key]!==r.yield_30d_pct;
-    prevYield[key]=r.yield_30d_pct;
-    return "<tr>"+COLS.map(([k])=>{
-      let cls=k==="symbol"?"sym":k==="yield_30d_pct"?"yield":"";
-      if(changed && (k==="bid"||k==="yield_30d_pct"||k==="price"||k==="premium"||k==="annualized_pct")) cls+=" flash";
-      return `<td class="${cls}">${fmt(k,r[k])}</td>`;
-    }).join("")+"</tr>";
-  }).join("");
+  document.getElementById("body").innerHTML=rows.map(r=>"<tr>"+COLS.map(([k])=>{
+    const cls=k==="symbol"?"sym":k==="yield_30d_pct"?"yield":""; return `<td class="${cls}">${fmt(k,r[k])}</td>`;
+  }).join("")+"</tr>").join("");
   document.getElementById("empty").style.display=rows.length?"none":"block";
-  setStats(rows.length);
+  setStats();
 }
 function sortBy(k){ if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=-1;} render(); }
-
-function setStats(shown){
+function setStats(){
   const p=DATA.params||{};
   const cells=[
-    [shown??(DATA.result_count??0),"Contracts shown"],
+    [DATA.result_count??0,"Contracts found"],
     [DATA.scanned_under_price??"—","Scanned < $"+(p.max_underlying_price||300)],
     [(p.yield_band_30d_pct?p.yield_band_30d_pct.join("–")+"%":"0.7–1.0%"),"30-day yield band"],
     [DATA.generated_at?DATA.generated_at.replace("T"," "):"never","Last scan"]
   ];
   document.getElementById("stats").innerHTML=cells.map(([n,l])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
 }
-function setPill(){
-  const pill=document.getElementById("livePill"), txt=document.getElementById("liveTxt");
-  pill.className="pill "+(liveOk?"live":"snap");
-  if(liveOk){ const t=lastLiveAt?new Date(lastLiveAt).toLocaleTimeString():""; txt.textContent="Live · "+t; }
-  else txt.textContent="Snapshot (live offline)";
-}
-
-async function loadSnapshot(){
+async function loadResults(){
   const err=document.getElementById("err"); err.style.display="none";
   try{
     const r=await fetch("results.json?_="+Date.now());
     if(!r.ok) throw new Error("results.json "+r.status);
     DATA=await r.json();
   }catch(e){ err.style.display="block"; err.textContent="Could not load data: "+e.message; DATA={results:[]}; }
-}
-async function refreshLive(){
-  if(!DATA.results || !DATA.results.length){ liveOk=false; setPill(); return; }
-  const syms=new Set();
-  DATA.results.forEach(r=>{ syms.add(r.symbol); if(r.option_symbol) syms.add(r.option_symbol); });
-  try{
-    const r=await fetch(LIVE_ENDPOINT+"?symbols="+encodeURIComponent([...syms].join(",")));
-    if(!r.ok) throw new Error("status "+r.status);
-    const j=await r.json();
-    if(!j.ok) throw new Error(j.error||"proxy error");
-    LIVE=j.quotes||{}; liveOk=true; lastLiveAt=j.asof||new Date().toISOString();
-  }catch(e){ liveOk=false; }   // graceful: keep showing snapshot
-  setPill(); render();
-}
-async function fullReload(){ await loadSnapshot(); render(); await refreshLive(); }
-
-// boot
-(async function(){
-  await loadSnapshot();
   render();
-  await refreshLive();
-  setInterval(refreshLive, REFRESH_MS);
-})();
+}
+loadResults();
+setInterval(loadResults, 300000);  // pick up new scans every 5 min
 </script>
 </body>
 </html>

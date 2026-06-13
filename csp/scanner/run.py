@@ -15,11 +15,6 @@ OUT = os.path.normpath(os.path.join(HERE, "..", "results.json"))
 
 
 def main() -> int:
-    if not os.getenv("TRADIER_TOKEN"):
-        # No token configured yet — exit cleanly so scheduled runs don't fail loudly.
-        print("TRADIER_TOKEN not set; skipping scan. Add it as a repo secret to enable.")
-        return 0
-
     symbols = universe.load_symbols()
     print(f"Universe: {len(symbols)} symbols")
 

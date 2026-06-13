@@ -1,11 +1,12 @@
 name: CSP Scan
 
-# Publishes csp/results.json for the static scanner page at globesec.ai/csp/
+# Publishes csp/results.json for the scanner page at globesec.ai/csp/.
+# Data source: CBOE delayed quotes (no account / API key required).
 on:
   workflow_dispatch:        # manual "Run workflow" button
   schedule:
-    # Every 30 min, 13:00-20:59 UTC, Mon-Fri (~US market hours).
-    - cron: "*/30 13-20 * * 1-5"
+    # Every 15 min, 13:00-20:59 UTC, Mon-Fri (~US market hours; data is ~15 min delayed).
+    - cron: "*/15 13-20 * * 1-5"
 
 permissions:
   contents: write           # allow committing results.json back to the repo
@@ -32,9 +33,6 @@ jobs:
 
       - name: Run scan
         working-directory: csp/scanner
-        env:
-          TRADIER_TOKEN: ${{ secrets.TRADIER_TOKEN }}
-          TRADIER_BASE_URL: ${{ vars.TRADIER_BASE_URL || 'https://api.tradier.com' }}
         run: python run.py
 
       - name: Commit results if changed
