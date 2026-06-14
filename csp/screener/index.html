@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSP Wheel Screener — GlobeSec.ai</title>
+<meta name="description" content="Cash-secured put wheel screener: avoid assignment first, wheelable second. Risk-adjusted ranking, earnings filter, position sizing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#eaeef3;--bg2:#fff;--bg3:#eef2f7;--cyan:#0e8aa6;--orange:#e2622a;--orange-glow:rgba(226,98,42,.25);
+  --text:#222b38;--text-dim:#5e6b7e;--white:#0c1422;--green:#12a150;--line:#d7dee8;
+  --grn-bg:#e7f7ee;--ylw-bg:#fdf4e3;--red:#c0392b;
+  --mono:'JetBrains Mono','Consolas',monospace;--sans:'Inter',system-ui,sans-serif;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(120,140,170,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(120,140,170,.05) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0;}
+nav{position:fixed;top:0;width:100%;z-index:1000;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:0 1.5rem;}
+.nav-inner{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;height:64px;}
+.logo{display:flex;align-items:center;gap:.75rem;text-decoration:none;color:var(--white);}
+.logo-diamond{width:40px;height:40px;background:var(--cyan);transform:rotate(45deg);display:flex;align-items:center;justify-content:center;border-radius:4px;}
+.logo-diamond span{transform:rotate(-45deg);font-weight:900;font-size:1.1rem;color:#fff;}
+.logo-text{font-weight:800;font-size:1.3rem;letter-spacing:1px;color:var(--white);line-height:1.1;}
+.logo-sub{font-family:var(--mono);font-size:.6rem;font-weight:500;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;}
+.nav-links{display:flex;gap:1.6rem;list-style:none;align-items:center;}
+.nav-links a{color:var(--text-dim);text-decoration:none;font-family:var(--mono);font-size:.75rem;font-weight:500;letter-spacing:1px;text-transform:uppercase;transition:color .3s;}
+.nav-links a:hover{color:var(--cyan);}
+.wrap{max-width:1400px;margin:0 auto;padding:6rem 1.5rem 4rem;position:relative;z-index:1;}
+.label{display:inline-flex;align-items:center;gap:.5rem;margin-bottom:.6rem;}
+.label .bar{width:3px;height:18px;background:var(--orange);}
+.label .text{font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--orange);letter-spacing:2px;text-transform:uppercase;}
+h1{font-size:clamp(1.8rem,4.5vw,2.7rem);font-weight:900;color:var(--white);letter-spacing:-1px;margin-bottom:.4rem;}
+h1 .cyan{color:var(--cyan);}
+.subtitle{font-family:var(--mono);font-size:.78rem;color:var(--text-dim);margin-bottom:1.6rem;max-width:900px;line-height:1.8;}
+.hd{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin:2rem 0 .7rem;}
+.warn{background:#fff4e5;border:1px solid #f0c98a;color:#8a5a00;font-family:var(--mono);font-size:.72rem;padding:.7rem 1rem;border-radius:6px;margin-bottom:1rem;}
+.controls{display:flex;gap:1.2rem;align-items:flex-end;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:8px;padding:1rem 1.2rem;margin-bottom:1.2rem;}
+.fld{display:flex;flex-direction:column;gap:.3rem;}
+.fld label{font-family:var(--mono);font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);}
+.fld input{background:#fff;border:1px solid var(--line);border-radius:5px;padding:.55rem .8rem;font-family:var(--mono);font-size:.85rem;color:var(--text);width:160px;outline:none;}
+.fld input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(14,138,166,.12);}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:1.2rem;}
+.summary .s{background:#fff;padding:.8rem 1rem;}
+.summary .n{font-family:var(--mono);font-size:1.15rem;font-weight:800;color:var(--cyan);}
+.summary .l{font-family:var(--mono);font-size:.58rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-top:.2rem;}
+.tablewrap{border:1px solid var(--line);background:#fff;overflow-x:auto;border-radius:6px;}
+table{width:100%;border-collapse:collapse;font-size:.76rem;}
+th,td{padding:.5rem .65rem;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line);}
+th{font-family:var(--mono);color:var(--text-dim);font-size:.58rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;position:sticky;top:0;background:var(--bg3);}
+th:hover{color:var(--cyan);}
+td{font-family:var(--mono);}
+td.l,th.l{text-align:left;}
+.sym{font-weight:800;color:var(--white);}
+tr.green td{background:var(--grn-bg);}
+tr.yellow td{background:var(--ylw-bg);}
+tr:hover td{filter:brightness(.98);}
+.ok{color:var(--green);font-weight:700;}
+.no{color:var(--red);font-weight:700;}
+.score{font-weight:800;color:var(--cyan);}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;}
+.dot.g{background:var(--green);}.dot.y{background:#e0a32e;}
+.empty{padding:2.5rem;text-align:center;color:var(--text-dim);font-family:var(--mono);font-size:.8rem;}
+.disc{font-family:var(--mono);font-size:.64rem;color:var(--text-dim);line-height:1.9;margin-top:1.5rem;border-left:2px solid var(--orange);padding-left:1rem;}
+.legend{font-family:var(--mono);font-size:.66rem;color:var(--text-dim);margin:.5rem 0 0;display:flex;gap:1.2rem;flex-wrap:wrap;}
+@media(max-width:800px){.nav-links{display:none;}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo"><div class="logo-diamond"><span>G</span></div><div><div class="logo-text">GLOBESEC</div><div class="logo-sub">protocol.ai</div></div></a>
+    <ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/csp/">CSP Scanner</a></li><li><a href="/csp/screener/">Wheel Screener</a></li></ul>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="label"><div class="bar"></div><div class="text">Options Lab</div></div>
+  <h1>CSP <span class="cyan">Wheel</span> Screener</h1>
+  <div class="subtitle">
+    Priority #1: <b>avoid assignment</b> (|delta| ≤ <span id="cfgAssign">20</span>%, ≥ <span id="cfgOtm">5</span>% OTM).
+    #2: if assigned, <b>sell a covered call at/above cost basis</b> for ≥ <span id="cfgCC">0.5</span>%/wk (wheelability).
+    Min <span id="cfgYield">0.7</span>%/wk on collateral · no earnings before expiry · OI ≥ <span id="cfgOI">500</span>, vol ≥ <span id="cfgVol">50</span>, spread ≤ <span id="cfgSpread">10</span>%.
+    Ranked by <b>risk-adjusted score = weekly yield ÷ assignment %</b>. Data: CBOE delayed (~15 min) + Finnhub.
+  </div>
+
+  <div class="warn" id="warn" style="display:none"></div>
+
+  <div class="hd">Ranked candidates</div>
+  <div class="legend">
+    <span><span class="dot g"></span> green = passes all filters</span>
+    <span><span class="dot y"></span> yellow = marginal</span>
+    <span>fails are hidden</span>
+    <span id="updated"></span>
+  </div>
+  <div class="tablewrap" style="margin-top:.6rem">
+    <table><thead><tr id="rhead"></tr></thead><tbody id="rbody"></tbody></table>
+    <div class="empty" id="rempty" style="display:none">No candidates — the scan hasn't published yet (or none passed today's filters).</div>
+  </div>
+
+  <div class="hd">Suggested position sizing</div>
+  <div class="controls">
+    <div class="fld"><label>Total collateral available</label><input id="collat" type="number" step="1000" value="120000" oninput="renderSizing()"></div>
+    <div class="fld"><label>Per-name cap %</label><input id="nameCap" type="number" step="1" value="25" oninput="renderSizing()"></div>
+    <div class="fld"><label>Per-sector cap %</label><input id="secCap" type="number" step="1" value="30" oninput="renderSizing()"></div>
+  </div>
+  <div class="summary" id="sizeSummary"></div>
+  <div class="warn" id="expiryFlag" style="display:none"></div>
+  <div class="tablewrap">
+    <table><thead><tr id="shead"></tr></thead><tbody id="sbody"></tbody></table>
+    <div class="empty" id="sempty" style="display:none">No sizing yet.</div>
+  </div>
+
+  <div class="disc">
+    DISCLAIMER: Educational/informational only. Not investment advice. Data is delayed (~15 min) and
+    sourced from public endpoints; verify everything with your broker. "Assignment %" uses option delta
+    as a proxy. Sizing is a suggestion based on your inputs and the caps.
+  </div>
+</div>
+
+<script>
+let DATA={results:[]};
+const RCOLS=[
+  ["tier",""],["symbol","Symbol"],["sector","Sector"],["spot","Spot"],["strike","Strike"],["otm_pct","% OTM"],
+  ["expiration","Expiry"],["dte","DTE"],["premium","Premium"],["weekly_yield","Wk Yld"],["assign_pct","Assign %"],
+  ["earnings_clear","Earn"],["wheel","Wheel (call)"],["liq","Liq"],["score","Score"]
+];
+let sortKey="score",sortDir=-1;
+function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function usd0(v){return "$"+Number(v).toLocaleString(undefined,{maximumFractionDigits:0});}
+function fmtFull(s){if(!s)return"—";const d=new Date(s+"T00:00:00");return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});}
+
+function rcell(k,r){
+  if(k==="tier") return `<td><span class="dot ${r.tier==='green'?'g':'y'}"></span></td>`;
+  if(k==="symbol") return `<td class="l sym">${r.symbol}</td>`;
+  if(k==="sector") return `<td class="l">${r.sector||"—"}</td>`;
+  if(k==="spot"||k==="strike"||k==="premium") return `<td>${money(r[k])}</td>`;
+  if(k==="otm_pct") return `<td>${r.otm_pct.toFixed(1)}%</td>`;
+  if(k==="expiration") return `<td>${fmtFull(r.expiration)}</td>`;
+  if(k==="dte") return `<td>${r.dte}</td>`;
+  if(k==="weekly_yield") return `<td class="ok">${r.weekly_yield.toFixed(2)}%</td>`;
+  if(k==="assign_pct") return `<td>${r.assign_pct.toFixed(1)}%</td>`;
+  if(k==="earnings_clear") return `<td class="${r.earnings_clear?'ok':'no'}">${r.earnings_clear?'✓':'✗'}</td>`;
+  if(k==="wheel") return `<td class="l ok">✓ $${r.cc_strike}c · $${r.cc_premium} · ${r.cc_weekly_yield}%/wk</td>`;
+  if(k==="liq") return `<td class="ok" title="OI ${r.open_interest}, vol ${r.volume}, spread ${r.spread_pct}%">✓</td>`;
+  if(k==="score") return `<td class="score">${r.score.toFixed(2)}</td>`;
+  return `<td>${r[k]}</td>`;
+}
+function renderRanked(){
+  document.getElementById("rhead").innerHTML=RCOLS.map(([k,l])=>{
+    const cls=(["symbol","sector","wheel"].includes(k))?"l":"";
+    return `<th class="${cls}" onclick="sortBy('${k}')">${l}${sortKey===k?(sortDir<0?" ▼":" ▲"):""}</th>`;
+  }).join("");
+  let rows=DATA.results.slice();
+  rows.sort((a,b)=>{let x=a[sortKey],y=b[sortKey];if(typeof x==="boolean"){x=x?1:0;y=y?1:0;}if(x===y)return 0;return (x>y?1:-1)*sortDir;});
+  document.getElementById("rbody").innerHTML=rows.map(r=>`<tr class="${r.tier}">`+RCOLS.map(([k])=>rcell(k,r)).join("")+"</tr>").join("");
+  document.getElementById("rempty").style.display=rows.length?"none":"block";
+}
+function sortBy(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=(k==="symbol"||k==="sector"||k==="expiration")?1:-1;}renderRanked();}
+
+const SCOLS=["#","Symbol","Sector","Contracts","Collateral","% of total","Expiry","Est. wk premium","Wk yld %"];
+function renderSizing(){
+  const total=Math.max(0,Number(document.getElementById("collat").value)||0);
+  const nameCapPct=Number(document.getElementById("nameCap").value)||25;
+  const secCapPct=Number(document.getElementById("secCap").value)||30;
+  const nameCap=total*nameCapPct/100, secCap=total*secCapPct/100;
+  const ranked=DATA.results.slice().sort((a,b)=>b.score-a.score);
+  let deployed=0; const bySector={}, byExpiry={}; const picks=[];
+  for(const r of ranked){
+    const cpc=r.collateral; if(cpc<=0) continue;
+    const secUsed=bySector[r.sector||"Unknown"]||0;
+    const room=Math.min(nameCap, secCap-secUsed, total-deployed);
+    const n=Math.floor(room/cpc);
+    if(n<1) continue;
+    const cap=n*cpc, prem=n*r.premium;
+    deployed+=cap; bySector[r.sector||"Unknown"]=secUsed+cap;
+    byExpiry[r.expiration]=(byExpiry[r.expiration]||0)+cap;
+    picks.push({...r,contracts:n,capital:cap,premium_total:prem});
+    if(total-deployed < 1) break;
+  }
+  // summary
+  const totPrem=picks.reduce((a,p)=>a+p.premium_total,0);
+  const blended=deployed>0?(totPrem/deployed*100):0;
+  document.getElementById("sizeSummary").innerHTML=[
+    [usd0(deployed),"Deployed"],[usd0(total-deployed),"Cash left"],[picks.length,"Names"],
+    ["$"+Math.round(totPrem).toLocaleString(),"Est. wk premium"],[blended.toFixed(2)+"%","Blended wk yld"]
+  ].map(([n,l])=>`<div class="s"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
+  // expiry concentration flag
+  let maxExp=null,maxV=0; for(const e in byExpiry){if(byExpiry[e]>maxV){maxV=byExpiry[e];maxExp=e;}}
+  const flag=document.getElementById("expiryFlag");
+  const pct=DATA.config?DATA.config.single_expiry_flag_pct:50;
+  if(deployed>0 && maxV/deployed*100 > pct){
+    flag.style.display="block";
+    flag.textContent=`⚠ ${(maxV/deployed*100).toFixed(0)}% of deployed collateral lands on a single expiry (${fmtFull(maxExp)}). Consider spreading expirations.`;
+  } else flag.style.display="none";
+  // table
+  document.getElementById("shead").innerHTML=SCOLS.map((l,i)=>`<th class="${i<3?'l':''}">${l}</th>`).join("");
+  document.getElementById("sbody").innerHTML=picks.map((p,i)=>
+    `<tr><td>${i+1}</td><td class="l sym">${p.symbol}</td><td class="l">${p.sector||"—"}</td>`+
+    `<td>${p.contracts}</td><td>${usd0(p.capital)}</td><td>${(p.capital/total*100).toFixed(1)}%</td>`+
+    `<td>${fmtFull(p.expiration)}</td><td>$${Math.round(p.premium_total).toLocaleString()}</td>`+
+    `<td class="ok">${p.weekly_yield.toFixed(2)}%</td></tr>`).join("");
+  document.getElementById("sempty").style.display=picks.length?"none":"block";
+}
+
+function applyConfig(){
+  const c=DATA.config; if(!c) return;
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  set("cfgAssign",c.max_assign_prob);set("cfgOtm",c.min_otm_pct);set("cfgCC",c.cc_min_weekly_yield);
+  set("cfgYield",c.min_weekly_yield);set("cfgOI",c.liquidity.min_oi);set("cfgVol",c.liquidity.min_vol);set("cfgSpread",c.liquidity.max_spread_pct);
+  document.getElementById("collat").value=c.total_collateral;
+  document.getElementById("nameCap").value=c.per_name_cap_pct;
+  document.getElementById("secCap").value=c.per_sector_cap_pct;
+}
+async function load(){
+  const w=document.getElementById("warn");
+  try{
+    const r=await fetch("screener.json?_="+Date.now());
+    if(!r.ok) throw new Error("screener.json "+r.status);
+    DATA=await r.json();
+  }catch(e){ w.style.display="block"; w.textContent="Could not load data: "+e.message; DATA={results:[]}; }
+  applyConfig();
+  document.getElementById("updated").textContent = DATA.generated_at ? ("updated "+fmtFull(DATA.generated_at.slice(0,10))+" "+DATA.generated_at.slice(11,16)) : "";
+  if(DATA.generated_at && !DATA.earnings_source_ok){
+    w.style.display="block";
+    w.textContent="⚠ Earnings calendar was unavailable on the last scan (no Finnhub key or API error) — the earnings filter was NOT applied. Add FINNHUB_API_KEY to enable it.";
+  }
+  renderRanked(); renderSizing();
+}
+load();
+setInterval(load, 300000);
+</script>
+</body>
+</html>
