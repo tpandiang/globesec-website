@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-14T16:46:14",
+  "generated_at": "2026-06-14T16:57:59",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -21,12 +21,12 @@
     "single_expiry_flag_pct": 50.0
   },
   "universe_size": 134,
-  "earnings_source_ok": false,
+  "earnings_source_ok": true,
   "result_count": 6,
   "results": [
     {
       "symbol": "MU",
-      "sector": "Unknown",
+      "sector": "Semiconductors",
       "spot": 990.0,
       "strike": 700.0,
       "otm_pct": 29.3,
@@ -54,7 +54,7 @@
     },
     {
       "symbol": "SMCI",
-      "sector": "Unknown",
+      "sector": "Technology",
       "spot": 30.82,
       "strike": 25.0,
       "otm_pct": 18.9,
@@ -64,7 +64,7 @@
       "weekly_yield": 0.887,
       "assign_pct": 12.7,
       "earnings_clear": true,
-      "next_earnings": null,
+      "next_earnings": "2026-08-03",
       "wheel_ok": true,
       "cost_basis": 24.62,
       "cc_strike": 27.0,
@@ -82,7 +82,7 @@
     },
     {
       "symbol": "INTC",
-      "sector": "Unknown",
+      "sector": "Semiconductors",
       "spot": 125.39,
       "strike": 100.0,
       "otm_pct": 20.2,
@@ -110,7 +110,7 @@
     },
     {
       "symbol": "AMD",
-      "sector": "Unknown",
+      "sector": "Semiconductors",
       "spot": 514.63,
       "strike": 440.0,
       "otm_pct": 14.5,
@@ -120,7 +120,7 @@
       "weekly_yield": 0.769,
       "assign_pct": 14.2,
       "earnings_clear": true,
-      "next_earnings": null,
+      "next_earnings": "2026-08-03",
       "wheel_ok": true,
       "cost_basis": 434.2,
       "cc_strike": 440.0,
@@ -138,7 +138,7 @@
     },
     {
       "symbol": "ARM",
-      "sector": "Unknown",
+      "sector": "Semiconductors",
       "spot": 384.35,
       "strike": 300.0,
       "otm_pct": 21.9,
@@ -148,7 +148,7 @@
       "weekly_yield": 0.955,
       "assign_pct": 18.2,
       "earnings_clear": true,
-      "next_earnings": null,
+      "next_earnings": "2026-07-27",
       "wheel_ok": true,
       "cost_basis": 286.5,
       "cc_strike": 300.0,
@@ -166,7 +166,7 @@
     },
     {
       "symbol": "TSLA",
-      "sector": "Unknown",
+      "sector": "Automobiles",
       "spot": 406.1,
       "strike": 380.0,
       "otm_pct": 6.4,
