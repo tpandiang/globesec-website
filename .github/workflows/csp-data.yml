@@ -1,0 +1,51 @@
+name: CSP Data Refresh
+
+# Runs BOTH the CSP scanner and the wheel screener, then commits their JSON in a SINGLE
+# commit -> one Cloudflare Pages build per cycle (stays under the 500 builds/month free tier).
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 13-20 * * 1-5"   # every 30 min, ~US market hours (data is ~15 min delayed)
+
+permissions:
+  contents: write
+
+concurrency:
+  group: csp-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          pip install -r csp/scanner/requirements.txt
+          pip install -r csp/screener/scanner/requirements.txt
+
+      - name: Run CSP scanner (results.json)
+        working-directory: csp/scanner
+        run: python run.py
+
+      - name: Run wheel screener (screener.json)
+        working-directory: csp/screener/scanner
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: python run.py
+
+      - name: Commit results in one commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add csp/results.json csp/screener/screener.json csp/screener/scanner/data/sectors.json
+          if git diff --staged --quiet; then
+            echo "No change"
+          else
+            git commit -m "chore(csp): refresh scanner + screener data [skip ci]"
+            git push
+          fi
