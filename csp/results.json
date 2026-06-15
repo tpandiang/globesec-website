@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-15T22:25:58",
+  "generated_at": "2026-06-15T22:43:14",
   "data_source": "CBOE delayed (~15 min)",
   "account_picks": [
     {
@@ -61,7 +61,7 @@
         "symbol": "INTC",
         "preferred": true,
         "company_name": "Intel Corporation",
-        "price": 125.87,
+        "price": 125.51,
         "expiration": "2026-06-18",
         "dte": 3,
         "strike": 118.0,
@@ -106,7 +106,7 @@
     },
     {
       "symbol": "MRK",
-      "price": 115.13,
+      "price": 115.07,
       "change_pct": -3.49,
       "company_name": "Merck & Co., Inc.",
       "pe": 32.37,
@@ -117,13 +117,13 @@
     },
     {
       "symbol": "AMC",
-      "price": 2.28,
+      "price": 2.29,
       "change_pct": -2.56,
       "company_name": "AMC Entertainment Holdings, Inc.",
       "pe": null,
       "week52_high": 3.6,
       "week52_low": 0.93,
-      "pct_below_high": 36.7,
+      "pct_below_high": 36.4,
       "preferred": false
     },
     {
@@ -150,7 +150,7 @@
     },
     {
       "symbol": "KO",
-      "price": 80.92,
+      "price": 80.93,
       "change_pct": -2.07,
       "company_name": "The Coca-Cola Company",
       "pe": 25.44,
@@ -172,7 +172,7 @@
     },
     {
       "symbol": "BBY",
-      "price": 77.41,
+      "price": 77.42,
       "change_pct": -1.43,
       "company_name": "Best Buy Co., Inc.",
       "pe": 14.34,
@@ -209,14 +209,14 @@
     "sorted_by": "premium"
   },
   "universe_size": 134,
-  "scanned_under_price": 61,
-  "total_qualifying": 94,
+  "scanned_under_price": 60,
+  "total_qualifying": 92,
   "result_count": 20,
   "results": [
     {
       "symbol": "AAPL",
       "option_symbol": "AAPL260724P00285000",
-      "price": 295.99,
+      "price": 295.36,
       "expiration": "2026-07-24",
       "dte": 39,
       "strike": 285.0,
@@ -282,7 +282,7 @@
     {
       "symbol": "AMZN",
       "option_symbol": "AMZN260724P00225000",
-      "price": 248.51,
+      "price": 247.81,
       "expiration": "2026-07-24",
       "dte": 39,
       "strike": 225.0,
@@ -358,7 +358,7 @@
     {
       "symbol": "BA",
       "option_symbol": "BA260717P00210000",
-      "price": 229.1,
+      "price": 229.0,
       "expiration": "2026-07-17",
       "dte": 32,
       "strike": 210.0,
@@ -443,7 +443,7 @@
     {
       "symbol": "NVDA",
       "option_symbol": "NVDA260717P00190000",
-      "price": 211.92,
+      "price": 211.51,
       "expiration": "2026-07-17",
       "dte": 32,
       "strike": 190.0,
@@ -576,7 +576,7 @@
     {
       "symbol": "QCOM",
       "option_symbol": "QCOM260724P00160000",
-      "price": 219.54,
+      "price": 219.13,
       "expiration": "2026-07-24",
       "dte": 39,
       "strike": 160.0,
@@ -803,7 +803,7 @@
     {
       "symbol": "ORCL",
       "option_symbol": "ORCL260724P00155000",
-      "price": 192.3,
+      "price": 191.65,
       "expiration": "2026-07-24",
       "dte": 39,
       "strike": 155.0,
@@ -946,7 +946,7 @@
     {
       "symbol": "BABA",
       "option_symbol": "BABA260724P00100000",
-      "price": 113.02,
+      "price": 113.09,
       "expiration": "2026-07-24",
       "dte": 39,
       "strike": 100.0,
@@ -1031,7 +1031,7 @@
     {
       "symbol": "WMT",
       "option_symbol": "WMT260724P00115000",
-      "price": 120.55,
+      "price": 120.69,
       "expiration": "2026-07-24",
       "dte": 39,
       "strike": 115.0,
@@ -1089,91 +1089,6 @@
               "pct_of_collateral": 0.88,
               "delta": -0.263,
               "open_interest": 142,
-              "recommended": true
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "symbol": "COIN",
-      "option_symbol": "COIN260717P00125000",
-      "price": 169.31,
-      "expiration": "2026-07-17",
-      "dte": 32,
-      "strike": 125.0,
-      "bid": 1.14,
-      "delta": -0.068,
-      "open_interest": 1684,
-      "collateral": 12500.0,
-      "premium": 114.0,
-      "yield_30d_pct": 0.855,
-      "annualized_pct": 10.4,
-      "preferred": false,
-      "company_name": "Coinbase Global, Inc.",
-      "pe": 62.36,
-      "week52_low": 139.36,
-      "week52_high": 444.65,
-      "weeklies": [
-        {
-          "expiration": "2026-06-18",
-          "dte": 3,
-          "puts": [
-            {
-              "strike": 160.0,
-              "bid": 1.33,
-              "premium": 133.0,
-              "pct_of_collateral": 0.831,
-              "delta": -0.198,
-              "open_interest": 6019,
-              "recommended": true
-            }
-          ]
-        },
-        {
-          "expiration": "2026-06-26",
-          "dte": 11,
-          "puts": [
-            {
-              "strike": 147.0,
-              "bid": 1.12,
-              "premium": 112.0,
-              "pct_of_collateral": 0.762,
-              "delta": -0.11,
-              "open_interest": 79,
-              "recommended": true
-            },
-            {
-              "strike": 149.0,
-              "bid": 1.36,
-              "premium": 136.0,
-              "pct_of_collateral": 0.913,
-              "delta": -0.13,
-              "open_interest": 217,
-              "recommended": false
-            },
-            {
-              "strike": 150.0,
-              "bid": 1.5,
-              "premium": 150.0,
-              "pct_of_collateral": 1.0,
-              "delta": -0.14,
-              "open_interest": 686,
-              "recommended": false
-            }
-          ]
-        },
-        {
-          "expiration": "2026-07-02",
-          "dte": 17,
-          "puts": [
-            {
-              "strike": 140.0,
-              "bid": 1.16,
-              "premium": 116.0,
-              "pct_of_collateral": 0.829,
-              "delta": -0.095,
-              "open_interest": 363,
               "recommended": true
             }
           ]
@@ -1325,7 +1240,7 @@
     {
       "symbol": "PLTR",
       "option_symbol": "PLTR260724P00110000",
-      "price": 134.47,
+      "price": 134.0,
       "expiration": "2026-07-24",
       "dte": 39,
       "strike": 110.0,
@@ -1504,7 +1419,7 @@
     {
       "symbol": "INTC",
       "option_symbol": "INTC260724P00080000",
-      "price": 125.87,
+      "price": 125.51,
       "expiration": "2026-07-24",
       "dte": 39,
       "strike": 80.0,
@@ -1768,6 +1683,73 @@
               "pct_of_collateral": 0.899,
               "delta": -0.213,
               "open_interest": 90,
+              "recommended": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "symbol": "NEE",
+      "option_symbol": "NEE260717P00082500",
+      "price": 86.13,
+      "expiration": "2026-07-17",
+      "dte": 32,
+      "strike": 82.5,
+      "bid": 0.83,
+      "delta": -0.245,
+      "open_interest": 2094,
+      "collateral": 8250.0,
+      "premium": 83.0,
+      "yield_30d_pct": 0.943,
+      "annualized_pct": 11.48,
+      "preferred": false,
+      "company_name": "NextEra Energy, Inc.",
+      "pe": 21.86,
+      "week52_low": 67.2,
+      "week52_high": 98.75,
+      "weeklies": [
+        {
+          "expiration": "2026-06-18",
+          "dte": 3,
+          "puts": [
+            {
+              "strike": 86.0,
+              "bid": 0.69,
+              "premium": 69.0,
+              "pct_of_collateral": 0.802,
+              "delta": -0.468,
+              "open_interest": 536,
+              "recommended": true
+            }
+          ]
+        },
+        {
+          "expiration": "2026-06-26",
+          "dte": 11,
+          "puts": [
+            {
+              "strike": 85.0,
+              "bid": 0.69,
+              "premium": 69.0,
+              "pct_of_collateral": 0.812,
+              "delta": -0.361,
+              "open_interest": 121,
+              "recommended": true
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-02",
+          "dte": 17,
+          "puts": [
+            {
+              "strike": 84.0,
+              "bid": 0.71,
+              "premium": 71.0,
+              "pct_of_collateral": 0.845,
+              "delta": -0.296,
+              "open_interest": 22,
               "recommended": true
             }
           ]
