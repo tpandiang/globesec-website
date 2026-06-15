@@ -17,6 +17,11 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    env:
+      # Set these as repo secrets to auto-purge Cloudflare after each data refresh.
+      # If unset, the purge step is skipped (everything else still works).
+      CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -39,13 +44,28 @@ jobs:
         run: python run.py
 
       - name: Commit results in one commit
+        id: commit
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add csp/results.json csp/screener/screener.json csp/screener/scanner/data/sectors.json
           if git diff --staged --quiet; then
             echo "No change"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             git commit -m "chore(csp): refresh scanner + screener data [skip ci]"
             git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Purge Cloudflare cache for the data files
+        if: steps.commit.outputs.changed == 'true' && env.CF_API_TOKEN != ''
+        run: |
+          curl -fsS -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data '{"files":[
+              "https://globesec.ai/csp/results.json",
+              "https://globesec.ai/csp/screener/screener.json"
+            ]}'
