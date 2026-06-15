@@ -4,6 +4,8 @@ S&P 500 (_SPX), Dow Jones (_DJX x 100 — DJX quotes the Dow at 1/100 scale),
 Nasdaq 100 (_NDX). Data is ~15 min delayed. get_indices() never raises: a symbol
 that fails to fetch is simply omitted so it can't break the scan.
 """
+import time
+
 import requests
 
 _BASE = "https://cdn.cboe.com/api/global/delayed_quotes/options"
@@ -18,14 +20,22 @@ _INDICES = [
 
 
 def _quote(symbol: str):
-    r = requests.get(f"{_BASE}/{symbol}.json", headers=_HEADERS, timeout=20)
-    r.raise_for_status()
-    d = (r.json() or {}).get("data") or {}
-    price = d.get("current_price")
-    if not price:
-        return None
-    chg = d.get("price_change_percent")
-    return float(price), (float(chg) if chg is not None else None)
+    """Fetch one index, retrying transient errors so all three show up reliably."""
+    last = None
+    for attempt in range(3):
+        try:
+            r = requests.get(f"{_BASE}/{symbol}.json", headers=_HEADERS, timeout=20)
+            r.raise_for_status()
+            d = (r.json() or {}).get("data") or {}
+            price = d.get("current_price")
+            if not price:
+                return None
+            chg = d.get("price_change_percent")
+            return float(price), (float(chg) if chg is not None else None)
+        except Exception as e:  # noqa: BLE001
+            last = e
+            time.sleep(1.0 * (attempt + 1))
+    raise last
 
 
 def get_indices() -> list:

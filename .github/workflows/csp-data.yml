@@ -53,23 +53,33 @@ jobs:
             echo "No change"
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "chore(csp): refresh scanner + screener data [skip ci]"
+            # NOTE: do NOT put [skip ci] here — Cloudflare Pages honors it and would
+            # skip deploying the refreshed data, leaving the live site stale.
+            git commit -m "chore(csp): refresh scanner + screener data"
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Purge Cloudflare cache for the data files
+      - name: Wait for Cloudflare Pages deploy, then purge until live is fresh
         if: steps.commit.outputs.changed == 'true' && env.CF_API_TOKEN != '' && env.CF_ZONE_ID != ''
         run: |
           # strip any stray whitespace/newlines that would make the URL malformed (curl exit 3)
           zone=$(printf '%s' "$CF_ZONE_ID" | tr -d '[:space:]')
           token=$(printf '%s' "$CF_API_TOKEN" | tr -d '[:space:]')
           echo "Zone ID length: ${#zone} (expected 32)"
-          resp=$(curl -sS -X POST \
-            "https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache" \
-            -H "Authorization: Bearer ${token}" \
-            -H "Content-Type: application/json" \
-            --data '{"files":["https://globesec.ai/csp/results.json","https://globesec.ai/csp/screener/screener.json"]}')
-          echo "Cloudflare response: $resp"
-          # token is only in the request header, never in the response, so this is safe to log
-          echo "$resp" | grep -q '"success":true' || { echo "::error::Cloudflare purge failed (see response above)"; exit 1; }
+          expected=$(python -c "import json;print(json.load(open('csp/screener/screener.json'))['generated_at'])")
+          echo "Target generated_at=$expected — waiting for the Pages build, then purging the edge cache."
+          fresh=0
+          for i in $(seq 1 20); do
+            sleep 15
+            resp=$(curl -sS -X POST \
+              "https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache" \
+              -H "Authorization: Bearer ${token}" \
+              -H "Content-Type: application/json" \
+              --data '{"files":["https://globesec.ai/csp/results.json","https://globesec.ai/csp/screener/screener.json"]}')
+            echo "$resp" | grep -q '"success":true' || echo "  purge attempt $i response: $resp"
+            live=$(curl -s "https://globesec.ai/csp/screener/screener.json?cb=${i}${RANDOM}" | python -c "import sys,json;print(json.load(sys.stdin).get('generated_at',''))" 2>/dev/null || echo "")
+            echo "  attempt $i: live generated_at=$live"
+            if [ "$live" = "$expected" ]; then fresh=1; echo "  live is fresh"; break; fi
+          done
+          [ "$fresh" = 1 ] || echo "::warning::Live data did not catch up within ~5 min — the Cloudflare Pages build may be slow or a cache rule is overriding the purge."
