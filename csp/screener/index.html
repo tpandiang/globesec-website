@@ -64,6 +64,12 @@ tr:hover td{filter:brightness(.98);}
 .empty{padding:2.5rem;text-align:center;color:var(--text-dim);font-family:var(--mono);font-size:.8rem;}
 .disc{font-family:var(--mono);font-size:.64rem;color:var(--text-dim);line-height:1.9;margin-top:1.5rem;border-left:2px solid var(--orange);padding-left:1rem;}
 .legend{font-family:var(--mono);font-size:.66rem;color:var(--text-dim);margin:.5rem 0 0;display:flex;gap:1.2rem;flex-wrap:wrap;}
+.mkt{display:flex;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:1.4rem;flex-wrap:wrap;}
+.mkt .ix{background:#fff;padding:.6rem 1.1rem;flex:1;min-width:150px;display:flex;flex-direction:column;gap:.12rem;}
+.mkt .nm{font-family:var(--mono);font-size:.58rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;}
+.mkt .vl{font-family:var(--mono);font-size:1.05rem;font-weight:800;color:var(--white);}
+.mkt .ch{font-family:var(--mono);font-size:.7rem;font-weight:700;}
+.mkt .up{color:var(--green);}.mkt .dn{color:var(--red);}
 @media(max-width:800px){.nav-links{display:none;}}
 </style>
 </head>
@@ -84,6 +90,8 @@ tr:hover td{filter:brightness(.98);}
     Min <span id="cfgYield">0.7</span>%/wk on collateral · no earnings before expiry · OI ≥ <span id="cfgOI">500</span>, vol ≥ <span id="cfgVol">50</span>, spread ≤ <span id="cfgSpread">10</span>%.
     Ranked by <b>risk-adjusted score = weekly yield ÷ assignment %</b>. Data: CBOE delayed (~15 min) + Finnhub.
   </div>
+
+  <div class="mkt" id="mkt" style="display:none"></div>
 
   <div class="warn" id="warn" style="display:none"></div>
 
@@ -159,6 +167,20 @@ function renderRanked(){
 }
 function sortBy(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=(k==="symbol"||k==="sector"||k==="expiration")?1:-1;}renderRanked();}
 
+function renderIndices(){
+  const el=document.getElementById("mkt");
+  const ix=DATA.indices||[];
+  if(!ix.length){el.style.display="none";return;}
+  el.style.display="flex";
+  el.innerHTML=ix.map(i=>{
+    const c=i.change_pct;
+    const cls=c==null?"":(c>=0?"up":"dn"), arrow=c==null?"":(c>=0?"▲":"▼");
+    const chg=c==null?"":`${arrow} ${Math.abs(c).toFixed(2)}%`;
+    const val=Number(i.value).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+    return `<div class="ix"><div class="nm">${i.label}</div><div class="vl">${val}</div><div class="ch ${cls}">${chg}</div></div>`;
+  }).join("");
+}
+
 const SCOLS=["#","Symbol","Sector","Contracts","Collateral","% of total","Expiry","Est. wk premium","Wk yld %"];
 function renderSizing(){
   const total=Math.max(0,Number(document.getElementById("collat").value)||0);
@@ -226,7 +248,7 @@ async function load(){
     w.style.display="block";
     w.textContent="⚠ Earnings calendar was unavailable on the last scan (no Finnhub key or API error) — the earnings filter was NOT applied. Add FINNHUB_API_KEY to enable it.";
   }
-  renderRanked(); renderSizing();
+  renderIndices(); renderRanked(); renderSizing();
 }
 load();
 setInterval(load, 300000);

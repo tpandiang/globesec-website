@@ -7,6 +7,7 @@ import json
 import os
 import sys
 
+import market
 import scanner
 import universe
 
@@ -39,6 +40,8 @@ def main() -> int:
                         r[k] = p[k]
     except Exception:
         pass
+
+    payload["indices"] = market.get_indices()
 
     tmp = OUT + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:

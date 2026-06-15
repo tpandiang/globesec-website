@@ -102,6 +102,12 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
 /* scoped alignment for the top-10 and losers tables */
 #top10 th,#top10 td,#losers th,#losers td{text-align:right;}
 #top10 th:nth-child(2),#top10 td:nth-child(2),#losers th:nth-child(1),#losers td:nth-child(1),#losers th:nth-child(2),#losers td:nth-child(2){text-align:left;}
+.mkt{display:flex; gap:1px; background:var(--line); border:1px solid var(--line); border-radius:6px; overflow:hidden; margin-bottom:1.5rem; flex-wrap:wrap;}
+.mkt .ix{background:#fff; padding:.7rem 1.1rem; flex:1; min-width:160px; display:flex; flex-direction:column; gap:.12rem;}
+.mkt .nm{font-family:var(--mono); font-size:.6rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.5px;}
+.mkt .vl{font-family:var(--mono); font-size:1.15rem; font-weight:800; color:var(--white);}
+.mkt .ch{font-family:var(--mono); font-size:.72rem; font-weight:700;}
+.mkt .up{color:var(--green);} .mkt .dn{color:#c0392b;}
 @media(max-width:900px){ .stats{grid-template-columns:repeat(2,1fr);} .nav-links{display:none;} }
 </style>
 </head>
@@ -129,6 +135,8 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
     <span style="color:var(--cyan)">▸ Click a ticker</span> to see the next 3 <b>Friday</b> expirations, each with the
     <b style="color:var(--green)">top 3 optimal strikes</b> (premium 0.7–1.0% that week, ranked safest-first / lowest assignment risk).
   </div>
+
+  <div class="mkt" id="mkt" style="display:none"></div>
 
   <div class="acct-hd" id="acctHd" style="display:none">▸ Account Picks — next 2 weeks</div>
   <div class="accounts" id="accounts"></div>
@@ -193,6 +201,19 @@ function nearestPick(r){
     if(rec) return {...rec, expiration:w.expiration, dte:w.dte};
   }
   return null;
+}
+function renderIndices(){
+  const el=document.getElementById("mkt");
+  const ix=DATA.indices||[];
+  if(!ix.length){ el.style.display="none"; return; }
+  el.style.display="flex";
+  el.innerHTML=ix.map(i=>{
+    const c=i.change_pct;
+    const cls=c==null?"":(c>=0?"up":"dn"), arrow=c==null?"":(c>=0?"▲":"▼");
+    const chg=c==null?"":`${arrow} ${Math.abs(c).toFixed(2)}%`;
+    const val=Number(i.value).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+    return `<div class="ix"><div class="nm">${i.label}</div><div class="vl">${val}</div><div class="ch ${cls}">${chg}</div></div>`;
+  }).join("");
 }
 function renderTop10(){
   const rows=(DATA.results||[]).slice(0,10);
@@ -343,6 +364,7 @@ async function loadResults(){
     DATA=await r.json();
   }catch(e){ err.style.display="block"; err.textContent="Could not load data: "+e.message; DATA={results:[]}; }
   priceBySym=Object.fromEntries((DATA.results||[]).map(r=>[r.symbol,r.price]));
+  renderIndices();
   renderAccounts();
   renderTop10();
   renderLosers();

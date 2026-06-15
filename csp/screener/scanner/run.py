@@ -6,6 +6,7 @@ import sys
 
 import config
 import finnhub_data
+import market
 import screener
 
 
@@ -37,6 +38,7 @@ def main() -> int:
             print(f"  {stage}: {d}/{t}", flush=True)
 
     payload = screener.run_screen(symbols, earnings, sectors, progress=progress)
+    payload["indices"] = market.get_indices()
 
     os.makedirs(os.path.dirname(config.OUT_FILE), exist_ok=True)
     tmp = config.OUT_FILE + ".tmp"
