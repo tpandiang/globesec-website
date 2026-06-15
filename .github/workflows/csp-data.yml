@@ -61,11 +61,11 @@ jobs:
       - name: Purge Cloudflare cache for the data files
         if: steps.commit.outputs.changed == 'true' && env.CF_API_TOKEN != ''
         run: |
-          curl -fsS -X POST \
+          resp=$(curl -sS -X POST \
             "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
             -H "Authorization: Bearer ${CF_API_TOKEN}" \
             -H "Content-Type: application/json" \
-            --data '{"files":[
-              "https://globesec.ai/csp/results.json",
-              "https://globesec.ai/csp/screener/screener.json"
-            ]}'
+            --data '{"files":["https://globesec.ai/csp/results.json","https://globesec.ai/csp/screener/screener.json"]}')
+          echo "Cloudflare response: $resp"
+          # token is only in the request header, never in the response, so this is safe to log
+          echo "$resp" | grep -q '"success":true' || { echo "::error::Cloudflare purge failed (see response above)"; exit 1; }
