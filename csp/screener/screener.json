@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-15T20:58:38",
+  "generated_at": "2026-06-15T22:27:04",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,14 +22,14 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 3,
+  "result_count": 4,
   "results": [
     {
       "symbol": "MU",
       "sector": "Semiconductors",
-      "spot": 1081.8,
+      "spot": 1085.4,
       "strike": 920.0,
-      "otm_pct": 15.0,
+      "otm_pct": 15.2,
       "expiration": "2026-06-26",
       "dte": 11,
       "premium": 2810.0,
@@ -55,9 +55,9 @@
     {
       "symbol": "INTC",
       "sector": "Semiconductors",
-      "spot": 126.85,
+      "spot": 125.85,
       "strike": 112.0,
-      "otm_pct": 11.7,
+      "otm_pct": 11.0,
       "expiration": "2026-06-26",
       "dte": 11,
       "premium": 205.0,
@@ -81,11 +81,39 @@
       "tier": "yellow"
     },
     {
+      "symbol": "QCOM",
+      "sector": "Semiconductors",
+      "spot": 219.4,
+      "strike": 190.0,
+      "otm_pct": 13.4,
+      "expiration": "2026-06-26",
+      "dte": 11,
+      "premium": 300.0,
+      "weekly_yield": 1.005,
+      "assign_pct": 15.6,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 187.0,
+      "cc_strike": 200.0,
+      "cc_premium": 3090.0,
+      "cc_expiration": "2026-07-17",
+      "cc_dte": 32,
+      "cc_weekly_yield": 3.615,
+      "open_interest": 644,
+      "volume": 187,
+      "spread_pct": 9.5,
+      "iv": 93.7,
+      "collateral": 19000.0,
+      "score": 0.064,
+      "tier": "yellow"
+    },
+    {
       "symbol": "AMD",
       "sector": "Semiconductors",
-      "spot": 547.45,
+      "spot": 546.91,
       "strike": 480.0,
-      "otm_pct": 12.3,
+      "otm_pct": 12.2,
       "expiration": "2026-06-26",
       "dte": 11,
       "premium": 605.0,
@@ -109,21 +137,5 @@
       "tier": "yellow"
     }
   ],
-  "indices": [
-    {
-      "label": "S&P 500",
-      "value": 7554.29,
-      "change_pct": 1.65
-    },
-    {
-      "label": "Dow Jones",
-      "value": 51671.0,
-      "change_pct": 0.92
-    },
-    {
-      "label": "Nasdaq 100",
-      "value": 30543.92,
-      "change_pct": 3.06
-    }
-  ]
+  "indices": []
 }
