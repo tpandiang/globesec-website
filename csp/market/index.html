@@ -114,7 +114,7 @@ tr:last-child td{border-bottom:none;}
 </div>
 
 <script>
-const WORKER = "/api/market";
+const WORKER = "https://csp-market.ptmtek4.workers.dev/";
 function pct(v){return v==null?"—":(v>=0?"+":"")+Number(v).toFixed(2)+"%";}
 function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtUpdated(s){if(!s)return"";const d=new Date(s);return d.toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"});}
