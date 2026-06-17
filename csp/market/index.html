@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Today — GlobeSec.ai</title>
+<meta name="description" content="Daily market brief: index summary, top 10 gainers and losers, this week's earnings, and market news.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#eaeef3;--bg2:#fff;--bg3:#eef2f7;--cyan:#0e8aa6;--orange:#e2622a;--orange-glow:rgba(226,98,42,.25);
+  --text:#222b38;--text-dim:#5e6b7e;--white:#0c1422;--green:#12a150;--line:#d7dee8;--red:#c0392b;
+  --grn-bg:#e7f7ee;--red-bg:#fdecea;
+  --mono:'JetBrains Mono','Consolas',monospace;--sans:'Inter',system-ui,sans-serif;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(120,140,170,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(120,140,170,.05) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0;}
+nav{position:fixed;top:0;width:100%;z-index:1000;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:0 1.5rem;}
+.nav-inner{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;height:64px;}
+.logo{display:flex;align-items:center;gap:.75rem;text-decoration:none;color:var(--white);}
+.logo-diamond{width:40px;height:40px;background:var(--cyan);transform:rotate(45deg);display:flex;align-items:center;justify-content:center;border-radius:4px;}
+.logo-diamond span{transform:rotate(-45deg);font-weight:900;font-size:1.1rem;color:#fff;}
+.logo-text{font-weight:800;font-size:1.3rem;letter-spacing:1px;color:var(--white);line-height:1.1;}
+.logo-sub{font-family:var(--mono);font-size:.6rem;font-weight:500;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;}
+.nav-links{display:flex;gap:1.6rem;list-style:none;align-items:center;}
+.nav-links a{color:var(--text-dim);text-decoration:none;font-family:var(--mono);font-size:.75rem;font-weight:500;letter-spacing:1px;text-transform:uppercase;transition:color .3s;}
+.nav-links a:hover{color:var(--cyan);}
+.wrap{max-width:1400px;margin:0 auto;padding:6rem 1.5rem 4rem;position:relative;z-index:1;}
+.label{display:inline-flex;align-items:center;gap:.5rem;margin-bottom:.6rem;}
+.label .bar{width:3px;height:18px;background:var(--orange);}
+.label .text{font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--orange);letter-spacing:2px;text-transform:uppercase;}
+h1{font-size:clamp(1.8rem,4.5vw,2.7rem);font-weight:900;color:var(--white);letter-spacing:-1px;margin-bottom:.3rem;}
+h1 .cyan{color:var(--cyan);}
+.lastupd{display:inline-flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.72rem;color:var(--text-dim);margin:.1rem 0 .8rem;}
+.lastupd .live{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(18,161,80,.18);}
+.lastupd b{color:var(--text);font-weight:700;}
+.summary{font-family:var(--sans);font-size:1.05rem;font-weight:700;color:var(--white);margin-bottom:1.4rem;}
+.mkt{display:flex;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:1.8rem;flex-wrap:wrap;}
+.mkt .ix{background:#fff;padding:.7rem 1.1rem;flex:1;min-width:150px;display:flex;flex-direction:column;gap:.12rem;}
+.mkt .nm{font-family:var(--mono);font-size:.58rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;}
+.mkt .vl{font-family:var(--mono);font-size:1.1rem;font-weight:800;color:var(--white);}
+.mkt .ch{font-family:var(--mono);font-size:.72rem;font-weight:700;}
+.up{color:var(--green);}.dn{color:var(--red);}
+.hd{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin:0 0 .7rem;}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem;}
+.card{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:.78rem;}
+th,td{padding:.5rem .8rem;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line);}
+th{font-family:var(--mono);color:var(--text-dim);font-size:.58rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:var(--bg3);}
+td{font-family:var(--mono);}
+th.l,td.l{text-align:left;}
+.sym{font-weight:800;color:var(--white);}
+.co{color:var(--text-dim);font-size:.72rem;}
+tr:last-child td{border-bottom:none;}
+.gain td.ch{color:var(--green);font-weight:700;}
+.lose td.ch{color:var(--red);font-weight:700;}
+.earn{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:2rem;}
+.news{display:flex;flex-direction:column;gap:.1rem;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:2rem;}
+.news a{background:#fff;padding:.8rem 1.1rem;text-decoration:none;color:var(--text);display:block;transition:background .2s;}
+.news a:hover{background:var(--bg3);}
+.news .h{font-weight:700;color:var(--white);font-size:.92rem;line-height:1.4;}
+.news .m{font-family:var(--mono);font-size:.62rem;color:var(--text-dim);margin-top:.2rem;}
+.note{font-family:var(--mono);font-size:.7rem;color:var(--text-dim);padding:1rem 1.1rem;}
+.empty{padding:1.5rem;text-align:center;color:var(--text-dim);font-family:var(--mono);font-size:.78rem;}
+.disc{font-family:var(--mono);font-size:.64rem;color:var(--text-dim);line-height:1.9;margin-top:1rem;border-left:2px solid var(--orange);padding-left:1rem;}
+@media(max-width:800px){.nav-links{display:none;}.cols{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo"><div class="logo-diamond"><span>G</span></div><div><div class="logo-text">GLOBESEC</div><div class="logo-sub">protocol.ai</div></div></a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/csp/">CSP Scanner</a></li>
+      <li><a href="/csp/screener/">Wheel Screener</a></li>
+      <li><a href="/csp/market/">Market Today</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="label"><div class="bar"></div><div class="text">Market Lab</div></div>
+  <h1>Market <span class="cyan">Today</span></h1>
+  <div class="lastupd" id="lastupd"></div>
+  <div class="summary" id="summary">Loading market brief…</div>
+
+  <div class="mkt" id="mkt" style="display:none"></div>
+
+  <div class="cols">
+    <div>
+      <div class="hd">▲ Top 10 Gainers Today</div>
+      <div class="card"><table><thead><tr><th class="l">Symbol</th><th class="l">Company</th><th>Price</th><th>Change</th></tr></thead><tbody id="gainers"></tbody></table><div class="empty" id="gEmpty" style="display:none">No data right now.</div></div>
+    </div>
+    <div>
+      <div class="hd">▼ Top 10 Losers Today</div>
+      <div class="card"><table><thead><tr><th class="l">Symbol</th><th class="l">Company</th><th>Price</th><th>Change</th></tr></thead><tbody id="losers"></tbody></table><div class="empty" id="lEmpty" style="display:none">No data right now.</div></div>
+    </div>
+  </div>
+
+  <div class="hd">This Week's Earnings</div>
+  <div class="earn"><table><thead><tr><th class="l">Symbol</th><th class="l">Date</th><th class="l">When</th><th>EPS est.</th></tr></thead><tbody id="earnings"></tbody></table><div class="note" id="earnNote" style="display:none"></div></div>
+
+  <div class="hd">Market News</div>
+  <div class="news" id="news"></div>
+  <div class="note" id="newsNote" style="display:none"></div>
+
+  <div class="disc">
+    DISCLAIMER: Educational/informational only. Not investment advice. Index quotes are CBOE delayed (~15 min);
+    movers via Yahoo Finance; earnings and news via Finnhub. Verify everything with your broker before trading.
+  </div>
+</div>
+
+<script>
+const WORKER = "https://csp-market.ptmtek4.workers.dev/";
+function pct(v){return v==null?"—":(v>=0?"+":"")+Number(v).toFixed(2)+"%";}
+function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtUpdated(s){if(!s)return"";const d=new Date(s);return d.toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"});}
+function fmtDay(s){if(!s)return"—";const d=new Date(s+"T00:00:00");return d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});}
+function whenLabel(h){return h==="bmo"?"Before open":h==="amc"?"After close":(h||"—");}
+
+function renderIndices(ix){
+  const el=document.getElementById("mkt");
+  if(!ix||!ix.length){el.style.display="none";return;}
+  el.style.display="flex";
+  el.innerHTML=ix.map(i=>{
+    const c=i.change_pct, cls=c==null?"":(c>=0?"up":"dn"), arrow=c==null?"":(c>=0?"▲":"▼");
+    const chg=c==null?"":`${arrow} ${Math.abs(c).toFixed(2)}%`;
+    const val=Number(i.value).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+    return `<div class="ix"><div class="nm">${i.label}</div><div class="vl">${val}</div><div class="ch ${cls}">${chg}</div></div>`;
+  }).join("");
+}
+function renderMovers(rows,id,cls,emptyId){
+  const body=document.getElementById(id);
+  if(!rows||!rows.length){body.innerHTML="";document.getElementById(emptyId).style.display="block";return;}
+  document.getElementById(emptyId).style.display="none";
+  body.innerHTML=rows.map(r=>`<tr class="${cls}"><td class="l sym">${r.symbol}</td><td class="l co">${(r.name||"").slice(0,28)}</td><td>${money(r.price)}</td><td class="ch">${pct(r.change_pct)}</td></tr>`).join("");
+}
+function renderEarnings(rows,hasKey){
+  const body=document.getElementById("earnings"), note=document.getElementById("earnNote");
+  if(!hasKey){body.innerHTML="";note.style.display="block";note.textContent="Earnings calendar needs the Finnhub key added to the Worker (Settings → Variables → FINNHUB_API_KEY).";return;}
+  if(!rows||!rows.length){body.innerHTML="";note.style.display="block";note.textContent="No earnings found for this week.";return;}
+  note.style.display="none";
+  body.innerHTML=rows.map(r=>`<tr><td class="l sym">${r.symbol}</td><td class="l">${fmtDay(r.date)}</td><td class="l">${whenLabel(r.hour)}</td><td>${r.eps_estimate==null?"—":r.eps_estimate}</td></tr>`).join("");
+}
+function renderNews(rows,hasKey){
+  const el=document.getElementById("news"), note=document.getElementById("newsNote");
+  if(!hasKey){el.style.display="none";note.style.display="block";note.textContent="Market news needs the Finnhub key added to the Worker.";return;}
+  if(!rows||!rows.length){el.style.display="none";note.style.display="block";note.textContent="No headlines right now.";return;}
+  note.style.display="none";el.style.display="flex";
+  el.innerHTML=rows.map(n=>`<a href="${n.url}" target="_blank" rel="noopener"><div class="h">${n.headline}</div><div class="m">${n.source||""}${n.datetime?" · "+fmtUpdated(n.datetime):""}</div></a>`).join("");
+}
+
+async function load(){
+  try{
+    const r=await fetch(WORKER,{cache:"no-store"});
+    if(!r.ok) throw new Error("market "+r.status);
+    const d=await r.json();
+    document.getElementById("summary").textContent=d.summary||"";
+    document.getElementById("lastupd").innerHTML=d.generated_at?`<span class="live"></span>Last updated: <b>${fmtUpdated(d.generated_at)}</b>`:"";
+    renderIndices(d.indices);
+    renderMovers(d.gainers,"gainers","gain","gEmpty");
+    renderMovers(d.losers,"losers","lose","lEmpty");
+    renderEarnings(d.earnings_week,d.has_finnhub);
+    renderNews(d.news,d.has_finnhub);
+  }catch(e){
+    document.getElementById("summary").textContent="Could not load the market brief: "+e.message;
+  }
+}
+load();
+setInterval(load,600000);
+</script>
+</body>
+</html>
