@@ -167,9 +167,13 @@ function renderRanked(){
 }
 function sortBy(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=(k==="symbol"||k==="sector"||k==="expiration")?1:-1;}renderRanked();}
 
-function renderIndices(){
+async function renderIndices(){
   const el=document.getElementById("mkt");
-  const ix=DATA.indices||[];
+  let ix=DATA.indices||[];
+  try{                                   // prefer the live Worker endpoint; fall back to baked-in data
+    const r=await fetch("/api/indices",{cache:"no-store"});
+    if(r.ok){const j=await r.json(); if(j&&j.indices&&j.indices.length) ix=j.indices;}
+  }catch(e){}
   if(!ix.length){el.style.display="none";return;}
   el.style.display="flex";
   el.innerHTML=ix.map(i=>{
