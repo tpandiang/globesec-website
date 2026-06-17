@@ -170,8 +170,8 @@ function sortBy(k){if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=(k==="symbo
 async function renderIndices(){
   const el=document.getElementById("mkt");
   let ix=DATA.indices||[];
-  try{                                   // prefer the live Worker endpoint; fall back to baked-in data
-    const r=await fetch("/api/indices",{cache:"no-store"});
+  try{                                   // live Worker endpoint; fall back to baked-in data
+    const r=await fetch("https://csp-indices.ptmtek4.workers.dev/",{cache:"no-store"});
     if(r.ok){const j=await r.json(); if(j&&j.indices&&j.indices.length) ix=j.indices;}
   }catch(e){}
   if(!ix.length){el.style.display="none";return;}
