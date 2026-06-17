@@ -39,6 +39,9 @@ nav{position:fixed; top:0; width:100%; z-index:1000; background:rgba(255,255,255
 h1{font-size:clamp(2rem,5vw,3rem); font-weight:900; color:var(--white); letter-spacing:-1px; margin-bottom:.5rem;}
 h1 .cyan{color:var(--cyan);}
 .subtitle{font-family:var(--mono); font-size:.8rem; color:var(--text-dim); letter-spacing:.3px; margin-bottom:2rem; max-width:820px; line-height:1.8;}
+.lastupd{display:inline-flex; align-items:center; gap:.45rem; font-family:var(--mono); font-size:.72rem; color:var(--text-dim); margin:.1rem 0 1.1rem;}
+.lastupd .live{width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 0 3px rgba(18,161,80,.18);}
+.lastupd b{color:var(--text); font-weight:700;}
 .toolbar{display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-bottom:1.5rem;}
 .toolbar input,.toolbar select{background:#fff; border:1px solid var(--line); color:var(--text); font-family:var(--mono); font-size:.8rem; padding:.6rem .9rem; outline:none; border-radius:5px;}
 .toolbar input{min-width:200px;}
@@ -130,6 +133,7 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
 <div class="wrap">
   <div class="label"><div class="bar"></div><div class="text">Options Lab</div></div>
   <h1>Cash-Secured <span class="cyan">Put</span> Scanner</h1>
+  <div class="lastupd" id="lastupd"></div>
   <div class="subtitle">
     Top 20 cash-secured puts on underlyings under $300, ranked by premium ($) received.
     Quotes from CBOE (delayed ~15 min).<br>
@@ -194,6 +198,7 @@ function setSort(m){ sortMode=m; render(); }
 function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
 function usd0(v){return "$"+Number(v).toLocaleString(undefined,{maximumFractionDigits:0});}
 function fmtFull(s){ if(!s) return "—"; const d=new Date(s+"T00:00:00"); return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}); }
+function fmtUpdated(s){ if(!s) return ""; const d=new Date(s.endsWith("Z")?s:s+"Z"); return d.toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"}); }
 let priceBySym={};
 function otmPct(spot,strike){ return spot ? ((spot-strike)/spot*100) : null; }
 function nearestPick(r){
@@ -369,6 +374,8 @@ async function loadResults(){
     DATA=await r.json();
   }catch(e){ err.style.display="block"; err.textContent="Could not load data: "+e.message; DATA={results:[]}; }
   priceBySym=Object.fromEntries((DATA.results||[]).map(r=>[r.symbol,r.price]));
+  const lu=document.getElementById("lastupd");
+  if(lu) lu.innerHTML = DATA.generated_at ? `<span class="live"></span>Last updated: <b>${fmtUpdated(DATA.generated_at)}</b>` : "";
   renderIndices();
   renderAccounts();
   renderTop10();

@@ -34,6 +34,9 @@ nav{position:fixed;top:0;width:100%;z-index:1000;background:rgba(255,255,255,.92
 h1{font-size:clamp(1.8rem,4.5vw,2.7rem);font-weight:900;color:var(--white);letter-spacing:-1px;margin-bottom:.4rem;}
 h1 .cyan{color:var(--cyan);}
 .subtitle{font-family:var(--mono);font-size:.78rem;color:var(--text-dim);margin-bottom:1.6rem;max-width:900px;line-height:1.8;}
+.lastupd{display:inline-flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.72rem;color:var(--text-dim);margin:.1rem 0 1rem;}
+.lastupd .live{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(18,161,80,.18);}
+.lastupd b{color:var(--text);font-weight:700;}
 .hd{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin:2rem 0 .7rem;}
 .warn{background:#fff4e5;border:1px solid #f0c98a;color:#8a5a00;font-family:var(--mono);font-size:.72rem;padding:.7rem 1rem;border-radius:6px;margin-bottom:1rem;}
 .controls{display:flex;gap:1.2rem;align-items:flex-end;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:8px;padding:1rem 1.2rem;margin-bottom:1.2rem;}
@@ -84,6 +87,7 @@ tr:hover td{filter:brightness(.98);}
 <div class="wrap">
   <div class="label"><div class="bar"></div><div class="text">Options Lab</div></div>
   <h1>CSP <span class="cyan">Wheel</span> Screener</h1>
+  <div class="lastupd" id="lastupd"></div>
   <div class="subtitle">
     Priority #1: <b>avoid assignment</b> (|delta| ≤ <span id="cfgAssign">20</span>%, ≥ <span id="cfgOtm">5</span>% OTM).
     #2: if assigned, <b>sell a covered call at/above cost basis</b> for ≥ <span id="cfgCC">0.5</span>%/wk (wheelability).
@@ -138,6 +142,7 @@ let sortKey="score",sortDir=-1;
 function money(v){return v==null?"—":"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
 function usd0(v){return "$"+Number(v).toLocaleString(undefined,{maximumFractionDigits:0});}
 function fmtFull(s){if(!s)return"—";const d=new Date(s+"T00:00:00");return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});}
+function fmtUpdated(s){if(!s)return"";const d=new Date(s.endsWith("Z")?s:s+"Z");return d.toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"});}
 
 function rcell(k,r){
   if(k==="tier") return `<td><span class="dot ${r.tier==='green'?'g':'y'}"></span></td>`;
@@ -248,6 +253,8 @@ async function load(){
   }catch(e){ w.style.display="block"; w.textContent="Could not load data: "+e.message; DATA={results:[]}; }
   applyConfig();
   document.getElementById("updated").textContent = DATA.generated_at ? ("updated "+fmtFull(DATA.generated_at.slice(0,10))+" "+DATA.generated_at.slice(11,16)) : "";
+  const lu=document.getElementById("lastupd");
+  if(lu) lu.innerHTML = DATA.generated_at ? `<span class="live"></span>Last updated: <b>${fmtUpdated(DATA.generated_at)}</b>` : "";
   if(DATA.generated_at && !DATA.earnings_source_ok){
     w.style.display="block";
     w.textContent="⚠ Earnings calendar was unavailable on the last scan (no Finnhub key or API error) — the earnings filter was NOT applied. Add FINNHUB_API_KEY to enable it.";
