@@ -1,5 +1,5 @@
 /**
- * GlobeSec CSP — "Market Today" Worker (defensive). Paste into the csp-market Worker.
+ * GlobeSec CSP — "Market Today" Worker (csp-market), deployed from GitHub via Workers Builds.
  *
  * Sources (all optional/graceful, never throws):
  *   - indices ........ CBOE delayed quotes                       [keyless]
