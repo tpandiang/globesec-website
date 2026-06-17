@@ -108,6 +108,7 @@ export default {
       ]);
       const indices = r[0] || [], gainers = r[1] || [], losers = r[2] || [], earnings_week = r[3] || [], headlines = r[4] || [];
       return jsonResponse({
+        build: "gh-1",
         generated_at: new Date().toISOString(),
         summary: summarize(indices),
         indices, gainers, losers, earnings_week, news: headlines,
