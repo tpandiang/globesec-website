@@ -5,13 +5,20 @@ quotes), edge-cached for 10 minutes, and returns the same JSON shape the old
 `csp/results.json` had. The page at `/csp/` fetches this instead of a committed
 file — so there's **no GitHub Action, no committed data, and no cache-purge dance.**
 
-## One-time deploy (same as the `csp-market` Worker)
-1. Cloudflare dashboard → **Workers & Pages → Create → Workers → Connect to Git**.
-2. Pick `tpandiang/globesec-website`, set **Root directory = `workers/csp`**.
-3. Deploy. It publishes to `https://csp-scan.<your-subdomain>.workers.dev/`
-   (the page expects `csp-scan.ptmtek4.workers.dev`; change the URL in
-   `csp/index.html` → `loadResults()` if your subdomain differs).
-4. After this, every push to `main` auto-deploys the Worker.
+## No new Worker to set up — it rides on `csp-market`
+The scan is exported from `index.js` (`runScan`) and **imported by the existing
+`csp-market` Worker** (`workers/market/index.js`), served at its `/scan` route:
+
+    https://csp-market.ptmtek4.workers.dev/scan
+
+`csp-market` is already connected to GitHub (Workers Builds, root `workers/market`),
+so a normal push to `main` auto-deploys the scan too — no extra Cloudflare setup.
+The page (`csp/index.html` → `loadResults()`) fetches that URL.
+
+### Optional: run it as its own Worker instead
+If you'd rather have a standalone `csp-scan` Worker, connect a new Workers-Builds
+project with **Root directory = `workers/csp`** (it has its own `wrangler.toml` and a
+default `fetch` handler), then point `loadResults()` at `csp-scan.<subdomain>.workers.dev`.
 
 ## Optional: company name / P/E / 52-week range
 Set **`FMP_API_KEY`** under the Worker's *Settings → Variables and Secrets*

@@ -368,9 +368,9 @@ function setStats(){
 }
 async function loadResults(){
   const err=document.getElementById("err"); err.style.display="none";
-  // Live scan from the csp-scan Worker (real-time at the edge, ~10 min cache).
-  // Falls back to the static results.json if the Worker is unavailable.
-  const WORKER="https://csp-scan.ptmtek4.workers.dev/";
+  // Live scan from the existing csp-market Worker's /scan route (real-time at the
+  // edge, ~10 min cache). Falls back to the static results.json if it's unavailable.
+  const WORKER="https://csp-market.ptmtek4.workers.dev/scan";
   try{
     const r=await fetch(WORKER,{cache:"no-store"});
     if(!r.ok) throw new Error("worker "+r.status);

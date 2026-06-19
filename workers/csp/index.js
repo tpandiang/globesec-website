@@ -302,7 +302,7 @@ async function getFundamentals(symbols, env, dbg) {
   return empty;
 }
 
-async function runScan(env, dbg) {
+export async function runScan(env, dbg) {
   const todayMs = Date.parse(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
 
   const settled = await Promise.all(UNIVERSE.map(getChain));

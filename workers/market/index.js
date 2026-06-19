@@ -10,6 +10,9 @@
  * Set FINNHUB_API_KEY / FMP_API_KEY under the Worker's Settings -> Variables and Secrets.
  */
 
+import { runScan } from "../csp/index.js";   // /scan route -> full CSP scan (shares this Worker)
+
+const CSP_CACHE_SECONDS = 600;
 const CBOE = "https://cdn.cboe.com/api/global/delayed_quotes/options";
 const YH = "https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved";
 const UA = "Mozilla/5.0 (globesec-csp-worker)";
@@ -96,10 +99,26 @@ function jsonResponse(obj, seconds) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, OPTIONS" } });
     }
+
+    // /scan -> live cash-secured-put scan (edge-cached); / -> Market Today (below).
+    const url = new URL(request.url);
+    if (url.pathname.replace(/\/+$/, "") === "/scan") {
+      const cache = caches.default;
+      const nocache = url.searchParams.has("nocache");
+      const cacheKey = new Request("https://globesec.ai/__cache/csp-scan", { method: "GET" });
+      if (!nocache) { const hit = await cache.match(cacheKey); if (hit) return hit; }
+      const sdbg = [];
+      let resp;
+      try { resp = jsonResponse(await runScan(env, sdbg), CSP_CACHE_SECONDS); }
+      catch (e) { return jsonResponse({ error: String(e), debug: sdbg, results: [] }, 30); }
+      if (!nocache && ctx && ctx.waitUntil) ctx.waitUntil(cache.put(cacheKey, resp.clone()));
+      return resp;
+    }
+
     const dbg = [];
     try {
       const key = env && env.FINNHUB_API_KEY ? env.FINNHUB_API_KEY : "";
