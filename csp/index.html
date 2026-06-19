@@ -144,11 +144,11 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
 
   <div class="mkt" id="mkt" style="display:none"></div>
 
-  <div class="acct-hd" id="topPicksHd" style="display:none">▸ Top Picks — Buy Ideas (cash-secured-put entry)</div>
-  <div class="accounts" id="topPicks"></div>
-
   <div class="acct-hd" id="acctHd" style="display:none">▸ CSP Picks — next 2 weeks</div>
   <div class="accounts" id="accounts"></div>
+
+  <div class="acct-hd" id="topPicksHd" style="display:none">▸ Top Picks — Buy Ideas (cash-secured-put entry)</div>
+  <div class="accounts" id="topPicks"></div>
 
   <div class="acct-hd" id="topHd" style="display:none">▸ Top 10 Picks</div>
   <div class="tablewrap" id="top10" style="margin-bottom:2rem"></div>
@@ -419,8 +419,8 @@ async function loadResults(){
   const lu=document.getElementById("lastupd");
   if(lu) lu.innerHTML = DATA.generated_at ? `<span class="live"></span>Last updated: <b>${fmtUpdated(DATA.generated_at)}</b>` : "";
   renderIndices();
-  renderTopPicks();
   renderAccounts();
+  renderTopPicks();
   renderTop10();
   renderLosers();
   render();
