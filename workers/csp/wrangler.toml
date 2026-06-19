@@ -1,0 +1,10 @@
+# Cloudflare Worker config for the live CSP scanner (csp-scan).
+# Connect to GitHub via Workers Builds with Root directory = workers/csp, so every
+# push to main auto-deploys this Worker — no manual paste, no GitHub Action, no
+# committed results.json, no cache-purge dance.
+#
+# Optional: set FMP_API_KEY under the Worker's Settings -> Variables and Secrets to
+# enrich rows/losers with company name, P/E and 52-week range (graceful without it).
+name = "csp-scan"
+main = "index.js"
+compatibility_date = "2026-06-01"

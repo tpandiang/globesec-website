@@ -368,11 +368,22 @@ function setStats(){
 }
 async function loadResults(){
   const err=document.getElementById("err"); err.style.display="none";
+  // Live scan from the csp-scan Worker (real-time at the edge, ~10 min cache).
+  // Falls back to the static results.json if the Worker is unavailable.
+  const WORKER="https://csp-scan.ptmtek4.workers.dev/";
   try{
-    const r=await fetch("results.json?_="+Date.now());
-    if(!r.ok) throw new Error("results.json "+r.status);
-    DATA=await r.json();
-  }catch(e){ err.style.display="block"; err.textContent="Could not load data: "+e.message; DATA={results:[]}; }
+    const r=await fetch(WORKER,{cache:"no-store"});
+    if(!r.ok) throw new Error("worker "+r.status);
+    const j=await r.json();
+    if(!j||!Array.isArray(j.results)||j.error) throw new Error(j&&j.error?j.error:"worker payload");
+    DATA=j;
+  }catch(e){
+    try{
+      const r2=await fetch("results.json?_="+Date.now());
+      if(!r2.ok) throw new Error("results.json "+r2.status);
+      DATA=await r2.json();
+    }catch(e2){ err.style.display="block"; err.textContent="Could not load data: "+e2.message; DATA={results:[]}; }
+  }
   priceBySym=Object.fromEntries((DATA.results||[]).map(r=>[r.symbol,r.price]));
   const lu=document.getElementById("lastupd");
   if(lu) lu.innerHTML = DATA.generated_at ? `<span class="live"></span>Last updated: <b>${fmtUpdated(DATA.generated_at)}</b>` : "";
