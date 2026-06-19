@@ -305,7 +305,13 @@ async function getFundamentals(symbols, env, dbg) {
 export async function runScan(env, dbg) {
   const todayMs = Date.parse(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
 
-  const settled = await Promise.all(UNIVERSE.map(getChain));
+  // Fetch chains in small concurrent batches (not all at once) so CBOE doesn't
+  // throttle the burst from a single Cloudflare colo and return partial data.
+  const POOL = 8;
+  const settled = [];
+  for (let i = 0; i < UNIVERSE.length; i += POOL) {
+    settled.push(...await Promise.all(UNIVERSE.slice(i, i + POOL).map(getChain)));
+  }
   const chains = settled.filter((c) => c && c.price > 0 && c.price < MAX_UNDERLYING_PRICE);
 
   let allRows = [];
