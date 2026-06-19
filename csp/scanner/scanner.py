@@ -256,6 +256,59 @@ def build_losers(chains_by_symbol: dict, top_n: int = 10) -> list[dict]:
     return movers
 
 
+def build_top_picks(chains_by_symbol: dict, today: dt.date, client: Cboe | None = None) -> list[dict]:
+    """A ~30-delta cash-secured-put entry for each curated Top Pick buy idea."""
+    out: list[dict] = []
+    for tp in config.TOP_PICKS:
+        entry = chains_by_symbol.get(tp["symbol"])
+        chain = spot = None
+        if entry and entry[1] > 0:
+            chain, spot = entry
+        else:
+            # missed by the main sweep (transient CBOE fail) -> fetch this one directly
+            try:
+                c = (client or Cboe()).get_chain(tp["symbol"])
+                if c and c.get("price", 0) > 0:
+                    chain, spot = c, c["price"]
+            except Exception:
+                pass
+        if not chain or not spot or spot <= 0:
+            out.append({**tp, "available": False, **({"price": round(spot, 2)} if spot else {})})
+            continue
+        cands = []
+        for o in chain["options"]:
+            if o["type"] != "put":
+                continue
+            k, bid = o["strike"], o["bid"]
+            if k is None or bid is None:
+                continue
+            k, bid = float(k), float(bid)
+            d = _dte(o["expiration"], today)
+            if d < 25 or d > 50 or k >= spot or bid <= 0:    # OTM, ~monthly window
+                continue
+            dl = abs(float(o["delta"])) if o.get("delta") is not None else None
+            cands.append((k, bid, dl, d, o["expiration"], int(o.get("open_interest") or 0)))
+        if not cands:
+            out.append({**tp, "available": False, "price": round(spot, 2)})
+            continue
+        # nearest ~0.30 delta (fallback: ~7% OTM by distance)
+        k, bid, dl, d, e, oi = min(
+            cands, key=lambda x: abs((x[2] if x[2] is not None else (spot - x[0]) / spot) - 0.30)
+        )
+        buyin = k - bid
+        yld = bid / k * 100
+        out.append({
+            **tp, "available": True,
+            "price": round(spot, 2), "strike": round(k, 2), "expiration": e, "dte": d,
+            "bid": round(bid, 2), "premium": round(bid * 100, 2),
+            "delta": round(dl, 3) if dl is not None else None, "open_interest": oi,
+            "collateral": round(k * 100, 2), "buyin": round(buyin, 2),
+            "discount_pct": round((spot - buyin) / spot * 100, 2),
+            "yield_pct": round(yld, 3), "annualized_pct": round(yld * (365 / d), 2),
+        })
+    return out
+
+
 def run_scan(symbols: list[str], progress=None) -> dict:
     """Full scan. `progress(done, total, stage)` is an optional callback."""
     client = Cboe()
@@ -335,12 +388,14 @@ def run_scan(symbols: list[str], progress=None) -> dict:
         )
 
     account_picks = build_account_picks(rows + extra_rows)
+    top_picks = build_top_picks(chains_by_symbol, today, client)
     losers = build_losers(chains_by_symbol)
 
     return {
         "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
         "data_source": "CBOE delayed (~15 min)",
         "account_picks": account_picks,
+        "top_picks": top_picks,
         "losers": losers,
         "params": {
             "max_underlying_price": config.MAX_UNDERLYING_PRICE,

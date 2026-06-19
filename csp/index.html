@@ -144,6 +144,9 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
 
   <div class="mkt" id="mkt" style="display:none"></div>
 
+  <div class="acct-hd" id="topPicksHd" style="display:none">▸ Top Picks — Buy Ideas (cash-secured-put entry)</div>
+  <div class="accounts" id="topPicks"></div>
+
   <div class="acct-hd" id="acctHd" style="display:none">▸ CSP Picks — next 2 weeks</div>
   <div class="accounts" id="accounts"></div>
 
@@ -286,6 +289,32 @@ function renderAccounts(){
       `</div></div>`;
   }).join("");
 }
+function renderTopPicks(){
+  const tps=DATA.top_picks||[];
+  document.getElementById("topPicksHd").style.display = tps.length?"block":"none";
+  document.getElementById("topPicks").innerHTML = tps.map(t=>{
+    if(!t.available || t.strike==null){
+      return `<div class="acct-card" style="border-left-color:var(--text-dim)">`+
+        `<div class="acct-name"><span>${t.symbol}</span><b>${t.sector||""}</b></div>`+
+        `<div class="acct-none">${t.price!=null?money(t.price):""} · no CSP entry available</div></div>`;
+    }
+    const assign=t.delta==null?"—":(t.delta*100).toFixed(0)+"%";
+    return `<div class="acct-card">`+
+      `<div class="acct-name"><span>${t.symbol}</span><b>${t.sector||""}</b></div>`+
+      `<div class="acct-trade">SELL ${t.symbol} $${t.strike} PUT</div>`+
+      `<div class="acct-sub">${t.thesis||""} &middot; exp ${fmtFull(t.expiration)} (${t.dte}d)</div>`+
+      `<div class="acct-metrics">`+
+        `<div><span>Spot</span><b>${money(t.price)}</b></div>`+
+        `<div><span>Premium</span><b>$${t.premium}</b></div>`+
+        `<div><span>Buy-in if assigned</span><b>${money(t.buyin)}</b></div>`+
+        `<div><span>Discount</span><b>${t.discount_pct}%</b></div>`+
+        `<div><span>Assign~</span><b>${assign}</b></div>`+
+        `<div><span>Yield</span><b>${t.yield_pct}%</b></div>`+
+        `<div><span>Annualized</span><b>${t.annualized_pct}%</b></div>`+
+        `<div><span>OI</span><b>${t.open_interest}</b></div>`+
+      `</div></div>`;
+  }).join("");
+}
 function fmt(k,v){
   if(v===null||v===undefined) return "—";
   if(["price","strike","bid","collateral","premium"].includes(k)) return money(v);
@@ -390,6 +419,7 @@ async function loadResults(){
   const lu=document.getElementById("lastupd");
   if(lu) lu.innerHTML = DATA.generated_at ? `<span class="live"></span>Last updated: <b>${fmtUpdated(DATA.generated_at)}</b>` : "";
   renderIndices();
+  renderTopPicks();
   renderAccounts();
   renderTop10();
   renderLosers();

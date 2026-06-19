@@ -39,6 +39,17 @@ BUCKETS.push({ name: "Bucket 4", balance: round2(TOTAL_CAPITAL - BUCKETS.reduce(
 // stocks you're happy to own if assigned (wheel) — always evaluated for picks
 const PREFERRED = new Set(["DAL", "NVDA", "AMZN", "ORCL", "INTC", "OSS", "SMCI"]);
 
+// Curated "Top Picks" buy ideas (under $80, diversified beaten-up sectors + growth).
+// Each gets a ~30-delta cash-secured-put entry computed live. Edit this list to
+// change what shows in the Top Picks section.
+const TOP_PICKS = [
+  { symbol: "PFE", sector: "Healthcare", thesis: "Pharma value; high dividend, low P/E" },
+  { symbol: "BAC", sector: "Financials", thesis: "Quality diversified bank; rate beneficiary" },
+  { symbol: "GM", sector: "Autos", thesis: "Deep value; very low P/E, big buybacks" },
+  { symbol: "KMI", sector: "Energy", thesis: "Pipeline fee cash flows; steady income" },
+  { symbol: "NU", sector: "Fintech", thesis: "LatAm digital bank; profitable growth" },
+];
+
 // Curated liquid, optionable, usually-sub-$300 universe (watchlist first). The
 // <$300 filter is applied live, so a name that pops above $300 is simply dropped.
 const UNIVERSE = [
@@ -277,6 +288,42 @@ function buildLosers(chains, fund, topN = 10) {
   return movers;
 }
 
+// ---- "Top Picks": a ~30-delta CSP entry for each curated buy idea ----
+function buildTopPicks(chainBySym, todayMs) {
+  const out = [];
+  for (const tp of TOP_PICKS) {
+    const ch = chainBySym[tp.symbol];
+    if (!ch || ch.price <= 0) { out.push({ ...tp, available: false }); continue; }
+    const spot = ch.price;
+    const cands = [];
+    for (const o of ch.options) {
+      if (o.type !== "put" || o.strike == null || o.bid == null) continue;
+      const k = Number(o.strike), bid = Number(o.bid);
+      const d = dte(o.expiration, todayMs);
+      if (d < 25 || d > 50 || k >= spot || bid <= 0) continue;     // OTM, ~monthly
+      const dl = o.delta != null ? Math.abs(Number(o.delta)) : null;
+      cands.push({ k, bid, dl, d, exp: o.expiration, oi: Math.trunc(o.open_interest || 0) });
+    }
+    if (!cands.length) { out.push({ ...tp, price: round2(spot), available: false }); continue; }
+    // pick the strike nearest ~0.30 delta (fallback: ~7% OTM by distance)
+    const target = (x) => Math.abs((x.dl != null ? x.dl : (spot - x.k) / spot) - 0.30);
+    cands.sort((a, b) => target(a) - target(b));
+    const c = cands[0];
+    const buyin = c.k - c.bid;
+    const yld = (c.bid / c.k) * 100;
+    out.push({
+      ...tp, available: true,
+      price: round2(spot), strike: round2(c.k), expiration: c.exp, dte: c.d,
+      bid: round2(c.bid), premium: round2(c.bid * 100),
+      delta: c.dl != null ? round3(c.dl) : null, open_interest: c.oi,
+      collateral: round2(c.k * 100), buyin: round2(buyin),
+      discount_pct: round2(((spot - buyin) / spot) * 100),
+      yield_pct: round3(yld), annualized_pct: round2(yld * (365 / c.d)),
+    });
+  }
+  return out;
+}
+
 async function getIndices(dbg) {
   const out = await Promise.all(INDICES.map(async ([label, sym, mult]) => {
     try {
@@ -364,6 +411,7 @@ export async function runScan(env, dbg) {
   });
 
   const accountPicks = buildAccountPicks(rows.concat(extraRows));
+  const topPicks = buildTopPicks(chainBySym, todayMs);
   const losers = buildLosers(chains, fund);
   const indices = await getIndices(dbg);
 
@@ -371,6 +419,7 @@ export async function runScan(env, dbg) {
     generated_at: new Date().toISOString().slice(0, 19),
     data_source: "CBOE delayed (~15 min)",
     account_picks: accountPicks,
+    top_picks: topPicks,
     losers,
     indices,
     params: {

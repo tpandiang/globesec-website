@@ -41,6 +41,16 @@ PREFERRED = [
     if s.strip()
 ]
 
+# Curated "Top Picks" buy ideas (under $80; diversified beaten-up sectors + growth).
+# Each gets a ~30-delta cash-secured-put entry computed live in the scan.
+TOP_PICKS = [
+    {"symbol": "PFE", "sector": "Healthcare", "thesis": "Pharma value; high dividend, low P/E"},
+    {"symbol": "BAC", "sector": "Financials", "thesis": "Quality diversified bank; rate beneficiary"},
+    {"symbol": "GM", "sector": "Autos", "thesis": "Deep value; very low P/E, big buybacks"},
+    {"symbol": "KMI", "sector": "Energy", "thesis": "Pipeline fee cash flows; steady income"},
+    {"symbol": "NU", "sector": "Fintech", "thesis": "LatAm digital bank; profitable growth"},
+]
+
 # --- Capital buckets (for the cash-secured-put picks at the top of the page) ---
 # Total deployable capital, split into four buckets. The first three are fixed
 # sizes; the last ("Bucket 4") absorbs whatever is left over. These dollar amounts
