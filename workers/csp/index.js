@@ -311,6 +311,7 @@ export async function runScan(env, dbg) {
   const settled = [];
   for (let i = 0; i < UNIVERSE.length; i += POOL) {
     settled.push(...await Promise.all(UNIVERSE.slice(i, i + POOL).map(getChain)));
+    if (i + POOL < UNIVERSE.length) await new Promise((r) => setTimeout(r, 120));
   }
   const chains = settled.filter((c) => c && c.price > 0 && c.price < MAX_UNDERLYING_PRICE);
 

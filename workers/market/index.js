@@ -109,14 +109,24 @@ export default {
     if (url.pathname.replace(/\/+$/, "") === "/scan") {
       const cache = caches.default;
       const nocache = url.searchParams.has("nocache");
-      const cacheKey = new Request("https://globesec.ai/__cache/csp-scan", { method: "GET" });
-      if (!nocache) { const hit = await cache.match(cacheKey); if (hit) return hit; }
+      const goodKey = new Request("https://globesec.ai/__cache/csp-scan", { method: "GET" });
+      if (!nocache) { const hit = await cache.match(goodKey); if (hit) return hit; }
       const sdbg = [];
-      let resp;
-      try { resp = jsonResponse(await runScan(env, sdbg), CSP_CACHE_SECONDS); }
-      catch (e) { return jsonResponse({ error: String(e), debug: sdbg, results: [] }, 30); }
-      if (!nocache && ctx && ctx.waitUntil) ctx.waitUntil(cache.put(cacheKey, resp.clone()));
-      return resp;
+      let payload;
+      try { payload = await runScan(env, sdbg); }
+      catch (e) { payload = { error: String(e), results: [], indices: [], debug: sdbg }; }
+      // Only cache a HEALTHY scan, so a CBOE 429 can't poison the 10-min cache.
+      const healthy = Array.isArray(payload.results) && payload.results.length > 0 && (payload.indices || []).length > 0;
+      if (healthy) {
+        const resp = jsonResponse(payload, CSP_CACHE_SECONDS);
+        if (ctx && ctx.waitUntil) ctx.waitUntil(cache.put(goodKey, resp.clone()));
+        return resp;
+      }
+      // Throttled scan: serve the last good cached scan if we have one; otherwise flag
+      // it degraded (short TTL) so the page falls back to the static results.json.
+      const lastGood = await cache.match(goodKey);
+      if (lastGood) return lastGood;
+      return jsonResponse({ ...payload, degraded: true }, 30);
     }
 
     const dbg = [];
