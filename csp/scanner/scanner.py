@@ -171,11 +171,19 @@ def build_account_picks(rows: list[dict]) -> list[dict]:
                     }
                 )
 
-    out: list[dict] = []
-    for acct in config.ACCOUNTS:
+    # Keep every bucket on a DIFFERENT stock so they don't all sour together.
+    # Allocate the smallest bucket first (it has the fewest affordable choices, so
+    # it isn't starved), reserve each chosen symbol, and emit in display order.
+    taken: set[str] = set()
+    picks: list = [None] * len(config.ACCOUNTS)
+    order = sorted(range(len(config.ACCOUNTS)), key=lambda i: config.ACCOUNTS[i]["balance"])
+    for i in order:
+        acct = config.ACCOUNTS[i]
         bal = float(acct["balance"])
         sized = []
         for c in cands:
+            if c["symbol"] in taken:             # distinct symbol per bucket
+                continue
             if c["collateral"] > bal:
                 continue
             contracts = int(bal // c["collateral"])
@@ -213,9 +221,10 @@ def build_account_picks(rows: list[dict]) -> list[dict]:
             best = max(sized, key=lambda p: p["account_yield_pct"])
         if best:
             best["meets_target"] = best["account_yield_pct"] >= config.TARGET_YIELD_MIN
+            taken.add(best["symbol"])             # reserve so no other bucket reuses it
         # NOTE: bucket balance is intentionally omitted from the output (not published).
-        out.append({"account": acct["name"], "pick": best})
-    return out
+        picks[i] = {"account": acct["name"], "pick": best}
+    return picks
 
 
 def build_losers(chains_by_symbol: dict, top_n: int = 10) -> list[dict]:

@@ -213,11 +213,18 @@ function buildAccountPicks(rows) {
     }
   }
   const risk = (p) => (p.delta != null ? Math.abs(p.delta) : 1.0);
-  const out = [];
-  for (const acct of BUCKETS) {
+  // Keep every bucket on a DIFFERENT stock so they don't all sour together.
+  // Allocate the smallest bucket first (fewest affordable choices), reserve each
+  // chosen symbol, and emit in the configured display order.
+  const taken = new Set();
+  const picks = new Array(BUCKETS.length).fill(null);
+  const order = BUCKETS.map((b, i) => i).sort((a, b) => BUCKETS[a].balance - BUCKETS[b].balance);
+  for (const bi of order) {
+    const acct = BUCKETS[bi];
     const bal = acct.balance;
     const sized = [];
     for (const c of cands) {
+      if (taken.has(c.symbol)) continue;          // distinct symbol per bucket
       if (c.collateral > bal) continue;
       const contracts = Math.floor(bal / c.collateral);
       if (contracts < 1) continue;
@@ -242,10 +249,10 @@ function buildAccountPicks(rows) {
     } else if (sized.length) {
       best = sized.reduce((a, b) => (b.account_yield_pct > a.account_yield_pct ? b : a));
     }
-    if (best) best.meets_target = best.account_yield_pct >= TARGET_YIELD_MIN;
-    out.push({ account: acct.name, pick: best });
+    if (best) { best.meets_target = best.account_yield_pct >= TARGET_YIELD_MIN; taken.add(best.symbol); }
+    picks[bi] = { account: acct.name, pick: best };
   }
-  return out;
+  return picks;
 }
 
 // ---- biggest decliners among the scanned universe (mirror of build_losers) ----
