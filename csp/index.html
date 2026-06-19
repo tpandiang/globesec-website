@@ -144,7 +144,7 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
 
   <div class="mkt" id="mkt" style="display:none"></div>
 
-  <div class="acct-hd" id="acctHd" style="display:none">▸ Account Picks — next 2 weeks</div>
+  <div class="acct-hd" id="acctHd" style="display:none">▸ CSP Picks — next 2 weeks</div>
   <div class="accounts" id="accounts"></div>
 
   <div class="acct-hd" id="topHd" style="display:none">▸ Top 10 Picks</div>
@@ -264,7 +264,7 @@ function renderAccounts(){
   document.getElementById("acctHd").style.display = aps.length?"block":"none";
   document.getElementById("accounts").innerHTML = aps.map(a=>{
     const p=a.pick;
-    if(!p) return `<div class="acct-card" style="border-left-color:var(--text-dim)"><div class="acct-name"><span>${a.account}</span><b>${usd0(a.balance)}</b></div><div class="acct-none">No CSP fits this balance.</div></div>`;
+    if(!p) return `<div class="acct-card" style="border-left-color:var(--text-dim)"><div class="acct-name"><span>${a.account}</span></div><div class="acct-none">No CSP fits this bucket.</div></div>`;
     const assign=p.delta==null?"—":(Math.abs(p.delta)*100).toFixed(0)+"%";
     const ay=p.account_yield_pct;
     const ayColor = (ay>=0.7) ? "var(--green)" : "#c0392b";
@@ -272,7 +272,7 @@ function renderAccounts(){
     const spot=(p.price!=null)?p.price:priceBySym[p.symbol];
     const otm=spot?otmPct(spot,p.strike):null;
     return `<div class="acct-card" style="${ay>=0.7?'':'border-left-color:#c0392b'}">`+
-      `<div class="acct-name"><span>${a.account}</span><b>${usd0(a.balance)}</b></div>`+
+      `<div class="acct-name"><span>${a.account}</span></div>`+
       `<div class="acct-trade">SELL ${p.contracts}× ${p.symbol} $${p.strike} PUT</div>`+
       `<div class="acct-sub">${p.company_name||p.symbol} &middot; exp ${fmtFull(p.expiration)} (${p.dte}d)${p.preferred?' &middot; <span style="color:var(--cyan)">★ watchlist</span>':''}</div>`+
       `<div class="acct-metrics">`+
@@ -283,7 +283,6 @@ function renderAccounts(){
         `<div><span>Strike vs spot</span><b>${otm==null?"—":otm.toFixed(1)+"% OTM"}</b></div>`+
         `<div><span>Yield/wk</span><b>${p.pct_of_collateral.toFixed(2)}%</b></div>`+
         `<div><span>Util</span><b>${p.utilization_pct}%</b></div>`+
-        `<div><span>Cash left</span><b>${usd0(p.cash_left)}</b></div>`+
       `</div></div>`;
   }).join("");
 }

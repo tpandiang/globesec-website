@@ -188,10 +188,10 @@ def build_account_picks(rows: list[dict]) -> list[dict]:
                     **c,
                     "contracts": contracts,
                     "total_premium": total_premium,
-                    "capital_used": used,
                     "utilization_pct": round(used / bal * 100, 1),
-                    "cash_left": round(bal - used, 2),
-                    # yield on the WHOLE account (this is the "0.7% minimum" target)
+                    # yield on the WHOLE bucket (this is the "0.7% minimum" target).
+                    # Absolute capital figures (balance, capital used, cash left) are
+                    # intentionally NOT carried into the output — only percentages.
                     "account_yield_pct": round(total_premium / bal * 100, 3),
                 }
             )
@@ -213,7 +213,8 @@ def build_account_picks(rows: list[dict]) -> list[dict]:
             best = max(sized, key=lambda p: p["account_yield_pct"])
         if best:
             best["meets_target"] = best["account_yield_pct"] >= config.TARGET_YIELD_MIN
-        out.append({"account": acct["name"], "balance": bal, "pick": best})
+        # NOTE: bucket balance is intentionally omitted from the output (not published).
+        out.append({"account": acct["name"], "pick": best})
     return out
 
 

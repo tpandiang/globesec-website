@@ -41,11 +41,22 @@ PREFERRED = [
     if s.strip()
 ]
 
-# --- Accounts (for per-account picks at the top of the page) ---
+# --- Capital buckets (for the cash-secured-put picks at the top of the page) ---
+# Total deployable capital, split into four buckets. The first three are fixed
+# sizes; the last ("Bucket 4") absorbs whatever is left over. These dollar amounts
+# are used ONLY to size each pick (how many contracts fit) — they are deliberately
+# NOT published to results.json or shown on the page.
+TOTAL_CAPITAL = _f("TOTAL_CAPITAL", 300000.0)
+_BUCKETS = [
+    _f("BUCKET_1", 22000.0),
+    _f("BUCKET_2", 100000.0),
+    _f("BUCKET_3", 50000.0),
+]
 ACCOUNTS = [
-    {"name": "OPT-J", "balance": 46000.0},
-    {"name": "OPT-C", "balance": 34000.0},
-    {"name": "OPT-H", "balance": 40000.0},
+    {"name": "Bucket 1", "balance": _BUCKETS[0]},
+    {"name": "Bucket 2", "balance": _BUCKETS[1]},
+    {"name": "Bucket 3", "balance": _BUCKETS[2]},
+    {"name": "Bucket 4", "balance": round(TOTAL_CAPITAL - sum(_BUCKETS), 2)},  # remaining
 ]
 ACCOUNT_WEEKS = _i("ACCOUNT_WEEKS", 2)                     # pick horizon: next N weeks
 
