@@ -207,14 +207,14 @@ def build_account_picks(rows: list[dict]) -> list[dict]:
         def _risk(p):
             return abs(p["delta"]) if p["delta"] is not None else 1.0
 
-        # Goal: clear 0.7% on the account. Prefer watchlist stocks (happy to own if
-        # assigned) and, for those, favor INCOME (highest account yield). If no
-        # watchlist trade fits, fall back to the safest non-watchlist trade.
+        # Among picks that clear the 0.7% account target, choose the SAFEST (lowest
+        # assignment risk / delta); prefer watchlist names. If none clear, take the
+        # best available yield (flagged below as not meeting target).
         meeting = [p for p in sized if p["account_yield_pct"] >= config.TARGET_YIELD_MIN]
         pref_meeting = [p for p in meeting if p["preferred"]]
         best = None
-        if pref_meeting:                         # watchlist + clears 0.7%: maximize income
-            best = max(pref_meeting, key=lambda p: (p["account_yield_pct"], -_risk(p)))
+        if pref_meeting:                         # watchlist clearing 0.7%: safest
+            best = min(pref_meeting, key=lambda p: (_risk(p), -p["account_yield_pct"]))
         elif meeting:                            # any stock clearing 0.7%: safest
             best = min(meeting, key=lambda p: (_risk(p), -p["account_yield_pct"]))
         elif sized:                              # nothing clears 0.7%: best available (flag)

@@ -51,22 +51,15 @@ TOP_PICKS = [
     {"symbol": "NU", "sector": "Fintech", "thesis": "LatAm digital bank; profitable growth"},
 ]
 
-# --- Capital buckets (for the cash-secured-put picks at the top of the page) ---
-# Total deployable capital, split into four buckets. The first three are fixed
-# sizes; the last ("Bucket 4") absorbs whatever is left over. These dollar amounts
-# are used ONLY to size each pick (how many contracts fit) — they are deliberately
-# NOT published to results.json or shown on the page.
-TOTAL_CAPITAL = _f("TOTAL_CAPITAL", 300000.0)
-_BUCKETS = [
-    _f("BUCKET_1", 22000.0),
-    _f("BUCKET_2", 100000.0),
-    _f("BUCKET_3", 50000.0),
-]
+# --- Real tradeable accounts (for the cash-secured-put picks on the page) ---
+# Only CSP-eligible accounts: the Roth IRA (#2) and the ETF-only account (#5) are
+# excluded. These balances are used ONLY to size each pick (how many contracts fit)
+# — they are deliberately NOT published to results.json or shown on the page.
 ACCOUNTS = [
-    {"name": "Bucket 1", "balance": _BUCKETS[0]},
-    {"name": "Bucket 2", "balance": _BUCKETS[1]},
-    {"name": "Bucket 3", "balance": _BUCKETS[2]},
-    {"name": "Bucket 4", "balance": round(TOTAL_CAPITAL - sum(_BUCKETS), 2)},  # remaining
+    {"name": "Account #1", "balance": _f("ACCT_1", 22039.16)},
+    {"name": "Account #3", "balance": _f("ACCT_3", 59625.37)},
+    {"name": "Account #4", "balance": _f("ACCT_4", 137424.66)},
+    {"name": "Account #6", "balance": _f("ACCT_6", 47419.99)},
 ]
 ACCOUNT_WEEKS = _i("ACCOUNT_WEEKS", 2)                     # pick horizon: next N weeks
 

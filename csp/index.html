@@ -267,7 +267,7 @@ function renderAccounts(){
   document.getElementById("acctHd").style.display = aps.length?"block":"none";
   document.getElementById("accounts").innerHTML = aps.map(a=>{
     const p=a.pick;
-    if(!p) return `<div class="acct-card" style="border-left-color:var(--text-dim)"><div class="acct-name"><span>${a.account}</span></div><div class="acct-none">No CSP fits this bucket.</div></div>`;
+    if(!p) return `<div class="acct-card" style="border-left-color:var(--text-dim)"><div class="acct-name"><span>${a.account}</span></div><div class="acct-none">No CSP fits this account.</div></div>`;
     const assign=p.delta==null?"—":(Math.abs(p.delta)*100).toFixed(0)+"%";
     const ay=p.account_yield_pct;
     const ayColor = (ay>=0.7) ? "var(--green)" : "#c0392b";

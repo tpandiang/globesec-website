@@ -27,14 +27,14 @@ const MIN_BID = 0.05;
 const TOP_N = 20;
 const ACCOUNT_WEEKS = 2;                                   // pick horizon for buckets
 
-// ---- capital buckets ($300K split; amounts are internal, never published) ----
-const TOTAL_CAPITAL = 300000.0;
+// ---- real tradeable accounts (CSP-eligible; amounts internal, never published) ----
+// Roth IRA (#2) and the ETF-only account (#5) are excluded. Balances size each pick.
 const BUCKETS = [
-  { name: "Bucket 1", balance: 22000.0 },
-  { name: "Bucket 2", balance: 100000.0 },
-  { name: "Bucket 3", balance: 50000.0 },
+  { name: "Account #1", balance: 22039.16 },
+  { name: "Account #3", balance: 59625.37 },
+  { name: "Account #4", balance: 137424.66 },
+  { name: "Account #6", balance: 47419.99 },
 ];
-BUCKETS.push({ name: "Bucket 4", balance: round2(TOTAL_CAPITAL - BUCKETS.reduce((a, b) => a + b.balance, 0)) });
 
 // stocks you're happy to own if assigned (wheel) — always evaluated for picks
 const PREFERRED = new Set(["DAL", "NVDA", "AMZN", "ORCL", "INTC", "OSS", "SMCI"]);
@@ -250,16 +250,15 @@ function buildAccountPicks(rows) {
         account_yield_pct: round3(totalPremium / bal * 100),
       });
     }
+    // Among picks that clear the 0.7% account target, choose the SAFEST (lowest
+    // assignment risk); prefer watchlist names. Fall back to best yield if none clear.
     const meeting = sized.filter((p) => p.account_yield_pct >= TARGET_YIELD_MIN);
     const prefMeeting = meeting.filter((p) => p.preferred);
+    const safest = (arr) => arr.reduce((a, b) => (risk(b) < risk(a) || (risk(b) === risk(a) && b.account_yield_pct > a.account_yield_pct) ? b : a));
     let best = null;
-    if (prefMeeting.length) {
-      best = prefMeeting.reduce((a, b) => (b.account_yield_pct > a.account_yield_pct || (b.account_yield_pct === a.account_yield_pct && risk(b) < risk(a)) ? b : a));
-    } else if (meeting.length) {
-      best = meeting.reduce((a, b) => (risk(b) < risk(a) || (risk(b) === risk(a) && b.account_yield_pct > a.account_yield_pct) ? b : a));
-    } else if (sized.length) {
-      best = sized.reduce((a, b) => (b.account_yield_pct > a.account_yield_pct ? b : a));
-    }
+    if (prefMeeting.length) best = safest(prefMeeting);
+    else if (meeting.length) best = safest(meeting);
+    else if (sized.length) best = sized.reduce((a, b) => (b.account_yield_pct > a.account_yield_pct ? b : a));
     if (best) { best.meets_target = best.account_yield_pct >= TARGET_YIELD_MIN; taken.add(best.symbol); }
     picks[bi] = { account: acct.name, pick: best };
   }
