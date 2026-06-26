@@ -1,27 +1,27 @@
 {
-  "generated_at": "2026-06-26T19:20:20",
+  "generated_at": "2026-06-26T21:07:39",
   "data_source": "CBOE delayed (~15 min)",
   "account_picks": [
     {
       "account": "Account #1",
       "pick": {
-        "symbol": "SMCI",
+        "symbol": "INTC",
         "preferred": true,
-        "company_name": "Super Micro Computer, Inc.",
-        "price": 30.3995,
+        "company_name": "Intel Corporation",
+        "price": 127.27,
         "expiration": "2026-07-10",
         "dte": 14,
-        "strike": 24.0,
-        "bid": 0.18,
-        "premium": 18.0,
-        "pct_of_collateral": 0.75,
-        "delta": -0.075,
-        "open_interest": 462,
-        "collateral": 2400.0,
-        "contracts": 9,
-        "total_premium": 162.0,
-        "utilization_pct": 98.0,
-        "account_yield_pct": 0.735,
+        "strike": 100.0,
+        "bid": 0.87,
+        "premium": 87.0,
+        "pct_of_collateral": 0.87,
+        "delta": -0.08,
+        "open_interest": 1506,
+        "collateral": 10000.0,
+        "contracts": 2,
+        "total_premium": 174.0,
+        "utilization_pct": 90.7,
+        "account_yield_pct": 0.79,
         "meets_target": true
       }
     },
@@ -31,20 +31,20 @@
         "symbol": "ORCL",
         "preferred": true,
         "company_name": "Oracle Corporation",
-        "price": 149.11,
+        "price": 148.45,
         "expiration": "2026-07-10",
         "dte": 14,
         "strike": 133.0,
-        "bid": 1.13,
-        "premium": 113.0,
-        "pct_of_collateral": 0.85,
-        "delta": -0.14,
+        "bid": 1.15,
+        "premium": 115.0,
+        "pct_of_collateral": 0.865,
+        "delta": -0.146,
         "open_interest": 53,
         "collateral": 13300.0,
         "contracts": 4,
-        "total_premium": 452.0,
+        "total_premium": 460.0,
         "utilization_pct": 89.2,
-        "account_yield_pct": 0.758,
+        "account_yield_pct": 0.771,
         "meets_target": true
       }
     },
@@ -54,14 +54,14 @@
         "symbol": "DAL",
         "preferred": true,
         "company_name": "Delta Air Lines, Inc.",
-        "price": 92.55,
+        "price": 92.24,
         "expiration": "2026-07-10",
         "dte": 14,
         "strike": 84.0,
         "bid": 0.78,
         "premium": 78.0,
         "pct_of_collateral": 0.929,
-        "delta": -0.177,
+        "delta": -0.183,
         "open_interest": 81,
         "collateral": 8400.0,
         "contracts": 16,
@@ -74,23 +74,23 @@
     {
       "account": "Account #6",
       "pick": {
-        "symbol": "INTC",
+        "symbol": "SMCI",
         "preferred": true,
-        "company_name": "Intel Corporation",
-        "price": 127.618,
+        "company_name": "Super Micro Computer, Inc.",
+        "price": 30.46,
         "expiration": "2026-07-10",
         "dte": 14,
-        "strike": 100.0,
-        "bid": 0.87,
-        "premium": 87.0,
-        "pct_of_collateral": 0.87,
-        "delta": -0.078,
-        "open_interest": 1506,
-        "collateral": 10000.0,
-        "contracts": 4,
-        "total_premium": 348.0,
-        "utilization_pct": 84.4,
-        "account_yield_pct": 0.734,
+        "strike": 24.5,
+        "bid": 0.2,
+        "premium": 20.0,
+        "pct_of_collateral": 0.816,
+        "delta": -0.083,
+        "open_interest": 12,
+        "collateral": 2450.0,
+        "contracts": 19,
+        "total_premium": 380.0,
+        "utilization_pct": 98.2,
+        "account_yield_pct": 0.801,
         "meets_target": true
       }
     }
@@ -101,173 +101,173 @@
       "sector": "Healthcare",
       "thesis": "Pharma value; high dividend, low P/E",
       "available": true,
-      "price": 24.25,
+      "price": 24.23,
       "strike": 23.0,
       "expiration": "2026-08-07",
       "dte": 42,
-      "bid": 0.24,
-      "premium": 24.0,
-      "delta": 0.29,
+      "bid": 0.06,
+      "premium": 6.0,
+      "delta": 0.276,
       "open_interest": 45,
       "collateral": 2300.0,
-      "buyin": 22.76,
-      "discount_pct": 6.14,
-      "yield_pct": 1.043,
-      "annualized_pct": 9.07
+      "buyin": 22.94,
+      "discount_pct": 5.32,
+      "yield_pct": 0.261,
+      "annualized_pct": 2.27
     },
     {
       "symbol": "BAC",
       "sector": "Financials",
       "thesis": "Quality diversified bank; rate beneficiary",
       "available": true,
-      "price": 57.79,
+      "price": 57.83,
       "strike": 56.0,
       "expiration": "2026-07-24",
       "dte": 28,
-      "bid": 0.81,
-      "premium": 81.0,
-      "delta": 0.305,
+      "bid": 0.76,
+      "premium": 76.0,
+      "delta": 0.303,
       "open_interest": 1420,
       "collateral": 5600.0,
-      "buyin": 55.19,
-      "discount_pct": 4.5,
-      "yield_pct": 1.446,
-      "annualized_pct": 18.86
+      "buyin": 55.24,
+      "discount_pct": 4.48,
+      "yield_pct": 1.357,
+      "annualized_pct": 17.69
     },
     {
       "symbol": "GM",
       "sector": "Autos",
       "thesis": "Deep value; very low P/E, big buybacks",
       "available": true,
-      "price": 78.17,
+      "price": 78.14,
       "strike": 74.0,
       "expiration": "2026-07-24",
       "dte": 28,
-      "bid": 1.7,
-      "premium": 170.0,
-      "delta": 0.296,
+      "bid": 1.68,
+      "premium": 168.0,
+      "delta": 0.297,
       "open_interest": 203,
       "collateral": 7400.0,
-      "buyin": 72.3,
-      "discount_pct": 7.51,
-      "yield_pct": 2.297,
-      "annualized_pct": 29.95
+      "buyin": 72.32,
+      "discount_pct": 7.45,
+      "yield_pct": 2.27,
+      "annualized_pct": 29.59
     },
     {
       "symbol": "KMI",
       "sector": "Energy",
       "thesis": "Pipeline fee cash flows; steady income",
       "available": true,
-      "price": 33.17,
+      "price": 33.2,
       "strike": 32.0,
-      "expiration": "2026-07-24",
-      "dte": 28,
-      "bid": 0.34,
-      "premium": 34.0,
-      "delta": 0.278,
-      "open_interest": 20,
+      "expiration": "2026-07-31",
+      "dte": 35,
+      "bid": 0.16,
+      "premium": 16.0,
+      "delta": 0.32,
+      "open_interest": 130,
       "collateral": 3200.0,
-      "buyin": 31.66,
-      "discount_pct": 4.55,
-      "yield_pct": 1.062,
-      "annualized_pct": 13.85
+      "buyin": 31.84,
+      "discount_pct": 4.1,
+      "yield_pct": 0.5,
+      "annualized_pct": 5.21
     },
     {
       "symbol": "NU",
       "sector": "Fintech",
       "thesis": "LatAm digital bank; profitable growth",
       "available": true,
-      "price": 13.04,
+      "price": 13.14,
       "strike": 12.5,
-      "expiration": "2026-07-24",
-      "dte": 28,
-      "bid": 0.23,
-      "premium": 23.0,
-      "delta": 0.311,
-      "open_interest": 133,
+      "expiration": "2026-07-31",
+      "dte": 35,
+      "bid": 0.26,
+      "premium": 26.0,
+      "delta": 0.295,
+      "open_interest": 82,
       "collateral": 1250.0,
-      "buyin": 12.27,
-      "discount_pct": 5.9,
-      "yield_pct": 1.84,
-      "annualized_pct": 23.99
+      "buyin": 12.24,
+      "discount_pct": 6.85,
+      "yield_pct": 2.08,
+      "annualized_pct": 21.69
     }
   ],
   "losers": [
     {
-      "symbol": "OSS",
-      "price": 17.25,
-      "change_pct": -6.43,
-      "company_name": "One Stop Systems, Inc.",
-      "pe": null,
-      "week52_high": 20.88,
-      "week52_low": 3.46,
-      "pct_below_high": 17.4,
-      "preferred": true
-    },
-    {
       "symbol": "QCOM",
-      "price": 194.32,
-      "change_pct": -5.16,
+      "price": 188.68,
+      "change_pct": -7.57,
       "company_name": "QUALCOMM Incorporated",
-      "pe": 20.89,
+      "pe": 20.36,
       "week52_high": 259.92,
       "week52_low": 121.99,
-      "pct_below_high": 25.2,
+      "pct_below_high": 27.4,
       "preferred": false
     },
     {
-      "symbol": "SMCI",
-      "price": 30.4,
-      "change_pct": -4.04,
-      "company_name": "Super Micro Computer, Inc.",
-      "pe": 16.07,
-      "week52_high": 62.36,
-      "week52_low": 19.48,
-      "pct_below_high": 51.3,
-      "preferred": true
+      "symbol": "CSCO",
+      "price": 112.82,
+      "change_pct": -4.37,
+      "company_name": "Cisco Systems, Inc.",
+      "pe": 37.92,
+      "week52_high": 130.37,
+      "week52_low": 65.75,
+      "pct_below_high": 13.5,
+      "preferred": false
     },
     {
       "symbol": "INTC",
-      "price": 127.62,
-      "change_pct": -3.95,
+      "price": 127.27,
+      "change_pct": -3.42,
       "company_name": "Intel Corporation",
       "pe": null,
       "week52_high": 141.45,
       "week52_low": 18.97,
-      "pct_below_high": 9.8,
+      "pct_below_high": 10.0,
       "preferred": true
     },
     {
-      "symbol": "CSCO",
-      "price": 115.38,
-      "change_pct": -3.02,
-      "company_name": "Cisco Systems, Inc.",
-      "pe": 38.53,
-      "week52_high": 130.37,
-      "week52_low": 65.75,
-      "pct_below_high": 11.5,
-      "preferred": false
+      "symbol": "SMCI",
+      "price": 30.46,
+      "change_pct": -3.31,
+      "company_name": "Super Micro Computer, Inc.",
+      "pe": 16.12,
+      "week52_high": 62.36,
+      "week52_low": 19.48,
+      "pct_below_high": 51.2,
+      "preferred": true
+    },
+    {
+      "symbol": "ORCL",
+      "price": 148.45,
+      "change_pct": -2.58,
+      "company_name": "Oracle Corporation",
+      "pe": 25.52,
+      "week52_high": 345.72,
+      "week52_low": 134.57,
+      "pct_below_high": 57.1,
+      "preferred": true
     },
     {
       "symbol": "C",
-      "price": 141.31,
-      "change_pct": -2.53,
+      "price": 141.95,
+      "change_pct": -2.22,
       "company_name": "Citigroup Inc.",
       "pe": 17.52,
       "week52_high": 147.96,
       "week52_low": 83.81,
-      "pct_below_high": 4.5,
+      "pct_below_high": 4.1,
       "preferred": false
     },
     {
-      "symbol": "ORCL",
-      "price": 149.11,
-      "change_pct": -2.2,
-      "company_name": "Oracle Corporation",
-      "pe": 25.66,
-      "week52_high": 345.72,
-      "week52_low": 134.57,
-      "pct_below_high": 56.9,
+      "symbol": "NVDA",
+      "price": 192.39,
+      "change_pct": -1.64,
+      "company_name": "NVIDIA Corporation",
+      "pe": 29.44,
+      "week52_high": 236.54,
+      "week52_low": 151.49,
+      "pct_below_high": 18.7,
       "preferred": true
     },
     {
@@ -275,32 +275,32 @@
       "price": 170.13,
       "change_pct": -1.23,
       "company_name": "Chevron Corporation",
-      "pe": 29.65,
+      "pe": 29.8,
       "week52_high": 214.71,
       "week52_low": 142.4,
       "pct_below_high": 20.8,
       "preferred": false
     },
     {
-      "symbol": "NVDA",
-      "price": 193.76,
-      "change_pct": -1.01,
-      "company_name": "NVIDIA Corporation",
-      "pe": 29.71,
-      "week52_high": 236.54,
-      "week52_low": 151.49,
-      "pct_below_high": 18.1,
-      "preferred": true
-    },
-    {
       "symbol": "LUV",
       "price": 51.63,
       "change_pct": -0.87,
       "company_name": "Southwest Airlines Co.",
-      "pe": 34.49,
+      "pe": 34.61,
       "week52_high": 55.11,
       "week52_low": 28.98,
       "pct_below_high": 6.3,
+      "preferred": false
+    },
+    {
+      "symbol": "XOM",
+      "price": 136.76,
+      "change_pct": -0.73,
+      "company_name": "Exxon Mobil Corporation",
+      "pe": 22.99,
+      "week52_high": 176.41,
+      "week52_low": 105.53,
+      "pct_below_high": 22.5,
       "preferred": false
     }
   ],
@@ -321,26 +321,26 @@
   },
   "universe_size": 134,
   "scanned_under_price": 56,
-  "total_qualifying": 114,
+  "total_qualifying": 111,
   "result_count": 20,
   "results": [
     {
       "symbol": "AAPL",
-      "option_symbol": "AAPL260807P00260000",
-      "price": 281.21,
+      "option_symbol": "AAPL260807P00265000",
+      "price": 282.59,
       "expiration": "2026-08-07",
       "dte": 42,
-      "strike": 260.0,
-      "bid": 3.45,
-      "delta": -0.205,
-      "open_interest": 50,
-      "collateral": 26000.0,
-      "premium": 345.0,
-      "yield_30d_pct": 0.948,
-      "annualized_pct": 11.53,
+      "strike": 265.0,
+      "bid": 3.5,
+      "delta": -0.243,
+      "open_interest": 2780,
+      "collateral": 26500.0,
+      "premium": 350.0,
+      "yield_30d_pct": 0.943,
+      "annualized_pct": 11.48,
       "preferred": false,
       "company_name": "Apple Inc.",
-      "pe": 34.13,
+      "pe": 34.4,
       "week52_low": 199.26,
       "week52_high": 317.4,
       "weeklies": [
@@ -349,12 +349,12 @@
           "dte": 6,
           "puts": [
             {
-              "strike": 277.5,
-              "bid": 2.53,
-              "premium": 253.0,
-              "pct_of_collateral": 0.912,
-              "delta": -0.354,
-              "open_interest": 1142,
+              "strike": 280.0,
+              "bid": 2.24,
+              "premium": 224.0,
+              "pct_of_collateral": 0.8,
+              "delta": -0.392,
+              "open_interest": 3294,
               "recommended": true
             }
           ]
@@ -364,21 +364,21 @@
           "dte": 14,
           "puts": [
             {
-              "strike": 270.0,
-              "bid": 1.97,
-              "premium": 197.0,
-              "pct_of_collateral": 0.73,
-              "delta": -0.22,
-              "open_interest": 1470,
+              "strike": 275.0,
+              "bid": 2.35,
+              "premium": 235.0,
+              "pct_of_collateral": 0.855,
+              "delta": -0.292,
+              "open_interest": 2797,
               "recommended": true
             },
             {
-              "strike": 272.5,
-              "bid": 2.53,
-              "premium": 253.0,
-              "pct_of_collateral": 0.928,
-              "delta": -0.268,
-              "open_interest": 318,
+              "strike": 277.5,
+              "bid": 2.74,
+              "premium": 274.0,
+              "pct_of_collateral": 0.987,
+              "delta": -0.35,
+              "open_interest": 345,
               "recommended": false
             }
           ]
@@ -388,12 +388,88 @@
           "dte": 21,
           "puts": [
             {
-              "strike": 265.0,
-              "bid": 1.89,
-              "premium": 189.0,
-              "pct_of_collateral": 0.713,
-              "delta": -0.179,
-              "open_interest": 16855,
+              "strike": 270.0,
+              "bid": 1.96,
+              "premium": 196.0,
+              "pct_of_collateral": 0.726,
+              "delta": -0.23,
+              "open_interest": 16335,
+              "recommended": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "symbol": "NVDA",
+      "option_symbol": "NVDA260807P00170000",
+      "price": 192.39,
+      "expiration": "2026-08-07",
+      "dte": 42,
+      "strike": 170.0,
+      "bid": 2.31,
+      "delta": -0.16,
+      "open_interest": 144,
+      "collateral": 17000.0,
+      "premium": 231.0,
+      "yield_30d_pct": 0.971,
+      "annualized_pct": 11.81,
+      "preferred": true,
+      "company_name": "NVIDIA Corporation",
+      "pe": 29.44,
+      "week52_low": 151.49,
+      "week52_high": 236.54,
+      "weeklies": [
+        {
+          "expiration": "2026-07-02",
+          "dte": 6,
+          "puts": [
+            {
+              "strike": 187.5,
+              "bid": 1.71,
+              "premium": 171.0,
+              "pct_of_collateral": 0.912,
+              "delta": -0.29,
+              "open_interest": 4854,
+              "recommended": true
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-10",
+          "dte": 14,
+          "puts": [
+            {
+              "strike": 180.0,
+              "bid": 1.36,
+              "premium": 136.0,
+              "pct_of_collateral": 0.756,
+              "delta": -0.174,
+              "open_interest": 3057,
+              "recommended": true
+            },
+            {
+              "strike": 182.5,
+              "bid": 1.7,
+              "premium": 170.0,
+              "pct_of_collateral": 0.932,
+              "delta": -0.221,
+              "open_interest": 152,
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-17",
+          "dte": 21,
+          "puts": [
+            {
+              "strike": 175.0,
+              "bid": 1.44,
+              "premium": 144.0,
+              "pct_of_collateral": 0.823,
+              "delta": -0.147,
+              "open_interest": 26141,
               "recommended": true
             }
           ]
@@ -403,20 +479,20 @@
     {
       "symbol": "BA",
       "option_symbol": "BA260731P00200000",
-      "price": 218.32,
+      "price": 217.7,
       "expiration": "2026-07-31",
       "dte": 35,
       "strike": 200.0,
-      "bid": 2.32,
-      "delta": -0.198,
+      "bid": 2.07,
+      "delta": -0.206,
       "open_interest": 68,
       "collateral": 20000.0,
-      "premium": 232.0,
-      "yield_30d_pct": 0.994,
-      "annualized_pct": 12.1,
+      "premium": 207.0,
+      "yield_30d_pct": 0.887,
+      "annualized_pct": 10.79,
       "preferred": false,
       "company_name": "The Boeing Company",
-      "pe": 86.27,
+      "pe": 85.87,
       "week52_low": 176.77,
       "week52_high": 254.35,
       "weeklies": [
@@ -425,12 +501,12 @@
           "dte": 6,
           "puts": [
             {
-              "strike": 215.0,
-              "bid": 1.98,
-              "premium": 198.0,
-              "pct_of_collateral": 0.921,
-              "delta": -0.342,
-              "open_interest": 1335,
+              "strike": 212.5,
+              "bid": 1.5,
+              "premium": 150.0,
+              "pct_of_collateral": 0.706,
+              "delta": -0.286,
+              "open_interest": 1152,
               "recommended": true
             }
           ]
@@ -441,10 +517,10 @@
           "puts": [
             {
               "strike": 207.5,
-              "bid": 1.46,
-              "premium": 146.0,
-              "pct_of_collateral": 0.704,
-              "delta": -0.198,
+              "bid": 1.47,
+              "premium": 147.0,
+              "pct_of_collateral": 0.708,
+              "delta": -0.218,
               "open_interest": 57,
               "recommended": true
             },
@@ -453,7 +529,7 @@
               "bid": 2.03,
               "premium": 203.0,
               "pct_of_collateral": 0.967,
-              "delta": -0.253,
+              "delta": -0.277,
               "open_interest": 290,
               "recommended": false
             }
@@ -464,70 +540,22 @@
           "dte": 21,
           "puts": [
             {
+              "strike": 202.5,
+              "bid": 1.54,
+              "premium": 154.0,
+              "pct_of_collateral": 0.76,
+              "delta": -0.174,
+              "open_interest": 22,
+              "recommended": true
+            },
+            {
               "strike": 205.0,
-              "bid": 1.81,
-              "premium": 181.0,
-              "pct_of_collateral": 0.883,
-              "delta": -0.194,
+              "bid": 2.0,
+              "premium": 200.0,
+              "pct_of_collateral": 0.976,
+              "delta": -0.214,
               "open_interest": 1704,
-              "recommended": true
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "symbol": "NVDA",
-      "option_symbol": "NVDA260807P00170000",
-      "price": 193.76,
-      "expiration": "2026-08-07",
-      "dte": 42,
-      "strike": 170.0,
-      "bid": 2.08,
-      "delta": -0.147,
-      "open_interest": 144,
-      "collateral": 17000.0,
-      "premium": 208.0,
-      "yield_30d_pct": 0.874,
-      "annualized_pct": 10.63,
-      "preferred": true,
-      "company_name": "NVIDIA Corporation",
-      "pe": 29.71,
-      "week52_low": 151.49,
-      "week52_high": 236.54,
-      "weeklies": [
-        {
-          "expiration": "2026-07-02",
-          "dte": 6,
-          "puts": []
-        },
-        {
-          "expiration": "2026-07-10",
-          "dte": 14,
-          "puts": [
-            {
-              "strike": 182.5,
-              "bid": 1.51,
-              "premium": 151.0,
-              "pct_of_collateral": 0.827,
-              "delta": -0.191,
-              "open_interest": 152,
-              "recommended": true
-            }
-          ]
-        },
-        {
-          "expiration": "2026-07-17",
-          "dte": 21,
-          "puts": [
-            {
-              "strike": 175.0,
-              "bid": 1.24,
-              "premium": 124.0,
-              "pct_of_collateral": 0.709,
-              "delta": -0.13,
-              "open_interest": 26141,
-              "recommended": true
+              "recommended": false
             }
           ]
         }
@@ -535,21 +563,21 @@
     },
     {
       "symbol": "AMZN",
-      "option_symbol": "AMZN260731P00200000",
-      "price": 228.76,
+      "option_symbol": "AMZN260731P00205000",
+      "price": 231.93,
       "expiration": "2026-07-31",
       "dte": 35,
-      "strike": 200.0,
-      "bid": 1.88,
-      "delta": -0.132,
-      "open_interest": 385,
-      "collateral": 20000.0,
-      "premium": 188.0,
-      "yield_30d_pct": 0.806,
-      "annualized_pct": 9.8,
+      "strike": 205.0,
+      "bid": 2.0,
+      "delta": -0.16,
+      "open_interest": 248,
+      "collateral": 20500.0,
+      "premium": 200.0,
+      "yield_30d_pct": 0.836,
+      "annualized_pct": 10.17,
       "preferred": true,
       "company_name": "Amazon.com, Inc.",
-      "pe": 31.86,
+      "pe": 32.45,
       "week52_low": 196.0,
       "week52_high": 278.56,
       "weeklies": [
@@ -558,12 +586,12 @@
           "dte": 6,
           "puts": [
             {
-              "strike": 225.0,
-              "bid": 2.24,
-              "premium": 224.0,
-              "pct_of_collateral": 0.996,
-              "delta": -0.338,
-              "open_interest": 2747,
+              "strike": 227.5,
+              "bid": 2.18,
+              "premium": 218.0,
+              "pct_of_collateral": 0.958,
+              "delta": -0.378,
+              "open_interest": 829,
               "recommended": true
             }
           ]
@@ -573,54 +601,82 @@
           "dte": 14,
           "puts": [
             {
-              "strike": 217.5,
-              "bid": 1.69,
-              "premium": 169.0,
-              "pct_of_collateral": 0.777,
-              "delta": -0.206,
-              "open_interest": 2281,
+              "strike": 220.0,
+              "bid": 1.65,
+              "premium": 165.0,
+              "pct_of_collateral": 0.75,
+              "delta": -0.231,
+              "open_interest": 1236,
               "recommended": true
+            },
+            {
+              "strike": 222.5,
+              "bid": 2.08,
+              "premium": 208.0,
+              "pct_of_collateral": 0.935,
+              "delta": -0.283,
+              "open_interest": 107,
+              "recommended": false
             }
           ]
         },
         {
           "expiration": "2026-07-17",
           "dte": 21,
-          "puts": []
+          "puts": [
+            {
+              "strike": 215.0,
+              "bid": 1.51,
+              "premium": 151.0,
+              "pct_of_collateral": 0.702,
+              "delta": -0.189,
+              "open_interest": 8622,
+              "recommended": true
+            },
+            {
+              "strike": 217.5,
+              "bid": 2.09,
+              "premium": 209.0,
+              "pct_of_collateral": 0.961,
+              "delta": -0.226,
+              "open_interest": 1954,
+              "recommended": false
+            }
+          ]
         }
       ]
     },
     {
-      "symbol": "QCOM",
-      "option_symbol": "QCOM260731P00150000",
-      "price": 194.32,
+      "symbol": "XOM",
+      "option_symbol": "XOM260731P00130000",
+      "price": 136.76,
       "expiration": "2026-07-31",
       "dte": 35,
-      "strike": 150.0,
-      "bid": 1.61,
-      "delta": -0.104,
-      "open_interest": 93,
-      "collateral": 15000.0,
-      "premium": 161.0,
-      "yield_30d_pct": 0.92,
-      "annualized_pct": 11.19,
+      "strike": 130.0,
+      "bid": 1.49,
+      "delta": -0.257,
+      "open_interest": 258,
+      "collateral": 13000.0,
+      "premium": 149.0,
+      "yield_30d_pct": 0.982,
+      "annualized_pct": 11.95,
       "preferred": false,
-      "company_name": "QUALCOMM Incorporated",
-      "pe": 20.88,
-      "week52_low": 121.99,
-      "week52_high": 259.92,
+      "company_name": "Exxon Mobil Corporation",
+      "pe": 22.99,
+      "week52_low": 105.53,
+      "week52_high": 176.41,
       "weeklies": [
         {
           "expiration": "2026-07-02",
           "dte": 6,
           "puts": [
             {
-              "strike": 177.5,
-              "bid": 1.45,
-              "premium": 145.0,
-              "pct_of_collateral": 0.817,
-              "delta": -0.152,
-              "open_interest": 362,
+              "strike": 135.0,
+              "bid": 1.1,
+              "premium": 110.0,
+              "pct_of_collateral": 0.815,
+              "delta": -0.362,
+              "open_interest": 1024,
               "recommended": true
             }
           ]
@@ -630,13 +686,22 @@
           "dte": 14,
           "puts": [
             {
-              "strike": 167.5,
-              "bid": 1.42,
-              "premium": 142.0,
-              "pct_of_collateral": 0.848,
-              "delta": -0.12,
-              "open_interest": 1,
+              "strike": 132.0,
+              "bid": 1.01,
+              "premium": 101.0,
+              "pct_of_collateral": 0.765,
+              "delta": -0.249,
+              "open_interest": 94,
               "recommended": true
+            },
+            {
+              "strike": 133.0,
+              "bid": 1.3,
+              "premium": 130.0,
+              "pct_of_collateral": 0.977,
+              "delta": -0.296,
+              "open_interest": 9,
+              "recommended": false
             }
           ]
         },
@@ -645,13 +710,22 @@
           "dte": 21,
           "puts": [
             {
-              "strike": 155.0,
-              "bid": 1.33,
-              "premium": 133.0,
-              "pct_of_collateral": 0.858,
-              "delta": -0.082,
-              "open_interest": 7313,
+              "strike": 130.0,
+              "bid": 1.05,
+              "premium": 105.0,
+              "pct_of_collateral": 0.808,
+              "delta": -0.211,
+              "open_interest": 9152,
               "recommended": true
+            },
+            {
+              "strike": 131.0,
+              "bid": 1.26,
+              "premium": 126.0,
+              "pct_of_collateral": 0.962,
+              "delta": -0.245,
+              "open_interest": 46,
+              "recommended": false
             }
           ]
         }
@@ -660,17 +734,17 @@
     {
       "symbol": "C",
       "option_symbol": "C260731P00130000",
-      "price": 141.31,
+      "price": 141.95,
       "expiration": "2026-07-31",
       "dte": 35,
       "strike": 130.0,
-      "bid": 1.38,
-      "delta": -0.188,
+      "bid": 1.42,
+      "delta": -0.181,
       "open_interest": 50,
       "collateral": 13000.0,
-      "premium": 138.0,
-      "yield_30d_pct": 0.91,
-      "annualized_pct": 11.07,
+      "premium": 142.0,
+      "yield_30d_pct": 0.936,
+      "annualized_pct": 11.39,
       "preferred": false,
       "company_name": "Citigroup Inc.",
       "pe": 17.52,
@@ -682,22 +756,13 @@
           "dte": 6,
           "puts": [
             {
-              "strike": 139.0,
-              "bid": 1.02,
-              "premium": 102.0,
-              "pct_of_collateral": 0.734,
-              "delta": -0.317,
-              "open_interest": 141,
-              "recommended": true
-            },
-            {
               "strike": 140.0,
-              "bid": 1.36,
-              "premium": 136.0,
-              "pct_of_collateral": 0.971,
-              "delta": -0.389,
+              "bid": 1.07,
+              "premium": 107.0,
+              "pct_of_collateral": 0.764,
+              "delta": -0.346,
               "open_interest": 820,
-              "recommended": false
+              "recommended": true
             }
           ]
         },
@@ -706,21 +771,21 @@
           "dte": 14,
           "puts": [
             {
-              "strike": 136.0,
-              "bid": 1.01,
-              "premium": 101.0,
-              "pct_of_collateral": 0.743,
-              "delta": -0.232,
-              "open_interest": 64,
+              "strike": 137.0,
+              "bid": 1.06,
+              "premium": 106.0,
+              "pct_of_collateral": 0.774,
+              "delta": -0.246,
+              "open_interest": 60,
               "recommended": true
             },
             {
-              "strike": 137.0,
+              "strike": 138.0,
               "bid": 1.3,
               "premium": 130.0,
-              "pct_of_collateral": 0.949,
-              "delta": -0.272,
-              "open_interest": 60,
+              "pct_of_collateral": 0.942,
+              "delta": -0.288,
+              "open_interest": 122,
               "recommended": false
             }
           ]
@@ -730,12 +795,12 @@
           "dte": 21,
           "puts": [
             {
-              "strike": 130.0,
-              "bid": 0.97,
-              "premium": 97.0,
-              "pct_of_collateral": 0.746,
-              "delta": -0.154,
-              "open_interest": 4668,
+              "strike": 133.0,
+              "bid": 1.3,
+              "premium": 130.0,
+              "pct_of_collateral": 0.977,
+              "delta": -0.202,
+              "open_interest": 2858,
               "recommended": true
             }
           ]
@@ -745,20 +810,20 @@
     {
       "symbol": "PG",
       "option_symbol": "PG260731P00141000",
-      "price": 149.05,
+      "price": 149.2,
       "expiration": "2026-07-31",
       "dte": 35,
       "strike": 141.0,
-      "bid": 1.32,
-      "delta": -0.239,
+      "bid": 1.33,
+      "delta": -0.24,
       "open_interest": 54,
       "collateral": 14100.0,
-      "premium": 132.0,
-      "yield_30d_pct": 0.802,
-      "annualized_pct": 9.76,
+      "premium": 133.0,
+      "yield_30d_pct": 0.809,
+      "annualized_pct": 9.84,
       "preferred": false,
       "company_name": "The Procter & Gamble Company",
-      "pe": 21.79,
+      "pe": 21.75,
       "week52_low": 137.62,
       "week52_high": 167.25,
       "weeklies": [
@@ -771,7 +836,7 @@
               "bid": 1.41,
               "premium": 141.0,
               "pct_of_collateral": 0.946,
-              "delta": -0.484,
+              "delta": -0.47,
               "open_interest": 523,
               "recommended": true
             }
@@ -783,19 +848,19 @@
           "puts": [
             {
               "strike": 146.0,
-              "bid": 1.13,
-              "premium": 113.0,
-              "pct_of_collateral": 0.774,
-              "delta": -0.297,
+              "bid": 1.12,
+              "premium": 112.0,
+              "pct_of_collateral": 0.767,
+              "delta": -0.29,
               "open_interest": 149,
               "recommended": true
             },
             {
               "strike": 147.0,
-              "bid": 1.43,
-              "premium": 143.0,
-              "pct_of_collateral": 0.973,
-              "delta": -0.353,
+              "bid": 1.42,
+              "premium": 142.0,
+              "pct_of_collateral": 0.966,
+              "delta": -0.345,
               "open_interest": 44,
               "recommended": false
             }
@@ -810,7 +875,7 @@
               "bid": 1.04,
               "premium": 104.0,
               "pct_of_collateral": 0.722,
-              "delta": -0.239,
+              "delta": -0.236,
               "open_interest": 185,
               "recommended": true
             },
@@ -819,7 +884,7 @@
               "bid": 1.33,
               "premium": 133.0,
               "pct_of_collateral": 0.917,
-              "delta": -0.28,
+              "delta": -0.275,
               "open_interest": 4764,
               "recommended": false
             }
@@ -830,12 +895,12 @@
     {
       "symbol": "TGT",
       "option_symbol": "TGT260731P00131000",
-      "price": 140.7,
+      "price": 139.64,
       "expiration": "2026-07-31",
       "dte": 35,
       "strike": 131.0,
       "bid": 1.31,
-      "delta": -0.208,
+      "delta": -0.21,
       "open_interest": 122,
       "collateral": 13100.0,
       "premium": 131.0,
@@ -843,7 +908,7 @@
       "annualized_pct": 10.43,
       "preferred": false,
       "company_name": "Target Corporation",
-      "pe": 18.54,
+      "pe": 18.57,
       "week52_low": 83.44,
       "week52_high": 142.82,
       "weeklies": [
@@ -853,10 +918,10 @@
           "puts": [
             {
               "strike": 139.0,
-              "bid": 1.06,
-              "premium": 106.0,
-              "pct_of_collateral": 0.763,
-              "delta": -0.354,
+              "bid": 1.1,
+              "premium": 110.0,
+              "pct_of_collateral": 0.791,
+              "delta": -0.379,
               "open_interest": 453,
               "recommended": true
             }
@@ -868,19 +933,19 @@
           "puts": [
             {
               "strike": 136.0,
-              "bid": 1.09,
-              "premium": 109.0,
-              "pct_of_collateral": 0.801,
-              "delta": -0.25,
+              "bid": 1.14,
+              "premium": 114.0,
+              "pct_of_collateral": 0.838,
+              "delta": -0.262,
               "open_interest": 15,
               "recommended": true
             },
             {
               "strike": 137.0,
-              "bid": 1.33,
-              "premium": 133.0,
-              "pct_of_collateral": 0.971,
-              "delta": -0.293,
+              "bid": 1.36,
+              "premium": 136.0,
+              "pct_of_collateral": 0.993,
+              "delta": -0.307,
               "open_interest": 14,
               "recommended": false
             }
@@ -892,115 +957,21 @@
           "puts": [
             {
               "strike": 133.0,
-              "bid": 1.04,
-              "premium": 104.0,
-              "pct_of_collateral": 0.782,
-              "delta": -0.195,
+              "bid": 0.96,
+              "premium": 96.0,
+              "pct_of_collateral": 0.722,
+              "delta": -0.201,
               "open_interest": 74,
               "recommended": true
             },
             {
               "strike": 134.0,
-              "bid": 1.19,
-              "premium": 119.0,
-              "pct_of_collateral": 0.888,
-              "delta": -0.223,
+              "bid": 1.22,
+              "premium": 122.0,
+              "pct_of_collateral": 0.91,
+              "delta": -0.231,
               "open_interest": 29,
               "recommended": false
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "symbol": "ORCL",
-      "option_symbol": "ORCL260731P00120000",
-      "price": 149.11,
-      "expiration": "2026-07-31",
-      "dte": 35,
-      "strike": 120.0,
-      "bid": 1.23,
-      "delta": -0.1,
-      "open_interest": 348,
-      "collateral": 12000.0,
-      "premium": 123.0,
-      "yield_30d_pct": 0.879,
-      "annualized_pct": 10.69,
-      "preferred": true,
-      "company_name": "Oracle Corporation",
-      "pe": 25.66,
-      "week52_low": 134.57,
-      "week52_high": 345.72,
-      "weeklies": [
-        {
-          "expiration": "2026-07-02",
-          "dte": 6,
-          "puts": [
-            {
-              "strike": 141.0,
-              "bid": 1.15,
-              "premium": 115.0,
-              "pct_of_collateral": 0.816,
-              "delta": -0.198,
-              "open_interest": 36,
-              "recommended": true
-            },
-            {
-              "strike": 142.0,
-              "bid": 1.37,
-              "premium": 137.0,
-              "pct_of_collateral": 0.965,
-              "delta": -0.226,
-              "open_interest": 45,
-              "recommended": false
-            }
-          ]
-        },
-        {
-          "expiration": "2026-07-10",
-          "dte": 14,
-          "puts": [
-            {
-              "strike": 132.0,
-              "bid": 1.01,
-              "premium": 101.0,
-              "pct_of_collateral": 0.765,
-              "delta": -0.127,
-              "open_interest": 0,
-              "recommended": true
-            },
-            {
-              "strike": 133.0,
-              "bid": 1.13,
-              "premium": 113.0,
-              "pct_of_collateral": 0.85,
-              "delta": -0.14,
-              "open_interest": 53,
-              "recommended": false
-            },
-            {
-              "strike": 134.0,
-              "bid": 1.28,
-              "premium": 128.0,
-              "pct_of_collateral": 0.955,
-              "delta": -0.153,
-              "open_interest": 32,
-              "recommended": false
-            }
-          ]
-        },
-        {
-          "expiration": "2026-07-17",
-          "dte": 21,
-          "puts": [
-            {
-              "strike": 125.0,
-              "bid": 0.93,
-              "premium": 93.0,
-              "pct_of_collateral": 0.744,
-              "delta": -0.095,
-              "open_interest": 2577,
-              "recommended": true
             }
           ]
         }
@@ -1022,7 +993,7 @@
       "annualized_pct": 12.09,
       "preferred": false,
       "company_name": "Chevron Corporation",
-      "pe": 29.65,
+      "pe": 29.8,
       "week52_low": 142.4,
       "week52_high": 214.71,
       "weeklies": [
@@ -1054,37 +1025,46 @@
       ]
     },
     {
-      "symbol": "WMT",
-      "option_symbol": "WMT260731P00112000",
-      "price": 116.81,
+      "symbol": "ORCL",
+      "option_symbol": "ORCL260731P00120000",
+      "price": 148.45,
       "expiration": "2026-07-31",
       "dte": 35,
-      "strike": 112.0,
-      "bid": 1.11,
-      "delta": -0.262,
-      "open_interest": 60,
-      "collateral": 11200.0,
-      "premium": 111.0,
-      "yield_30d_pct": 0.849,
-      "annualized_pct": 10.34,
-      "preferred": false,
-      "company_name": "Walmart Inc.",
-      "pe": 41.01,
-      "week52_low": 94.23,
-      "week52_high": 135.16,
+      "strike": 120.0,
+      "bid": 1.13,
+      "delta": -0.103,
+      "open_interest": 348,
+      "collateral": 12000.0,
+      "premium": 113.0,
+      "yield_30d_pct": 0.807,
+      "annualized_pct": 9.82,
+      "preferred": true,
+      "company_name": "Oracle Corporation",
+      "pe": 25.52,
+      "week52_low": 134.57,
+      "week52_high": 345.72,
       "weeklies": [
         {
           "expiration": "2026-07-02",
           "dte": 6,
           "puts": [
             {
-              "strike": 116.0,
-              "bid": 0.87,
-              "premium": 87.0,
-              "pct_of_collateral": 0.75,
-              "delta": -0.393,
-              "open_interest": 888,
+              "strike": 141.0,
+              "bid": 1.15,
+              "premium": 115.0,
+              "pct_of_collateral": 0.816,
+              "delta": -0.209,
+              "open_interest": 36,
               "recommended": true
+            },
+            {
+              "strike": 142.0,
+              "bid": 1.33,
+              "premium": 133.0,
+              "pct_of_collateral": 0.937,
+              "delta": -0.238,
+              "open_interest": 45,
+              "recommended": false
             }
           ]
         },
@@ -1093,21 +1073,30 @@
           "dte": 14,
           "puts": [
             {
-              "strike": 114.0,
-              "bid": 0.83,
-              "premium": 83.0,
-              "pct_of_collateral": 0.728,
-              "delta": -0.277,
-              "open_interest": 294,
+              "strike": 131.0,
+              "bid": 0.92,
+              "premium": 92.0,
+              "pct_of_collateral": 0.702,
+              "delta": -0.121,
+              "open_interest": 47,
               "recommended": true
             },
             {
-              "strike": 115.0,
-              "bid": 1.14,
-              "premium": 114.0,
-              "pct_of_collateral": 0.991,
-              "delta": -0.344,
-              "open_interest": 768,
+              "strike": 132.0,
+              "bid": 1.03,
+              "premium": 103.0,
+              "pct_of_collateral": 0.78,
+              "delta": -0.133,
+              "open_interest": 0,
+              "recommended": false
+            },
+            {
+              "strike": 133.0,
+              "bid": 1.15,
+              "premium": 115.0,
+              "pct_of_collateral": 0.865,
+              "delta": -0.146,
+              "open_interest": 53,
               "recommended": false
             }
           ]
@@ -1117,12 +1106,12 @@
           "dte": 21,
           "puts": [
             {
-              "strike": 113.0,
-              "bid": 1.01,
-              "premium": 101.0,
-              "pct_of_collateral": 0.894,
-              "delta": -0.261,
-              "open_interest": 125,
+              "strike": 125.0,
+              "bid": 0.95,
+              "premium": 95.0,
+              "pct_of_collateral": 0.76,
+              "delta": -0.098,
+              "open_interest": 2577,
               "recommended": true
             }
           ]
@@ -1132,12 +1121,12 @@
     {
       "symbol": "SHOP",
       "option_symbol": "SHOP260731P00095000",
-      "price": 116.04,
+      "price": 116.4,
       "expiration": "2026-07-31",
       "dte": 35,
       "strike": 95.0,
       "bid": 1.09,
-      "delta": -0.138,
+      "delta": -0.128,
       "open_interest": 70,
       "collateral": 9500.0,
       "premium": 109.0,
@@ -1145,7 +1134,7 @@
       "annualized_pct": 11.97,
       "preferred": false,
       "company_name": "Shopify Inc.",
-      "pe": 114.31,
+      "pe": 114.57,
       "week52_low": 94.0,
       "week52_high": 182.19,
       "weeklies": [
@@ -1154,21 +1143,30 @@
           "dte": 6,
           "puts": [
             {
-              "strike": 109.0,
-              "bid": 0.84,
-              "premium": 84.0,
-              "pct_of_collateral": 0.771,
-              "delta": -0.187,
-              "open_interest": 110,
+              "strike": 110.0,
+              "bid": 0.91,
+              "premium": 91.0,
+              "pct_of_collateral": 0.827,
+              "delta": -0.197,
+              "open_interest": 242,
               "recommended": true
             },
             {
-              "strike": 110.0,
-              "bid": 1.02,
-              "premium": 102.0,
-              "pct_of_collateral": 0.927,
-              "delta": -0.22,
-              "open_interest": 242,
+              "strike": 111.0,
+              "bid": 0.99,
+              "premium": 99.0,
+              "pct_of_collateral": 0.892,
+              "delta": -0.231,
+              "open_interest": 139,
+              "recommended": false
+            },
+            {
+              "strike": 112.0,
+              "bid": 1.12,
+              "premium": 112.0,
+              "pct_of_collateral": 1.0,
+              "delta": -0.268,
+              "open_interest": 124,
               "recommended": false
             }
           ]
@@ -1178,12 +1176,190 @@
           "dte": 14,
           "puts": [
             {
-              "strike": 104.0,
-              "bid": 0.78,
-              "premium": 78.0,
-              "pct_of_collateral": 0.75,
-              "delta": -0.149,
-              "open_interest": 66,
+              "strike": 105.0,
+              "bid": 1.0,
+              "premium": 100.0,
+              "pct_of_collateral": 0.952,
+              "delta": -0.164,
+              "open_interest": 73,
+              "recommended": true
+            },
+            {
+              "strike": 107.0,
+              "bid": 1.0,
+              "premium": 100.0,
+              "pct_of_collateral": 0.935,
+              "delta": -0.204,
+              "open_interest": 44,
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-17",
+          "dte": 21,
+          "puts": [
+            {
+              "strike": 101.0,
+              "bid": 0.85,
+              "premium": 85.0,
+              "pct_of_collateral": 0.842,
+              "delta": -0.142,
+              "open_interest": 4,
+              "recommended": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "symbol": "COIN",
+      "option_symbol": "COIN260731P00115000",
+      "price": 148.47,
+      "expiration": "2026-07-31",
+      "dte": 35,
+      "strike": 115.0,
+      "bid": 1.09,
+      "delta": -0.118,
+      "open_interest": 64,
+      "collateral": 11500.0,
+      "premium": 109.0,
+      "yield_30d_pct": 0.812,
+      "annualized_pct": 9.88,
+      "preferred": false,
+      "company_name": "Coinbase Global, Inc.",
+      "pe": 54.8,
+      "week52_low": 139.18,
+      "week52_high": 444.65,
+      "weeklies": [
+        {
+          "expiration": "2026-07-02",
+          "dte": 6,
+          "puts": [
+            {
+              "strike": 135.0,
+              "bid": 1.04,
+              "premium": 104.0,
+              "pct_of_collateral": 0.77,
+              "delta": -0.141,
+              "open_interest": 941,
+              "recommended": true
+            },
+            {
+              "strike": 136.0,
+              "bid": 1.17,
+              "premium": 117.0,
+              "pct_of_collateral": 0.86,
+              "delta": -0.157,
+              "open_interest": 634,
+              "recommended": false
+            },
+            {
+              "strike": 137.0,
+              "bid": 1.3,
+              "premium": 130.0,
+              "pct_of_collateral": 0.949,
+              "delta": -0.173,
+              "open_interest": 235,
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-10",
+          "dte": 14,
+          "puts": [
+            {
+              "strike": 125.0,
+              "bid": 1.01,
+              "premium": 101.0,
+              "pct_of_collateral": 0.808,
+              "delta": -0.102,
+              "open_interest": 275,
+              "recommended": true
+            },
+            {
+              "strike": 126.0,
+              "bid": 0.97,
+              "premium": 97.0,
+              "pct_of_collateral": 0.77,
+              "delta": -0.11,
+              "open_interest": 1,
+              "recommended": false
+            },
+            {
+              "strike": 129.0,
+              "bid": 1.19,
+              "premium": 119.0,
+              "pct_of_collateral": 0.922,
+              "delta": -0.137,
+              "open_interest": 2,
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-17",
+          "dte": 21,
+          "puts": []
+        }
+      ]
+    },
+    {
+      "symbol": "QCOM",
+      "option_symbol": "QCOM260724P00145000",
+      "price": 188.68,
+      "expiration": "2026-07-24",
+      "dte": 28,
+      "strike": 145.0,
+      "bid": 1.08,
+      "delta": -0.079,
+      "open_interest": 60,
+      "collateral": 14500.0,
+      "premium": 108.0,
+      "yield_30d_pct": 0.798,
+      "annualized_pct": 9.71,
+      "preferred": false,
+      "company_name": "QUALCOMM Incorporated",
+      "pe": 20.36,
+      "week52_low": 121.99,
+      "week52_high": 259.92,
+      "weeklies": [
+        {
+          "expiration": "2026-07-02",
+          "dte": 6,
+          "puts": [
+            {
+              "strike": 170.0,
+              "bid": 1.2,
+              "premium": 120.0,
+              "pct_of_collateral": 0.706,
+              "delta": -0.141,
+              "open_interest": 614,
+              "recommended": true
+            },
+            {
+              "strike": 172.5,
+              "bid": 1.63,
+              "premium": 163.0,
+              "pct_of_collateral": 0.945,
+              "delta": -0.173,
+              "open_interest": 98,
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-10",
+          "dte": 14,
+          "puts": [
+            {
+              "strike": 162.5,
+              "bid": 1.39,
+              "premium": 139.0,
+              "pct_of_collateral": 0.855,
+              "delta": -0.128,
+              "open_interest": 0,
               "recommended": true
             }
           ]
@@ -1193,12 +1369,12 @@
           "dte": 21,
           "puts": [
             {
-              "strike": 98.0,
-              "bid": 0.73,
-              "premium": 73.0,
-              "pct_of_collateral": 0.745,
-              "delta": -0.111,
-              "open_interest": 101,
+              "strike": 150.0,
+              "bid": 1.2,
+              "premium": 120.0,
+              "pct_of_collateral": 0.8,
+              "delta": -0.084,
+              "open_interest": 2895,
               "recommended": true
             }
           ]
@@ -1207,40 +1383,50 @@
     },
     {
       "symbol": "SBUX",
-      "option_symbol": "SBUX260731P00094000",
-      "price": 104.45,
+      "option_symbol": "SBUX260731P00096000",
+      "price": 104.41,
       "expiration": "2026-07-31",
       "dte": 35,
-      "strike": 94.0,
-      "bid": 0.96,
-      "delta": -0.171,
-      "open_interest": 176,
-      "collateral": 9400.0,
-      "premium": 96.0,
-      "yield_30d_pct": 0.875,
-      "annualized_pct": 10.65,
+      "strike": 96.0,
+      "bid": 1.05,
+      "delta": -0.211,
+      "open_interest": 118,
+      "collateral": 9600.0,
+      "premium": 105.0,
+      "yield_30d_pct": 0.938,
+      "annualized_pct": 11.41,
       "preferred": false,
       "company_name": "Starbucks Corporation",
-      "pe": 79.76,
+      "pe": 79.85,
       "week52_low": 77.99,
       "week52_high": 108.88,
       "weeklies": [
         {
           "expiration": "2026-07-02",
           "dte": 6,
-          "puts": []
+          "puts": [
+            {
+              "strike": 104.0,
+              "bid": 0.99,
+              "premium": 99.0,
+              "pct_of_collateral": 0.952,
+              "delta": -0.421,
+              "open_interest": 136,
+              "recommended": true
+            }
+          ]
         },
         {
           "expiration": "2026-07-10",
           "dte": 14,
           "puts": [
             {
-              "strike": 101.0,
-              "bid": 0.78,
-              "premium": 78.0,
-              "pct_of_collateral": 0.772,
-              "delta": -0.249,
-              "open_interest": 125,
+              "strike": 102.0,
+              "bid": 0.94,
+              "premium": 94.0,
+              "pct_of_collateral": 0.922,
+              "delta": -0.295,
+              "open_interest": 47,
               "recommended": true
             }
           ]
@@ -1251,10 +1437,10 @@
           "puts": [
             {
               "strike": 100.0,
-              "bid": 0.89,
-              "premium": 89.0,
-              "pct_of_collateral": 0.89,
-              "delta": -0.235,
+              "bid": 0.85,
+              "premium": 85.0,
+              "pct_of_collateral": 0.85,
+              "delta": -0.226,
               "open_interest": 7744,
               "recommended": true
             }
@@ -1263,36 +1449,36 @@
       ]
     },
     {
-      "symbol": "KO",
-      "option_symbol": "KO260731P00080000",
-      "price": 82.32,
+      "symbol": "WMT",
+      "option_symbol": "WMT260731P00110000",
+      "price": 115.6,
       "expiration": "2026-07-31",
       "dte": 35,
-      "strike": 80.0,
-      "bid": 0.93,
-      "delta": -0.307,
-      "open_interest": 67,
-      "collateral": 8000.0,
-      "premium": 93.0,
-      "yield_30d_pct": 0.996,
-      "annualized_pct": 12.12,
+      "strike": 110.0,
+      "bid": 1.04,
+      "delta": -0.245,
+      "open_interest": 180,
+      "collateral": 11000.0,
+      "premium": 104.0,
+      "yield_30d_pct": 0.81,
+      "annualized_pct": 9.86,
       "preferred": false,
-      "company_name": "The Coca-Cola Company",
-      "pe": 25.96,
-      "week52_low": 65.35,
-      "week52_high": 84.04,
+      "company_name": "Walmart Inc.",
+      "pe": 40.74,
+      "week52_low": 94.23,
+      "week52_high": 135.16,
       "weeklies": [
         {
           "expiration": "2026-07-02",
           "dte": 6,
           "puts": [
             {
-              "strike": 82.0,
-              "bid": 0.58,
-              "premium": 58.0,
-              "pct_of_collateral": 0.707,
-              "delta": -0.423,
-              "open_interest": 149,
+              "strike": 115.0,
+              "bid": 1.05,
+              "premium": 105.0,
+              "pct_of_collateral": 0.913,
+              "delta": -0.449,
+              "open_interest": 1027,
               "recommended": true
             }
           ]
@@ -1300,7 +1486,83 @@
         {
           "expiration": "2026-07-10",
           "dte": 14,
+          "puts": [
+            {
+              "strike": 113.0,
+              "bid": 0.83,
+              "premium": 83.0,
+              "pct_of_collateral": 0.735,
+              "delta": -0.306,
+              "open_interest": 162,
+              "recommended": true
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-17",
+          "dte": 21,
+          "puts": [
+            {
+              "strike": 111.0,
+              "bid": 0.86,
+              "premium": 86.0,
+              "pct_of_collateral": 0.775,
+              "delta": -0.236,
+              "open_interest": 94,
+              "recommended": true
+            },
+            {
+              "strike": 112.0,
+              "bid": 1.1,
+              "premium": 110.0,
+              "pct_of_collateral": 0.982,
+              "delta": -0.284,
+              "open_interest": 867,
+              "recommended": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "symbol": "KO",
+      "option_symbol": "KO260731P00080000",
+      "price": 82.46,
+      "expiration": "2026-07-31",
+      "dte": 35,
+      "strike": 80.0,
+      "bid": 0.9,
+      "delta": -0.29,
+      "open_interest": 67,
+      "collateral": 8000.0,
+      "premium": 90.0,
+      "yield_30d_pct": 0.964,
+      "annualized_pct": 11.73,
+      "preferred": false,
+      "company_name": "The Coca-Cola Company",
+      "pe": 25.98,
+      "week52_low": 65.35,
+      "week52_high": 84.04,
+      "weeklies": [
+        {
+          "expiration": "2026-07-02",
+          "dte": 6,
           "puts": []
+        },
+        {
+          "expiration": "2026-07-10",
+          "dte": 14,
+          "puts": [
+            {
+              "strike": 82.0,
+              "bid": 0.74,
+              "premium": 74.0,
+              "pct_of_collateral": 0.902,
+              "delta": -0.393,
+              "open_interest": 124,
+              "recommended": true
+            }
+          ]
         },
         {
           "expiration": "2026-07-17",
@@ -1308,10 +1570,10 @@
           "puts": [
             {
               "strike": 81.0,
-              "bid": 0.78,
-              "premium": 78.0,
-              "pct_of_collateral": 0.963,
-              "delta": -0.338,
+              "bid": 0.67,
+              "premium": 67.0,
+              "pct_of_collateral": 0.827,
+              "delta": -0.309,
               "open_interest": 51,
               "recommended": true
             }
@@ -1320,157 +1582,45 @@
       ]
     },
     {
-      "symbol": "COIN",
-      "option_symbol": "COIN260731P00100000",
-      "price": 146.69,
-      "expiration": "2026-07-31",
-      "dte": 35,
-      "strike": 100.0,
-      "bid": 0.93,
-      "delta": -0.057,
-      "open_interest": 234,
-      "collateral": 10000.0,
-      "premium": 93.0,
-      "yield_30d_pct": 0.797,
-      "annualized_pct": 9.7,
-      "preferred": false,
-      "company_name": "Coinbase Global, Inc.",
-      "pe": 54.05,
-      "week52_low": 139.18,
-      "week52_high": 444.65,
-      "weeklies": [
-        {
-          "expiration": "2026-07-02",
-          "dte": 6,
-          "puts": [
-            {
-              "strike": 133.0,
-              "bid": 0.97,
-              "premium": 97.0,
-              "pct_of_collateral": 0.729,
-              "delta": -0.138,
-              "open_interest": 82,
-              "recommended": true
-            },
-            {
-              "strike": 134.0,
-              "bid": 1.12,
-              "premium": 112.0,
-              "pct_of_collateral": 0.836,
-              "delta": -0.154,
-              "open_interest": 640,
-              "recommended": false
-            },
-            {
-              "strike": 135.0,
-              "bid": 1.27,
-              "premium": 127.0,
-              "pct_of_collateral": 0.941,
-              "delta": -0.172,
-              "open_interest": 941,
-              "recommended": false
-            }
-          ]
-        },
-        {
-          "expiration": "2026-07-10",
-          "dte": 14,
-          "puts": [
-            {
-              "strike": 122.0,
-              "bid": 0.88,
-              "premium": 88.0,
-              "pct_of_collateral": 0.721,
-              "delta": -0.092,
-              "open_interest": 193,
-              "recommended": true
-            },
-            {
-              "strike": 123.0,
-              "bid": 0.99,
-              "premium": 99.0,
-              "pct_of_collateral": 0.805,
-              "delta": -0.099,
-              "open_interest": 4,
-              "recommended": false
-            },
-            {
-              "strike": 124.0,
-              "bid": 1.06,
-              "premium": 106.0,
-              "pct_of_collateral": 0.855,
-              "delta": -0.107,
-              "open_interest": 2,
-              "recommended": false
-            }
-          ]
-        },
-        {
-          "expiration": "2026-07-17",
-          "dte": 21,
-          "puts": [
-            {
-              "strike": 110.0,
-              "bid": 0.8,
-              "premium": 80.0,
-              "pct_of_collateral": 0.727,
-              "delta": -0.061,
-              "open_interest": 1933,
-              "recommended": true
-            },
-            {
-              "strike": 115.0,
-              "bid": 1.05,
-              "premium": 105.0,
-              "pct_of_collateral": 0.913,
-              "delta": -0.083,
-              "open_interest": 2726,
-              "recommended": false
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "symbol": "ABNB",
-      "option_symbol": "ABNB260717P00135000",
-      "price": 147.14,
+      "symbol": "MRK",
+      "option_symbol": "MRK260717P00122000",
+      "price": 128.24,
       "expiration": "2026-07-17",
       "dte": 21,
-      "strike": 135.0,
-      "bid": 0.91,
-      "delta": -0.154,
-      "open_interest": 1271,
-      "collateral": 13500.0,
-      "premium": 91.0,
-      "yield_30d_pct": 0.963,
-      "annualized_pct": 11.72,
+      "strike": 122.0,
+      "bid": 0.85,
+      "delta": -0.197,
+      "open_interest": 75,
+      "collateral": 12200.0,
+      "premium": 85.0,
+      "yield_30d_pct": 0.995,
+      "annualized_pct": 12.11,
       "preferred": false,
-      "company_name": "Airbnb, Inc.",
-      "pe": 36.42,
-      "week52_low": 110.81,
-      "week52_high": 147.58,
+      "company_name": "Merck & Co., Inc.",
+      "pe": 36.24,
+      "week52_low": 76.66,
+      "week52_high": 128.78,
       "weeklies": [
         {
           "expiration": "2026-07-02",
           "dte": 6,
           "puts": [
             {
-              "strike": 144.0,
-              "bid": 1.13,
-              "premium": 113.0,
-              "pct_of_collateral": 0.785,
-              "delta": -0.302,
-              "open_interest": 85,
+              "strike": 127.0,
+              "bid": 0.94,
+              "premium": 94.0,
+              "pct_of_collateral": 0.74,
+              "delta": -0.359,
+              "open_interest": 0,
               "recommended": true
             },
             {
-              "strike": 145.0,
-              "bid": 1.43,
-              "premium": 143.0,
-              "pct_of_collateral": 0.986,
-              "delta": -0.358,
-              "open_interest": 7,
+              "strike": 128.0,
+              "bid": 1.26,
+              "premium": 126.0,
+              "pct_of_collateral": 0.984,
+              "delta": -0.451,
+              "open_interest": 20,
               "recommended": false
             }
           ]
@@ -1480,12 +1630,12 @@
           "dte": 14,
           "puts": [
             {
-              "strike": 140.0,
-              "bid": 1.12,
-              "premium": 112.0,
-              "pct_of_collateral": 0.8,
-              "delta": -0.221,
-              "open_interest": 41,
+              "strike": 125.0,
+              "bid": 1.14,
+              "premium": 114.0,
+              "pct_of_collateral": 0.912,
+              "delta": -0.292,
+              "open_interest": 1,
               "recommended": true
             }
           ]
@@ -1495,12 +1645,12 @@
           "dte": 21,
           "puts": [
             {
-              "strike": 136.0,
+              "strike": 123.0,
               "bid": 1.09,
               "premium": 109.0,
-              "pct_of_collateral": 0.801,
-              "delta": -0.172,
-              "open_interest": 327,
+              "pct_of_collateral": 0.886,
+              "delta": -0.231,
+              "open_interest": 42,
               "recommended": true
             }
           ]
@@ -1510,20 +1660,20 @@
     {
       "symbol": "PLTR",
       "option_symbol": "PLTR260724P00095000",
-      "price": 112.69,
+      "price": 112.63,
       "expiration": "2026-07-24",
       "dte": 28,
       "strike": 95.0,
-      "bid": 0.86,
-      "delta": -0.106,
+      "bid": 0.84,
+      "delta": -0.107,
       "open_interest": 842,
       "collateral": 9500.0,
-      "premium": 86.0,
-      "yield_30d_pct": 0.97,
-      "annualized_pct": 11.8,
+      "premium": 84.0,
+      "yield_30d_pct": 0.947,
+      "annualized_pct": 11.53,
       "preferred": false,
       "company_name": "Palantir Technologies Inc.",
-      "pe": 127.13,
+      "pe": 126.89,
       "week52_low": 106.37,
       "week52_high": 207.52,
       "weeklies": [
@@ -1533,19 +1683,19 @@
           "puts": [
             {
               "strike": 107.0,
-              "bid": 0.86,
-              "premium": 86.0,
-              "pct_of_collateral": 0.804,
-              "delta": -0.204,
+              "bid": 0.8,
+              "premium": 80.0,
+              "pct_of_collateral": 0.748,
+              "delta": -0.194,
               "open_interest": 1601,
               "recommended": true
             },
             {
               "strike": 108.0,
-              "bid": 1.08,
-              "premium": 108.0,
-              "pct_of_collateral": 1.0,
-              "delta": -0.244,
+              "bid": 0.99,
+              "premium": 99.0,
+              "pct_of_collateral": 0.917,
+              "delta": -0.233,
               "open_interest": 707,
               "recommended": false
             }
@@ -1557,20 +1707,29 @@
           "puts": [
             {
               "strike": 102.0,
-              "bid": 0.81,
-              "premium": 81.0,
-              "pct_of_collateral": 0.794,
-              "delta": -0.141,
+              "bid": 0.75,
+              "premium": 75.0,
+              "pct_of_collateral": 0.735,
+              "delta": -0.139,
               "open_interest": 52,
               "recommended": true
             },
             {
               "strike": 103.0,
-              "bid": 0.96,
-              "premium": 96.0,
-              "pct_of_collateral": 0.932,
-              "delta": -0.162,
+              "bid": 0.89,
+              "premium": 89.0,
+              "pct_of_collateral": 0.864,
+              "delta": -0.159,
               "open_interest": 69,
+              "recommended": false
+            },
+            {
+              "strike": 104.0,
+              "bid": 1.04,
+              "premium": 104.0,
+              "pct_of_collateral": 1.0,
+              "delta": -0.183,
+              "open_interest": 107,
               "recommended": false
             }
           ]
@@ -1579,6 +1738,127 @@
           "expiration": "2026-07-17",
           "dte": 21,
           "puts": []
+        }
+      ]
+    },
+    {
+      "symbol": "INTC",
+      "option_symbol": "INTC260731P00075000",
+      "price": 127.27,
+      "expiration": "2026-07-31",
+      "dte": 35,
+      "strike": 75.0,
+      "bid": 0.8,
+      "delta": -0.043,
+      "open_interest": 175,
+      "collateral": 7500.0,
+      "premium": 80.0,
+      "yield_30d_pct": 0.914,
+      "annualized_pct": 11.12,
+      "preferred": true,
+      "company_name": "Intel Corporation",
+      "pe": null,
+      "week52_low": 18.97,
+      "week52_high": 141.45,
+      "weeklies": [
+        {
+          "expiration": "2026-07-02",
+          "dte": 6,
+          "puts": [
+            {
+              "strike": 112.0,
+              "bid": 0.87,
+              "premium": 87.0,
+              "pct_of_collateral": 0.777,
+              "delta": -0.119,
+              "open_interest": 1384,
+              "recommended": true
+            },
+            {
+              "strike": 113.0,
+              "bid": 0.95,
+              "premium": 95.0,
+              "pct_of_collateral": 0.841,
+              "delta": -0.132,
+              "open_interest": 458,
+              "recommended": false
+            },
+            {
+              "strike": 114.0,
+              "bid": 1.11,
+              "premium": 111.0,
+              "pct_of_collateral": 0.974,
+              "delta": -0.147,
+              "open_interest": 548,
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-10",
+          "dte": 14,
+          "puts": [
+            {
+              "strike": 98.0,
+              "bid": 0.7,
+              "premium": 70.0,
+              "pct_of_collateral": 0.714,
+              "delta": -0.069,
+              "open_interest": 340,
+              "recommended": true
+            },
+            {
+              "strike": 99.0,
+              "bid": 0.74,
+              "premium": 74.0,
+              "pct_of_collateral": 0.747,
+              "delta": -0.074,
+              "open_interest": 214,
+              "recommended": false
+            },
+            {
+              "strike": 100.0,
+              "bid": 0.87,
+              "premium": 87.0,
+              "pct_of_collateral": 0.87,
+              "delta": -0.08,
+              "open_interest": 1506,
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-17",
+          "dte": 21,
+          "puts": [
+            {
+              "strike": 85.0,
+              "bid": 0.6,
+              "premium": 60.0,
+              "pct_of_collateral": 0.706,
+              "delta": -0.042,
+              "open_interest": 10776,
+              "recommended": true
+            },
+            {
+              "strike": 90.0,
+              "bid": 0.76,
+              "premium": 76.0,
+              "pct_of_collateral": 0.844,
+              "delta": -0.058,
+              "open_interest": 8674,
+              "recommended": false
+            },
+            {
+              "strike": 92.5,
+              "bid": 0.9,
+              "premium": 90.0,
+              "pct_of_collateral": 0.973,
+              "delta": -0.068,
+              "open_interest": 1221,
+              "recommended": false
+            }
+          ]
         }
       ]
     },
@@ -1598,7 +1878,7 @@
       "annualized_pct": 10.56,
       "preferred": false,
       "company_name": "Wells Fargo & Company",
-      "pe": 12.98,
+      "pe": 12.96,
       "week52_low": 72.78,
       "week52_high": 97.76,
       "weeklies": [
@@ -1657,155 +1937,22 @@
           ]
         }
       ]
-    },
-    {
-      "symbol": "UBER",
-      "option_symbol": "UBER260731P00070000",
-      "price": 75.07,
-      "expiration": "2026-07-31",
-      "dte": 35,
-      "strike": 70.0,
-      "bid": 0.78,
-      "delta": -0.241,
-      "open_interest": 408,
-      "collateral": 7000.0,
-      "premium": 78.0,
-      "yield_30d_pct": 0.955,
-      "annualized_pct": 11.62,
-      "preferred": false,
-      "company_name": "Uber Technologies, Inc.",
-      "pe": 18.64,
-      "week52_low": 67.19,
-      "week52_high": 101.99,
-      "weeklies": [
-        {
-          "expiration": "2026-07-02",
-          "dte": 6,
-          "puts": [
-            {
-              "strike": 73.0,
-              "bid": 0.57,
-              "premium": 57.0,
-              "pct_of_collateral": 0.781,
-              "delta": -0.264,
-              "open_interest": 696,
-              "recommended": true
-            }
-          ]
-        },
-        {
-          "expiration": "2026-07-10",
-          "dte": 14,
-          "puts": []
-        },
-        {
-          "expiration": "2026-07-17",
-          "dte": 21,
-          "puts": [
-            {
-              "strike": 70.0,
-              "bid": 0.64,
-              "premium": 64.0,
-              "pct_of_collateral": 0.914,
-              "delta": -0.187,
-              "open_interest": 10159,
-              "recommended": true
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "symbol": "CSCO",
-      "option_symbol": "CSCO260717P00105000",
-      "price": 115.38,
-      "expiration": "2026-07-17",
-      "dte": 21,
-      "strike": 105.0,
-      "bid": 0.72,
-      "delta": -0.143,
-      "open_interest": 1700,
-      "collateral": 10500.0,
-      "premium": 72.0,
-      "yield_30d_pct": 0.98,
-      "annualized_pct": 11.92,
-      "preferred": false,
-      "company_name": "Cisco Systems, Inc.",
-      "pe": 38.53,
-      "week52_low": 65.75,
-      "week52_high": 130.37,
-      "weeklies": [
-        {
-          "expiration": "2026-07-02",
-          "dte": 6,
-          "puts": [
-            {
-              "strike": 113.0,
-              "bid": 0.95,
-              "premium": 95.0,
-              "pct_of_collateral": 0.841,
-              "delta": -0.306,
-              "open_interest": 415,
-              "recommended": true
-            }
-          ]
-        },
-        {
-          "expiration": "2026-07-10",
-          "dte": 14,
-          "puts": [
-            {
-              "strike": 109.0,
-              "bid": 0.82,
-              "premium": 82.0,
-              "pct_of_collateral": 0.752,
-              "delta": -0.205,
-              "open_interest": 17,
-              "recommended": true
-            }
-          ]
-        },
-        {
-          "expiration": "2026-07-17",
-          "dte": 21,
-          "puts": [
-            {
-              "strike": 106.0,
-              "bid": 0.85,
-              "premium": 85.0,
-              "pct_of_collateral": 0.802,
-              "delta": -0.166,
-              "open_interest": 25,
-              "recommended": true
-            },
-            {
-              "strike": 107.0,
-              "bid": 1.0,
-              "premium": 100.0,
-              "pct_of_collateral": 0.935,
-              "delta": -0.19,
-              "open_interest": 33,
-              "recommended": false
-            }
-          ]
-        }
-      ]
     }
   ],
   "indices": [
     {
       "label": "S&P 500",
-      "value": 7343.47,
-      "change_pct": -0.19
+      "value": 7354.02,
+      "change_pct": -0.05
     },
     {
       "label": "Dow Jones",
-      "value": 51831.0,
-      "change_pct": -0.17
+      "value": 51876.0,
+      "change_pct": -0.09
     },
     {
       "label": "Nasdaq 100",
-      "value": 29118.48,
+      "value": 29118.24,
       "change_pct": -1.09
     }
   ]
