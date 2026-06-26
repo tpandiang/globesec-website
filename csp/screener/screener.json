@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-25T20:32:59",
+  "generated_at": "2026-06-26T15:26:23",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -27,47 +27,47 @@
     {
       "symbol": "SMCI",
       "sector": "Technology",
-      "spot": 31.78,
+      "spot": 31.02,
       "strike": 28.5,
-      "otm_pct": 10.3,
+      "otm_pct": 8.1,
       "expiration": "2026-07-02",
-      "dte": 7,
-      "premium": 40.0,
-      "weekly_yield": 1.404,
-      "assign_pct": 18.2,
+      "dte": 6,
+      "premium": 36.0,
+      "weekly_yield": 1.474,
+      "assign_pct": 19.4,
       "earnings_clear": true,
       "next_earnings": null,
       "wheel_ok": true,
-      "cost_basis": 28.1,
+      "cost_basis": 28.14,
       "cc_strike": 32.0,
-      "cc_premium": 280.0,
+      "cc_premium": 232.0,
       "cc_expiration": "2026-07-24",
-      "cc_dte": 29,
-      "cc_weekly_yield": 2.405,
-      "open_interest": 1650,
-      "volume": 74,
-      "spread_pct": 4.9,
-      "iv": 90.4,
+      "cc_dte": 28,
+      "cc_weekly_yield": 2.061,
+      "open_interest": 1662,
+      "volume": 109,
+      "spread_pct": 5.4,
+      "iv": 81.3,
       "collateral": 2850.0,
-      "score": 0.077,
+      "score": 0.076,
       "tier": "yellow"
     }
   ],
   "indices": [
     {
       "label": "S&P 500",
-      "value": 7357.49,
-      "change_pct": -0.01
+      "value": 7357.89,
+      "change_pct": 0.01
     },
     {
       "label": "Dow Jones",
-      "value": 51921.0,
-      "change_pct": 0.14
+      "value": 51933.0,
+      "change_pct": 0.02
     },
     {
       "label": "Nasdaq 100",
-      "value": 29440.32,
-      "change_pct": 0.75
+      "value": 29187.38,
+      "change_pct": -0.86
     }
   ]
 }
