@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-30T19:22:46",
+  "generated_at": "2026-06-30T21:16:08",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,7 +22,80 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 0,
-  "results": [],
-  "indices": []
+  "result_count": 2,
+  "results": [
+    {
+      "symbol": "INTC",
+      "sector": "Semiconductors",
+      "spot": 138.72,
+      "strike": 121.0,
+      "otm_pct": 12.8,
+      "expiration": "2026-07-10",
+      "dte": 10,
+      "premium": 158.0,
+      "weekly_yield": 0.914,
+      "assign_pct": 14.8,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 119.42,
+      "cc_strike": 125.0,
+      "cc_premium": 2300.0,
+      "cc_expiration": "2026-07-31",
+      "cc_dte": 31,
+      "cc_weekly_yield": 4.349,
+      "open_interest": 1130,
+      "volume": 265,
+      "spread_pct": 6.7,
+      "iv": 88.4,
+      "collateral": 12100.0,
+      "score": 0.062,
+      "tier": "green"
+    },
+    {
+      "symbol": "HOOD",
+      "sector": "Financial Services",
+      "spot": 100.18,
+      "strike": 90.0,
+      "otm_pct": 10.2,
+      "expiration": "2026-07-10",
+      "dte": 10,
+      "premium": 99.0,
+      "weekly_yield": 0.77,
+      "assign_pct": 16.1,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 89.01,
+      "cc_strike": 100.0,
+      "cc_premium": 830.0,
+      "cc_expiration": "2026-07-31",
+      "cc_dte": 31,
+      "cc_weekly_yield": 2.106,
+      "open_interest": 1770,
+      "volume": 347,
+      "spread_pct": 9.6,
+      "iv": 70.3,
+      "collateral": 9000.0,
+      "score": 0.048,
+      "tier": "yellow"
+    }
+  ],
+  "indices": [
+    {
+      "label": "S&P 500",
+      "value": 7499.36,
+      "change_pct": 0.79
+    },
+    {
+      "label": "Dow Jones",
+      "value": 52319.0,
+      "change_pct": 0.26
+    },
+    {
+      "label": "Nasdaq 100",
+      "value": 30276.35,
+      "change_pct": 1.68
+    }
+  ]
 }
