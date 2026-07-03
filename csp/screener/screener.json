@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-03T15:14:44",
+  "generated_at": "2026-07-03T16:56:25",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,7 +22,80 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 0,
-  "results": [],
-  "indices": []
+  "result_count": 2,
+  "results": [
+    {
+      "symbol": "SMCI",
+      "sector": "Technology",
+      "spot": 27.28,
+      "strike": 24.0,
+      "otm_pct": 12.0,
+      "expiration": "2026-07-10",
+      "dte": 7,
+      "premium": 30.0,
+      "weekly_yield": 1.25,
+      "assign_pct": 15.4,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 23.7,
+      "cc_strike": 33.0,
+      "cc_premium": 97.0,
+      "cc_expiration": "2026-07-31",
+      "cc_dte": 28,
+      "cc_weekly_yield": 1.023,
+      "open_interest": 2174,
+      "volume": 459,
+      "spread_pct": 3.3,
+      "iv": 89.3,
+      "collateral": 2400.0,
+      "score": 0.081,
+      "tier": "yellow"
+    },
+    {
+      "symbol": "AMD",
+      "sector": "Semiconductors",
+      "spot": 519.5,
+      "strike": 470.0,
+      "otm_pct": 9.5,
+      "expiration": "2026-07-10",
+      "dte": 7,
+      "premium": 520.0,
+      "weekly_yield": 1.106,
+      "assign_pct": 17.3,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 464.8,
+      "cc_strike": 520.0,
+      "cc_premium": 4340.0,
+      "cc_expiration": "2026-07-31",
+      "cc_dte": 28,
+      "cc_weekly_yield": 2.334,
+      "open_interest": 2095,
+      "volume": 1494,
+      "spread_pct": 7.4,
+      "iv": 73.3,
+      "collateral": 47000.0,
+      "score": 0.064,
+      "tier": "yellow"
+    }
+  ],
+  "indices": [
+    {
+      "label": "S&P 500",
+      "value": 7483.24,
+      "change_pct": 0.0
+    },
+    {
+      "label": "Dow Jones",
+      "value": 52900.0,
+      "change_pct": 1.12
+    },
+    {
+      "label": "Nasdaq 100",
+      "value": 29329.21,
+      "change_pct": -1.64
+    }
+  ]
 }

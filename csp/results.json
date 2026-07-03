@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-03T15:13:13",
+  "generated_at": "2026-07-03T16:55:15",
   "data_source": "CBOE delayed (~15 min)",
   "account_picks": [
     {
@@ -176,7 +176,20 @@
       "symbol": "NU",
       "sector": "Fintech",
       "thesis": "LatAm digital bank; profitable growth",
-      "available": false
+      "available": true,
+      "price": 13.58,
+      "strike": 13.0,
+      "expiration": "2026-07-31",
+      "dte": 28,
+      "bid": 0.28,
+      "premium": 28.0,
+      "delta": 0.306,
+      "open_interest": 144,
+      "collateral": 1300.0,
+      "buyin": 12.72,
+      "discount_pct": 6.33,
+      "yield_pct": 2.154,
+      "annualized_pct": 28.08
     }
   ],
   "losers": [
@@ -307,8 +320,8 @@
     "sorted_by": "premium"
   },
   "universe_size": 134,
-  "scanned_under_price": 56,
-  "total_qualifying": 97,
+  "scanned_under_price": 55,
+  "total_qualifying": 100,
   "result_count": 20,
   "results": [
     {
@@ -720,6 +733,91 @@
       ]
     },
     {
+      "symbol": "COIN",
+      "option_symbol": "COIN260807P00115000",
+      "price": 165.7,
+      "expiration": "2026-08-07",
+      "dte": 35,
+      "strike": 115.0,
+      "bid": 1.2,
+      "delta": -0.071,
+      "open_interest": 120,
+      "collateral": 11500.0,
+      "premium": 120.0,
+      "yield_30d_pct": 0.894,
+      "annualized_pct": 10.88,
+      "preferred": false,
+      "company_name": "Coinbase Global, Inc.",
+      "pe": 61.06,
+      "week52_low": 139.18,
+      "week52_high": 444.65,
+      "weeklies": [
+        {
+          "expiration": "2026-07-10",
+          "dte": 7,
+          "puts": [
+            {
+              "strike": 146.0,
+              "bid": 1.11,
+              "premium": 111.0,
+              "pct_of_collateral": 0.76,
+              "delta": -0.122,
+              "open_interest": 2215,
+              "recommended": true
+            },
+            {
+              "strike": 147.0,
+              "bid": 1.23,
+              "premium": 123.0,
+              "pct_of_collateral": 0.837,
+              "delta": -0.133,
+              "open_interest": 894,
+              "recommended": false
+            },
+            {
+              "strike": 148.0,
+              "bid": 1.35,
+              "premium": 135.0,
+              "pct_of_collateral": 0.912,
+              "delta": -0.145,
+              "open_interest": 576,
+              "recommended": false
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-17",
+          "dte": 14,
+          "puts": [
+            {
+              "strike": 135.0,
+              "bid": 1.2,
+              "premium": 120.0,
+              "pct_of_collateral": 0.889,
+              "delta": -0.094,
+              "open_interest": 1762,
+              "recommended": true
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-24",
+          "dte": 21,
+          "puts": [
+            {
+              "strike": 125.0,
+              "bid": 0.98,
+              "premium": 98.0,
+              "pct_of_collateral": 0.784,
+              "delta": -0.07,
+              "open_interest": 325,
+              "recommended": true
+            }
+          ]
+        }
+      ]
+    },
+    {
       "symbol": "C",
       "option_symbol": "C260807P00125000",
       "price": 139.97,
@@ -1080,62 +1178,6 @@
               "pct_of_collateral": 1.0,
               "delta": -0.218,
               "open_interest": 17,
-              "recommended": false
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "symbol": "MMM",
-      "option_symbol": "MMM260724P00150000",
-      "price": 160.44,
-      "expiration": "2026-07-24",
-      "dte": 21,
-      "strike": 150.0,
-      "bid": 1.0,
-      "delta": -0.218,
-      "open_interest": 62,
-      "collateral": 15000.0,
-      "premium": 100.0,
-      "yield_30d_pct": 0.952,
-      "annualized_pct": 11.59,
-      "preferred": false,
-      "company_name": "3M Company",
-      "pe": 30.97,
-      "week52_low": 139.34,
-      "week52_high": 177.41,
-      "weeklies": [
-        {
-          "expiration": "2026-07-10",
-          "dte": 7,
-          "puts": []
-        },
-        {
-          "expiration": "2026-07-17",
-          "dte": 14,
-          "puts": []
-        },
-        {
-          "expiration": "2026-07-24",
-          "dte": 21,
-          "puts": [
-            {
-              "strike": 148.0,
-              "bid": 1.4,
-              "premium": 140.0,
-              "pct_of_collateral": 0.946,
-              "delta": -0.183,
-              "open_interest": 6,
-              "recommended": true
-            },
-            {
-              "strike": 155.0,
-              "bid": 1.46,
-              "premium": 146.0,
-              "pct_of_collateral": 0.942,
-              "delta": -0.329,
-              "open_interest": 40,
               "recommended": false
             }
           ]
@@ -1907,5 +1949,21 @@
       ]
     }
   ],
-  "indices": []
+  "indices": [
+    {
+      "label": "S&P 500",
+      "value": 7483.24,
+      "change_pct": 0.0
+    },
+    {
+      "label": "Dow Jones",
+      "value": 52900.0,
+      "change_pct": 1.12
+    },
+    {
+      "label": "Nasdaq 100",
+      "value": 29329.21,
+      "change_pct": -1.64
+    }
+  ]
 }
