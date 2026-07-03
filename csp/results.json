@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-03T16:55:15",
+  "generated_at": "2026-07-03T18:14:05",
   "data_source": "CBOE delayed (~15 min)",
   "account_picks": [
     {
@@ -320,8 +320,8 @@
     "sorted_by": "premium"
   },
   "universe_size": 134,
-  "scanned_under_price": 55,
-  "total_qualifying": 100,
+  "scanned_under_price": 56,
+  "total_qualifying": 102,
   "result_count": 20,
   "results": [
     {
@@ -570,6 +570,63 @@
               "pct_of_collateral": 0.814,
               "delta": -0.207,
               "open_interest": 2495,
+              "recommended": true
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-24",
+          "dte": 21,
+          "puts": []
+        }
+      ]
+    },
+    {
+      "symbol": "CRM",
+      "option_symbol": "CRM260731P00145000",
+      "price": 166.3,
+      "expiration": "2026-07-31",
+      "dte": 28,
+      "strike": 145.0,
+      "bid": 1.33,
+      "delta": -0.124,
+      "open_interest": 220,
+      "collateral": 14500.0,
+      "premium": 133.0,
+      "yield_30d_pct": 0.983,
+      "annualized_pct": 11.96,
+      "preferred": false,
+      "company_name": "Salesforce, Inc.",
+      "pe": 19.23,
+      "week52_low": 146.32,
+      "week52_high": 276.8,
+      "weeklies": [
+        {
+          "expiration": "2026-07-10",
+          "dte": 7,
+          "puts": [
+            {
+              "strike": 160.0,
+              "bid": 1.56,
+              "premium": 156.0,
+              "pct_of_collateral": 0.975,
+              "delta": -0.257,
+              "open_interest": 1331,
+              "recommended": true
+            }
+          ]
+        },
+        {
+          "expiration": "2026-07-17",
+          "dte": 14,
+          "puts": [
+            {
+              "strike": 155.0,
+              "bid": 1.54,
+              "premium": 154.0,
+              "pct_of_collateral": 0.994,
+              "delta": -0.195,
+              "open_interest": 2707,
               "recommended": true
             }
           ]
@@ -1848,100 +1905,6 @@
               "pct_of_collateral": 0.958,
               "delta": -0.26,
               "open_interest": 181,
-              "recommended": false
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "symbol": "CSCO",
-      "option_symbol": "CSCO260731P00100000",
-      "price": 112.48,
-      "expiration": "2026-07-31",
-      "dte": 28,
-      "strike": 100.0,
-      "bid": 0.71,
-      "delta": -0.136,
-      "open_interest": 160,
-      "collateral": 10000.0,
-      "premium": 71.0,
-      "yield_30d_pct": 0.761,
-      "annualized_pct": 9.26,
-      "preferred": false,
-      "company_name": "Cisco Systems, Inc.",
-      "pe": 37.56,
-      "week52_low": 65.75,
-      "week52_high": 130.37,
-      "weeklies": [
-        {
-          "expiration": "2026-07-10",
-          "dte": 7,
-          "puts": [
-            {
-              "strike": 108.0,
-              "bid": 0.82,
-              "premium": 82.0,
-              "pct_of_collateral": 0.759,
-              "delta": -0.232,
-              "open_interest": 3180,
-              "recommended": true
-            },
-            {
-              "strike": 109.0,
-              "bid": 1.04,
-              "premium": 104.0,
-              "pct_of_collateral": 0.954,
-              "delta": -0.282,
-              "open_interest": 183,
-              "recommended": false
-            }
-          ]
-        },
-        {
-          "expiration": "2026-07-17",
-          "dte": 14,
-          "puts": [
-            {
-              "strike": 104.0,
-              "bid": 0.75,
-              "premium": 75.0,
-              "pct_of_collateral": 0.721,
-              "delta": -0.163,
-              "open_interest": 293,
-              "recommended": true
-            },
-            {
-              "strike": 105.0,
-              "bid": 0.95,
-              "premium": 95.0,
-              "pct_of_collateral": 0.905,
-              "delta": -0.19,
-              "open_interest": 1622,
-              "recommended": false
-            }
-          ]
-        },
-        {
-          "expiration": "2026-07-24",
-          "dte": 21,
-          "puts": [
-            {
-              "strike": 103.0,
-              "bid": 0.91,
-              "premium": 91.0,
-              "pct_of_collateral": 0.883,
-              "delta": -0.173,
-              "open_interest": 5,
-              "recommended": true
-            },
-            {
-              "strike": 104.0,
-              "bid": 1.0,
-              "premium": 100.0,
-              "pct_of_collateral": 0.962,
-              "delta": -0.198,
-              "open_interest": 387,
               "recommended": false
             }
           ]

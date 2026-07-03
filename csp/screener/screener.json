@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-03T16:56:25",
+  "generated_at": "2026-07-03T18:15:13",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,8 +22,36 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 2,
+  "result_count": 4,
   "results": [
+    {
+      "symbol": "INTC",
+      "sector": "Semiconductors",
+      "spot": 121.0,
+      "strike": 108.0,
+      "otm_pct": 10.7,
+      "expiration": "2026-07-10",
+      "dte": 7,
+      "premium": 190.0,
+      "weekly_yield": 1.759,
+      "assign_pct": 19.6,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 106.1,
+      "cc_strike": 125.0,
+      "cc_premium": 1125.0,
+      "cc_expiration": "2026-07-31",
+      "cc_dte": 28,
+      "cc_weekly_yield": 2.651,
+      "open_interest": 2382,
+      "volume": 1192,
+      "spread_pct": 7.6,
+      "iv": 94.5,
+      "collateral": 10800.0,
+      "score": 0.09,
+      "tier": "yellow"
+    },
     {
       "symbol": "SMCI",
       "sector": "Technology",
@@ -79,23 +107,35 @@
       "collateral": 47000.0,
       "score": 0.064,
       "tier": "yellow"
+    },
+    {
+      "symbol": "HOOD",
+      "sector": "Financial Services",
+      "spot": 111.98,
+      "strike": 103.0,
+      "otm_pct": 8.0,
+      "expiration": "2026-07-10",
+      "dte": 7,
+      "premium": 100.0,
+      "weekly_yield": 0.971,
+      "assign_pct": 17.1,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 102.0,
+      "cc_strike": 110.0,
+      "cc_premium": 1045.0,
+      "cc_expiration": "2026-07-31",
+      "cc_dte": 28,
+      "cc_weekly_yield": 2.561,
+      "open_interest": 2729,
+      "volume": 486,
+      "spread_pct": 9.5,
+      "iv": 67.1,
+      "collateral": 10300.0,
+      "score": 0.057,
+      "tier": "yellow"
     }
   ],
-  "indices": [
-    {
-      "label": "S&P 500",
-      "value": 7483.24,
-      "change_pct": 0.0
-    },
-    {
-      "label": "Dow Jones",
-      "value": 52900.0,
-      "change_pct": 1.12
-    },
-    {
-      "label": "Nasdaq 100",
-      "value": 29329.21,
-      "change_pct": -1.64
-    }
-  ]
+  "indices": []
 }
