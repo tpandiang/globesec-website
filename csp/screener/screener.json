@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-08T15:24:36",
+  "generated_at": "2026-07-08T16:59:44",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,52 +22,7 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 1,
-  "results": [
-    {
-      "symbol": "AMD",
-      "sector": "Semiconductors",
-      "spot": 508.6,
-      "strike": 445.0,
-      "otm_pct": 12.5,
-      "expiration": "2026-07-17",
-      "dte": 9,
-      "premium": 540.0,
-      "weekly_yield": 0.944,
-      "assign_pct": 14.7,
-      "earnings_clear": true,
-      "next_earnings": null,
-      "wheel_ok": true,
-      "cost_basis": 439.6,
-      "cc_strike": 440.0,
-      "cc_premium": 9455.0,
-      "cc_expiration": "2026-08-21",
-      "cc_dte": 44,
-      "cc_weekly_yield": 3.422,
-      "open_interest": 1215,
-      "volume": 68,
-      "spread_pct": 7.1,
-      "iv": 86.2,
-      "collateral": 44500.0,
-      "score": 0.064,
-      "tier": "green"
-    }
-  ],
-  "indices": [
-    {
-      "label": "S&P 500",
-      "value": 7442.81,
-      "change_pct": -0.81
-    },
-    {
-      "label": "Dow Jones",
-      "value": 52131.0,
-      "change_pct": -1.5
-    },
-    {
-      "label": "Nasdaq 100",
-      "value": 28984.46,
-      "change_pct": -0.65
-    }
-  ]
+  "result_count": 0,
+  "results": [],
+  "indices": []
 }
