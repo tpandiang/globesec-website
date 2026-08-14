@@ -32,6 +32,7 @@ jobs:
         run: |
           pip install -r csp/scanner/requirements.txt
           pip install -r csp/screener/scanner/requirements.txt
+          pip install -r watchlist/scanner/requirements.txt
 
       - name: Run CSP scanner (results.json)
         working-directory: csp/scanner
@@ -43,12 +44,18 @@ jobs:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         run: python run.py
 
+      - name: Run watchlist (watchlist.json)
+        working-directory: watchlist/scanner
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+        run: python run.py
+
       - name: Commit results in one commit
         id: commit
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add csp/results.json csp/screener/screener.json csp/screener/scanner/data/sectors.json
+          git add csp/results.json csp/screener/screener.json csp/screener/scanner/data/sectors.json watchlist/watchlist.json
           if git diff --staged --quiet; then
             echo "No change"
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -76,7 +83,7 @@ jobs:
               "https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache" \
               -H "Authorization: Bearer ${token}" \
               -H "Content-Type: application/json" \
-              --data '{"files":["https://globesec.ai/csp/results.json","https://globesec.ai/csp/screener/screener.json"]}')
+              --data '{"files":["https://globesec.ai/csp/results.json","https://globesec.ai/csp/screener/screener.json","https://globesec.ai/watchlist/watchlist.json"]}')
             echo "$resp" | grep -q '"success":true' || echo "  purge attempt $i response: $resp"
             live=$(curl -s "https://globesec.ai/csp/screener/screener.json?cb=${i}${RANDOM}" | python -c "import sys,json;print(json.load(sys.stdin).get('generated_at',''))" 2>/dev/null || echo "")
             echo "  attempt $i: live generated_at=$live"
