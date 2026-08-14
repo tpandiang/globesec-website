@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watchlist — GlobeSec.ai</title>
+<meta name="description" content="Tracked watchlist portfolio: last price, 52-week range, market cap, volume and options open interest.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#eaeef3;--bg2:#fff;--bg3:#eef2f7;--cyan:#0e8aa6;--orange:#e2622a;--orange-glow:rgba(226,98,42,.25);
+  --text:#222b38;--text-dim:#5e6b7e;--white:#0c1422;--green:#12a150;--line:#d7dee8;--red:#c0392b;
+  --grn-bg:#e7f7ee;--red-bg:#fdecea;
+  --mono:'JetBrains Mono','Consolas',monospace;--sans:'Inter',system-ui,sans-serif;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(120,140,170,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(120,140,170,.05) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0;}
+nav{position:fixed;top:0;width:100%;z-index:1000;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:0 1.5rem;}
+.nav-inner{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;height:64px;}
+.logo{display:flex;align-items:center;gap:.75rem;text-decoration:none;color:var(--white);}
+.logo-diamond{width:40px;height:40px;background:var(--cyan);transform:rotate(45deg);display:flex;align-items:center;justify-content:center;border-radius:4px;}
+.logo-diamond span{transform:rotate(-45deg);font-weight:900;font-size:1.1rem;color:#fff;}
+.logo-text{font-weight:800;font-size:1.3rem;letter-spacing:1px;color:var(--white);line-height:1.1;}
+.logo-sub{font-family:var(--mono);font-size:.6rem;font-weight:500;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;}
+.nav-links{display:flex;gap:1.6rem;list-style:none;align-items:center;}
+.nav-links a{color:var(--text-dim);text-decoration:none;font-family:var(--mono);font-size:.75rem;font-weight:500;letter-spacing:1px;text-transform:uppercase;transition:color .3s;}
+.nav-links a:hover,.nav-links a.on{color:var(--cyan);}
+.wrap{max-width:1400px;margin:0 auto;padding:6rem 1.5rem 4rem;position:relative;z-index:1;}
+.label{display:inline-flex;align-items:center;gap:.5rem;margin-bottom:.6rem;}
+.label .bar{width:3px;height:18px;background:var(--orange);}
+.label .text{font-family:var(--mono);font-size:.7rem;font-weight:700;color:var(--orange);letter-spacing:2px;text-transform:uppercase;}
+h1{font-size:clamp(1.8rem,4.5vw,2.7rem);font-weight:900;color:var(--white);letter-spacing:-1px;margin-bottom:.3rem;}
+h1 .cyan{color:var(--cyan);}
+.lastupd{display:inline-flex;align-items:center;gap:.45rem;font-family:var(--mono);font-size:.72rem;color:var(--text-dim);margin:.1rem 0 .8rem;}
+.lastupd .live{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(18,161,80,.18);}
+.lastupd b{color:var(--text);font-weight:700;}
+.summary{font-family:var(--sans);font-size:1.05rem;font-weight:700;color:var(--white);margin-bottom:1.4rem;}
+.stats{display:flex;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:1.8rem;flex-wrap:wrap;}
+.stats .ix{background:#fff;padding:.7rem 1.1rem;flex:1;min-width:150px;display:flex;flex-direction:column;gap:.12rem;}
+.stats .nm{font-family:var(--mono);font-size:.58rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;}
+.stats .vl{font-family:var(--mono);font-size:1.1rem;font-weight:800;color:var(--white);}
+.stats .ch{font-family:var(--mono);font-size:.72rem;font-weight:700;}
+.up{color:var(--green);}.dn{color:var(--red);}
+.hd{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin:0 0 .7rem;}
+.card{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:2rem;}
+.scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.78rem;min-width:1120px;}
+th,td{padding:.5rem .7rem;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line);}
+th{font-family:var(--mono);color:var(--text-dim);font-size:.58rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:var(--bg3);position:sticky;top:0;}
+td{font-family:var(--mono);}
+th.l,td.l{text-align:left;}
+.sym{font-weight:800;color:var(--white);}
+.co{color:var(--text-dim);font-size:.72rem;}
+tr:last-child td{border-bottom:none;}
+tr.grp td{background:var(--bg3);font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);padding:.45rem .7rem;}
+.bar52{display:flex;flex-direction:column;gap:.2rem;min-width:120px;}
+.bar52 .track{position:relative;height:5px;background:var(--bg3);border-radius:3px;overflow:visible;}
+.bar52 .dot{position:absolute;top:-2px;width:9px;height:9px;border-radius:50%;background:var(--cyan);transform:translateX(-50%);border:2px solid #fff;}
+.bar52 .ends{display:flex;justify-content:space-between;font-size:.58rem;color:var(--text-dim);}
+.na{color:var(--text-dim);}
+.oi{font-weight:700;color:var(--white);}
+.note{font-family:var(--mono);font-size:.7rem;color:var(--text-dim);padding:1rem 1.1rem;}
+.empty{padding:1.5rem;text-align:center;color:var(--text-dim);font-family:var(--mono);font-size:.78rem;}
+.disc{font-family:var(--mono);font-size:.64rem;color:var(--text-dim);line-height:1.9;margin-top:1rem;border-left:2px solid var(--orange);padding-left:1rem;}
+@media(max-width:800px){.nav-links{display:none;}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="logo"><div class="logo-diamond"><span>G</span></div><div><div class="logo-text">GLOBESEC</div><div class="logo-sub">protocol.ai</div></div></a>
+    <ul class="nav-links">
+      <li><a href="/">Home</a></li>
+      <li><a href="/csp/">CSP Scanner</a></li>
+      <li><a href="/csp/screener/">Wheel Screener</a></li>
+      <li><a href="/csp/market/">Market Today</a></li>
+      <li><a href="/csp/watchlist/" class="on">Watchlist</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="label"><div class="bar"></div><div class="text">Market Lab</div></div>
+  <h1>Watchlist <span class="cyan">Portfolio</span></h1>
+  <div class="lastupd" id="lastupd"></div>
+  <div class="summary" id="summary">Loading watchlist…</div>
+
+  <div class="stats" id="stats" style="display:none"></div>
+
+  <div class="hd">Tracked Positions</div>
+  <div class="card">
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="l">Symbol</th>
+            <th class="l">Company</th>
+            <th>Last</th>
+            <th>Chg %</th>
+            <th class="l">52-Week Range</th>
+            <th>52W Mid</th>
+            <th>200D Avg</th>
+            <th>Market Cap</th>
+            <th>Volume</th>
+            <th>Avg Vol</th>
+            <th>Options OI</th>
+            <th>Put/Call</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="empty" style="display:none">No data right now.</div>
+    <div class="note" id="note" style="display:none"></div>
+  </div>
+
+  <div class="disc">
+    DISCLAIMER: Educational/informational only. Not investment advice. Quotes, market cap, volume and 52-week
+    figures via Financial Modeling Prep; options open interest is summed across the full CBOE delayed option
+    chain (~15 min delayed) and covers all listed expirations. &ldquo;52W Mid&rdquo; is the midpoint of the
+    52-week high/low, not a time-weighted mean &mdash; the 200-day average is the closer read on a year of
+    trading. Open interest is not a directional signal on its own. Verify everything with your broker before trading.
+  </div>
+</div>
+
+<script>
+const WORKER = "https://csp-market.ptmtek4.workers.dev/watchlist";
+
+function money(v){return v==null?'<span class="na">—</span>':"$"+Number(v).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});}
+function pct(v){if(v==null)return'<span class="na">—</span>';const c=v>=0?"up":"dn";return `<span class="${c}">${v>=0?"+":""}${Number(v).toFixed(2)}%</span>`;}
+function big(v){
+  if(v==null)return'<span class="na">—</span>';
+  const n=Number(v),a=Math.abs(n);
+  if(a>=1e12)return "$"+(n/1e12).toFixed(2)+"T";
+  if(a>=1e9) return "$"+(n/1e9).toFixed(2)+"B";
+  if(a>=1e6) return "$"+(n/1e6).toFixed(1)+"M";
+  return "$"+n.toLocaleString();
+}
+function num(v){
+  if(v==null)return'<span class="na">—</span>';
+  const n=Number(v),a=Math.abs(n);
+  if(a>=1e9)return (n/1e9).toFixed(2)+"B";
+  if(a>=1e6)return (n/1e6).toFixed(1)+"M";
+  if(a>=1e3)return (n/1e3).toFixed(1)+"K";
+  return n.toLocaleString();
+}
+function plain(v,d){return v==null?'<span class="na">—</span>':Number(v).toFixed(d==null?2:d);}
+function fmtUpdated(s){if(!s)return"";const d=new Date(s);return d.toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"});}
+
+function range52(r){
+  if(r.year_low==null||r.year_high==null)return '<span class="na">—</span>';
+  const p=r.range_pos_pct==null?50:r.range_pos_pct;
+  return `<div class="bar52">
+    <div class="track"><div class="dot" style="left:${p}%"></div></div>
+    <div class="ends"><span>${Number(r.year_low).toFixed(2)}</span><span>${Number(r.year_high).toFixed(2)}</span></div>
+  </div>`;
+}
+
+function renderStats(d){
+  const el=document.getElementById("stats");
+  const rows=(d.rows||[]).filter(r=>r.change_pct!=null);
+  if(!rows.length){el.style.display="none";return;}
+  const up=rows.filter(r=>r.change_pct>0).length;
+  const down=rows.filter(r=>r.change_pct<0).length;
+  const avg=rows.reduce((s,r)=>s+r.change_pct,0)/rows.length;
+  const cap=(d.rows||[]).reduce((s,r)=>s+(r.market_cap||0),0);
+  const oi=(d.rows||[]).reduce((s,r)=>s+((r.options&&r.options.total_oi)||0),0);
+  el.style.display="flex";
+  el.innerHTML=`
+    <div class="ix"><div class="nm">Tracked</div><div class="vl">${d.count||0}</div><div class="ch">${up} up · ${down} down</div></div>
+    <div class="ix"><div class="nm">Avg Change</div><div class="vl ${avg>=0?"up":"dn"}">${avg>=0?"+":""}${avg.toFixed(2)}%</div><div class="ch">unweighted</div></div>
+    <div class="ix"><div class="nm">Combined Market Cap</div><div class="vl">${big(cap).replace(/^\$/,"$")}</div><div class="ch">all names</div></div>
+    <div class="ix"><div class="nm">Total Options OI</div><div class="vl">${num(oi)}</div><div class="ch">all expirations</div></div>`;
+}
+
+function renderRows(d){
+  const body=document.getElementById("rows");
+  const groups=d.groups||[];
+  if(!groups.length){document.getElementById("empty").style.display="block";return;}
+  document.getElementById("empty").style.display="none";
+  let html="";
+  for(const g of groups){
+    html+=`<tr class="grp"><td class="l" colspan="12">${g.name}</td></tr>`;
+    for(const r of g.rows){
+      const o=r.options;
+      html+=`<tr>
+        <td class="l sym">${r.symbol}</td>
+        <td class="l co">${(r.name||"").slice(0,26)}</td>
+        <td>${money(r.price)}</td>
+        <td>${pct(r.change_pct)}</td>
+        <td class="l">${range52(r)}</td>
+        <td>${plain(r.year_mid)}</td>
+        <td>${plain(r.avg_200)}</td>
+        <td>${big(r.market_cap)}</td>
+        <td>${num(r.volume)}</td>
+        <td>${num(r.avg_volume)}</td>
+        <td class="oi">${o?num(o.total_oi):'<span class="na">—</span>'}</td>
+        <td>${o&&o.pc_ratio!=null?plain(o.pc_ratio):'<span class="na">—</span>'}</td>
+      </tr>`;
+    }
+  }
+  body.innerHTML=html;
+}
+
+async function load(){
+  try{
+    const r=await fetch(WORKER,{cache:"no-store"});
+    if(!r.ok) throw new Error("watchlist "+r.status);
+    const d=await r.json();
+    if(d.error) throw new Error(d.error);
+    document.getElementById("lastupd").innerHTML=d.generated_at?`<span class="live"></span>Last updated: <b>${fmtUpdated(d.generated_at)}</b>`:"";
+    const priced=(d.rows||[]).filter(x=>x.price!=null).length;
+    document.getElementById("summary").textContent=`${priced} of ${d.count||0} tracked names priced.`;
+    renderStats(d);
+    renderRows(d);
+    const note=document.getElementById("note");
+    if(!d.has_fmp){note.style.display="block";note.textContent="Market cap, volume and 52-week figures need the FMP key on the Worker (Settings → Variables → FMP_API_KEY). Price and options OI still work without it.";}
+    else note.style.display="none";
+  }catch(e){
+    document.getElementById("summary").textContent="Could not load the watchlist: "+e.message;
+  }
+}
+load();
+setInterval(load,600000);
+</script>
+</body>
+</html>

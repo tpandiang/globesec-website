@@ -7,6 +7,11 @@
  *   - earnings_week ... Finnhub earnings calendar (Mon-Fri)      [needs FINNHUB_API_KEY]
  *   - news ........... Finnhub general market news               [needs FINNHUB_API_KEY]
  *
+ * Routes:
+ *   /           -> Market Today brief
+ *   /scan       -> full CSP scan (shared with the csp Worker)
+ *   /watchlist  -> tracked-ticker portfolio: quote, 52wk, market cap, volume, options open interest
+ *
  * Set FINNHUB_API_KEY / FMP_API_KEY under the Worker's Settings -> Variables and Secrets.
  */
 
@@ -92,6 +97,137 @@ function summarize(ix) {
   return up >= down ? "U.S. markets are mostly higher today." : "U.S. markets are mostly lower today.";
 }
 
+/* ------------------------------------------------------------------ *
+ *  WATCHLIST
+ *  Quote/fundamentals come from FMP in ONE batched call. Options open
+ *  interest comes from the same keyless CBOE delayed feed the CSP
+ *  scanner already uses (one request per underlying), summed inline so
+ *  we never hold a full chain longer than we must.
+ * ------------------------------------------------------------------ */
+
+const WATCHLIST = [
+  { symbol: "VRT",  name: "Vertiv Holdings",         group: "Data-Center Power & Cooling" },
+  { symbol: "MOD",  name: "Modine Manufacturing",    group: "Data-Center Power & Cooling" },
+  { symbol: "FIX",  name: "Comfort Systems USA",     group: "Data-Center Power & Cooling" },
+  { symbol: "TT",   name: "Trane Technologies",      group: "Data-Center Power & Cooling" },
+  { symbol: "NVDA", name: "NVIDIA",                  group: "Mega-Cap Tech" },
+  { symbol: "GOOG", name: "Alphabet (Class C)",      group: "Mega-Cap Tech" },
+  { symbol: "AAPL", name: "Apple",                   group: "Mega-Cap Tech" },
+  { symbol: "TSLA", name: "Tesla",                   group: "Mega-Cap Tech" },
+  { symbol: "AMZN", name: "Amazon",                  group: "Mega-Cap Tech" },
+  { symbol: "TSM",  name: "Taiwan Semiconductor",    group: "Semiconductors & Memory" },
+  { symbol: "SKHY", name: "SK hynix (ADR)",          group: "Semiconductors & Memory" },
+  { symbol: "MU",   name: "Micron Technology",       group: "Semiconductors & Memory" },
+];
+
+const OCC_RE = /^([A-Z]+)(\d{6})([CP])(\d{8})$/;
+
+function r2(x) { return x == null ? null : Math.round(Number(x) * 100) / 100; }
+
+// One FMP call for every symbol -> price, market cap, volume, 52wk, moving averages.
+async function watchlistQuotes(env, dbg) {
+  const bySym = {};
+  if (!(env && env.FMP_API_KEY)) { dbg.push("watchlist: no FMP_API_KEY (price-only via CBOE)"); return bySym; }
+  try {
+    const syms = WATCHLIST.map((w) => w.symbol).join(",");
+    const d = await jget(`https://financialmodelingprep.com/api/v3/quote/${syms}?apikey=${env.FMP_API_KEY}`);
+    if (Array.isArray(d) && d.length) { for (const q of d) if (q && q.symbol) bySym[q.symbol] = q; }
+    else dbg.push("fmp quote: empty/unauthorized");
+  } catch (e) { dbg.push(`fmp quote: ${e}`); }
+  return bySym;
+}
+
+// Sum open interest across the whole CBOE chain for one underlying.
+async function optionInterest(symbol, dbg) {
+  try {
+    const data = (await jget(`${CBOE}/${symbol}.json`))?.data;
+    if (!data) return null;
+    let callOI = 0, putOI = 0, optVol = 0, contracts = 0;
+    for (const o of data.options || []) {
+      const m = OCC_RE.exec(o.option || "");
+      if (!m) continue;
+      const oi = Number(o.open_interest) || 0;
+      optVol += Number(o.volume) || 0;
+      contracts++;
+      if (m[3] === "P") putOI += oi; else callOI += oi;
+    }
+    const chg = data.price_change_percent;
+    // CBOE reports open_interest/volume as floats; keep the published totals whole.
+    return {
+      price: Number(data.current_price || data.close || 0) || null,
+      change_pct: chg == null || isNaN(Number(chg)) ? null : r2(chg),
+      call_oi: Math.round(callOI),
+      put_oi: Math.round(putOI),
+      total_oi: Math.round(callOI + putOI),
+      pc_ratio: callOI > 0 ? Math.round((putOI / callOI) * 100) / 100 : null,
+      option_volume: Math.round(optVol),
+      contracts,
+    };
+  } catch (e) { dbg.push(`cboe ${symbol}: ${e}`); return null; }
+}
+
+// Chains are large; fetch a few at a time so we never parse 12 at once.
+async function inBatches(items, size, fn) {
+  const out = [];
+  for (let i = 0; i < items.length; i += size) {
+    out.push(...(await Promise.all(items.slice(i, i + size).map(fn))));
+  }
+  return out;
+}
+
+async function buildWatchlist(env, dbg) {
+  const quotes = await watchlistQuotes(env, dbg);
+  const chains = await inBatches(WATCHLIST, 4, (w) => optionInterest(w.symbol, dbg));
+
+  const rows = WATCHLIST.map((w, i) => {
+    const q = quotes[w.symbol] || {};
+    const oi = chains[i];
+    const last = q.price != null ? Number(q.price) : oi && oi.price != null ? oi.price : null;
+    const hi = q.yearHigh != null ? Number(q.yearHigh) : null;
+    const lo = q.yearLow != null ? Number(q.yearLow) : null;
+    // Position of the last trade inside the 52-week band, 0% = at the low.
+    const pos = last != null && hi != null && lo != null && hi > lo
+      ? Math.max(0, Math.min(100, Math.round(((last - lo) / (hi - lo)) * 100)))
+      : null;
+    return {
+      symbol: w.symbol,
+      name: q.name || w.name,
+      group: w.group,
+      price: r2(last),
+      change_pct: q.changesPercentage != null ? r2(q.changesPercentage) : oi ? oi.change_pct : null,
+      market_cap: q.marketCap != null ? Number(q.marketCap) : null,
+      volume: q.volume != null ? Number(q.volume) : null,
+      avg_volume: q.avgVolume != null ? Number(q.avgVolume) : null,
+      year_high: r2(hi),
+      year_low: r2(lo),
+      year_mid: hi != null && lo != null ? r2((hi + lo) / 2) : null,   // 52-week midpoint
+      avg_50: q.priceAvg50 != null ? r2(q.priceAvg50) : null,
+      avg_200: q.priceAvg200 != null ? r2(q.priceAvg200) : null,       // closest true "52wk average"
+      range_pos_pct: pos,
+      pe: q.pe != null ? r2(q.pe) : null,
+      options: oi
+        ? { total_oi: oi.total_oi, call_oi: oi.call_oi, put_oi: oi.put_oi, pc_ratio: oi.pc_ratio, option_volume: oi.option_volume, contracts: oi.contracts }
+        : null,
+    };
+  });
+
+  const groups = [];
+  for (const r of rows) {
+    let g = groups.find((x) => x.name === r.group);
+    if (!g) { g = { name: r.group, rows: [] }; groups.push(g); }
+    g.rows.push(r);
+  }
+
+  return {
+    generated_at: new Date().toISOString(),
+    count: rows.length,
+    has_fmp: !!(env && env.FMP_API_KEY),
+    rows,
+    groups,
+    debug: dbg,
+  };
+}
+
 function jsonResponse(obj, seconds) {
   return new Response(JSON.stringify(obj), {
     headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Cache-Control": `public, max-age=${seconds}` },
@@ -127,6 +263,24 @@ export default {
       const lastGood = await cache.match(goodKey);
       if (lastGood) return lastGood;
       return jsonResponse({ ...payload, degraded: true }, 30);
+    }
+
+    // /watchlist -> tracked-ticker portfolio (edge-cached like the scan).
+    if (url.pathname.replace(/\/+$/, "") === "/watchlist") {
+      const cache = caches.default;
+      const nocache = url.searchParams.has("nocache");
+      const wKey = new Request("https://globesec.ai/__cache/watchlist", { method: "GET" });
+      if (!nocache) { const hit = await cache.match(wKey); if (hit) return hit; }
+      const wdbg = [];
+      let payload;
+      try { payload = await buildWatchlist(env, wdbg); }
+      catch (e) { return jsonResponse({ error: String(e), rows: [], groups: [], debug: wdbg }, 30); }
+      // Only cache a run where we actually priced something.
+      const healthy = (payload.rows || []).some((r) => r.price != null);
+      if (!healthy) return jsonResponse({ ...payload, degraded: true }, 30);
+      const resp = jsonResponse(payload, CACHE_SECONDS);
+      if (ctx && ctx.waitUntil) ctx.waitUntil(cache.put(wKey, resp.clone()));
+      return resp;
     }
 
     const dbg = [];

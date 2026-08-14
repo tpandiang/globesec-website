@@ -1,0 +1,8 @@
+# udemy-course: assemble.py builds index.html from the domain*-questions.html
+# sources. Only the built page is published; the sources stay local.
+udemy-course/*
+!udemy-course/index.html
+
+# Python bytecode
+__pycache__/
+*.py[cod]
