@@ -1,0 +1,32 @@
+# Watchlist symbols — edit this file to add or remove tickers.
+#
+# Easiest way: open this file on github.com and click the pencil icon, make the
+# change, commit to main. The data job picks it up on its next run (every 30 min
+# during market hours) and the site updates itself. No code change needed.
+#
+# FORMAT — one ticker per line. Two options:
+#
+#   AMD                                     <- just the ticker; name comes from the
+#                                              price feed, group becomes "Watchlist"
+#   AMD | Advanced Micro Devices | Semis    <- ticker | display name | group heading
+#
+# Lines starting with # are ignored. Blank lines are ignored. Case does not matter.
+# Groups become the section headings on the page, in the order they first appear.
+#
+# Note: use the US-listed ticker. Foreign companies usually trade here as an ADR
+# with a different symbol (Taiwan Semiconductor is TSM, not TSMC).
+
+VRT  | Vertiv Holdings      | Data-Center Power & Cooling
+MOD  | Modine Manufacturing | Data-Center Power & Cooling
+FIX  | Comfort Systems USA  | Data-Center Power & Cooling
+TT   | Trane Technologies   | Data-Center Power & Cooling
+
+NVDA | NVIDIA               | Mega-Cap Tech
+GOOG | Alphabet (Class C)   | Mega-Cap Tech
+AAPL | Apple                | Mega-Cap Tech
+TSLA | Tesla                | Mega-Cap Tech
+AMZN | Amazon               | Mega-Cap Tech
+
+TSM  | Taiwan Semiconductor | Semiconductors & Memory
+SKHY | SK hynix (ADR)       | Semiconductors & Memory
+MU   | Micron Technology    | Semiconductors & Memory

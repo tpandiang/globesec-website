@@ -35,30 +35,89 @@ OCC = re.compile(r"^([A-Z]+)(\d{6})([CP])(\d{8})$")
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "watchlist.json")
 FINNHUB_API_KEY = os.environ.get("FINNHUB_API_KEY", "")
 
-WATCHLIST = [
-    ("VRT",  "Vertiv Holdings",      "Data-Center Power & Cooling"),
-    ("MOD",  "Modine Manufacturing", "Data-Center Power & Cooling"),
-    ("FIX",  "Comfort Systems USA",  "Data-Center Power & Cooling"),
-    ("TT",   "Trane Technologies",   "Data-Center Power & Cooling"),
-    ("NVDA", "NVIDIA",               "Mega-Cap Tech"),
-    ("GOOG", "Alphabet (Class C)",   "Mega-Cap Tech"),
-    ("AAPL", "Apple",                "Mega-Cap Tech"),
-    ("TSLA", "Tesla",                "Mega-Cap Tech"),
-    ("AMZN", "Amazon",               "Mega-Cap Tech"),
-    ("TSM",  "Taiwan Semiconductor", "Semiconductors & Memory"),
-    ("SKHY", "SK hynix (ADR)",       "Semiconductors & Memory"),
-    ("MU",   "Micron Technology",    "Semiconductors & Memory"),
-]
+# No listed company is worth $10T. Anything above this is a units/currency bug,
+# so drop it rather than publish a number that is obviously wrong.
+MAX_PLAUSIBLE_CAP = 1e13
+
+SYMBOLS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "symbols.txt")
+
+
+def load_watchlist() -> list:
+    """Read symbols.txt -> [(ticker, name, group)].
+
+    The list lives in a plain text file so it can be edited directly on GitHub
+    without touching this script. Format is one ticker per line, optionally
+    `TICKER | Display Name | Group`. Blank lines and # comments are ignored.
+    """
+    rows, seen = [], set()
+    try:
+        with open(SYMBOLS_FILE, encoding="utf-8") as f:
+            lines = f.readlines()
+    except FileNotFoundError:
+        print(f"!! {SYMBOLS_FILE} not found — nothing to build")
+        return rows
+
+    for raw in lines:
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        ticker = parts[0].upper()
+        if not ticker or not ticker.replace(".", "").replace("-", "").isalnum():
+            print(f"  skipping unparseable line: {raw.strip()!r}")
+            continue
+        if ticker in seen:
+            print(f"  skipping duplicate: {ticker}")
+            continue
+        seen.add(ticker)
+        name = parts[1] if len(parts) > 1 and parts[1] else ""
+        group = parts[2] if len(parts) > 2 and parts[2] else "Watchlist"
+        rows.append((ticker, name, group))
+    return rows
+
+
+WATCHLIST = load_watchlist()
 
 
 def _r2(x):
     return None if x is None else round(float(x), 2)
 
 
-def _get(url, **kw):
-    r = requests.get(url, headers=UA, timeout=25, **kw)
-    r.raise_for_status()
-    return r.json()
+def _get(url, tries=4, **kw):
+    """GET with backoff on throttling.
+
+    CBOE returns 429 when we hit it right after the CSP scanner has pulled ~46
+    chains earlier in the same workflow run. Without retries every symbol fails
+    at once and the whole options column silently goes null.
+    """
+    delay = 2.0
+    for attempt in range(tries):
+        last_attempt = attempt == tries - 1
+        try:
+            r = requests.get(url, headers=UA, timeout=45, **kw)
+            if r.status_code in (429, 500, 502, 503, 504) and not last_attempt:
+                print(f"    HTTP {r.status_code}, retrying in {delay:.0f}s")
+                time.sleep(delay)
+                delay *= 2.5
+                continue
+            r.raise_for_status()
+            return r.json()
+        except requests.RequestException:
+            if last_attempt:
+                raise
+            time.sleep(delay)
+            delay *= 2.5
+    return None
+
+
+def fx_to_usd() -> dict:
+    """USD per one unit of each currency, keyless. Empty dict on failure."""
+    try:
+        d = _get("https://open.er-api.com/v6/latest/USD")
+        return {c: 1.0 / v for c, v in ((d or {}).get("rates") or {}).items() if v}
+    except (requests.RequestException, ValueError, TypeError, ZeroDivisionError) as e:
+        print(f"  fx: {e}")
+        return {}
 
 
 def yahoo(symbol: str) -> dict:
@@ -103,14 +162,33 @@ def yahoo(symbol: str) -> dict:
         return {}
 
 
-def market_cap(symbol: str) -> float | None:
-    """Finnhub reports market cap in millions."""
+def market_cap(symbol: str, fx: dict) -> float | None:
+    """Market cap in USD.
+
+    Finnhub reports marketCapitalization in MILLIONS of the company's *reporting*
+    currency, not USD. Foreign listings therefore come back wildly inflated —
+    TSM in TWD (~32x) and SKHY in KRW (~1415x) — so the raw value has to be
+    converted using the `currency` field on the same response.
+    """
     if not FINNHUB_API_KEY:
         return None
     try:
         d = _get(f"{FINNHUB}/stock/profile2", params={"symbol": symbol, "token": FINNHUB_API_KEY})
         mc = (d or {}).get("marketCapitalization")
-        return float(mc) * 1e6 if mc else None
+        if not mc:
+            return None
+        val = float(mc) * 1e6
+        cur = str((d or {}).get("currency") or "USD").upper()
+        if cur != "USD":
+            rate = fx.get(cur)
+            if not rate:
+                print(f"  {symbol}: cap reported in {cur}, no FX rate — dropping")
+                return None
+            val *= rate
+        if val > MAX_PLAUSIBLE_CAP:
+            print(f"  {symbol}: cap {val:.3g} exceeds sanity ceiling — dropping")
+            return None
+        return val
     except (requests.RequestException, ValueError, TypeError) as e:
         print(f"  finnhub {symbol}: {e}")
         return None
@@ -147,11 +225,13 @@ def option_interest(symbol: str) -> dict | None:
 
 
 def build() -> dict:
+    fx = fx_to_usd()
+    print(f"fx rates loaded: {len(fx)}")
     rows = []
     for sym, name, group in WATCHLIST:
         print(f"{sym} ...")
         y = yahoo(sym)
-        cap = market_cap(sym)
+        cap = market_cap(sym, fx)
         opts = option_interest(sym)
 
         hi, lo, px = y.get("year_high"), y.get("year_low"), y.get("price")
@@ -161,7 +241,7 @@ def build() -> dict:
 
         rows.append({
             "symbol": sym,
-            "name": y.get("name") or name,
+            "name": name or y.get("name") or sym,
             "group": group,
             "price": y.get("price"),
             "change_pct": y.get("change_pct"),
@@ -179,7 +259,7 @@ def build() -> dict:
             "partial_history": y.get("partial_history", False),
             "options": opts,
         })
-        time.sleep(0.4)          # be polite to the free endpoints
+        time.sleep(1.2)          # CBOE throttles; the CSP scanner runs just ahead of us
 
     groups: list[dict] = []
     for r in rows:
