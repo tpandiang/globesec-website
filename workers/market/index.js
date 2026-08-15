@@ -257,10 +257,18 @@ async function readSymbols(env) {
   return { symbols: DEFAULT_SYMBOLS, source: "default", kv: true };
 }
 
+// Constant-time compare so response timing can't leak the secret char by char.
+function sameSecret(a, b) {
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 function authorized(request, env) {
   const key = env && env.ADMIN_KEY;
   if (!key) return false;
-  return request.headers.get("x-admin-key") === key;
+  return sameSecret(request.headers.get("x-admin-key") || "", key);
 }
 
 async function handleSymbols(request, env) {
@@ -288,8 +296,16 @@ async function handleSymbols(request, env) {
       status: 503, headers: { "Content-Type": "application/json", ...cors },
     });
   }
+  if (!(env && env.ADMIN_KEY)) {
+    return new Response(JSON.stringify({ error: "ADMIN_KEY is not set on this Worker — add it under Settings → Variables and Secrets" }), {
+      status: 503, headers: { "Content-Type": "application/json", ...cors },
+    });
+  }
   if (!authorized(request, env)) {
-    return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { "Content-Type": "application/json", ...cors } });
+    // A deliberately short secret is guessable, so make each wrong guess cost
+    // a full second. Brute force stops being practical; a human never notices.
+    await new Promise((r) => setTimeout(r, 1000));
+    return new Response(JSON.stringify({ error: "wrong password" }), { status: 401, headers: { "Content-Type": "application/json", ...cors } });
   }
 
   let body;

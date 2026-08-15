@@ -317,12 +317,13 @@ const SYMBOLS_API = "https://csp-market.ptmtek4.workers.dev/watchlist/symbols";
 const KEY_STORE   = "globesec_admin_key";
 let SYMBOLS = [];      // live list from KV
 let LAST_DATA = null;  // last rendered payload
+let KV_READY = false;  // storage bound on the Worker?
 
 function msg(text,cls){const m=document.getElementById("addMsg");m.className="addmsg "+(cls||"info");m.textContent=text||"";}
 function adminKey(){
   let k=localStorage.getItem(KEY_STORE);
   if(!k){
-    k=prompt("Admin key (set as ADMIN_KEY on the csp-market Worker):");
+    k=prompt("Enter your watchlist password:");
     if(k) localStorage.setItem(KEY_STORE,k.trim());
   }
   return k?k.trim():"";
@@ -334,6 +335,7 @@ async function loadSymbols(){
     if(!r.ok) throw new Error("symbols "+r.status);
     const d=await r.json();
     SYMBOLS=d.symbols||[];
+    KV_READY=d.kv_bound===true;
     // populate the group suggestions from whatever groups already exist
     const groups=[...new Set(SYMBOLS.map(s=>s.group).filter(Boolean))];
     document.getElementById("groupList").innerHTML=groups.map(g=>`<option value="${g}">`).join("");
@@ -343,6 +345,11 @@ async function loadSymbols(){
 }
 
 async function postSymbol(action,ticker,name,group){
+  // Don't ask for a password the backend can't check yet.
+  if(!KV_READY){
+    msg("Storage isn't enabled yet — bind the WATCHLIST_KV namespace in wrangler.toml and set ADMIN_KEY on the csp-market Worker. Until then, edit watchlist/scanner/symbols.txt on GitHub.","err");
+    return;
+  }
   const key=adminKey();
   if(!key){ msg("Cancelled — no admin key entered.","err"); return; }
   const btn=document.getElementById("fAdd");
