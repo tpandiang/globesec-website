@@ -228,6 +228,110 @@ async function buildWatchlist(env, dbg) {
   };
 }
 
+/* ------------------------------------------------------------------ *
+ *  SYMBOL STORE (Workers KV)
+ *  The watchlist ticker list lives in KV so it can be edited from the
+ *  website instead of requiring a commit. The Python data job reads this
+ *  same endpoint at build time, so KV is the single source of truth and
+ *  symbols.txt is only the seed/fallback.
+ *
+ *  Reads are public (it is just a list of tickers). Writes require
+ *  ADMIN_KEY, because the site itself is public.
+ * ------------------------------------------------------------------ */
+
+const SYMBOLS_KEY = "watchlist:symbols";
+const TICKER_RE = /^[A-Z][A-Z0-9.-]{0,9}$/;
+const MAX_SYMBOLS = 40;   // keeps the data job inside its subrequest budget
+
+const DEFAULT_SYMBOLS = WATCHLIST.map((w) => ({ ticker: w.symbol, name: w.name, group: w.group }));
+
+async function readSymbols(env) {
+  if (!env || !env.WATCHLIST_KV) return { symbols: DEFAULT_SYMBOLS, source: "default", kv: false };
+  try {
+    const raw = await env.WATCHLIST_KV.get(SYMBOLS_KEY);
+    if (raw) {
+      const list = JSON.parse(raw);
+      if (Array.isArray(list) && list.length) return { symbols: list, source: "kv", kv: true };
+    }
+  } catch (_e) { /* fall through to defaults */ }
+  return { symbols: DEFAULT_SYMBOLS, source: "default", kv: true };
+}
+
+function authorized(request, env) {
+  const key = env && env.ADMIN_KEY;
+  if (!key) return false;
+  return request.headers.get("x-admin-key") === key;
+}
+
+async function handleSymbols(request, env) {
+  const cors = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, x-admin-key",
+  };
+
+  if (request.method === "OPTIONS") return new Response(null, { headers: cors });
+
+  if (request.method === "GET") {
+    const { symbols, source, kv } = await readSymbols(env);
+    return new Response(JSON.stringify({ symbols, source, kv_bound: kv, count: symbols.length }), {
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...cors },
+    });
+  }
+
+  if (request.method !== "POST") {
+    return new Response(JSON.stringify({ error: "method not allowed" }), { status: 405, headers: { "Content-Type": "application/json", ...cors } });
+  }
+
+  if (!(env && env.WATCHLIST_KV)) {
+    return new Response(JSON.stringify({ error: "KV not bound — add the WATCHLIST_KV namespace to wrangler.toml" }), {
+      status: 503, headers: { "Content-Type": "application/json", ...cors },
+    });
+  }
+  if (!authorized(request, env)) {
+    return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { "Content-Type": "application/json", ...cors } });
+  }
+
+  let body;
+  try { body = await request.json(); }
+  catch (_e) { return new Response(JSON.stringify({ error: "invalid JSON" }), { status: 400, headers: { "Content-Type": "application/json", ...cors } }); }
+
+  const action = String(body.action || "").toLowerCase();
+  const ticker = String(body.ticker || "").trim().toUpperCase();
+  if (!TICKER_RE.test(ticker)) {
+    return new Response(JSON.stringify({ error: `"${ticker}" is not a valid ticker` }), { status: 400, headers: { "Content-Type": "application/json", ...cors } });
+  }
+
+  const current = (await readSymbols(env)).symbols.slice();
+  let symbols, message;
+
+  if (action === "add") {
+    if (current.some((s) => s.ticker === ticker)) {
+      return new Response(JSON.stringify({ error: `${ticker} is already on the watchlist` }), { status: 409, headers: { "Content-Type": "application/json", ...cors } });
+    }
+    if (current.length >= MAX_SYMBOLS) {
+      return new Response(JSON.stringify({ error: `watchlist is full (${MAX_SYMBOLS} max)` }), { status: 409, headers: { "Content-Type": "application/json", ...cors } });
+    }
+    const name = String(body.name || "").trim().slice(0, 48);
+    const group = String(body.group || "").trim().slice(0, 40) || "Watchlist";
+    symbols = current.concat([{ ticker, name, group }]);
+    message = `${ticker} added — prices appear after the next data refresh`;
+  } else if (action === "remove") {
+    symbols = current.filter((s) => s.ticker !== ticker);
+    if (symbols.length === current.length) {
+      return new Response(JSON.stringify({ error: `${ticker} is not on the watchlist` }), { status: 404, headers: { "Content-Type": "application/json", ...cors } });
+    }
+    message = `${ticker} removed`;
+  } else {
+    return new Response(JSON.stringify({ error: 'action must be "add" or "remove"' }), { status: 400, headers: { "Content-Type": "application/json", ...cors } });
+  }
+
+  await env.WATCHLIST_KV.put(SYMBOLS_KEY, JSON.stringify(symbols));
+  return new Response(JSON.stringify({ ok: true, message, count: symbols.length, symbols }), {
+    headers: { "Content-Type": "application/json", ...cors },
+  });
+}
+
 function jsonResponse(obj, seconds) {
   return new Response(JSON.stringify(obj), {
     headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Cache-Control": `public, max-age=${seconds}` },
@@ -263,6 +367,11 @@ export default {
       const lastGood = await cache.match(goodKey);
       if (lastGood) return lastGood;
       return jsonResponse({ ...payload, degraded: true }, 30);
+    }
+
+    // /watchlist/symbols -> read (public) / edit (ADMIN_KEY) the ticker list.
+    if (url.pathname.replace(/\/+$/, "") === "/watchlist/symbols") {
+      return handleSymbols(request, env);
     }
 
     // /watchlist -> tracked-ticker portfolio (edge-cached like the scan).

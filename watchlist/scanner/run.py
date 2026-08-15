@@ -40,14 +40,36 @@ FINNHUB_API_KEY = os.environ.get("FINNHUB_API_KEY", "")
 MAX_PLAUSIBLE_CAP = 1e13
 
 SYMBOLS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "symbols.txt")
+SYMBOLS_API = "https://csp-market.ptmtek4.workers.dev/watchlist/symbols"
 
 
 def load_watchlist() -> list:
+    """Ticker list, preferring the live KV store over the checked-in file.
+
+    KV is the source of truth so symbols can be added from the website. If the
+    Worker is unreachable or KV is not bound yet, fall back to symbols.txt so a
+    network blip never produces an empty watchlist.
+    """
+    try:
+        d = _get(SYMBOLS_API, tries=2)
+        syms = (d or {}).get("symbols") or []
+        if syms:
+            rows = [(str(s.get("ticker", "")).upper(), s.get("name") or "", s.get("group") or "Watchlist")
+                    for s in syms if s.get("ticker")]
+            if rows:
+                print(f"symbols: {len(rows)} from {(d or {}).get('source')} (live)")
+                return rows
+    except (requests.RequestException, ValueError, TypeError, AttributeError) as e:
+        print(f"  symbols API unavailable ({e}) — using symbols.txt")
+
+    return load_watchlist_file()
+
+
+def load_watchlist_file() -> list:
     """Read symbols.txt -> [(ticker, name, group)].
 
-    The list lives in a plain text file so it can be edited directly on GitHub
-    without touching this script. Format is one ticker per line, optionally
-    `TICKER | Display Name | Group`. Blank lines and # comments are ignored.
+    Format is one ticker per line, optionally `TICKER | Display Name | Group`.
+    Blank lines and # comments are ignored.
     """
     rows, seen = [], set()
     try:
@@ -74,9 +96,6 @@ def load_watchlist() -> list:
         group = parts[2] if len(parts) > 2 and parts[2] else "Watchlist"
         rows.append((ticker, name, group))
     return rows
-
-
-WATCHLIST = load_watchlist()
 
 
 def _r2(x):
@@ -225,10 +244,13 @@ def option_interest(symbol: str) -> dict | None:
 
 
 def build() -> dict:
+    watchlist = load_watchlist()
+    if not watchlist:
+        raise SystemExit("no symbols resolved from KV or symbols.txt — refusing to publish an empty watchlist")
     fx = fx_to_usd()
     print(f"fx rates loaded: {len(fx)}")
     rows = []
-    for sym, name, group in WATCHLIST:
+    for sym, name, group in watchlist:
         print(f"{sym} ...")
         y = yahoo(sym)
         cap = market_cap(sym, fx)

@@ -4,3 +4,22 @@
 name = "csp-market"
 main = "index.js"
 compatibility_date = "2026-06-01"
+
+# Watchlist symbol store — lets the ticker list be edited from the website
+# instead of requiring a commit.
+#
+# TO ENABLE (one time):
+#   1. Dashboard -> Storage & Databases -> KV -> Create namespace, name it
+#      "watchlist" and copy the namespace ID.
+#   2. Paste the ID below and uncomment both lines.
+#   3. Worker -> Settings -> Variables and Secrets -> add a SECRET named
+#      ADMIN_KEY with a long random value. That is the password the Add
+#      Symbol form asks for.
+#   4. Commit — Workers Builds redeploys automatically.
+#
+# Until this is enabled the endpoint still serves the built-in list; only
+# editing from the site is disabled (it returns a clear 503).
+#
+# [[kv_namespaces]]
+# binding = "WATCHLIST_KV"
+# id = "PASTE_NAMESPACE_ID_HERE"

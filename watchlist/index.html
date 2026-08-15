@@ -66,6 +66,28 @@ tr.grp td{background:var(--bg3);font-family:var(--mono);font-size:.6rem;font-wei
 .note{font-family:var(--mono);font-size:.7rem;color:var(--text-dim);padding:1rem 1.1rem;}
 .empty{padding:1.5rem;text-align:center;color:var(--text-dim);font-family:var(--mono);font-size:.78rem;}
 .disc{font-family:var(--mono);font-size:.64rem;color:var(--text-dim);line-height:1.9;margin-top:1rem;border-left:2px solid var(--orange);padding-left:1rem;}
+/* add-symbol control */
+.addbtn{font-family:var(--mono);font-size:.66rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  background:#fff;color:var(--cyan);border:1px solid var(--line);border-radius:5px;padding:.4rem .8rem;cursor:pointer;transition:all .2s;}
+.addbtn:hover{border-color:var(--cyan);}
+.addbtn.go{background:var(--cyan);color:#fff;border-color:var(--cyan);}
+.addbtn.go:hover{filter:brightness(1.08);}
+.addbtn:disabled{opacity:.5;cursor:not-allowed;}
+.addbox{background:#fff;border:1px solid var(--line);border-radius:8px;padding:1rem;margin-bottom:1rem;}
+.addrow{display:flex;gap:.6rem;flex-wrap:wrap;}
+.addrow input{font-family:var(--mono);font-size:.8rem;padding:.5rem .7rem;border:1px solid var(--line);border-radius:5px;color:var(--text);background:var(--bg3);}
+.addrow input:focus{outline:none;border-color:var(--cyan);background:#fff;}
+#fTicker{width:150px;text-transform:uppercase;font-weight:700;}
+#fName{flex:1;min-width:170px;}
+#fGroup{width:210px;}
+.addmsg{font-family:var(--mono);font-size:.72rem;margin-top:.6rem;min-height:1.1rem;}
+.addmsg.ok{color:var(--green);}
+.addmsg.err{color:var(--red);}
+.addmsg.info{color:var(--text-dim);}
+tr.pending td{opacity:.62;font-style:italic;}
+.rm{background:none;border:none;color:var(--text-dim);cursor:pointer;font-family:var(--mono);font-size:.85rem;padding:0 .2rem;}
+.rm:hover{color:var(--red);}
+@media(max-width:700px){.addrow input,.addrow button{width:100%;}#fTicker,#fGroup{width:100%;}}
 @media(max-width:800px){.nav-links{display:none;}}
 </style>
 </head>
@@ -91,7 +113,22 @@ tr.grp td{background:var(--bg3);font-family:var(--mono);font-size:.6rem;font-wei
 
   <div class="stats" id="stats" style="display:none"></div>
 
-  <div class="hd">Tracked Positions</div>
+  <div class="hd" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <span>Tracked Positions</span>
+    <button id="addToggle" class="addbtn">+ Add Symbol</button>
+  </div>
+
+  <div class="addbox" id="addBox" style="display:none">
+    <div class="addrow">
+      <input id="fTicker" placeholder="Ticker (e.g. AMD)" maxlength="10" autocapitalize="characters" autocomplete="off">
+      <input id="fName" placeholder="Company name (optional)" maxlength="48" autocomplete="off">
+      <input id="fGroup" placeholder="Group (optional)" maxlength="40" autocomplete="off" list="groupList">
+      <datalist id="groupList"></datalist>
+      <button id="fAdd" class="addbtn go">Add</button>
+    </div>
+    <div class="addmsg" id="addMsg"></div>
+  </div>
+
   <div class="card">
     <div class="scroll">
       <table>
@@ -196,7 +233,7 @@ function renderRows(d){
       const o=r.options;
       const dag=r.partial_history?` <span class="flag" title="Only ${r.sessions} sessions of history — shorter window">†</span>`:"";
       html+=`<tr>
-        <td class="l sym">${r.symbol}</td>
+        <td class="l sym">${r.symbol} <button class="rm" data-rm="${r.symbol}" title="Remove ${r.symbol}">&times;</button></td>
         <td class="l co">${(r.name||"").slice(0,26)}</td>
         <td>${money(r.price)}</td>
         <td>${pct(r.change_pct)}</td>
@@ -211,10 +248,33 @@ function renderRows(d){
       </tr>`;
     }
   }
+
+  // Symbols added from the site that the data job has not picked up yet.
+  const have=new Set((d.rows||[]).map(r=>r.symbol));
+  const pending=SYMBOLS.filter(s=>!have.has(s.ticker));
+  if(pending.length){
+    html+=`<tr class="grp"><td class="l" colspan="12">Pending — data arrives on the next refresh</td></tr>`;
+    for(const s of pending){
+      html+=`<tr class="pending">
+        <td class="l sym">${s.ticker} <button class="rm" data-rm="${s.ticker}" title="Remove ${s.ticker}">&times;</button></td>
+        <td class="l co">${(s.name||"").slice(0,26)}</td>
+        <td colspan="10" class="l na">queued — the data job runs every 30 min during market hours</td>
+      </tr>`;
+    }
+  }
+
   body.innerHTML=html;
+
+  body.querySelectorAll("button[data-rm]").forEach(b=>{
+    b.addEventListener("click",()=>{
+      const t=b.getAttribute("data-rm");
+      if(confirm(`Remove ${t} from the watchlist?`)) postSymbol("remove",t);
+    });
+  });
 }
 
 function paint(d,source){
+  LAST_DATA=d;
   document.getElementById("lastupd").innerHTML=
     (d.generated_at?`<span class="live"></span>Last updated: <b>${fmtUpdated(d.generated_at)}</b>`:"")+
     ` <span class="src">${source}</span>`;
@@ -252,6 +312,76 @@ async function load(){
     document.getElementById("summary").textContent="Could not load the watchlist: "+e.message;
   }
 }
+/* ---------------- add / remove symbols ---------------- */
+const SYMBOLS_API = "https://csp-market.ptmtek4.workers.dev/watchlist/symbols";
+const KEY_STORE   = "globesec_admin_key";
+let SYMBOLS = [];      // live list from KV
+let LAST_DATA = null;  // last rendered payload
+
+function msg(text,cls){const m=document.getElementById("addMsg");m.className="addmsg "+(cls||"info");m.textContent=text||"";}
+function adminKey(){
+  let k=localStorage.getItem(KEY_STORE);
+  if(!k){
+    k=prompt("Admin key (set as ADMIN_KEY on the csp-market Worker):");
+    if(k) localStorage.setItem(KEY_STORE,k.trim());
+  }
+  return k?k.trim():"";
+}
+
+async function loadSymbols(){
+  try{
+    const r=await fetch(SYMBOLS_API,{cache:"no-store"});
+    if(!r.ok) throw new Error("symbols "+r.status);
+    const d=await r.json();
+    SYMBOLS=d.symbols||[];
+    // populate the group suggestions from whatever groups already exist
+    const groups=[...new Set(SYMBOLS.map(s=>s.group).filter(Boolean))];
+    document.getElementById("groupList").innerHTML=groups.map(g=>`<option value="${g}">`).join("");
+    if(!d.kv_bound) msg("Storage not enabled yet — see wrangler.toml for the one-time KV setup.","info");
+    return true;
+  }catch(e){ SYMBOLS=[]; return false; }
+}
+
+async function postSymbol(action,ticker,name,group){
+  const key=adminKey();
+  if(!key){ msg("Cancelled — no admin key entered.","err"); return; }
+  const btn=document.getElementById("fAdd");
+  if(btn) btn.disabled=true;
+  msg("Working…","info");
+  try{
+    const r=await fetch(SYMBOLS_API,{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-admin-key":key},
+      body:JSON.stringify({action,ticker,name,group}),
+    });
+    const d=await r.json().catch(()=>({}));
+    if(r.status===401){ localStorage.removeItem(KEY_STORE); msg("Wrong admin key — cleared it, try again.","err"); return; }
+    if(!r.ok){ msg(d.error||("Failed ("+r.status+")"),"err"); return; }
+    msg(d.message||"Saved.","ok");
+    document.getElementById("fTicker").value="";
+    document.getElementById("fName").value="";
+    await loadSymbols();
+    if(LAST_DATA) renderRows(LAST_DATA);
+  }catch(e){ msg("Network error: "+e.message,"err"); }
+  finally{ if(btn) btn.disabled=false; }
+}
+
+document.getElementById("addToggle").addEventListener("click",function(){
+  const b=document.getElementById("addBox");
+  const open=b.style.display==="none";
+  b.style.display=open?"block":"none";
+  this.textContent=open?"Close":"+ Add Symbol";
+  if(open) document.getElementById("fTicker").focus();
+});
+document.getElementById("fAdd").addEventListener("click",function(){
+  const t=document.getElementById("fTicker").value.trim().toUpperCase();
+  if(!t){ msg("Enter a ticker.","err"); return; }
+  if(!/^[A-Z][A-Z0-9.-]{0,9}$/.test(t)){ msg(`"${t}" is not a valid ticker.`,"err"); return; }
+  postSymbol("add",t,document.getElementById("fName").value.trim(),document.getElementById("fGroup").value.trim());
+});
+document.getElementById("fTicker").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("fAdd").click();});
+
+loadSymbols();
 load();
 setInterval(load,600000);
 </script>
