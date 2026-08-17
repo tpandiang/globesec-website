@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-17T17:33:25",
+  "generated_at": "2026-08-17T18:41:14",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,23 +22,36 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 0,
-  "results": [],
-  "indices": [
+  "result_count": 1,
+  "results": [
     {
-      "label": "S&P 500",
-      "value": 7762.2,
-      "change_pct": -0.3
-    },
-    {
-      "label": "Dow Jones",
-      "value": 53544.0,
-      "change_pct": -0.35
-    },
-    {
-      "label": "Nasdaq 100",
-      "value": 30043.62,
-      "change_pct": -0.01
+      "symbol": "INTC",
+      "sector": "Semiconductors",
+      "spot": 103.07,
+      "strike": 93.0,
+      "otm_pct": 9.8,
+      "expiration": "2026-08-28",
+      "dte": 11,
+      "premium": 109.0,
+      "weekly_yield": 0.746,
+      "assign_pct": 16.8,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 91.91,
+      "cc_strike": 95.0,
+      "cc_premium": 1220.0,
+      "cc_expiration": "2026-09-18",
+      "cc_dte": 32,
+      "cc_weekly_yield": 2.904,
+      "open_interest": 1017,
+      "volume": 113,
+      "spread_pct": 7.1,
+      "iv": 66.3,
+      "collateral": 9300.0,
+      "score": 0.044,
+      "tier": "yellow"
     }
-  ]
+  ],
+  "indices": []
 }
