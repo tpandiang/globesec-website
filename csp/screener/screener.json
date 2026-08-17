@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-17T14:57:40",
+  "generated_at": "2026-08-17T15:27:22",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,7 +22,80 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 0,
-  "results": [],
-  "indices": []
+  "result_count": 2,
+  "results": [
+    {
+      "symbol": "INTC",
+      "sector": "Semiconductors",
+      "spot": 105.71,
+      "strike": 95.0,
+      "otm_pct": 10.1,
+      "expiration": "2026-08-28",
+      "dte": 11,
+      "premium": 111.0,
+      "weekly_yield": 0.744,
+      "assign_pct": 16.8,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 93.89,
+      "cc_strike": 95.0,
+      "cc_premium": 1430.0,
+      "cc_expiration": "2026-09-18",
+      "cc_dte": 32,
+      "cc_weekly_yield": 3.332,
+      "open_interest": 2415,
+      "volume": 520,
+      "spread_pct": 8.6,
+      "iv": 67.2,
+      "collateral": 9500.0,
+      "score": 0.044,
+      "tier": "yellow"
+    },
+    {
+      "symbol": "NOW",
+      "sector": "Technology",
+      "spot": 118.93,
+      "strike": 110.0,
+      "otm_pct": 7.5,
+      "expiration": "2026-08-28",
+      "dte": 11,
+      "premium": 124.0,
+      "weekly_yield": 0.717,
+      "assign_pct": 19.4,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 108.76,
+      "cc_strike": 115.0,
+      "cc_premium": 945.0,
+      "cc_expiration": "2026-09-18",
+      "cc_dte": 32,
+      "cc_weekly_yield": 1.901,
+      "open_interest": 513,
+      "volume": 333,
+      "spread_pct": 7.8,
+      "iv": 55.5,
+      "collateral": 11000.0,
+      "score": 0.037,
+      "tier": "yellow"
+    }
+  ],
+  "indices": [
+    {
+      "label": "S&P 500",
+      "value": 7775.62,
+      "change_pct": -0.13
+    },
+    {
+      "label": "Dow Jones",
+      "value": 53548.0,
+      "change_pct": -0.34
+    },
+    {
+      "label": "Nasdaq 100",
+      "value": 30180.9,
+      "change_pct": 0.45
+    }
+  ]
 }
