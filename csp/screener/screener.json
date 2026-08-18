@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-18T16:33:19",
+  "generated_at": "2026-08-18T17:29:29",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,42 +22,23 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 1,
-  "results": [
-    {
-      "symbol": "RBLX",
-      "sector": "Media",
-      "spot": 38.39,
-      "strike": 35.5,
-      "otm_pct": 7.5,
-      "expiration": "2026-08-28",
-      "dte": 10,
-      "premium": 39.0,
-      "weekly_yield": 0.769,
-      "assign_pct": 19.1,
-      "earnings_clear": true,
-      "next_earnings": null,
-      "wheel_ok": true,
-      "cost_basis": 35.11,
-      "cc_strike": 40.0,
-      "cc_premium": 197.0,
-      "cc_expiration": "2026-09-18",
-      "cc_dte": 31,
-      "cc_weekly_yield": 1.267,
-      "open_interest": 594,
-      "volume": 60,
-      "spread_pct": 7.4,
-      "iv": 57.6,
-      "collateral": 3550.0,
-      "score": 0.04,
-      "tier": "yellow"
-    }
-  ],
+  "result_count": 0,
+  "results": [],
   "indices": [
     {
       "label": "S&P 500",
-      "value": 7704.03,
-      "change_pct": -0.53
+      "value": 7706.27,
+      "change_pct": -0.5
+    },
+    {
+      "label": "Dow Jones",
+      "value": 53383.0,
+      "change_pct": -0.14
+    },
+    {
+      "label": "Nasdaq 100",
+      "value": 29540.61,
+      "change_pct": -1.52
     }
   ]
 }
