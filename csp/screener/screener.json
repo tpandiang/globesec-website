@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-18T20:25:55",
+  "generated_at": "2026-08-18T20:52:11",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -27,9 +27,9 @@
     {
       "symbol": "MU",
       "sector": "Semiconductors",
-      "spot": 938.0,
+      "spot": 939.9,
       "strike": 850.0,
-      "otm_pct": 9.4,
+      "otm_pct": 9.6,
       "expiration": "2026-08-28",
       "dte": 10,
       "premium": 980.0,
@@ -55,9 +55,9 @@
     {
       "symbol": "HOOD",
       "sector": "Financial Services",
-      "spot": 91.31,
+      "spot": 91.72,
       "strike": 85.0,
-      "otm_pct": 6.9,
+      "otm_pct": 7.3,
       "expiration": "2026-08-28",
       "dte": 10,
       "premium": 92.0,
@@ -81,21 +81,5 @@
       "tier": "yellow"
     }
   ],
-  "indices": [
-    {
-      "label": "S&P 500",
-      "value": 7691.76,
-      "change_pct": -0.69
-    },
-    {
-      "label": "Dow Jones",
-      "value": 53343.0,
-      "change_pct": -0.22
-    },
-    {
-      "label": "Nasdaq 100",
-      "value": 29490.96,
-      "change_pct": -1.68
-    }
-  ]
+  "indices": []
 }
