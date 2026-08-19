@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-19T19:27:29",
+  "generated_at": "2026-08-19T19:52:45",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -25,39 +25,33 @@
   "result_count": 1,
   "results": [
     {
-      "symbol": "AMD",
-      "sector": "Semiconductors",
-      "spot": 466.75,
-      "strike": 435.0,
-      "otm_pct": 6.8,
+      "symbol": "DELL",
+      "sector": "Technology",
+      "spot": 436.23,
+      "strike": 400.0,
+      "otm_pct": 8.3,
       "expiration": "2026-08-28",
       "dte": 9,
-      "premium": 450.0,
-      "weekly_yield": 0.805,
-      "assign_pct": 19.6,
+      "premium": 490.0,
+      "weekly_yield": 0.953,
+      "assign_pct": 19.4,
       "earnings_clear": true,
-      "next_earnings": null,
+      "next_earnings": "2026-09-03",
       "wheel_ok": true,
-      "cost_basis": 430.5,
-      "cc_strike": 440.0,
-      "cc_premium": 4385.0,
+      "cost_basis": 395.1,
+      "cc_strike": 400.0,
+      "cc_premium": 5920.0,
       "cc_expiration": "2026-09-18",
       "cc_dte": 30,
-      "cc_weekly_yield": 2.377,
-      "open_interest": 916,
-      "volume": 441,
-      "spread_pct": 7.5,
-      "iv": 56.1,
-      "collateral": 43500.0,
-      "score": 0.041,
+      "cc_weekly_yield": 3.496,
+      "open_interest": 1109,
+      "volume": 827,
+      "spread_pct": 8.8,
+      "iv": 67.8,
+      "collateral": 40000.0,
+      "score": 0.049,
       "tier": "yellow"
     }
   ],
-  "indices": [
-    {
-      "label": "S&P 500",
-      "value": 7717.8,
-      "change_pct": 0.34
-    }
-  ]
+  "indices": []
 }
