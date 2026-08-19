@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-18T20:52:11",
+  "generated_at": "2026-08-19T13:45:33",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,64 +22,23 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 2,
-  "results": [
+  "result_count": 0,
+  "results": [],
+  "indices": [
     {
-      "symbol": "MU",
-      "sector": "Semiconductors",
-      "spot": 939.9,
-      "strike": 850.0,
-      "otm_pct": 9.6,
-      "expiration": "2026-08-28",
-      "dte": 10,
-      "premium": 980.0,
-      "weekly_yield": 0.807,
-      "assign_pct": 16.8,
-      "earnings_clear": true,
-      "next_earnings": "2026-09-21",
-      "wheel_ok": true,
-      "cost_basis": 840.2,
-      "cc_strike": 850.0,
-      "cc_premium": 12475.0,
-      "cc_expiration": "2026-09-18",
-      "cc_dte": 31,
-      "cc_weekly_yield": 3.353,
-      "open_interest": 1212,
-      "volume": 1463,
-      "spread_pct": 5.9,
-      "iv": 68.8,
-      "collateral": 85000.0,
-      "score": 0.048,
-      "tier": "yellow"
+      "label": "S&P 500",
+      "value": 7724.79,
+      "change_pct": 0.43
     },
     {
-      "symbol": "HOOD",
-      "sector": "Financial Services",
-      "spot": 91.72,
-      "strike": 85.0,
-      "otm_pct": 7.3,
-      "expiration": "2026-08-28",
-      "dte": 10,
-      "premium": 92.0,
-      "weekly_yield": 0.758,
-      "assign_pct": 19.8,
-      "earnings_clear": true,
-      "next_earnings": null,
-      "wheel_ok": true,
-      "cost_basis": 84.08,
-      "cc_strike": 85.0,
-      "cc_premium": 960.0,
-      "cc_expiration": "2026-09-18",
-      "cc_dte": 31,
-      "cc_weekly_yield": 2.578,
-      "open_interest": 1107,
-      "volume": 293,
-      "spread_pct": 8.3,
-      "iv": 56.0,
-      "collateral": 8500.0,
-      "score": 0.038,
-      "tier": "yellow"
+      "label": "Dow Jones",
+      "value": 53527.0,
+      "change_pct": 0.34
+    },
+    {
+      "label": "Nasdaq 100",
+      "value": 29490.96,
+      "change_pct": 0.0
     }
-  ],
-  "indices": []
+  ]
 }
