@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-19T20:29:42",
+  "generated_at": "2026-08-19T20:58:09",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,42 +22,14 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 3,
+  "result_count": 2,
   "results": [
-    {
-      "symbol": "DELL",
-      "sector": "Technology",
-      "spot": 439.9,
-      "strike": 400.0,
-      "otm_pct": 9.1,
-      "expiration": "2026-08-28",
-      "dte": 9,
-      "premium": 475.0,
-      "weekly_yield": 0.924,
-      "assign_pct": 18.6,
-      "earnings_clear": true,
-      "next_earnings": "2026-09-03",
-      "wheel_ok": true,
-      "cost_basis": 395.25,
-      "cc_strike": 400.0,
-      "cc_premium": 6005.0,
-      "cc_expiration": "2026-09-18",
-      "cc_dte": 30,
-      "cc_weekly_yield": 3.545,
-      "open_interest": 1109,
-      "volume": 840,
-      "spread_pct": 9.0,
-      "iv": 68.1,
-      "collateral": 40000.0,
-      "score": 0.05,
-      "tier": "yellow"
-    },
     {
       "symbol": "INTC",
       "sector": "Semiconductors",
-      "spot": 92.82,
+      "spot": 92.87,
       "strike": 85.0,
-      "otm_pct": 8.4,
+      "otm_pct": 8.5,
       "expiration": "2026-08-28",
       "dte": 9,
       "premium": 91.0,
@@ -83,9 +55,9 @@
     {
       "symbol": "MU",
       "sector": "Semiconductors",
-      "spot": 937.58,
+      "spot": 936.4,
       "strike": 850.0,
-      "otm_pct": 9.3,
+      "otm_pct": 9.2,
       "expiration": "2026-08-28",
       "dte": 9,
       "premium": 835.0,
@@ -109,21 +81,5 @@
       "tier": "yellow"
     }
   ],
-  "indices": [
-    {
-      "label": "S&P 500",
-      "value": 7707.98,
-      "change_pct": 0.21
-    },
-    {
-      "label": "Dow Jones",
-      "value": 53463.0,
-      "change_pct": 0.23
-    },
-    {
-      "label": "Nasdaq 100",
-      "value": 29426.02,
-      "change_pct": -0.22
-    }
-  ]
+  "indices": []
 }
