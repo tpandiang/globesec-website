@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-20T15:35:32",
+  "generated_at": "2026-08-20T16:37:37",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,23 +22,52 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 0,
-  "results": [],
+  "result_count": 1,
+  "results": [
+    {
+      "symbol": "DELL",
+      "sector": "Technology",
+      "spot": 434.83,
+      "strike": 400.0,
+      "otm_pct": 8.0,
+      "expiration": "2026-08-28",
+      "dte": 8,
+      "premium": 455.0,
+      "weekly_yield": 0.995,
+      "assign_pct": 18.8,
+      "earnings_clear": true,
+      "next_earnings": "2026-09-03",
+      "wheel_ok": true,
+      "cost_basis": 395.45,
+      "cc_strike": 450.0,
+      "cc_premium": 3275.0,
+      "cc_expiration": "2026-09-18",
+      "cc_dte": 29,
+      "cc_weekly_yield": 1.999,
+      "open_interest": 1680,
+      "volume": 150,
+      "spread_pct": 9.4,
+      "iv": 67.8,
+      "collateral": 40000.0,
+      "score": 0.053,
+      "tier": "yellow"
+    }
+  ],
   "indices": [
     {
       "label": "S&P 500",
-      "value": 7686.21,
-      "change_pct": -0.28
+      "value": 7675.45,
+      "change_pct": -0.42
     },
     {
       "label": "Dow Jones",
-      "value": 53145.0,
-      "change_pct": -0.59
+      "value": 52995.0,
+      "change_pct": -0.88
     },
     {
       "label": "Nasdaq 100",
-      "value": 29271.41,
-      "change_pct": -0.53
+      "value": 29242.91,
+      "change_pct": -0.62
     }
   ]
 }
