@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-19T20:58:09",
+  "generated_at": "2026-08-20T13:48:57",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,64 +22,52 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 2,
+  "result_count": 1,
   "results": [
     {
-      "symbol": "INTC",
-      "sector": "Semiconductors",
-      "spot": 92.87,
-      "strike": 85.0,
-      "otm_pct": 8.5,
+      "symbol": "MRNA",
+      "sector": "Biotechnology",
+      "spot": 143.87,
+      "strike": 100.0,
+      "otm_pct": 30.5,
       "expiration": "2026-08-28",
-      "dte": 9,
-      "premium": 91.0,
-      "weekly_yield": 0.833,
-      "assign_pct": 17.9,
+      "dte": 8,
+      "premium": 140.0,
+      "weekly_yield": 1.225,
+      "assign_pct": 8.1,
       "earnings_clear": true,
       "next_earnings": null,
       "wheel_ok": true,
-      "cost_basis": 84.09,
-      "cc_strike": 85.0,
-      "cc_premium": 1090.0,
+      "cost_basis": 98.6,
+      "cc_strike": 120.0,
+      "cc_premium": 3275.0,
       "cc_expiration": "2026-09-18",
-      "cc_dte": 30,
-      "cc_weekly_yield": 3.025,
-      "open_interest": 2657,
-      "volume": 514,
-      "spread_pct": 9.4,
-      "iv": 64.9,
-      "collateral": 8500.0,
-      "score": 0.047,
-      "tier": "yellow"
-    },
-    {
-      "symbol": "MU",
-      "sector": "Semiconductors",
-      "spot": 936.4,
-      "strike": 850.0,
-      "otm_pct": 9.2,
-      "expiration": "2026-08-28",
-      "dte": 9,
-      "premium": 835.0,
-      "weekly_yield": 0.764,
-      "assign_pct": 16.2,
-      "earnings_clear": true,
-      "next_earnings": "2026-09-21",
-      "wheel_ok": true,
-      "cost_basis": 841.65,
-      "cc_strike": 900.0,
-      "cc_premium": 8850.0,
-      "cc_expiration": "2026-09-18",
-      "cc_dte": 30,
-      "cc_weekly_yield": 2.454,
-      "open_interest": 1934,
-      "volume": 599,
-      "spread_pct": 5.8,
-      "iv": 66.3,
-      "collateral": 85000.0,
-      "score": 0.047,
-      "tier": "yellow"
+      "cc_dte": 29,
+      "cc_weekly_yield": 8.017,
+      "open_interest": 3079,
+      "volume": 580,
+      "spread_pct": 6.9,
+      "iv": 184.5,
+      "collateral": 10000.0,
+      "score": 0.15,
+      "tier": "green"
     }
   ],
-  "indices": []
+  "indices": [
+    {
+      "label": "S&P 500",
+      "value": 7684.42,
+      "change_pct": -0.31
+    },
+    {
+      "label": "Dow Jones",
+      "value": 53081.0,
+      "change_pct": -0.71
+    },
+    {
+      "label": "Nasdaq 100",
+      "value": 29314.02,
+      "change_pct": -0.38
+    }
+  ]
 }
