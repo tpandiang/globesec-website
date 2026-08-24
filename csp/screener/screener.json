@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-24T16:39:43",
+  "generated_at": "2026-08-24T17:32:53",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,7 +22,108 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 0,
-  "results": [],
-  "indices": []
+  "result_count": 3,
+  "results": [
+    {
+      "symbol": "MARA",
+      "sector": "Technology",
+      "spot": 11.52,
+      "strike": 10.0,
+      "otm_pct": 13.2,
+      "expiration": "2026-09-04",
+      "dte": 11,
+      "premium": 18.0,
+      "weekly_yield": 1.145,
+      "assign_pct": 17.3,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 9.82,
+      "cc_strike": 10.0,
+      "cc_premium": 195.0,
+      "cc_expiration": "2026-09-18",
+      "cc_dte": 25,
+      "cc_weekly_yield": 5.56,
+      "open_interest": 3992,
+      "volume": 479,
+      "spread_pct": 5.4,
+      "iv": 94.0,
+      "collateral": 1000.0,
+      "score": 0.066,
+      "tier": "yellow"
+    },
+    {
+      "symbol": "INTC",
+      "sector": "Semiconductors",
+      "spot": 87.5,
+      "strike": 80.0,
+      "otm_pct": 8.6,
+      "expiration": "2026-09-04",
+      "dte": 11,
+      "premium": 96.0,
+      "weekly_yield": 0.764,
+      "assign_pct": 18.4,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 79.04,
+      "cc_strike": 80.0,
+      "cc_premium": 975.0,
+      "cc_expiration": "2026-09-18",
+      "cc_dte": 25,
+      "cc_weekly_yield": 3.454,
+      "open_interest": 2950,
+      "volume": 700,
+      "spread_pct": 7.0,
+      "iv": 61.7,
+      "collateral": 8000.0,
+      "score": 0.042,
+      "tier": "yellow"
+    },
+    {
+      "symbol": "AMD",
+      "sector": "Semiconductors",
+      "spot": 459.94,
+      "strike": 425.0,
+      "otm_pct": 7.6,
+      "expiration": "2026-09-04",
+      "dte": 11,
+      "premium": 480.0,
+      "weekly_yield": 0.719,
+      "assign_pct": 19.4,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 420.2,
+      "cc_strike": 450.0,
+      "cc_premium": 3090.0,
+      "cc_expiration": "2026-09-18",
+      "cc_dte": 25,
+      "cc_weekly_yield": 2.059,
+      "open_interest": 643,
+      "volume": 296,
+      "spread_pct": 8.0,
+      "iv": 56.1,
+      "collateral": 42500.0,
+      "score": 0.037,
+      "tier": "yellow"
+    }
+  ],
+  "indices": [
+    {
+      "label": "S&P 500",
+      "value": 7661.56,
+      "change_pct": -0.17
+    },
+    {
+      "label": "Dow Jones",
+      "value": 53392.0,
+      "change_pct": 0.22
+    },
+    {
+      "label": "Nasdaq 100",
+      "value": 29103.28,
+      "change_pct": -0.7
+    }
+  ]
 }
