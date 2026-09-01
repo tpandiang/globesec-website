@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-01T20:05:36",
+  "generated_at": "2026-09-01T22:46:10",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,80 +22,7 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 2,
-  "results": [
-    {
-      "symbol": "DELL",
-      "sector": "Technology",
-      "spot": 425.2,
-      "strike": 370.0,
-      "otm_pct": 13.0,
-      "expiration": "2026-09-18",
-      "dte": 17,
-      "premium": 850.0,
-      "weekly_yield": 0.946,
-      "assign_pct": 19.0,
-      "earnings_clear": true,
-      "next_earnings": "2026-09-01",
-      "wheel_ok": true,
-      "cost_basis": 361.5,
-      "cc_strike": 460.0,
-      "cc_premium": 2695.0,
-      "cc_expiration": "2026-10-16",
-      "cc_dte": 45,
-      "cc_weekly_yield": 1.16,
-      "open_interest": 1065,
-      "volume": 547,
-      "spread_pct": 2.9,
-      "iv": 82.3,
-      "collateral": 37000.0,
-      "score": 0.05,
-      "tier": "yellow"
-    },
-    {
-      "symbol": "HOOD",
-      "sector": "Financial Services",
-      "spot": 103.41,
-      "strike": 95.0,
-      "otm_pct": 8.1,
-      "expiration": "2026-09-11",
-      "dte": 10,
-      "premium": 99.0,
-      "weekly_yield": 0.729,
-      "assign_pct": 17.9,
-      "earnings_clear": true,
-      "next_earnings": null,
-      "wheel_ok": true,
-      "cost_basis": 94.01,
-      "cc_strike": 95.0,
-      "cc_premium": 1330.0,
-      "cc_expiration": "2026-10-16",
-      "cc_dte": 45,
-      "cc_weekly_yield": 2.201,
-      "open_interest": 557,
-      "volume": 410,
-      "spread_pct": 6.8,
-      "iv": 59.4,
-      "collateral": 9500.0,
-      "score": 0.041,
-      "tier": "yellow"
-    }
-  ],
-  "indices": [
-    {
-      "label": "S&P 500",
-      "value": 7627.49,
-      "change_pct": -0.76
-    },
-    {
-      "label": "Dow Jones",
-      "value": 52731.0,
-      "change_pct": -0.86
-    },
-    {
-      "label": "Nasdaq 100",
-      "value": 29072.93,
-      "change_pct": -1.3
-    }
-  ]
+  "result_count": 0,
+  "results": [],
+  "indices": []
 }
