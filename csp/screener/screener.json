@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-15T20:26:42",
+  "generated_at": "2026-09-15T23:05:48",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,8 +22,65 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 0,
-  "results": [],
+  "result_count": 2,
+  "results": [
+    {
+      "symbol": "INTC",
+      "sector": "Semiconductors",
+      "spot": 97.09,
+      "strike": 90.0,
+      "otm_pct": 7.3,
+      "expiration": "2026-09-21",
+      "dte": 6,
+      "premium": 60.0,
+      "weekly_yield": 0.778,
+      "assign_pct": 15.2,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 89.4,
+      "cc_strike": 90.0,
+      "cc_premium": 1085.0,
+      "cc_expiration": "2026-10-16",
+      "cc_dte": 31,
+      "cc_weekly_yield": 2.74,
+      "open_interest": 609,
+      "volume": 470,
+      "spread_pct": 4.9,
+      "iv": 60.6,
+      "collateral": 9000.0,
+      "score": 0.051,
+      "tier": "yellow"
+    },
+    {
+      "symbol": "HOOD",
+      "sector": "Financial Services",
+      "spot": 109.0,
+      "strike": 100.0,
+      "otm_pct": 8.3,
+      "expiration": "2026-09-25",
+      "dte": 10,
+      "premium": 113.0,
+      "weekly_yield": 0.791,
+      "assign_pct": 16.8,
+      "earnings_clear": true,
+      "next_earnings": "2026-11-03",
+      "wheel_ok": true,
+      "cost_basis": 98.87,
+      "cc_strike": 100.0,
+      "cc_premium": 1410.0,
+      "cc_expiration": "2026-10-16",
+      "cc_dte": 31,
+      "cc_weekly_yield": 3.22,
+      "open_interest": 932,
+      "volume": 1362,
+      "spread_pct": 3.5,
+      "iv": 66.8,
+      "collateral": 10000.0,
+      "score": 0.047,
+      "tier": "yellow"
+    }
+  ],
   "indices": [
     {
       "label": "S&P 500",
@@ -34,6 +91,11 @@
       "label": "Dow Jones",
       "value": 52093.0,
       "change_pct": -0.63
+    },
+    {
+      "label": "Nasdaq 100",
+      "value": 28937.84,
+      "change_pct": -0.65
     }
   ]
 }
