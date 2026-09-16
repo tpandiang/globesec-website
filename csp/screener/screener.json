@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-16T20:25:22",
+  "generated_at": "2026-09-16T23:12:45",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,108 +22,7 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 3,
-  "results": [
-    {
-      "symbol": "INTC",
-      "sector": "Semiconductors",
-      "spot": 101.38,
-      "strike": 93.0,
-      "otm_pct": 8.3,
-      "expiration": "2026-09-25",
-      "dte": 9,
-      "premium": 115.0,
-      "weekly_yield": 0.962,
-      "assign_pct": 19.4,
-      "earnings_clear": true,
-      "next_earnings": null,
-      "wheel_ok": true,
-      "cost_basis": 91.85,
-      "cc_strike": 92.5,
-      "cc_premium": 1215.0,
-      "cc_expiration": "2026-10-16",
-      "cc_dte": 30,
-      "cc_weekly_yield": 3.087,
-      "open_interest": 846,
-      "volume": 1670,
-      "spread_pct": 5.9,
-      "iv": 66.4,
-      "collateral": 9300.0,
-      "score": 0.05,
-      "tier": "yellow"
-    },
-    {
-      "symbol": "HOOD",
-      "sector": "Financial Services",
-      "spot": 104.6,
-      "strike": 96.0,
-      "otm_pct": 8.2,
-      "expiration": "2026-09-25",
-      "dte": 9,
-      "premium": 111.0,
-      "weekly_yield": 0.899,
-      "assign_pct": 18.8,
-      "earnings_clear": true,
-      "next_earnings": "2026-11-03",
-      "wheel_ok": true,
-      "cost_basis": 94.89,
-      "cc_strike": 95.0,
-      "cc_premium": 1285.0,
-      "cc_expiration": "2026-10-16",
-      "cc_dte": 30,
-      "cc_weekly_yield": 3.16,
-      "open_interest": 706,
-      "volume": 428,
-      "spread_pct": 7.8,
-      "iv": 65.2,
-      "collateral": 9600.0,
-      "score": 0.048,
-      "tier": "yellow"
-    },
-    {
-      "symbol": "PLTR",
-      "sector": "Technology",
-      "spot": 174.44,
-      "strike": 162.5,
-      "otm_pct": 6.8,
-      "expiration": "2026-09-25",
-      "dte": 9,
-      "premium": 149.0,
-      "weekly_yield": 0.713,
-      "assign_pct": 18.7,
-      "earnings_clear": true,
-      "next_earnings": "2026-11-02",
-      "wheel_ok": true,
-      "cost_basis": 161.01,
-      "cc_strike": 165.0,
-      "cc_premium": 1540.0,
-      "cc_expiration": "2026-10-16",
-      "cc_dte": 30,
-      "cc_weekly_yield": 2.232,
-      "open_interest": 1430,
-      "volume": 471,
-      "spread_pct": 5.2,
-      "iv": 53.3,
-      "collateral": 16250.0,
-      "score": 0.038,
-      "tier": "yellow"
-    }
-  ],
-  "indices": [
-    {
-      "label": "S&P 500",
-      "value": 7551.81,
-      "change_pct": -0.45
-    },
-    {
-      "label": "Dow Jones",
-      "value": 51462.0,
-      "change_pct": -1.21
-    },
-    {
-      "label": "Nasdaq 100",
-      "value": 28945.06,
-      "change_pct": 0.03
-    }
-  ]
+  "result_count": 0,
+  "results": [],
+  "indices": []
 }
