@@ -57,6 +57,7 @@ const UNIVERSE = [
   "AAPL", "AMD", "MU", "PLTR", "SOFI", "F", "BAC", "T", "NIO", "MARA", "HOOD",
   "SNAP", "PFE", "CSCO", "KO", "DIS", "UBER", "CCL", "AAL", "GM", "WBD", "RIVN",
   "LCID", "COIN", "BABA", "NU", "ET", "KMI", "VZ", "WBA", "GME", "AMC", "WMT",
+  "AIRJ", "AMPX", "ALMU", "ZS", "MRAM",
 ];
 
 const CBOE = "https://cdn.cboe.com/api/global/delayed_quotes/options";
@@ -355,16 +356,51 @@ async function getFundamentals(symbols, env, dbg) {
   return empty;
 }
 
-export async function runScan(env, dbg) {
+// Most chains we may pull in one scan. The free Workers plan allows 50
+// subrequests: 3 indices + N chains + 1 FMP batch, so N must stay under ~46.
+const MAX_CHAINS = 45;
+
+/**
+ * Build the list of symbols to scan.
+ *
+ * `priority` is the user's "this week" list. Those symbols are scanned FIRST and
+ * always make the cut, so a pick can never be crowded out by the standard
+ * universe. Whatever subrequest budget is left over is filled from UNIVERSE, in
+ * its normal order, skipping anything already in the priority list.
+ */
+export function buildUniverse(priority) {
+  const seen = new Set();
+  const week = [];
+  for (const raw of priority || []) {
+    const s = String(raw || "").trim().toUpperCase();
+    if (!s || seen.has(s)) continue;
+    seen.add(s);
+    week.push(s);
+    if (week.length >= MAX_CHAINS) break;   // a huge list can't starve the budget
+  }
+  const fill = [];
+  for (const s of UNIVERSE) {
+    if (week.length + fill.length >= MAX_CHAINS) break;
+    if (seen.has(s)) continue;
+    seen.add(s);
+    fill.push(s);
+  }
+  return { symbols: week.concat(fill), week, fill };
+}
+
+export async function runScan(env, dbg, priority) {
   const todayMs = Date.parse(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
+  const { symbols: SCAN_LIST, week: WEEK_LIST } = buildUniverse(priority);
+  const weekSet = new Set(WEEK_LIST);
+  if (WEEK_LIST.length) dbg.push(`week symbols first: ${WEEK_LIST.join(",")}`);
 
   // Fetch chains in small concurrent batches (not all at once) so CBOE doesn't
   // throttle the burst from a single Cloudflare colo and return partial data.
   const POOL = 8;
   const settled = [];
-  for (let i = 0; i < UNIVERSE.length; i += POOL) {
-    settled.push(...await Promise.all(UNIVERSE.slice(i, i + POOL).map(getChain)));
-    if (i + POOL < UNIVERSE.length) await new Promise((r) => setTimeout(r, 120));
+  for (let i = 0; i < SCAN_LIST.length; i += POOL) {
+    settled.push(...await Promise.all(SCAN_LIST.slice(i, i + POOL).map(getChain)));
+    if (i + POOL < SCAN_LIST.length) await new Promise((r) => setTimeout(r, 120));
   }
   const chains = settled.filter((c) => c && c.price > 0 && c.price < MAX_UNDERLYING_PRICE);
 
@@ -430,11 +466,17 @@ export async function runScan(env, dbg) {
       top_n: TOP_N,
       sorted_by: "premium",
     },
-    universe_size: UNIVERSE.length,
+    universe_size: SCAN_LIST.length,
     scanned_under_price: chains.length,
     total_qualifying: totalFound,
     result_count: rows.length,
     results: rows,
+    // "This week" picks: the user's symbols, kept separate so the page can pin
+    // them above the standard scan. A symbol appears here only if it actually
+    // produced a qualifying contract; week_symbols always lists what was asked
+    // for, so the page can show "no qualifying put this week" for the rest.
+    week_symbols: WEEK_LIST,
+    week_results: rows.filter((r) => weekSet.has(r.symbol)),
     debug: dbg,
   };
 }

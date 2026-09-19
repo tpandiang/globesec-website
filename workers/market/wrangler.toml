@@ -5,8 +5,11 @@ name = "csp-market"
 main = "index.js"
 compatibility_date = "2026-06-01"
 
-# Watchlist symbol store — lets the ticker list be edited from the website
-# instead of requiring a commit.
+# Symbol store. One KV namespace and one password serve BOTH:
+#   watchlist:symbols  — the /watchlist ticker list
+#   csp:week           — "This Week's CSP" picks, scanned first by /scan
+# Until this is enabled, both pages still READ fine; only editing from the site
+# is disabled, and each returns a clear 503 explaining why.
 #
 # TO ENABLE (one time):
 #   1. Dashboard -> Storage & Databases -> KV -> Create namespace, name it

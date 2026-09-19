@@ -240,6 +240,10 @@ async function buildWatchlist(env, dbg) {
  * ------------------------------------------------------------------ */
 
 const SYMBOLS_KEY = "watchlist:symbols";
+// "This week" CSP picks. Same KV namespace and same ADMIN_KEY as the watchlist -
+// one password to remember, one namespace to create.
+const WEEK_KEY = "csp:week";
+const MAX_WEEK = 12;      // these are scanned first, so keep the list deliberate
 const TICKER_RE = /^[A-Z][A-Z0-9.-]{0,9}$/;
 const MAX_SYMBOLS = 40;   // keeps the data job inside its subrequest budget
 
@@ -269,6 +273,93 @@ function authorized(request, env) {
   const key = env && env.ADMIN_KEY;
   if (!key) return false;
   return sameSecret(request.headers.get("x-admin-key") || "", key);
+}
+
+/**
+ * This week's CSP symbols, stored in the same KV namespace as the watchlist.
+ *
+ * GET  is public - it is only a list of tickers.
+ * POST replaces the whole list and requires the ADMIN_KEY password, exactly as
+ *      the watchlist editor does. The list is small and gets rewritten wholesale
+ *      each week, so replace is a better fit here than add/remove.
+ */
+async function readWeek(env) {
+  if (!env || !env.WATCHLIST_KV) return { symbols: [], kv: false };
+  try {
+    const raw = await env.WATCHLIST_KV.get(WEEK_KEY);
+    if (raw) {
+      const v = JSON.parse(raw);
+      if (Array.isArray(v.symbols)) return { symbols: v.symbols, updated_at: v.updated_at, kv: true };
+      if (Array.isArray(v)) return { symbols: v, kv: true };          // older shape
+    }
+  } catch (_e) { /* fall through to empty */ }
+  return { symbols: [], kv: true };
+}
+
+async function handleWeek(request, env) {
+  const cors = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, x-admin-key",
+  };
+  const json = (obj, status) => new Response(JSON.stringify(obj), {
+    status: status || 200,
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...cors },
+  });
+
+  if (request.method === "OPTIONS") return new Response(null, { headers: cors });
+
+  if (request.method === "GET") {
+    const w = await readWeek(env);
+    return json({ symbols: w.symbols, updated_at: w.updated_at || null, kv_bound: w.kv, max: MAX_WEEK });
+  }
+  if (request.method !== "POST") return json({ error: "method not allowed" }, 405);
+
+  if (!(env && env.WATCHLIST_KV)) {
+    return json({ error: "KV not bound - add the WATCHLIST_KV namespace to wrangler.toml" }, 503);
+  }
+  if (!(env && env.ADMIN_KEY)) {
+    return json({ error: "ADMIN_KEY is not set on this Worker - add it under Settings -> Variables and Secrets" }, 503);
+  }
+  if (!authorized(request, env)) {
+    // Same 1-second penalty the watchlist editor uses, so a short password is
+    // not worth brute forcing. A human never notices it.
+    await new Promise((r) => setTimeout(r, 1000));
+    return json({ error: "wrong password" }, 401);
+  }
+
+  let body;
+  try { body = await request.json(); }
+  catch (_e) { return json({ error: "invalid JSON" }, 400); }
+
+  // Accept "SOFI, HOOD MU" or ["SOFI","HOOD"] - paste whatever is to hand.
+  const raw = Array.isArray(body.symbols) ? body.symbols
+            : String(body.symbols || "").split(/[\s,;]+/);
+  const seen = new Set();
+  const symbols = [];
+  const rejected = [];
+  for (const item of raw) {
+    const t = String(item || "").trim().toUpperCase();
+    if (!t) continue;
+    if (!TICKER_RE.test(t)) { rejected.push(t); continue; }
+    if (seen.has(t)) continue;
+    seen.add(t);
+    symbols.push(t);
+  }
+  if (symbols.length > MAX_WEEK) {
+    return json({ error: `too many symbols - keep it to ${MAX_WEEK} (got ${symbols.length})` }, 400);
+  }
+  if (rejected.length) {
+    return json({ error: `not valid tickers: ${rejected.join(", ")}` }, 400);
+  }
+
+  const updated_at = new Date().toISOString();
+  await env.WATCHLIST_KV.put(WEEK_KEY, JSON.stringify({ symbols, updated_at }));
+  // The scan is edge-cached for 10 minutes; drop it so the new list takes
+  // effect on the very next page load instead of after the TTL expires.
+  try { await caches.default.delete(new Request("https://globesec.ai/__cache/csp-scan")); } catch (_e) {}
+
+  return json({ ok: true, symbols, updated_at, count: symbols.length });
 }
 
 async function handleSymbols(request, env) {
@@ -369,8 +460,12 @@ export default {
       if (!nocache) { const hit = await cache.match(goodKey); if (hit) return hit; }
       const sdbg = [];
       let payload;
-      try { payload = await runScan(env, sdbg); }
-      catch (e) { payload = { error: String(e), results: [], indices: [], debug: sdbg }; }
+      try {
+        // This week's picks are scanned first and always make the cut; the
+        // standard universe fills whatever subrequest budget is left.
+        const week = await readWeek(env);
+        payload = await runScan(env, sdbg, week.symbols);
+      } catch (e) { payload = { error: String(e), results: [], indices: [], debug: sdbg }; }
       // Only cache a HEALTHY scan, so a CBOE 429 can't poison the 10-min cache.
       const healthy = Array.isArray(payload.results) && payload.results.length > 0 && (payload.indices || []).length > 0;
       if (healthy) {
@@ -388,6 +483,11 @@ export default {
     // /watchlist/symbols -> read (public) / edit (ADMIN_KEY) the ticker list.
     if (url.pathname.replace(/\/+$/, "") === "/watchlist/symbols") {
       return handleSymbols(request, env);
+    }
+
+    // /csp/week -> read (public) / replace (ADMIN_KEY) this week's CSP symbols.
+    if (url.pathname.replace(/\/+$/, "") === "/csp/week") {
+      return handleWeek(request, env);
     }
 
     // /watchlist -> tracked-ticker portfolio (edge-cached like the scan).

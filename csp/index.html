@@ -101,6 +101,25 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
 .pick{display:inline-block; background:var(--green); color:#fff; font-size:.55rem; font-weight:800; letter-spacing:.5px; padding:.05rem .35rem; border-radius:3px; margin-right:.35rem; vertical-align:middle;}
 .empty{padding:3rem; text-align:center; color:var(--text-dim); font-family:var(--mono); font-size:.8rem;}
 .err{color:#c0392b; font-family:var(--mono); font-size:.8rem; padding:1rem 0;}
+/* ---- this week's picks ---- */
+.week-edit{font-family:var(--mono); font-size:.6rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim);
+  background:transparent; border:1px solid var(--line); border-radius:4px; padding:.15rem .5rem; margin-left:.6rem; cursor:pointer;}
+.week-edit:hover{color:var(--cyan); border-color:var(--cyan);}
+.week-note{font-family:var(--mono); font-size:.68rem; color:var(--text-dim); margin:-.3rem 0 .7rem;}
+.week-form{background:#fff; border:1px solid var(--line); border-left:4px solid var(--cyan); border-radius:8px; padding:1rem 1.2rem; margin-bottom:2rem;}
+.week-form label{display:block; font-family:var(--mono); font-size:.68rem; letter-spacing:1px; text-transform:uppercase; color:var(--text-dim); margin-bottom:.45rem;}
+.week-form textarea{width:100%; box-sizing:border-box; font-family:var(--mono); font-size:.9rem; text-transform:uppercase;
+  border:1px solid var(--line); border-radius:6px; padding:.55rem .7rem; resize:vertical;}
+.week-actions{display:flex; align-items:center; gap:.6rem; margin-top:.7rem; flex-wrap:wrap;}
+.week-save,.week-cancel{font-family:var(--mono); font-size:.7rem; letter-spacing:1px; text-transform:uppercase;
+  border-radius:5px; padding:.4rem .9rem; cursor:pointer; border:1px solid var(--line);}
+.week-save{background:var(--cyan); border-color:var(--cyan); color:#fff; font-weight:700;}
+.week-cancel{background:transparent; color:var(--text-dim);}
+.week-msg{font-family:var(--mono); font-size:.7rem;}
+.week-msg.ok{color:var(--green);} .week-msg.err{color:#c0392b;}
+#weekTable th,#weekTable td{text-align:right;}
+#weekTable th:nth-child(1),#weekTable td:nth-child(1),#weekTable th:nth-child(2),#weekTable td:nth-child(2){text-align:left;}
+#weekTable tr.nohit td{color:var(--text-dim); font-style:italic;}
 .disc{font-family:var(--mono); font-size:.65rem; color:var(--text-dim); line-height:1.9; margin-top:1.5rem; border-left:2px solid var(--orange); padding-left:1rem;}
 /* scoped alignment for the top-10 and losers tables */
 #top10 th,#top10 td,#losers th,#losers td{text-align:right;}
@@ -144,6 +163,25 @@ tr.detail td{background:#f4f7fb; padding:1rem 1rem 1.3rem;}
   </div>
 
   <div class="mkt" id="mkt" style="display:none"></div>
+
+  <!-- This week's picks: scanned first, so they can never be crowded out of the
+       results by the standard universe. Editing is password-gated server-side. -->
+  <div class="acct-hd" id="weekHd">
+    ▸ This Week's CSP — my picks
+    <button class="week-edit" id="weekEdit" onclick="openWeek()">edit</button>
+  </div>
+  <div class="week-note" id="weekNote"></div>
+  <div class="tablewrap" id="weekTable" style="margin-bottom:2rem"></div>
+
+  <div class="week-form" id="weekForm" style="display:none">
+    <label for="weekInput">Symbols for this week — comma or space separated, max 12</label>
+    <textarea id="weekInput" rows="2" placeholder="SOFI, HOOD, MU"></textarea>
+    <div class="week-actions">
+      <button class="week-save" onclick="saveWeek()">Save</button>
+      <button class="week-cancel" onclick="closeWeek()">Cancel</button>
+      <span class="week-msg" id="weekMsg"></span>
+    </div>
+  </div>
 
   <div class="acct-hd" id="acctHd" style="display:none">▸ CSP Picks — next 2 weeks</div>
   <div class="accounts" id="accounts"></div>
@@ -420,12 +458,121 @@ async function loadResults(){
   const lu=document.getElementById("lastupd");
   if(lu) lu.innerHTML = DATA.generated_at ? `<span class="live"></span>Last updated: <b>${fmtUpdated(DATA.generated_at)}</b>` : "";
   renderIndices();
+  renderWeek();
   renderAccounts();
   renderTopPicks();
   renderTop10();
   renderLosers();
   render();
 }
+
+/* ---------------- this week's picks ---------------- */
+const WEEK_API  = "https://csp-market.ptmtek4.workers.dev/csp/week";
+const WEEK_KEY_STORE = "globesec_admin_key";   // same key the watchlist editor uses
+let WEEK_KV_READY = false;
+
+function weekMsg(text, cls){
+  const el=document.getElementById("weekMsg");
+  if(el){ el.textContent=text||""; el.className="week-msg"+(cls?" "+cls:""); }
+}
+
+/* The scan payload carries week_symbols (what was asked for) and week_results
+   (those that produced a qualifying contract). Showing both means a symbol that
+   found nothing this week still appears, rather than silently vanishing. */
+function renderWeek(){
+  const asked=DATA.week_symbols||[];
+  const hits=DATA.week_results||[];
+  const note=document.getElementById("weekNote");
+  const wrap=document.getElementById("weekTable");
+  if(!wrap) return;
+
+  if(!asked.length){
+    wrap.innerHTML="";
+    if(note) note.textContent="No symbols set for this week — click edit to add yours.";
+    return;
+  }
+  const byS=Object.fromEntries(hits.map(r=>[r.symbol,r]));
+  const rows=asked.map(sym=>{
+    const r=byS[sym];
+    if(!r) return `<tr class="nohit"><td>${sym}</td><td colspan="7">no put in the 0.7–1.0% band this week</td></tr>`;
+    const otm=otmPct(r.price,r.strike);
+    return `<tr onclick='renderDetail(${JSON.stringify(r).replace(/'/g,"&#39;")})' style="cursor:pointer">`+
+      `<td><b class="cyan">${r.symbol}</b></td><td>${r.company_name||""}</td>`+
+      `<td>${money(r.price)}</td><td>${money(r.strike)}</td>`+
+      `<td>${otm==null?"—":otm.toFixed(1)+"%"}</td>`+
+      `<td>${fmtFull(r.expiration)} <span style="color:var(--text-dim)">(${r.dte}d)</span></td>`+
+      `<td>${money(r.premium)}</td><td>${(r.yield_30d_pct||0).toFixed(2)}%</td></tr>`;
+  }).join("");
+  wrap.innerHTML=`<table><thead><tr><th>Symbol</th><th>Company</th><th>Spot</th><th>Strike</th>`+
+    `<th>% OTM</th><th>Expiry</th><th>Premium</th><th>Yield 30d</th></tr></thead><tbody>${rows}</tbody></table>`;
+  if(note){
+    const n=hits.length;
+    note.textContent=`${asked.length} symbol${asked.length===1?"":"s"} set — ${n} with a qualifying put. `+
+      `These are scanned first, so they always appear here.`;
+  }
+}
+
+async function openWeek(){
+  const form=document.getElementById("weekForm");
+  const input=document.getElementById("weekInput");
+  weekMsg("");
+  try{
+    const r=await fetch(WEEK_API,{cache:"no-store"});
+    const d=await r.json();
+    WEEK_KV_READY = d.kv_bound===true;
+    input.value=(d.symbols||[]).join(", ");
+    if(!WEEK_KV_READY){
+      weekMsg("Storage isn't enabled yet — create the KV namespace and set ADMIN_KEY on the csp-market Worker.","err");
+    }
+  }catch(e){ input.value=""; weekMsg("Could not load the current list: "+e.message,"err"); }
+  form.style.display="block";
+  input.focus();
+}
+function closeWeek(){
+  document.getElementById("weekForm").style.display="none";
+  weekMsg("");
+}
+
+function adminKey(){
+  let k=localStorage.getItem(WEEK_KEY_STORE);
+  if(!k){
+    k=prompt("Enter your admin password:");
+    if(k) localStorage.setItem(WEEK_KEY_STORE,k);
+  }
+  return k;
+}
+
+async function saveWeek(){
+  // Don't ask for a password the backend has no way to check yet.
+  if(!WEEK_KV_READY){
+    weekMsg("Storage isn't enabled yet — nothing was saved.","err");
+    return;
+  }
+  const key=adminKey();
+  if(!key){ weekMsg("Cancelled — no password entered.","err"); return; }
+  const raw=document.getElementById("weekInput").value||"";
+  weekMsg("Saving…");
+  try{
+    const r=await fetch(WEEK_API,{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-admin-key":key},
+      body:JSON.stringify({symbols:raw}),
+    });
+    const d=await r.json();
+    if(r.status===401){
+      localStorage.removeItem(WEEK_KEY_STORE);
+      weekMsg("Wrong password — cleared it, try again.","err");
+      return;
+    }
+    if(!r.ok){ weekMsg(d.error||("save failed ("+r.status+")"),"err"); return; }
+    weekMsg(`Saved ${d.count} symbol${d.count===1?"":"s"} — rescanning…`,"ok");
+    // The Worker already dropped its cached scan, so this picks up the new list.
+    await loadResults();
+    weekMsg(`Saved ${d.count} symbol${d.count===1?"":"s"}.`,"ok");
+    setTimeout(closeWeek,1200);
+  }catch(e){ weekMsg("Save failed: "+e.message,"err"); }
+}
+
 loadResults();
 setInterval(loadResults, 300000);
 </script>
