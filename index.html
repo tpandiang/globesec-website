@@ -147,10 +147,25 @@ nav {
     transform: translateX(-50%);
     background: rgba(15, 17, 20, 0.98);
     border: 1px solid rgba(0, 240, 255, 0.12);
-    min-width: 240px;
+    min-width: 265px;
     padding: 0.5rem 0;
     z-index: 1001;
 }
+/* a named folder inside the menu, with its groups nested under it */
+.dropdown-folder {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: var(--orange);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0.55rem 1.2rem 0.45rem;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.10);
+    margin-bottom: 0.25rem;
+}
+.dropdown-folder-body .dropdown-label { padding-left: 2.1rem; }
+.dropdown-folder-body a { padding-left: 2.8rem; }
 .nav-dropdown:hover .dropdown-menu { display: block; }
 .dropdown-menu::before {
     content: '';
@@ -868,21 +883,22 @@ footer {
         </a>
         <ul class="nav-links">
             <li class="nav-dropdown">
-                <span class="dropdown-toggle">AWS Security</span>
+                <span class="dropdown-toggle">Training</span>
                 <div class="dropdown-menu">
-                    <span class="dropdown-label">Quizzes</span>
-                    <a href="quiz.html">Fundamentals (150 Qs)</a>
-                    <a href="aws-security-exam.html">Scenario — Exam SC-02 (63 Qs)</a>
-                    <a href="pre-test/index.html">Scenario — Pre-Test (63 Qs)</a>
-                    <a href="training/iam-advanced.html">Scenario — IAM Advanced (26 Qs)</a>
-                    <a href="pre-test/random-quiz.html">Quick 10-Question Quiz</a>
-                    <a href="udemy-course/index.html">Official Practice (360 Qs)</a>
-                    <div class="dropdown-divider"></div>
-                    <span class="dropdown-label">Notes</span>
-                    <a href="training.html">Study Guide (SCS-C03)</a>
-                    <a href="pre-test/cheatsheet.html">Cheat Sheet</a>
-                    <a href="pre-test/takeaways.html">Key Takeaways</a>
-                    <a href="practice-guide.html">Practice Guide</a>
+                    <span class="dropdown-folder">AWS-SC03</span>
+                    <div class="dropdown-folder-body">
+                        <span class="dropdown-label">Quizzes</span>
+                        <a href="quiz.html">Fundamentals (150 Qs)</a>
+                        <a href="aws-security-exam.html">Scenario — Exam SC-02 (63 Qs)</a>
+                        <a href="pre-test/index.html">Scenario — Pre-Test (63 Qs)</a>
+                        <a href="pre-test/random-quiz.html">Quick 10-Question Quiz</a>
+                        <a href="udemy-course/index.html">Official Practice (360 Qs)</a>
+                        <div class="dropdown-divider"></div>
+                        <span class="dropdown-label">Notes</span>
+                        <a href="pre-test/cheatsheet.html">Cheat Sheet</a>
+                        <a href="pre-test/takeaways.html">Key Takeaways</a>
+                        <a href="practice-guide.html">Practice Guide</a>
+                    </div>
                 </div>
             </li>
             <li><a href="#services">Services</a></li>
@@ -896,15 +912,14 @@ footer {
     </div>
 </nav>
 <div class="mobile-menu">
-    <div class="mobile-section-label" style="color:var(--cyan);font-family:var(--mono);font-size:0.6rem;letter-spacing:2px;padding:0.5rem 0 0.2rem;font-weight:700;">AWS SECURITY — QUIZZES</div>
+    <div class="mobile-section-label" style="color:var(--orange);font-family:var(--mono);font-size:0.62rem;letter-spacing:2px;padding:0.6rem 0 0.3rem;font-weight:700;border-bottom:1px solid rgba(0,240,255,0.10);">TRAINING &mdash; AWS-SC03</div>
+    <div class="mobile-section-label" style="color:var(--cyan);font-family:var(--mono);font-size:0.6rem;letter-spacing:2px;padding:0.5rem 0 0.2rem;font-weight:700;">QUIZZES</div>
     <a href="quiz.html">Fundamentals (150 Qs)</a>
     <a href="aws-security-exam.html">Scenario — Exam SC-02</a>
     <a href="pre-test/index.html">Scenario — Pre-Test</a>
-    <a href="training/iam-advanced.html">Scenario — IAM Advanced</a>
     <a href="pre-test/random-quiz.html">Quick 10-Question Quiz</a>
     <a href="udemy-course/index.html">Official Practice (360 Qs)</a>
-    <div class="mobile-section-label" style="color:var(--cyan);font-family:var(--mono);font-size:0.6rem;letter-spacing:2px;padding:0.5rem 0 0.2rem;font-weight:700;">AWS SECURITY — NOTES</div>
-    <a href="training.html">Study Guide (SCS-C03)</a>
+    <div class="mobile-section-label" style="color:var(--cyan);font-family:var(--mono);font-size:0.6rem;letter-spacing:2px;padding:0.5rem 0 0.2rem;font-weight:700;">NOTES</div>
     <a href="pre-test/cheatsheet.html">Cheat Sheet</a>
     <a href="pre-test/takeaways.html">Key Takeaways</a>
     <a href="practice-guide.html">Practice Guide</a>
@@ -1014,9 +1029,6 @@ footer {
                 <p>Expert-led training programs covering AWS Security, Cloud Architecture, and certification preparation.</p>
                 <div class="training-links">
                     <div class="training-links-label">AWS Security Learning</div>
-                    <a href="training.html" class="training-link">
-                        <span class="tag aws">SCS-C03</span> Study Guide &rarr;
-                    </a>
                     <a href="practice-guide.html" class="training-link">
                         <span class="tag aws">SCS-C03</span> Practice Questions &rarr;
                     </a>
@@ -1025,9 +1037,6 @@ footer {
                     </a>
                     <a href="aws-security-exam.html" class="training-link">
                         <span class="tag sc02">SC-02</span> AWS Security Exam &#128274; &rarr;
-                    </a>
-                    <a href="training/iam-advanced.html" class="training-link">
-                        <span class="tag aws">IAM</span> Advanced Practice Exam &rarr;
                     </a>
                     <a href="pre-test/" class="training-link">
                         <span class="tag sc02">SCS</span> Pre-Test Assessment &rarr;
