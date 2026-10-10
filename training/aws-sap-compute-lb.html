@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Compute &amp; Load Balancing - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Compute &amp; Load Balancing</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Compute &amp; Load Balancing</h2>
+        <p>60 refresher questions &mdash; EC2, HPC, Auto Scaling, ECS/EKS/Fargate, Lambda, ELB, API Gateway, Route 53, Global Accelerator &amp; hybrid edge</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="EC2" onclick="filterQ(this)">EC2</button><button class="filter-btn" data-f="HPC" onclick="filterQ(this)">HPC</button><button class="filter-btn" data-f="Auto Scaling" onclick="filterQ(this)">Auto Scaling</button><button class="filter-btn" data-f="Containers" onclick="filterQ(this)">Containers</button><button class="filter-btn" data-f="Lambda" onclick="filterQ(this)">Lambda</button><button class="filter-btn" data-f="Load Balancers" onclick="filterQ(this)">Load Balancers</button><button class="filter-btn" data-f="API Gateway" onclick="filterQ(this)">API Gateway</button><button class="filter-btn" data-f="Route 53" onclick="filterQ(this)">Route 53</button><button class="filter-btn" data-f="Edge & Hybrid" onclick="filterQ(this)">Edge & Hybrid</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 EC2 -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EC2" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>An application runs a large in-memory cache and needs far more RAM than CPU. Which EC2 instance family fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">C family (compute optimized)</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">I family (storage optimized)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">T3 (burstable)</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">R family (memory optimized)</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> R family (memory optimized)<br><br>
+<strong>How to think about it:</strong> Memorise the family letters: <b>R</b>=RAM, <b>C</b>=CPU, <b>M</b>=balanced, <b>I</b>=local I/O, <b>G</b>=GPU, <b>T</b>=burstable.<br><br>
+<strong>Why D is correct:</strong> R instances have a high memory-to-vCPU ratio, built for in-memory caches and databases.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) C family (compute optimized)</em> &mdash; C is for CPU-heavy work such as batch processing or encoding, not large memory.<br><em>B) I family (storage optimized)</em> &mdash; I is for very fast local NVMe instance storage (high I/O), not RAM.<br><em>C) T3 (burstable)</em> &mdash; T3 gives a CPU baseline with burst credits; it is for spiky, light workloads.
+</div>
+</div>
+
+<!-- Q2 EC2 -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EC2" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>A big-data job must finish as fast as possible and needs the lowest network latency and highest throughput between its instances. Which placement group strategy should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Spread</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">No placement group, across three AZs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Cluster</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Partition</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Cluster<br><br>
+<strong>How to think about it:</strong> Lowest latency between nodes = everything close together = <b>Cluster</b> (same rack, same AZ).<br><br>
+<strong>Why C is correct:</strong> Cluster packs instances close together in one AZ, giving low latency and high bandwidth (with Enhanced Networking). The trade-off: a rack failure hits every instance.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Spread</em> &mdash; Spread puts each instance on separate hardware for availability. This adds distance, not speed.<br><em>B) No placement group, across three AZs</em> &mdash; Spreading across AZs adds latency between instances, the opposite of what is needed.<br><em>D) Partition</em> &mdash; Partition separates groups of instances onto different racks for fault isolation in big distributed systems.
+</div>
+</div>
+
+<!-- Q3 EC2 -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EC2" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>A spread placement group is used for a small set of critical instances. What is its key limit?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">At most 7 running instances per Availability Zone per group</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only one instance type is allowed in the group</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It must stay inside a single Availability Zone</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">At most 100 instances per Availability Zone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> At most 7 running instances per Availability Zone per group<br><br>
+<strong>How to think about it:</strong> Spread = maximum isolation, so it is small: <b>7 running instances per AZ per group</b>.<br><br>
+<strong>Why A is correct:</strong> Each instance sits on distinct hardware, which caps a spread group at 7 per AZ. It can span several AZs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Only one instance type is allowed in the group</em> &mdash; Spread does not restrict you to one instance type.<br><em>C) It must stay inside a single Availability Zone</em> &mdash; That describes cluster placement groups. Spread groups can span AZs.<br><em>D) At most 100 instances per Availability Zone</em> &mdash; Hundreds of instances is the partition strategy's scale, not spread's.
+</div>
+</div>
+
+<!-- Q4 EC2 -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EC2" data-level="A">
+<div class="q-tags"><span class="q-tag">EC2</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>You are deploying Cassandra on hundreds of instances. A rack failure may take down a group of nodes but must not affect the others, and the application should know which rack each node is on. Which placement strategy fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Cluster placement group</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Spread placement group</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Dedicated Hosts with host affinity</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Partition placement group</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Partition placement group<br><br>
+<strong>How to think about it:</strong> Hundreds of nodes, rack awareness, HDFS/HBase/Cassandra/Kafka = <b>Partition</b>.<br><br>
+<strong>Why D is correct:</strong> Partitions use separate racks (up to 7 per AZ, hundreds of instances), and each instance can read its partition number from instance metadata for rack-aware replication.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Cluster placement group</em> &mdash; Cluster puts everything on the same hardware, so one rack failure can take down the whole ring.<br><em>B) Spread placement group</em> &mdash; Spread isolates single instances but is capped at 7 per AZ, far too small for hundreds of nodes.<br><em>C) Dedicated Hosts with host affinity</em> &mdash; Host affinity is for licensing and placement on a specific host, not rack-level fault domains.
+</div>
+</div>
+
+<!-- Q5 EC2 -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EC2" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>A vendor licenses its database per physical CPU socket and core. The company needs to see the sockets and cores and keep instances on the same physical server after a reboot. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Convertible Reserved Instances</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Dedicated Instances</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Spot Instances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Dedicated Hosts</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Dedicated Hosts<br><br>
+<strong>How to think about it:</strong> Licensing tied to sockets or cores, or needing host affinity = <b>Dedicated Hosts</b>.<br><br>
+<strong>Why D is correct:</strong> A Dedicated Host is an entire physical server you control. You can see its sockets and cores and set host affinity, which bring-your-own-licence software needs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Convertible Reserved Instances</em> &mdash; Reserved Instances are a billing discount. They say nothing about the physical server.<br><em>B) Dedicated Instances</em> &mdash; Dedicated Instances run on hardware no other customer uses, but they do not show you sockets or cores or give you host placement control.<br><em>C) Spot Instances</em> &mdash; Spot is spare capacity that can be reclaimed, so it is unsuitable for a licensed database.
+</div>
+</div>
+
+<!-- Q6 EC2 -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EC2" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>Which of these metrics does CloudWatch NOT collect for an EC2 instance by default?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">NetworkIn / NetworkOut</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Memory (RAM) utilization</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CPUUtilization</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">StatusCheckFailed_System</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Memory (RAM) utilization<br><br>
+<strong>How to think about it:</strong> The hypervisor sees CPU, network, disk and status checks. It cannot see inside the guest OS, so <b>RAM needs the CloudWatch agent</b>.<br><br>
+<strong>Why B is correct:</strong> AWS cannot see memory use inside the guest OS. Install the CloudWatch agent to publish it as a custom metric.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) NetworkIn / NetworkOut</em> &mdash; Network bytes in and out are default EC2 metrics.<br><em>C) CPUUtilization</em> &mdash; CPU utilization is a default EC2 metric.<br><em>D) StatusCheckFailed_System</em> &mdash; Status check metrics are published by default.
+</div>
+</div>
+
+<!-- Q7 EC2 -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EC2" data-level="A">
+<div class="q-tags"><span class="q-tag">EC2</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>If the underlying AWS hardware fails, a single EC2 instance must recover automatically and keep its private IP, Elastic IP and instance metadata. What should you configure?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An Auto Scaling group with min = max = 1</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A CloudWatch alarm on StatusCheckFailed_Instance with a reboot action</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch alarm on StatusCheckFailed_System with the EC2 recover action</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Lambda function that takes an AMI and relaunches it</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A CloudWatch alarm on StatusCheckFailed_System with the EC2 recover action<br><br>
+<strong>How to think about it:</strong> <b>System</b> status check = AWS hardware. Instance <b>recovery</b> moves the same instance to new hardware and keeps its identity.<br><br>
+<strong>Why C is correct:</strong> The recover action restarts the same instance on healthy hardware and keeps its private, public and Elastic IPs, metadata and placement group. You can also notify an SNS topic.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An Auto Scaling group with min = max = 1</em> &mdash; An ASG replaces the instance with a brand-new one, which gets a new private IP and ID.<br><em>B) A CloudWatch alarm on StatusCheckFailed_Instance with a reboot action</em> &mdash; The instance check covers problems inside the VM (OS or software). A reboot does not move the instance off failed hardware.<br><em>D) A Lambda function that takes an AMI and relaunches it</em> &mdash; That creates a new instance with new IPs, and it is custom work the recover action already does.
+</div>
+</div>
+
+<!-- Q8 EC2 -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EC2" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>When EC2 reclaims a Spot Instance, how much warning does the instance get?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">15 minutes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">2 minutes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">30 seconds</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">1 hour</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> 2 minutes<br><br>
+<strong>How to think about it:</strong> Spot = up to 90% off, but you get only a <b>2-minute</b> interruption notice.<br><br>
+<strong>Why B is correct:</strong> EC2 gives a two-minute interruption notice through instance metadata and EventBridge. Use it to checkpoint or drain.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 15 minutes</em> &mdash; There is no 15-minute notice. (15 minutes is the Lambda timeout.)<br><em>C) 30 seconds</em> &mdash; The notice is longer than 30 seconds.<br><em>D) 1 hour</em> &mdash; There is no one-hour guarantee for standard Spot Instances.
+</div>
+</div>
+
+<!-- Q9 EC2 -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EC2" data-level="A">
+<div class="q-tags"><span class="q-tag">EC2</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>A Spot Fleet should launch from the pools with the most spare capacity, and among those choose the cheapest. Which allocation strategy is this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">lowestPrice</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">diversified</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">capacityOptimized</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">priceCapacityOptimized</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> priceCapacityOptimized<br><br>
+<strong>How to think about it:</strong> AWS's recommended default is <b>priceCapacityOptimized</b>: capacity first, then price.<br><br>
+<strong>Why D is correct:</strong> It picks the pools with the most available capacity and then the lowest price among them. This lowers interruptions while keeping cost low, and it is recommended for most workloads.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) lowestPrice</em> &mdash; lowestPrice looks only at price, so it can land in shallow pools that are interrupted more often.<br><em>B) diversified</em> &mdash; diversified spreads instances across all pools for availability. It does not rank by capacity then price.<br><em>C) capacityOptimized</em> &mdash; capacityOptimized considers capacity only and ignores price.
+</div>
+</div>
+
+<!-- Q10 EC2 -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EC2" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>A team wants to move a Windows Server application fleet to AWS Graviton instances for the price performance. What is the problem?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Graviton cannot be used in an Auto Scaling group</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Graviton requires Dedicated Hosts</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Graviton instances are not available for Windows</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Graviton is only offered for containers</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Graviton instances are not available for Windows<br><br>
+<strong>How to think about it:</strong> Graviton = ARM-based, <b>Linux only</b> (Amazon Linux 2, RHEL, SUSE, Ubuntu).<br><br>
+<strong>Why C is correct:</strong> Graviton processors run Linux distributions only. Windows workloads must stay on x86 instance families.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Graviton cannot be used in an Auto Scaling group</em> &mdash; Graviton instances work normally in Auto Scaling groups.<br><em>B) Graviton requires Dedicated Hosts</em> &mdash; Graviton instances are ordinary shared-tenancy instances. No Dedicated Host is needed.<br><em>D) Graviton is only offered for containers</em> &mdash; Graviton runs plain EC2 instances, not just containers.
+</div>
+</div>
+
+<!-- Q11 HPC -->
+<div class="question" data-type="mc" data-answer="2" data-topic="HPC" data-level="B">
+<div class="q-tags"><span class="q-tag">HPC</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>A tightly coupled HPC simulation on Linux uses MPI and needs the lowest-latency communication between nodes, bypassing the operating system. Which network interface should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Intel 82599 VF</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Elastic Network Adapter (ENA)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Elastic Fabric Adapter (EFA)</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A second ENI on each instance</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Elastic Fabric Adapter (EFA)<br><br>
+<strong>How to think about it:</strong> MPI + tightly coupled + OS bypass = <b>EFA</b>. Plain high bandwidth = ENA.<br><br>
+<strong>Why C is correct:</strong> EFA is an enhanced ENA for HPC (Linux only). It supports MPI and bypasses the OS for low-latency, reliable traffic between nodes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Intel 82599 VF</em> &mdash; This is the legacy enhanced-networking option, limited to 10 Gbps.<br><em>B) Elastic Network Adapter (ENA)</em> &mdash; ENA gives enhanced networking up to 100 Gbps, but it has no OS bypass for MPI.<br><em>D) A second ENI on each instance</em> &mdash; Adding a network interface does not lower latency or add MPI support.
+</div>
+</div>
+
+<!-- Q12 HPC -->
+<div class="question" data-type="mc" data-answer="1" data-topic="HPC" data-level="B">
+<div class="q-tags"><span class="q-tag">HPC</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>An HPC cluster needs a shared, distributed file system with millions of IOPS that can load data from and save results to Amazon S3. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon FSx for Windows File Server</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon FSx for Lustre</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon S3 mounted directly as a block device</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon EFS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon FSx for Lustre<br><br>
+<strong>How to think about it:</strong> HPC file system + S3-backed = <b>FSx for Lustre</b>.<br><br>
+<strong>Why B is correct:</strong> Lustre is a parallel file system designed for HPC, scaling to millions of IOPS, and it links directly to an S3 bucket.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon FSx for Windows File Server</em> &mdash; This is an SMB file share for Windows applications, not HPC.<br><em>C) Amazon S3 mounted directly as a block device</em> &mdash; S3 is object storage, not a POSIX file system or block device.<br><em>D) Amazon EFS</em> &mdash; EFS is general-purpose NFS. Its performance is good but it is not tuned for HPC scratch workloads at Lustre scale.
+</div>
+</div>
+
+<!-- Q13 HPC -->
+<div class="question" data-type="mc" data-answer="1" data-topic="HPC" data-level="B">
+<div class="q-tags"><span class="q-tag">HPC</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>Researchers want an open-source tool that deploys a complete HPC cluster, including its VPC, subnets and instance types, from a text configuration file. What should they use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Elastic Beanstalk</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS ParallelCluster</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Outposts</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Batch</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS ParallelCluster<br><br>
+<strong>How to think about it:</strong> Open-source HPC cluster from a config file = <b>AWS ParallelCluster</b>.<br><br>
+<strong>Why B is correct:</strong> ParallelCluster is an open-source cluster manager. You describe the cluster in a text file and it builds the networking, scheduler and compute nodes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Elastic Beanstalk</em> &mdash; Beanstalk deploys web applications, not HPC clusters.<br><em>C) AWS Outposts</em> &mdash; Outposts is AWS hardware installed on-premises. It has nothing to do with deploying clusters from a config file.<br><em>D) AWS Batch</em> &mdash; Batch is a managed job scheduler. It is not an open-source cluster deployment tool driven by a config file.
+</div>
+</div>
+
+<!-- Q14 HPC -->
+<div class="question" data-type="mc" data-answer="1" data-topic="HPC" data-level="A">
+<div class="q-tags"><span class="q-tag">HPC</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>One managed batch job must run across several EC2 instances at once (for example, an MPI job), with AWS handling scheduling and instance launches. Which option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon ECS scheduled tasks</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Batch multi-node parallel jobs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Lambda with reserved concurrency</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An EventBridge schedule that starts On-Demand instances</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS Batch multi-node parallel jobs<br><br>
+<strong>How to think about it:</strong> One job spanning many instances, managed scheduling = <b>AWS Batch multi-node parallel jobs</b>.<br><br>
+<strong>Why B is correct:</strong> Batch can run a single job that spans several EC2 instances, and it launches and scales the compute environment for you.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon ECS scheduled tasks</em> &mdash; Scheduled tasks start containers on a timetable. They do not coordinate one job across several nodes.<br><em>C) AWS Lambda with reserved concurrency</em> &mdash; Lambda invocations are independent, run for at most 15 minutes, and cannot form an MPI job.<br><em>D) An EventBridge schedule that starts On-Demand instances</em> &mdash; This is do-it-yourself scheduling with no job queue or multi-node coordination.
+</div>
+</div>
+
+<!-- Q15 Auto Scaling -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Auto Scaling" data-level="B">
+<div class="q-tags"><span class="q-tag">Auto Scaling</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>You want an Auto Scaling group to keep average CPU around 40% with the least setup. Which policy should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Scheduled action</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Simple scaling with a cooldown</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Step scaling</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Target tracking scaling</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Target tracking scaling<br><br>
+<strong>How to think about it:</strong> "Keep a metric at X" = <b>Target Tracking</b>.<br><br>
+<strong>Why D is correct:</strong> Target tracking creates and manages the CloudWatch alarms itself and adds or removes capacity to hold the metric near its target.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Scheduled action</em> &mdash; Scheduled actions change capacity at set times. They do not react to CPU.<br><em>B) Simple scaling with a cooldown</em> &mdash; Simple scaling reacts to one alarm with a fixed adjustment. It is the legacy, coarse option.<br><em>C) Step scaling</em> &mdash; Step scaling needs you to define the alarms and step adjustments yourself. It works, but it is more setup.
+</div>
+</div>
+
+<!-- Q16 Auto Scaling -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Auto Scaling" data-level="B">
+<div class="q-tags"><span class="q-tag">Auto Scaling</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>Traffic always jumps on Friday at 5 PM. How can you make sure at least 10 instances are running before then?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A scheduled action that raises the minimum capacity to 10 just before 5 PM on Fridays</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A lifecycle hook on launch</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Suspend the AZRebalance process</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Target tracking on CPU at 40%</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A scheduled action that raises the minimum capacity to 10 just before 5 PM on Fridays<br><br>
+<strong>How to think about it:</strong> Known, calendar-based pattern = <b>Scheduled action</b>.<br><br>
+<strong>Why A is correct:</strong> Scheduled actions change min, max or desired capacity at specific times, which suits predictable peaks.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A lifecycle hook on launch</em> &mdash; Lifecycle hooks pause instances during launch or terminate. They do not schedule capacity.<br><em>C) Suspend the AZRebalance process</em> &mdash; This only stops AZ rebalancing. It does not add capacity.<br><em>D) Target tracking on CPU at 40%</em> &mdash; Target tracking reacts after load arrives, so instances may still be booting when the peak hits.
+</div>
+</div>
+
+<!-- Q17 Auto Scaling -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Auto Scaling" data-level="A">
+<div class="q-tags"><span class="q-tag">Auto Scaling</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>Before an Auto Scaling group terminates an instance, you must copy its application logs to S3. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A termination lifecycle hook</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Replace the instance's user data</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Suspend the Terminate process</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Instance scale-in protection</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A termination lifecycle hook<br><br>
+<strong>How to think about it:</strong> "Do something before in-service or before terminate" = <b>Lifecycle hook</b>.<br><br>
+<strong>Why A is correct:</strong> The hook holds the instance in Terminating:Wait so a script or Lambda can extract logs, then completes the lifecycle action.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Replace the instance's user data</em> &mdash; User data runs at boot, not at termination.<br><em>C) Suspend the Terminate process</em> &mdash; Suspending termination stops scale-in completely, which is not the goal.<br><em>D) Instance scale-in protection</em> &mdash; Scale-in protection stops the instance being chosen for termination at all. It does not run a cleanup step.
+</div>
+</div>
+
+<!-- Q18 Auto Scaling -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Auto Scaling" data-level="A">
+<div class="q-tags"><span class="q-tag">Auto Scaling</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>You've published a new AMI in the launch template. All instances in the ASG must be replaced while at least 60% of capacity stays healthy. What is the native way to do this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Set desired capacity to 0 and then back to the original value</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Start an Instance Refresh with minimum healthy percentage set to 60%</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Suspend the ReplaceUnhealthy process and reboot every instance</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Update the launch template only</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Start an Instance Refresh with minimum healthy percentage set to 60%<br><br>
+<strong>How to think about it:</strong> Update the template, then <b>Instance Refresh</b> with a minimum healthy percentage and warm-up time.<br><br>
+<strong>Why B is correct:</strong> Instance Refresh replaces instances in batches using the new template, keeps at least 60% healthy, and respects the warm-up time.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Set desired capacity to 0 and then back to the original value</em> &mdash; This causes a full outage.<br><em>C) Suspend the ReplaceUnhealthy process and reboot every instance</em> &mdash; Rebooting does not change the AMI an instance runs.<br><em>D) Update the launch template only</em> &mdash; Existing instances keep the old AMI. Only instances launched later use the new version.
+</div>
+</div>
+
+<!-- Q19 Auto Scaling -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Auto Scaling" data-level="A">
+<div class="q-tags"><span class="q-tag">Auto Scaling</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>Engineers are debugging instances that fail health checks. They want the ASG to stop terminating and replacing those instances for now, without changing anything else. What should they do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Delete the launch template</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Set desired capacity to 0</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Suspend the ReplaceUnhealthy process</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Suspend the AZRebalance process</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Suspend the ReplaceUnhealthy process<br><br>
+<strong>How to think about it:</strong> ASG processes (Launch, Terminate, HealthCheck, ReplaceUnhealthy, AZRebalance, …) <b>can be suspended</b> one by one.<br><br>
+<strong>Why C is correct:</strong> With ReplaceUnhealthy suspended, the group still marks instances unhealthy but does not terminate and replace them, so engineers can inspect them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Delete the launch template</em> &mdash; A group cannot run without its launch template, and this does not stop replacements.<br><em>B) Set desired capacity to 0</em> &mdash; This terminates every instance, including the ones they want to debug.<br><em>D) Suspend the AZRebalance process</em> &mdash; AZRebalance only balances instances across AZs. Unhealthy instances would still be replaced.
+</div>
+</div>
+
+<!-- Q20 Auto Scaling -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Auto Scaling" data-level="B">
+<div class="q-tags"><span class="q-tag">Auto Scaling</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>An ASG sits behind an ALB. You want each instance to handle a steady number of requests. Which metric is the best fit for target tracking?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">ALBRequestCountPerTarget</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Average memory utilization</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">StatusCheckFailed</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Disk read bytes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> ALBRequestCountPerTarget<br><br>
+<strong>How to think about it:</strong> Behind an ALB, "requests per instance" = <b>RequestCountPerTarget</b>.<br><br>
+<strong>Why A is correct:</strong> It measures requests per target, so the group grows or shrinks to keep each instance's load steady.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Average memory utilization</em> &mdash; Memory needs the CloudWatch agent, and it is not a direct measure of request load.<br><em>C) StatusCheckFailed</em> &mdash; This is a health signal, not a load metric.<br><em>D) Disk read bytes</em> &mdash; Disk metrics apply to instance store, and they do not track web request load.
+</div>
+</div>
+
+<!-- Q21 Auto Scaling -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Auto Scaling" data-level="A">
+<div class="q-tags"><span class="q-tag">Auto Scaling</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>The ALB health check calls <code>/number-customers</code>, which queries RDS. When RDS slowed down, the ASG terminated every web instance. What is the fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Switch the ASG to EC2 status checks and remove the ALB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Increase the ASG's maximum capacity</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add a longer cooldown period</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Point the health check at a lightweight /health endpoint that checks only the instance</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Point the health check at a lightweight /health endpoint that checks only the instance<br><br>
+<strong>How to think about it:</strong> A health check should test <b>the instance itself</b>, simply. It should not depend on downstream systems.<br><br>
+<strong>Why D is correct:</strong> If the check depends on the database, one slow database marks every instance unhealthy and causes mass replacement. A simple local check avoids that.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Switch the ASG to EC2 status checks and remove the ALB</em> &mdash; This loses application-level health checking and load balancing.<br><em>B) Increase the ASG's maximum capacity</em> &mdash; More instances would fail the same check.<br><em>C) Add a longer cooldown period</em> &mdash; A cooldown only delays the cycle. It does not remove the dependency.
+</div>
+</div>
+
+<!-- Q22 Auto Scaling -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Auto Scaling" data-level="A">
+<div class="q-tags"><span class="q-tag">Auto Scaling</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>Load follows a regular daily pattern, but instances take several minutes to boot. You want capacity added before the load arrives, from a forecast. Which scaling type should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Target tracking only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Simple scaling</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Instance Refresh</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Predictive scaling</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Predictive scaling<br><br>
+<strong>How to think about it:</strong> Forecast + schedule ahead = <b>Predictive scaling</b>.<br><br>
+<strong>Why D is correct:</strong> Predictive scaling learns the historical pattern, forecasts the load and launches capacity ahead of time.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Target tracking only</em> &mdash; Target tracking reacts to the current metric, so slow-booting instances lag behind the load.<br><em>B) Simple scaling</em> &mdash; Simple scaling reacts to an alarm after the fact.<br><em>C) Instance Refresh</em> &mdash; Instance Refresh replaces instances. It does not change capacity.
+</div>
+</div>
+
+<!-- Q23 Containers -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Containers" data-level="B">
+<div class="q-tags"><span class="q-tag">Containers</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>An ECS task must read from one S3 bucket. Other tasks on the same EC2 instance must not get that access. Where should the permission go?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">In an S3 bucket ACL that allows the cluster</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">In the ECS task IAM role</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">As access keys in environment variables</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">In the EC2 instance profile</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> In the ECS task IAM role<br><br>
+<strong>How to think about it:</strong> Per-task AWS permissions = <b>ECS Task IAM Role</b>. The instance profile is for the ECS agent itself.<br><br>
+<strong>Why B is correct:</strong> Each task definition can carry its own IAM role, which gives least privilege per task.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) In an S3 bucket ACL that allows the cluster</em> &mdash; ACLs are a legacy mechanism and cannot identify a single task.<br><em>C) As access keys in environment variables</em> &mdash; Static keys are a security risk. Use roles.<br><em>D) In the EC2 instance profile</em> &mdash; Every task on the host could use the instance profile, which breaks least privilege. The profile is for the ECS agent (registering, pulling images, sending logs).
+</div>
+</div>
+
+<!-- Q24 Containers -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Containers" data-level="B">
+<div class="q-tags"><span class="q-tag">Containers</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>In Amazon ECS, which JSON document describes the image, CPU, memory and port mappings for a container?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">ECS cluster</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Task definition</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Capacity provider</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">ECS service</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Task definition<br><br>
+<strong>How to think about it:</strong> Blueprint = <b>Task Definition</b>. A running copy of it = Task. Keeps N tasks running = Service.<br><br>
+<strong>Why B is correct:</strong> The task definition is the JSON blueprint: image, CPU and memory, ports, environment, IAM role and network mode.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) ECS cluster</em> &mdash; A cluster is a logical group of capacity (EC2 instances or Fargate).<br><em>C) Capacity provider</em> &mdash; A capacity provider decides which compute (an ASG or Fargate) runs the tasks.<br><em>D) ECS service</em> &mdash; A service keeps the desired number of tasks running from a task definition.
+</div>
+</div>
+
+<!-- Q25 Containers -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Containers" data-level="A">
+<div class="q-tags"><span class="q-tag">Containers</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>You need to run several copies of the same container on each EC2 instance behind an Application Load Balancer, with no port conflicts. What makes this possible?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Dynamic host port mapping registered with an ALB target group</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One EC2 instance per task</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Classic Load Balancer with a fixed port</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">host network mode</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Dynamic host port mapping registered with an ALB target group<br><br>
+<strong>How to think about it:</strong> ALB + ECS = <b>dynamic port mapping</b>: each task gets a random host port and the ALB finds it.<br><br>
+<strong>Why A is correct:</strong> Each task gets a random host port. ECS registers the port with the target group, so many copies fit on one host.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) One EC2 instance per task</em> &mdash; That works, but it wastes capacity. The point is to pack copies onto one host.<br><em>C) A Classic Load Balancer with a fixed port</em> &mdash; A CLB needs one fixed port per instance, so only one copy could run per host.<br><em>D) host network mode</em> &mdash; host mode binds the container port directly to the host, so two copies would collide.
+</div>
+</div>
+
+<!-- Q26 Containers -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Containers" data-level="A">
+<div class="q-tags"><span class="q-tag">Containers</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>Every ECS task needs its own private IP address and security group, and must appear in VPC Flow Logs. Which network mode should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">bridge</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">host</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">none</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">awsvpc</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> awsvpc<br><br>
+<strong>How to think about it:</strong> Own ENI per task = <b>awsvpc</b> (and it is the only mode on Fargate).<br><br>
+<strong>Why D is correct:</strong> awsvpc gives each task its own ENI and private IP, so it can have its own security groups and appears in Flow Logs. It is the default and only mode for Fargate.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) bridge</em> &mdash; bridge uses Docker's virtual network behind the host's IP, so tasks share the host's ENI.<br><em>B) host</em> &mdash; host shares the host's network interface. There is no per-task IP.<br><em>C) none</em> &mdash; none gives the task no network connectivity.
+</div>
+</div>
+
+<!-- Q27 Containers -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Containers" data-level="B">
+<div class="q-tags"><span class="q-tag">Containers</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>A team wants to run containers without provisioning or patching any EC2 instances, paying only for the CPU and memory each task uses. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Fargate</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Lambda with a container image</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">ECS on EC2 instances in an Auto Scaling group</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">EKS self-managed nodes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AWS Fargate<br><br>
+<strong>How to think about it:</strong> Serverless containers = <b>Fargate</b>. It works with both ECS and EKS.<br><br>
+<strong>Why A is correct:</strong> With Fargate you define tasks with CPU and memory and AWS runs them. There are no instances to manage, and you scale by changing the task count.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Lambda with a container image</em> &mdash; Lambda can run container images, but only images that implement the Lambda Runtime API, for up to 15 minutes. It is not for arbitrary long-running containers.<br><em>C) ECS on EC2 instances in an Auto Scaling group</em> &mdash; You still manage the EC2 instances: their AMIs, patching and scaling.<br><em>D) EKS self-managed nodes</em> &mdash; You create and manage the worker nodes yourself.
+</div>
+</div>
+
+<!-- Q28 Containers -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Containers" data-level="A">
+<div class="q-tags"><span class="q-tag">Containers</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>You need ECR to scan images on push for vulnerabilities in both the operating system and programming-language packages. Which option does this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">ECR enhanced scanning with Amazon Inspector</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Macie</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">ECR basic scanning</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon GuardDuty</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> ECR enhanced scanning with Amazon Inspector<br><br>
+<strong>How to think about it:</strong> Basic scanning = OS CVEs. <b>Enhanced scanning = Amazon Inspector</b> (OS + language packages).<br><br>
+<strong>Why A is correct:</strong> Enhanced scanning uses Inspector to find vulnerabilities in OS and programming-language packages, and sends findings to EventBridge.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon Macie</em> &mdash; Macie finds sensitive data in S3, not vulnerable packages.<br><em>C) ECR basic scanning</em> &mdash; Basic scanning checks common CVEs in OS packages only.<br><em>D) Amazon GuardDuty</em> &mdash; GuardDuty detects threats in logs and runtime behaviour. It does not scan image packages.
+</div>
+</div>
+
+<!-- Q29 Containers -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Containers" data-level="B">
+<div class="q-tags"><span class="q-tag">Containers</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>A company already runs Kubernetes on-premises and wants to move to AWS while keeping its Kubernetes manifests and tooling. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Elastic Beanstalk</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS App Runner</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon ECS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon EKS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Amazon EKS<br><br>
+<strong>How to think about it:</strong> "Already using Kubernetes" or "cloud-agnostic" = <b>EKS</b>.<br><br>
+<strong>Why D is correct:</strong> EKS is managed Kubernetes, so existing manifests, Helm charts and kubectl workflows carry over.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Elastic Beanstalk</em> &mdash; Beanstalk is a PaaS for web apps, not Kubernetes.<br><em>B) AWS App Runner</em> &mdash; App Runner is a simple web-app service. It does not run Kubernetes manifests.<br><em>C) Amazon ECS</em> &mdash; ECS has its own API and task definitions. Moving to it means rewriting the Kubernetes setup.
+</div>
+</div>
+
+<!-- Q30 Containers -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Containers" data-level="A">
+<div class="q-tags"><span class="q-tag">Containers</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>EKS pods running on Fargate across several AZs need shared, persistent storage. Which storage option works?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon EFS through the EFS CSI driver</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 mounted as a block device</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Instance store volumes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon EBS through the EBS CSI driver</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon EFS through the EFS CSI driver<br><br>
+<strong>How to think about it:</strong> EKS volumes use CSI drivers. <b>EFS works with Fargate</b>. EBS is tied to one AZ and is not supported on Fargate.<br><br>
+<strong>Why A is correct:</strong> EFS is a multi-AZ, shared NFS file system that Fargate pods can mount.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) S3 mounted as a block device</em> &mdash; S3 is object storage and cannot act as a shared block or POSIX volume.<br><em>C) Instance store volumes</em> &mdash; Instance store is temporary and tied to one host, and Fargate exposes no host.<br><em>D) Amazon EBS through the EBS CSI driver</em> &mdash; EBS volumes are tied to one AZ and attach to one node. They cannot be used by Fargate pods.
+</div>
+</div>
+
+<!-- Q31 Containers -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Containers" data-level="A">
+<div class="q-tags"><span class="q-tag">Containers</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>For data residency reasons, some containers must run on the company's own on-premises servers, but should be managed from the same ECS control plane as the cloud workloads. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon ECS Anywhere</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Wavelength</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Fargate</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">ECR cross-Region replication</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon ECS Anywhere<br><br>
+<strong>How to think about it:</strong> ECS tasks on your own servers = <b>ECS Anywhere</b> (EXTERNAL launch type, ECS agent + SSM agent).<br><br>
+<strong>Why A is correct:</strong> You install the ECS and SSM agents on your servers and register them. Tasks then run with the EXTERNAL launch type, managed from the regional ECS control plane, which needs a stable connection.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS Wavelength</em> &mdash; Wavelength places AWS compute in 5G carrier networks, not in your data centre.<br><em>C) AWS Fargate</em> &mdash; Fargate runs only in AWS Regions.<br><em>D) ECR cross-Region replication</em> &mdash; This copies container images between Regions and accounts. It does not run containers.
+</div>
+</div>
+
+<!-- Q32 Lambda -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Lambda" data-level="B">
+<div class="q-tags"><span class="q-tag">Lambda</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>What is the longest a single Lambda invocation can run?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">15 minutes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">29 seconds</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">5 minutes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">1 hour</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> 15 minutes<br><br>
+<strong>How to think about it:</strong> Lambda limits to know: <b>15 min</b> timeout, 128 MB–10 GB memory, 10 GB /tmp, 1,000 concurrent executions (a soft limit).<br><br>
+<strong>Why A is correct:</strong> The maximum timeout is 900 seconds (15 minutes). Longer jobs belong on ECS/Fargate, Batch or Step Functions.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) 29 seconds</em> &mdash; 29 seconds is API Gateway's default integration timeout, not Lambda's.<br><em>C) 5 minutes</em> &mdash; 5 minutes was the old limit, raised years ago.<br><em>D) 1 hour</em> &mdash; Lambda never runs for an hour.
+</div>
+</div>
+
+<!-- Q33 Lambda -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Lambda" data-level="B">
+<div class="q-tags"><span class="q-tag">Lambda</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>A Lambda function is CPU-bound and slow. How do you give it more CPU?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Set the vCPU count in the function configuration</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Raise the reserved concurrency</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable provisioned concurrency</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Increase the memory setting</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Increase the memory setting<br><br>
+<strong>How to think about it:</strong> CPU is <b>tied to memory</b>: more memory means more vCPU (about 2 vCPUs at 1,769 MB, 6 vCPUs at 10,240 MB).<br><br>
+<strong>Why D is correct:</strong> Lambda allocates CPU in proportion to memory, so raising memory gives more vCPU.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Set the vCPU count in the function configuration</em> &mdash; There is no vCPU setting.<br><em>B) Raise the reserved concurrency</em> &mdash; Reserved concurrency limits how many copies run at once. It does not add CPU per invocation.<br><em>C) Enable provisioned concurrency</em> &mdash; Provisioned concurrency removes cold starts. It does not add CPU per invocation.
+</div>
+</div>
+
+<!-- Q34 Lambda -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Lambda" data-level="A">
+<div class="q-tags"><span class="q-tag">Lambda</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>A Lambda function in private VPC subnets must call a partner API that only allows one fixed source IP address. How should you set this up?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Route the private subnets to a NAT gateway in a public subnet that has an Elastic IP</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add an interface VPC endpoint for the partner API</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Run the function outside the VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Attach an Elastic IP directly to the Lambda function</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Route the private subnets to a NAT gateway in a public subnet that has an Elastic IP<br><br>
+<strong>How to think about it:</strong> Fixed outbound IP from Lambda = <b>Lambda in VPC → NAT Gateway with an Elastic IP</b>.<br><br>
+<strong>Why A is correct:</strong> Outbound traffic leaves through the NAT gateway's Elastic IP, a stable address the partner can allow.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Add an interface VPC endpoint for the partner API</em> &mdash; Interface endpoints reach AWS services or PrivateLink services, not an arbitrary internet API.<br><em>C) Run the function outside the VPC</em> &mdash; A Lambda function outside a VPC uses random AWS public IPs that can change.<br><em>D) Attach an Elastic IP directly to the Lambda function</em> &mdash; You cannot attach an Elastic IP to a Lambda function or its ENIs.
+</div>
+</div>
+
+<!-- Q35 Lambda -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Lambda" data-level="A">
+<div class="q-tags"><span class="q-tag">Lambda</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>A burst of traffic to one Lambda function used the account's whole 1,000 concurrency limit, and an unrelated critical function was throttled. How do you prevent this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Increase the memory of both functions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Set reserved concurrency on the critical function, and cap the bursty one</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Raise the timeout of the critical function</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Switch both functions to synchronous invocation</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Set reserved concurrency on the critical function, and cap the bursty one<br><br>
+<strong>How to think about it:</strong> <b>Reserved concurrency</b> is both a guarantee and a cap.<br><br>
+<strong>Why B is correct:</strong> Reserved concurrency sets aside capacity for a function and also limits it, so one function cannot use up the account pool.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Increase the memory of both functions</em> &mdash; Memory does not affect concurrency limits.<br><em>C) Raise the timeout of the critical function</em> &mdash; Throttling happens before the function runs, so the timeout is irrelevant.<br><em>D) Switch both functions to synchronous invocation</em> &mdash; The invocation type does not change how the concurrency pool is shared.
+</div>
+</div>
+
+<!-- Q36 Lambda -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Lambda" data-level="B">
+<div class="q-tags"><span class="q-tag">Lambda</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>S3 events invoke a Lambda function asynchronously. Some events still fail after retries, and the team wants to keep them for later analysis. What should it configure?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A dead-letter queue (SQS or SNS), or an on-failure destination</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable provisioned concurrency</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Have S3 invoke the function synchronously</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Increase the function timeout</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A dead-letter queue (SQS or SNS), or an on-failure destination<br><br>
+<strong>How to think about it:</strong> Async invocation = Lambda <b>retries for you (3 attempts in total)</b>, so code must be idempotent. Send final failures to a <b>DLQ</b> (SQS/SNS) or an on-failure destination.<br><br>
+<strong>Why A is correct:</strong> After its built-in async retries, Lambda sends the failed event to the DLQ or destination for inspection and reprocessing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Enable provisioned concurrency</em> &mdash; This reduces cold starts. It does not catch failed events.<br><em>C) Have S3 invoke the function synchronously</em> &mdash; S3 event notifications always invoke Lambda asynchronously.<br><em>D) Increase the function timeout</em> &mdash; This only helps if timeouts caused the failures, and nothing keeps the failed events.
+</div>
+</div>
+
+<!-- Q37 Lambda -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Lambda" data-level="A">
+<div class="q-tags"><span class="q-tag">Lambda</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>A new Lambda version should get 10% of traffic for 5 minutes, then all of it, with automatic rollback if alarms fire. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CodeDeploy with the Canary10Percent5Minutes configuration on an alias</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Two Lambda functions behind Route 53 weighted records</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CodeDeploy with Linear10PercentEvery10Minutes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CodeDeploy with AllAtOnce</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> CodeDeploy with the Canary10Percent5Minutes configuration on an alias<br><br>
+<strong>How to think about it:</strong> Gradual Lambda deployments = <b>CodeDeploy</b> with an alias. Canary = X% then 100%. Linear = +N% every M minutes.<br><br>
+<strong>Why A is correct:</strong> Canary moves 10% of traffic to the new version for 5 minutes, then the rest. Pre- and post-traffic hooks and alarms can trigger a rollback.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Two Lambda functions behind Route 53 weighted records</em> &mdash; Lambda functions are not DNS targets, and there would be no automatic rollback.<br><em>C) CodeDeploy with Linear10PercentEvery10Minutes</em> &mdash; Linear adds 10% every 10 minutes, about 100 minutes in all, which is not 10% then everything after 5 minutes.<br><em>D) CodeDeploy with AllAtOnce</em> &mdash; All traffic moves at once, with no canary period.
+</div>
+</div>
+
+<!-- Q38 Load Balancers -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Load Balancers" data-level="B">
+<div class="q-tags"><span class="q-tag">Load Balancers</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>A game backend uses UDP, needs millions of requests per second at very low latency, and must give partners one static IP per AZ to allow-list. Which load balancer should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Application Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Gateway Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Network Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Classic Load Balancer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Network Load Balancer<br><br>
+<strong>How to think about it:</strong> TCP/UDP + extreme performance + static/Elastic IP = <b>NLB</b>.<br><br>
+<strong>Why C is correct:</strong> The NLB works at Layer 4 (TCP, UDP, TLS) with very low latency, and has one static IP per AZ (Elastic IPs can be assigned).<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Application Load Balancer</em> &mdash; The ALB is Layer 7 HTTP/HTTPS only, has no UDP, and has no static IPs.<br><em>B) Gateway Load Balancer</em> &mdash; The GWLB is for inserting virtual appliances, not serving application traffic.<br><em>D) Classic Load Balancer</em> &mdash; The CLB is the legacy option with no UDP support.
+</div>
+</div>
+
+<!-- Q39 Load Balancers -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Load Balancers" data-level="B">
+<div class="q-tags"><span class="q-tag">Load Balancers</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>One endpoint must send /user to one microservice and /search to another. Which load balancer can do this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Gateway Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Application Load Balancer with path-based listener rules</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Network Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Route 53 weighted routing</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Application Load Balancer with path-based listener rules<br><br>
+<strong>How to think about it:</strong> Path, host, header or query-string routing = <b>ALB</b> (Layer 7).<br><br>
+<strong>Why B is correct:</strong> ALB rules can route by path, host, headers or query string to different target groups.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Gateway Load Balancer</em> &mdash; The GWLB forwards IP packets to appliances and does not parse HTTP.<br><em>C) Network Load Balancer</em> &mdash; The NLB works at Layer 4 and cannot see HTTP paths.<br><em>D) Route 53 weighted routing</em> &mdash; DNS resolves hostnames, not URL paths.
+</div>
+</div>
+
+<!-- Q40 Load Balancers -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Load Balancers" data-level="B">
+<div class="q-tags"><span class="q-tag">Load Balancers</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>All inbound VPC traffic must pass transparently through a fleet of third-party firewall appliances that scales out. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Global Accelerator</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Application Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Gateway Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Network Load Balancer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Gateway Load Balancer<br><br>
+<strong>How to think about it:</strong> Third-party firewalls, IDS/IPS or deep packet inspection = <b>GWLB</b> (Layer 3, GENEVE on port 6081).<br><br>
+<strong>Why C is correct:</strong> The GWLB acts as a transparent gateway and load balancer for appliances, using GENEVE on port 6081 and steered by route tables.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Global Accelerator</em> &mdash; Global Accelerator speeds up internet traffic to your endpoints. It does not chain appliances.<br><em>B) Application Load Balancer</em> &mdash; The ALB ends HTTP connections and cannot inspect all IP traffic transparently.<br><em>D) Network Load Balancer</em> &mdash; An NLB could spread TCP or UDP traffic, but it is not a transparent bump-in-the-wire gateway.
+</div>
+</div>
+
+<!-- Q41 Load Balancers -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Load Balancers" data-level="A">
+<div class="q-tags"><span class="q-tag">Load Balancers</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>You want to expose a Lambda function over HTTPS behind an existing load balancer, with AWS WAF in front. Which load balancer can target Lambda directly?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Classic Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Network Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Gateway Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Application Load Balancer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Application Load Balancer<br><br>
+<strong>How to think about it:</strong> Only the <b>ALB</b> has Lambda as a target type. The HTTP request arrives as a JSON event.<br><br>
+<strong>Why D is correct:</strong> ALB target groups can be Lambda functions. The ALB turns the HTTP request into a JSON event, and WAF can attach to the ALB.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Classic Load Balancer</em> &mdash; The CLB supports EC2 instances only.<br><em>B) Network Load Balancer</em> &mdash; NLB targets are instances, IPs or an ALB, not Lambda.<br><em>C) Gateway Load Balancer</em> &mdash; GWLB targets are appliance instances or IPs.
+</div>
+</div>
+
+<!-- Q42 Load Balancers -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Load Balancers" data-level="A">
+<div class="q-tags"><span class="q-tag">Load Balancers</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>An NLB has 2 targets in AZ-a and 8 in AZ-b. The two AZ-a targets are overloaded because each NLB node sends traffic only to its own AZ. What fixes this, and what does it cost?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turn on sticky sessions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable cross-zone load balancing; NLB cross-zone traffic is always free</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable cross-zone load balancing on the NLB, accepting inter-AZ data transfer charges</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Switch the routing algorithm to least outstanding requests</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Enable cross-zone load balancing on the NLB, accepting inter-AZ data transfer charges<br><br>
+<strong>How to think about it:</strong> Cross-zone: <b>ALB is on by default</b> (no inter-AZ charge). <b>NLB and GWLB are off by default</b>, and inter-AZ data is charged when you turn it on.<br><br>
+<strong>Why C is correct:</strong> With cross-zone on, each node spreads traffic across all registered targets in all AZs. For the NLB that cross-AZ traffic is billed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Turn on sticky sessions</em> &mdash; Stickiness pins clients to a target, which can make imbalance worse.<br><em>B) Enable cross-zone load balancing; NLB cross-zone traffic is always free</em> &mdash; Inter-AZ data charges do apply when NLB cross-zone is enabled.<br><em>D) Switch the routing algorithm to least outstanding requests</em> &mdash; The NLB uses flow hash. Least outstanding requests is an ALB/CLB option.
+</div>
+</div>
+
+<!-- Q43 Load Balancers -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Load Balancers" data-level="A">
+<div class="q-tags"><span class="q-tag">Load Balancers</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>How does a Network Load Balancer choose a target for a new TCP connection?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Lowest average CPU on each target</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A flow hash of protocol, source and destination IP and port, and TCP sequence number; the connection stays on that target for its lifetime</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Round robin across the target group</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Least outstanding requests</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A flow hash of protocol, source and destination IP and port, and TCP sequence number; the connection stays on that target for its lifetime<br><br>
+<strong>How to think about it:</strong> <b>NLB = flow hash.</b> ALB = round robin or least outstanding requests.<br><br>
+<strong>Why B is correct:</strong> Flow hash keeps each TCP or UDP connection on one target for as long as the connection lasts.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Lowest average CPU on each target</em> &mdash; No load balancer routes by target CPU.<br><em>C) Round robin across the target group</em> &mdash; This is used by the ALB and CLB (TCP listener).<br><em>D) Least outstanding requests</em> &mdash; This is an ALB/CLB HTTP algorithm.
+</div>
+</div>
+
+<!-- Q44 API Gateway -->
+<div class="question" data-type="mc" data-answer="2" data-topic="API Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">API Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>Clients upload files of up to 50 MB through API Gateway, and the uploads fail. What is the best design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Put CloudFront in front of API Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use a Lambda proxy integration with more memory</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Have the API return an S3 pre-signed URL so the client uploads directly to S3</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Raise the API Gateway payload limit to 50 MB</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Have the API return an S3 pre-signed URL so the client uploads directly to S3<br><br>
+<strong>How to think about it:</strong> API Gateway has a <b>10 MB payload</b> limit. For large uploads, return an <b>S3 pre-signed URL</b>.<br><br>
+<strong>Why C is correct:</strong> The API call stays small. The large file goes straight to S3 with temporary, scoped permission.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Put CloudFront in front of API Gateway</em> &mdash; CloudFront does not get around API Gateway's payload limit.<br><em>B) Use a Lambda proxy integration with more memory</em> &mdash; Lambda's synchronous payload limit (6 MB) is even smaller.<br><em>D) Raise the API Gateway payload limit to 50 MB</em> &mdash; The 10 MB payload limit is a hard limit.
+</div>
+</div>
+
+<!-- Q45 API Gateway -->
+<div class="question" data-type="mc" data-answer="3" data-topic="API Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">API Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>An API's users are spread around the world, and you want their requests to go through CloudFront edge locations while the API itself stays in one Region. Which endpoint type should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Regional</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Multi-Region active-active</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Private</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Edge-optimized</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Edge-optimized<br><br>
+<strong>How to think about it:</strong> Edge-optimized = global clients (the default). Regional = same-Region clients. Private = VPC only.<br><br>
+<strong>Why D is correct:</strong> Requests enter at the nearest CloudFront edge and travel over the AWS network to the API's Region.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Regional</em> &mdash; A Regional endpoint suits clients in the same Region. You would have to add your own CloudFront distribution.<br><em>B) Multi-Region active-active</em> &mdash; This is not an endpoint type.<br><em>C) Private</em> &mdash; A private API is reachable only from VPCs through an interface endpoint.
+</div>
+</div>
+
+<!-- Q46 API Gateway -->
+<div class="question" data-type="mc" data-answer="1" data-topic="API Gateway" data-level="A">
+<div class="q-tags"><span class="q-tag">API Gateway</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>An internal REST API must be reachable only from one specific VPC endpoint, including callers in another AWS account. How should it be set up?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An edge-optimized API with AWS WAF IP rules</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A private API with a resource policy that allows only that endpoint (aws:SourceVpce)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A usage plan with an API key</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Regional API with a security group</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A private API with a resource policy that allows only that endpoint (aws:SourceVpce)<br><br>
+<strong>How to think about it:</strong> Private API = <b>interface VPC endpoint + resource policy</b> using aws:SourceVpce or aws:SourceVpc.<br><br>
+<strong>Why B is correct:</strong> Private APIs are reached through interface VPC endpoints, and the resource policy narrows access to particular VPCs or endpoints, even across accounts.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An edge-optimized API with AWS WAF IP rules</em> &mdash; This is still public, and private IPs behind an endpoint cannot be filtered this way.<br><em>C) A usage plan with an API key</em> &mdash; API keys are for metering and throttling, not network isolation or authorization.<br><em>D) A Regional API with a security group</em> &mdash; API Gateway endpoints have no security groups.
+</div>
+</div>
+
+<!-- Q47 API Gateway -->
+<div class="question" data-type="mc" data-answer="2" data-topic="API Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">API Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>Clients sometimes get HTTP 504 from API Gateway after about 29 seconds. What is the likely cause?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The Lambda function returned malformed proxy output</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS WAF blocked the request</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The backend integration took longer than the integration timeout</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The client was throttled by a usage plan</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The backend integration took longer than the integration timeout<br><br>
+<strong>How to think about it:</strong> API Gateway errors: 429 = throttled, 502 = bad output from a Lambda proxy, <b>504 = integration timed out</b>.<br><br>
+<strong>Why C is correct:</strong> API Gateway gives up after the integration timeout (29 seconds by default) and returns 504.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The Lambda function returned malformed proxy output</em> &mdash; This returns 502 Bad Gateway.<br><em>B) AWS WAF blocked the request</em> &mdash; A WAF block returns 403.<br><em>D) The client was throttled by a usage plan</em> &mdash; Throttling returns 429 Too Many Requests.
+</div>
+</div>
+
+<!-- Q48 API Gateway -->
+<div class="question" data-type="mc" data-answer="3" data-topic="API Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">API Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>You sell API access to customers. Each must have their own throttle rate and monthly request quota. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Stage-level cache</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Lambda reserved concurrency</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CORS configuration</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Usage plans with API keys</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Usage plans with API keys<br><br>
+<strong>How to think about it:</strong> Monetized APIs = <b>usage plans + API keys</b>.<br><br>
+<strong>Why D is correct:</strong> A usage plan ties API keys to stages and sets per-client throttling and quotas.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Stage-level cache</em> &mdash; Caching cuts backend calls but does not meter each client.<br><em>B) Lambda reserved concurrency</em> &mdash; This limits the backend, not each customer.<br><em>C) CORS configuration</em> &mdash; CORS controls which browser origins can call the API. It is not about quotas.
+</div>
+</div>
+
+<!-- Q49 API Gateway -->
+<div class="question" data-type="mc" data-answer="2" data-topic="API Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">API Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>An API must accept bearer tokens from a third-party OAuth provider and validate them with custom logic before the backend is called. Which authorization option should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A resource policy that allows by source IP</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Cognito user pool authorizer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda authorizer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">IAM authorization (AWS_IAM)</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A Lambda authorizer<br><br>
+<strong>How to think about it:</strong> API Gateway authorization: <b>IAM (SigV4)</b> for AWS principals, <b>Cognito user pools</b> for Cognito tokens, <b>Lambda authorizer</b> for anything custom (OAuth, SAML, third party).<br><br>
+<strong>Why C is correct:</strong> A Lambda authorizer runs your own code to validate the third-party token and returns an IAM policy that allows or denies the call. API Gateway can cache the result.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A resource policy that allows by source IP</em> &mdash; A resource policy controls which networks or accounts can call the API. It does not validate tokens.<br><em>B) A Cognito user pool authorizer</em> &mdash; This validates only tokens issued by a Cognito user pool.<br><em>D) IAM authorization (AWS_IAM)</em> &mdash; IAM authorization expects SigV4-signed requests from AWS principals, not third-party OAuth tokens.
+</div>
+</div>
+
+<!-- Q50 API Gateway -->
+<div class="question" data-type="mc" data-answer="2" data-topic="API Gateway" data-level="A">
+<div class="q-tags"><span class="q-tag">API Gateway</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>A chat application keeps persistent connections, and the server must push messages to particular clients. How does the backend reply to one client?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An ALB with sticky sessions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">SNS email notifications</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use an API Gateway WebSocket API and POST to the @connections URL with that client's connectionId</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A REST API that clients poll every second</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Use an API Gateway WebSocket API and POST to the @connections URL with that client's connectionId<br><br>
+<strong>How to think about it:</strong> WebSocket API: store the <b>connectionId</b> (for example in DynamoDB), then POST to the <b>@connections</b> callback URL.<br><br>
+<strong>Why C is correct:</strong> The backend (often Lambda) sends a SigV4-signed POST to .../@connections/{connectionId} to push data to that client.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An ALB with sticky sessions</em> &mdash; Stickiness keeps a client on one target. It does not give the server a way to push to a client.<br><em>B) SNS email notifications</em> &mdash; Email is not a real-time channel to a browser.<br><em>D) A REST API that clients poll every second</em> &mdash; Polling wastes resources and is not server push.
+</div>
+</div>
+
+<!-- Q51 API Gateway -->
+<div class="question" data-type="mc" data-answer="1" data-topic="API Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">API Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>A mobile app needs one GraphQL endpoint that combines data from DynamoDB, Aurora and an HTTP API, with real-time updates and offline sync. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">API Gateway REST API</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS AppSync</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Step Functions</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Cognito</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS AppSync<br><br>
+<strong>How to think about it:</strong> GraphQL = <b>AppSync</b>.<br><br>
+<strong>Why B is correct:</strong> AppSync is managed GraphQL. Resolvers pull from DynamoDB, Aurora, OpenSearch, Lambda or HTTP, with real-time subscriptions and offline sync.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) API Gateway REST API</em> &mdash; A REST API can front these sources, but it has no GraphQL schema or built-in offline sync.<br><em>C) AWS Step Functions</em> &mdash; Step Functions runs workflows. It is not a query API.<br><em>D) Amazon Cognito</em> &mdash; Cognito handles user sign-in. It is not a data API (though it integrates with AppSync).
+</div>
+</div>
+
+<!-- Q52 Route 53 -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Route 53" data-level="B">
+<div class="q-tags"><span class="q-tag">Route 53</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>You need <code>example.com</code> (the zone apex) to point to an Application Load Balancer. Which record should you create?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An Alias record that targets the ALB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An Alias record that targets an EC2 public DNS name</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An A record with the ALB's current IP addresses</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CNAME record for example.com</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An Alias record that targets the ALB<br><br>
+<strong>How to think about it:</strong> Zone apex → AWS resource = <b>Alias</b>. A CNAME cannot sit at the apex.<br><br>
+<strong>Why A is correct:</strong> Alias records work at the apex, are free to query and track the ALB's changing IPs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An Alias record that targets an EC2 public DNS name</em> &mdash; Alias cannot target an EC2 DNS name, and the requirement is the ALB anyway.<br><em>C) An A record with the ALB's current IP addresses</em> &mdash; ALB IP addresses change, so the record would break.<br><em>D) A CNAME record for example.com</em> &mdash; A CNAME is not allowed at the zone apex.
+</div>
+</div>
+
+<!-- Q53 Route 53 -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Route 53" data-level="B">
+<div class="q-tags"><span class="q-tag">Route 53</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>German users must always get the German site, even if another Region would answer faster. Which routing policy should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Latency-based routing</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Weighted routing</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Geolocation routing, plus a default record</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Multi-value answer routing</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Geolocation routing, plus a default record<br><br>
+<strong>How to think about it:</strong> Based on <b>where the user is</b> = Geolocation. Based on <b>fastest</b> = Latency.<br><br>
+<strong>Why C is correct:</strong> Geolocation routes by continent, country or US state. Add a default record for locations with no match.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Latency-based routing</em> &mdash; Latency routing might send German users to the US if that is faster.<br><em>B) Weighted routing</em> &mdash; Weights split traffic by percentage, not by where the user is.<br><em>D) Multi-value answer routing</em> &mdash; This returns several healthy records and ignores location.
+</div>
+</div>
+
+<!-- Q54 Route 53 -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Route 53" data-level="B">
+<div class="q-tags"><span class="q-tag">Route 53</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>You want to send 10% of DNS traffic to a new version of an application and 90% to the current one. Which routing policy should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Simple routing with two values</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Weighted routing</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Failover routing</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Geoproximity routing</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Weighted routing<br><br>
+<strong>How to think about it:</strong> Percentage split = <b>Weighted</b>.<br><br>
+<strong>Why B is correct:</strong> Each record gets a relative weight (for example 90 and 10), and it can be paired with health checks.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Simple routing with two values</em> &mdash; The client picks a value at random. You cannot set percentages, and there are no health checks.<br><em>C) Failover routing</em> &mdash; Failover is active-passive: all traffic goes to the primary until it fails.<br><em>D) Geoproximity routing</em> &mdash; Geoproximity shifts traffic by location and bias, not a fixed percentage.
+</div>
+</div>
+
+<!-- Q55 Route 53 -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Route 53" data-level="A">
+<div class="q-tags"><span class="q-tag">Route 53</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>A Route 53 failover record depends on a database inside a private subnet. How can Route 53 check that database's health?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Open the security group to 0.0.0.0/0</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Publish a CloudWatch metric and alarm for the database, then create a Route 53 health check on that alarm</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A calculated health check with no child checks</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An HTTP health check on the database's private IP</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Publish a CloudWatch metric and alarm for the database, then create a Route 53 health check on that alarm<br><br>
+<strong>How to think about it:</strong> Route 53 health checkers are <b>outside your VPC</b>. For private resources, check a <b>CloudWatch alarm</b>.<br><br>
+<strong>Why B is correct:</strong> Route 53 checkers cannot reach private IPs, but they can follow the state of a CloudWatch alarm.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Open the security group to 0.0.0.0/0</em> &mdash; This is a security hole, and a private IP still cannot be reached.<br><em>C) A calculated health check with no child checks</em> &mdash; A calculated check needs child checks, and they would have the same reachability problem.<br><em>D) An HTTP health check on the database's private IP</em> &mdash; Route 53 health checkers run on the public internet and cannot reach private endpoints.
+</div>
+</div>
+
+<!-- Q56 Route 53 -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Route 53" data-level="A">
+<div class="q-tags"><span class="q-tag">Route 53</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>On-premises DNS servers, connected over Direct Connect, must resolve records in a Route 53 private hosted zone. What should you create?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Make the private hosted zone public</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Route 53 Resolver outbound endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Route 53 Resolver inbound endpoint, with on-premises DNS forwarding that zone to the endpoint's IPs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable DNSSEC signing</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A Route 53 Resolver inbound endpoint, with on-premises DNS forwarding that zone to the endpoint's IPs<br><br>
+<strong>How to think about it:</strong> On-prem → AWS = <b>Inbound</b> endpoint. AWS → on-prem = <b>Outbound</b> endpoint + forwarding rules.<br><br>
+<strong>Why C is correct:</strong> The inbound endpoint puts ENIs in your VPC (create them in two AZs) that accept queries from your network and answer from private hosted zones.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Make the private hosted zone public</em> &mdash; This exposes internal names, and private hosted zones cannot be made public.<br><em>B) A Route 53 Resolver outbound endpoint</em> &mdash; Outbound is the other direction: the VPC forwarding queries to on-premises DNS.<br><em>D) Enable DNSSEC signing</em> &mdash; DNSSEC protects record integrity and works only on public zones. It does not resolve across networks.
+</div>
+</div>
+
+<!-- Q57 Route 53 -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Route 53" data-level="B">
+<div class="q-tags"><span class="q-tag">Route 53</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>You want DNS to return up to eight healthy IP addresses so clients can pick one, leaving out unhealthy hosts. Which routing policy should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">IP-based routing</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Simple routing with multiple values</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Multi-value answer routing</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Failover routing</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Multi-value answer routing<br><br>
+<strong>How to think about it:</strong> Several answers + health checks = <b>Multi-value</b>. It is not a substitute for a load balancer.<br><br>
+<strong>Why C is correct:</strong> This returns up to 8 healthy records per query, each with its own health check.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) IP-based routing</em> &mdash; IP-based routing sends clients to endpoints by the client's CIDR, not to several healthy answers.<br><em>B) Simple routing with multiple values</em> &mdash; Simple routing cannot use health checks, so it may return dead IPs.<br><em>D) Failover routing</em> &mdash; Failover returns only the primary, or the secondary when the primary is down.
+</div>
+</div>
+
+<!-- Q58 Edge & Hybrid -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Edge & Hybrid" data-level="A">
+<div class="q-tags"><span class="q-tag">Edge & Hybrid</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>A multiplayer game uses UDP across several Regions. Players need two fixed IP addresses and failover to a healthy Region in under a minute, unaffected by DNS caching. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Network Load Balancer in each Region with Elastic IPs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Route 53 latency routing</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon CloudFront</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Global Accelerator</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Global Accelerator<br><br>
+<strong>How to think about it:</strong> Non-HTTP (UDP/TCP), static anycast IPs, fast Regional failover = <b>Global Accelerator</b>. Cacheable HTTP content = CloudFront.<br><br>
+<strong>Why D is correct:</strong> It provides 2 static anycast IPs, carries traffic over the AWS backbone from the nearest edge, health-checks endpoints and fails over quickly. Because the IPs never change, client DNS caching is not a problem.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Network Load Balancer in each Region with Elastic IPs</em> &mdash; This gives static IPs per Region, but no single global entry point or automatic cross-Region failover.<br><em>B) Route 53 latency routing</em> &mdash; DNS failover depends on TTLs and client caching, so it is slower and does not give fixed IPs.<br><em>C) Amazon CloudFront</em> &mdash; CloudFront is built for HTTP(S) and caching. It is not general UDP game traffic with static IPs.
+</div>
+</div>
+
+<!-- Q59 Edge & Hybrid -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Edge & Hybrid" data-level="B">
+<div class="q-tags"><span class="q-tag">Edge & Hybrid</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>A connected-car application needs single-digit-millisecond latency for devices on a carrier's 5G network, and its traffic should stay inside that network. Which AWS offering fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Wavelength Zones</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon CloudFront</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Outposts</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Local Zones</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AWS Wavelength Zones<br><br>
+<strong>How to think about it:</strong> 5G carrier edge = <b>Wavelength</b>. Metro-area extension of a Region = Local Zones. AWS racks in your data centre = Outposts.<br><br>
+<strong>Why A is correct:</strong> Wavelength embeds EC2, EBS and VPC in telecom providers' 5G data centres, so traffic does not leave the carrier network.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon CloudFront</em> &mdash; CloudFront caches and accelerates HTTP content. It does not run your compute inside the 5G network.<br><em>C) AWS Outposts</em> &mdash; Outposts racks sit in your own data centre, not the carrier's.<br><em>D) AWS Local Zones</em> &mdash; Local Zones put AWS compute in large metro areas (for example Dallas). They are not inside the 5G carrier network.
+</div>
+</div>
+
+<!-- Q60 Edge & Hybrid -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Edge & Hybrid" data-level="B">
+<div class="q-tags"><span class="q-tag">Edge & Hybrid</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>A bank must keep data on its own premises for residency reasons, but wants the same EC2, EBS, S3 and RDS APIs and tools it uses in the cloud, fully managed by AWS. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">ECS Anywhere</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Snowball Edge</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Local Zones</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Outposts</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Outposts<br><br>
+<strong>How to think about it:</strong> AWS-managed racks in <b>your</b> data centre = <b>Outposts</b>. You are responsible for physical security.<br><br>
+<strong>Why D is correct:</strong> AWS installs and manages Outposts racks on premises, running EC2, EBS, S3 on Outposts, ECS, EKS and RDS with the same APIs. The customer is responsible for physical security.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) ECS Anywhere</em> &mdash; ECS Anywhere runs containers on your own servers, but it does not provide EBS, S3 or RDS.<br><em>B) AWS Snowball Edge</em> &mdash; Snowball is mainly for moving data and limited edge compute. It does not provide the full managed AWS service stack.<br><em>C) AWS Local Zones</em> &mdash; Local Zones are AWS-run locations in metro areas, not inside your building.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>
