@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Migrations - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Migrations</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Migrations</h2>
+        <p>60 refresher questions &mdash; 7 Rs, Storage Gateway, Snowball Edge, DMS &amp; SCT, Application Discovery Service, Application Migration Service, Elastic Disaster Recovery, DR strategies, Fault Injection Service &amp; AWS Backup</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="7 Rs" onclick="filterQ(this)">7 Rs</button><button class="filter-btn" data-f="Storage Gateway" onclick="filterQ(this)">Storage Gateway</button><button class="filter-btn" data-f="Snowball" onclick="filterQ(this)">Snowball</button><button class="filter-btn" data-f="DMS & SCT" onclick="filterQ(this)">DMS & SCT</button><button class="filter-btn" data-f="Discovery & MGN" onclick="filterQ(this)">Discovery & MGN</button><button class="filter-btn" data-f="Disaster Recovery" onclick="filterQ(this)">Disaster Recovery</button><button class="filter-btn" data-f="AWS Backup" onclick="filterQ(this)">AWS Backup</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 7 Rs -->
+<div class="question" data-type="mc" data-answer="3" data-topic="7 Rs" data-level="B">
+<div class="q-tags"><span class="q-tag">7 Rs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>Which migration strategy is nicknamed lift and shift, moving servers to AWS as they are with no cloud optimization?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Replatform</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Refactor</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Relocate</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Rehost</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Rehost<br><br>
+<strong>How to think about it:</strong> <b>Lift and shift</b> = Rehost. Lift and <em>reshape</em> = Replatform.<br><br>
+<strong>Why D is correct:</strong> Rehost moves machines (physical, virtual or another cloud) to AWS unchanged, often with Application Migration Service.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Replatform</em> &mdash; Replatform makes a few cloud optimizations, such as a managed database, so it is lift and reshape.<br><em>B) Refactor</em> &mdash; Refactor redesigns the application with cloud-native features, which is the opposite of moving it as is.<br><em>C) Relocate</em> &mdash; Relocate moves workloads at the hypervisor or account level, such as VMware to VMware Cloud on AWS.
+</div>
+</div>
+
+<!-- Q2 7 Rs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="7 Rs" data-level="B">
+<div class="q-tags"><span class="q-tag">7 Rs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>A team moves its self-managed MySQL database to Amazon RDS but leaves the application architecture alone. Which strategy is this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Rehost</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Repurchase</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Replatform</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Refactor</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Replatform<br><br>
+<strong>How to think about it:</strong> Same architecture + swap in a <b>managed service</b> (RDS, Beanstalk) = <b>Replatform</b>.<br><br>
+<strong>Why C is correct:</strong> Moving to a managed service such as RDS saves operations effort while keeping the core architecture, which is replatforming.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Rehost</em> &mdash; Rehost would copy the database server to EC2 unchanged rather than adopting RDS.<br><em>B) Repurchase</em> &mdash; Repurchase means buying a different product, usually SaaS, instead of keeping your own database.<br><em>D) Refactor</em> &mdash; Refactor changes how the application is built, for example breaking it into microservices.
+</div>
+</div>
+
+<!-- Q3 7 Rs -->
+<div class="question" data-type="mc" data-answer="0" data-topic="7 Rs" data-level="B">
+<div class="q-tags"><span class="q-tag">7 Rs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>A company drops its in-house HR system and signs up for Workday as part of its cloud move. Which strategy is this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Repurchase</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Rehost</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Retire</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Replatform</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Repurchase<br><br>
+<strong>How to think about it:</strong> Drop and shop: move to a <b>SaaS product</b> = <b>Repurchase</b>.<br><br>
+<strong>Why A is correct:</strong> Repurchase replaces the existing product with a different one, often SaaS. It costs more short term but deploys quickly.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Rehost</em> &mdash; Rehost moves the existing HR servers to EC2 rather than swapping products.<br><em>C) Retire</em> &mdash; Retire turns an application off with nothing replacing it.<br><em>D) Replatform</em> &mdash; Replatform keeps your own application and moves it onto a managed platform.
+</div>
+</div>
+
+<!-- Q4 7 Rs -->
+<div class="question" data-type="mc" data-answer="3" data-topic="7 Rs" data-level="B">
+<div class="q-tags"><span class="q-tag">7 Rs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>A mainframe application has unresolved dependencies and compliance questions, so the company decides to leave it on premises for now. Which strategy is this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Retire</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Relocate</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Repurchase</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Retain</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Retain<br><br>
+<strong>How to think about it:</strong> Doing nothing for now is still a decision = <b>Retain</b>.<br><br>
+<strong>Why D is correct:</strong> Retain keeps the workload where it is, typically due to compliance, performance, dependencies or no business value in moving.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Retire</em> &mdash; Retire would switch the application off, but this one is still needed.<br><em>B) Relocate</em> &mdash; Relocate moves workloads to the cloud version of the same platform, which is not happening here.<br><em>C) Repurchase</em> &mdash; Repurchase would replace the mainframe with a new product, which the company has not chosen.
+</div>
+</div>
+
+<!-- Q5 7 Rs -->
+<div class="question" data-type="mc" data-answer="3" data-topic="7 Rs" data-level="B">
+<div class="q-tags"><span class="q-tag">7 Rs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>During portfolio discovery, a company finds dozens of applications that nobody uses. Turning them off saves money and shrinks the attack surface. Which strategy is this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Rehost</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Retain</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Refactor</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Retire</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Retire<br><br>
+<strong>How to think about it:</strong> Turn off what you do not need = <b>Retire</b> (less cost, less to secure).<br><br>
+<strong>Why D is correct:</strong> Retiring unused applications cuts cost and attack surface and lets the team focus on what must be maintained.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Rehost</em> &mdash; Rehosting unused applications would pay to migrate software nobody needs.<br><em>B) Retain</em> &mdash; Retain keeps the applications running where they are, which does not save anything.<br><em>C) Refactor</em> &mdash; Refactoring unused applications would spend the most effort on the least value.
+</div>
+</div>
+
+<!-- Q6 7 Rs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="7 Rs" data-level="A">
+<div class="q-tags"><span class="q-tag">7 Rs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>A company runs a VMware vSphere estate and wants to move it to VMware Cloud on AWS without converting VMs or changing tooling. Which strategy is this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Replatform</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Relocate</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Rehost</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Retain</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Relocate<br><br>
+<strong>How to think about it:</strong> Same platform, now in the cloud (VMware to VMware Cloud on AWS, or EC2 to another account/Region) = <b>Relocate</b>.<br><br>
+<strong>Why B is correct:</strong> Relocate moves workloads to the cloud version of the same platform with no VM conversion or code change.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Replatform</em> &mdash; Replatform adopts managed services such as RDS, which is not part of this move.<br><em>C) Rehost</em> &mdash; Rehost converts machines to run natively on EC2, which the company wants to avoid.<br><em>D) Retain</em> &mdash; Retain would leave the VMware estate on premises.
+</div>
+</div>
+
+<!-- Q7 7 Rs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="7 Rs" data-level="A">
+<div class="q-tags"><span class="q-tag">7 Rs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>To add features faster and scale independently, a company rebuilds its monolith as microservices on Lambda and S3. Which strategy is this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Rehost</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Replatform</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Refactor / Re-architect</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Repurchase</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Refactor / Re-architect<br><br>
+<strong>How to think about it:</strong> Business need for agility + <b>cloud-native redesign</b> = <b>Refactor / Re-architect</b>.<br><br>
+<strong>Why C is correct:</strong> Re-architecting reimagines the application with cloud-native services, driven by needs for features, scale and agility.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Rehost</em> &mdash; Rehost moves the monolith unchanged, so it would still be a monolith.<br><em>B) Replatform</em> &mdash; Replatform keeps the core architecture and only adds a few optimizations.<br><em>D) Repurchase</em> &mdash; Repurchase buys a commercial product rather than rebuilding your own code.
+</div>
+</div>
+
+<!-- Q8 Storage Gateway -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Storage Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">Storage Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>On-premises servers need to read and write objects in an S3 bucket as files over NFS or SMB, with recently used data cached locally. Which gateway fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Tape Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon S3 File Gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Volume Gateway in cached mode</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon EFS mounted over VPN</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon S3 File Gateway<br><br>
+<strong>How to think about it:</strong> Files (<b>NFS/SMB</b>) stored as S3 objects = <b>S3 File Gateway</b>.<br><br>
+<strong>Why B is correct:</strong> S3 File Gateway exposes buckets as NFS or SMB shares, stores each file as an S3 object and caches recent data locally.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Tape Gateway</em> &mdash; Tape Gateway presents a virtual tape library for backup software, not file shares.<br><em>C) Volume Gateway in cached mode</em> &mdash; Volume Gateway presents iSCSI block volumes, not file shares backed by S3 objects.<br><em>D) Amazon EFS mounted over VPN</em> &mdash; EFS is a native NFS file system, and its data is not stored as S3 objects.
+</div>
+</div>
+
+<!-- Q9 Storage Gateway -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Storage Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">Storage Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>Windows users access an S3 File Gateway share over SMB. How can access be tied to their existing corporate identities?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Give each user an IAM access key</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use S3 bucket ACLs per user</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Configure Amazon Cognito user pools</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Join the gateway to Microsoft Active Directory</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Join the gateway to Microsoft Active Directory<br><br>
+<strong>How to think about it:</strong> SMB file share + user authentication = <b>Active Directory integration</b>.<br><br>
+<strong>Why D is correct:</strong> S3 File Gateway can join an AD domain so SMB users and groups authenticate with their existing accounts.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Give each user an IAM access key</em> &mdash; SMB clients do not sign in with IAM keys; the gateway uses an IAM role to reach the bucket.<br><em>B) Use S3 bucket ACLs per user</em> &mdash; Bucket ACLs control AWS principals, not domain users connecting to an SMB share.<br><em>C) Configure Amazon Cognito user pools</em> &mdash; Cognito authenticates web and mobile app users, not SMB file share clients.
+</div>
+</div>
+
+<!-- Q10 Storage Gateway -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Storage Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">Storage Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>A company backs up to physical tapes with its existing backup software and wants to stop handling tapes without changing the process. Which gateway fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Volume Gateway in stored mode</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 File Gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Tape Gateway</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS DataSync agent</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Tape Gateway<br><br>
+<strong>How to think about it:</strong> Keep tape-based backup software, lose the tapes = <b>Tape Gateway</b> (virtual tape library).<br><br>
+<strong>Why C is correct:</strong> Tape Gateway presents a virtual tape library over iSCSI that works with leading backup applications and stores tapes in S3.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Volume Gateway in stored mode</em> &mdash; Stored volumes are iSCSI disks, not a tape library that backup software expects.<br><em>B) S3 File Gateway</em> &mdash; File Gateway offers NFS/SMB shares, which the tape-based backup jobs do not use.<br><em>D) AWS DataSync agent</em> &mdash; DataSync copies files between storage systems; it does not emulate a tape library.
+</div>
+</div>
+
+<!-- Q11 Storage Gateway -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Storage Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">Storage Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>An application needs low-latency iSCSI access to its whole dataset on premises, with scheduled asynchronous backups to AWS. Which configuration fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 File Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Volume Gateway with cached volumes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Volume Gateway with stored volumes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Tape Gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Volume Gateway with stored volumes<br><br>
+<strong>How to think about it:</strong> Whole dataset local + backups to AWS = <b>Stored</b> volumes. Hot data local only = <b>Cached</b> volumes.<br><br>
+<strong>Why C is correct:</strong> Stored volumes keep the entire dataset on premises and back it up asynchronously to S3 as point-in-time snapshots.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) S3 File Gateway</em> &mdash; File Gateway serves files over NFS/SMB, not iSCSI block volumes.<br><em>B) Volume Gateway with cached volumes</em> &mdash; Cached volumes keep primary data in AWS and only cache recently used data locally.<br><em>D) Tape Gateway</em> &mdash; Tape Gateway presents virtual tapes for backup jobs, not a live block volume.
+</div>
+</div>
+
+<!-- Q12 Storage Gateway -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Storage Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">Storage Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>A company wants to keep its primary block storage in AWS to shrink its local SAN, while still giving apps fast iSCSI access to recently used data. Which configuration fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 File Gateway with NFS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Volume Gateway with cached volumes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon FSx for Windows File Server</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Volume Gateway with stored volumes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Volume Gateway with cached volumes<br><br>
+<strong>How to think about it:</strong> Primary data in AWS + local cache of hot blocks = <b>Cached volumes</b>.<br><br>
+<strong>Why B is correct:</strong> Cached volumes store the full volume in AWS and keep frequently accessed data in a local cache for low latency.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) S3 File Gateway with NFS</em> &mdash; File Gateway provides file shares, while these applications need block (iSCSI) volumes.<br><em>C) Amazon FSx for Windows File Server</em> &mdash; FSx is an SMB file system in AWS, not an iSCSI block volume with a local cache.<br><em>D) Volume Gateway with stored volumes</em> &mdash; Stored volumes keep the whole dataset on premises, so the local SAN does not shrink.
+</div>
+</div>
+
+<!-- Q13 Storage Gateway -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Storage Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">Storage Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>Volume Gateway backs up volumes to AWS. In what form are those point-in-time backups kept, so they can be restored in AWS too?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">As virtual tapes in S3 Glacier</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">As Amazon EBS snapshots</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">As AMIs registered in the Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">As files in a visible S3 bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> As Amazon EBS snapshots<br><br>
+<strong>How to think about it:</strong> Volume Gateway backups = <b>EBS snapshots</b> (restore on premises or as an EBS volume).<br><br>
+<strong>Why B is correct:</strong> Volume Gateway snapshots are EBS snapshots, so they can be restored to the gateway or used to create EBS volumes for EC2.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) As virtual tapes in S3 Glacier</em> &mdash; Virtual tapes are what Tape Gateway produces, not Volume Gateway.<br><em>C) As AMIs registered in the Region</em> &mdash; An AMI is an EC2 machine image, not the backup format of a gateway volume.<br><em>D) As files in a visible S3 bucket</em> &mdash; The volume data is kept by the service in S3, not as browsable files in your own bucket.
+</div>
+</div>
+
+<!-- Q14 Storage Gateway -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Storage Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">Storage Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>Where can the Storage Gateway appliance itself run on premises?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only as an agent installed on each application server</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">As a virtual machine on VMware ESXi, Hyper-V or KVM</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only on an AWS Outposts rack</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only inside a container on Amazon ECS Anywhere</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> As a virtual machine on VMware ESXi, Hyper-V or KVM<br><br>
+<strong>How to think about it:</strong> Gateway = a <b>VM</b> on <b>VMware, Hyper-V or KVM</b> in your data center (or an EC2 instance).<br><br>
+<strong>Why B is correct:</strong> The gateway is distributed as a VM image for common hypervisors, and it can also run on EC2.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only as an agent installed on each application server</em> &mdash; The gateway is a separate appliance that clients connect to over NFS, SMB or iSCSI.<br><em>C) Only on an AWS Outposts rack</em> &mdash; Storage Gateway does not need Outposts; it runs on your own hypervisor.<br><em>D) Only inside a container on Amazon ECS Anywhere</em> &mdash; Storage Gateway is not packaged as an ECS Anywhere container.
+</div>
+</div>
+
+<!-- Q15 Storage Gateway -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Storage Gateway" data-level="A">
+<div class="q-tags"><span class="q-tag">Storage Gateway</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>Backup software ejects a virtual tape from Tape Gateway because it is rarely needed. Where does the tape go?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">To an EBS snapshot linked to the gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">To the gateway's local cache disk on premises</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">To an S3 Standard-IA bucket in your own account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">To the tape archive in Glacier or Glacier Deep Archive</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> To the tape archive in Glacier or Glacier Deep Archive<br><br>
+<strong>How to think about it:</strong> Tape <b>ejected</b> from the backup app = <b>archived</b> to S3 Glacier Flexible Retrieval or Glacier Deep Archive.<br><br>
+<strong>Why D is correct:</strong> Ejected tapes move from the virtual tape library into the archive tier, cutting cost for long retention.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) To an EBS snapshot linked to the gateway</em> &mdash; EBS snapshots are how Volume Gateway backs up, not where tapes are archived.<br><em>B) To the gateway's local cache disk on premises</em> &mdash; Ejecting a tape moves it away from the gateway to cheap archive storage.<br><em>C) To an S3 Standard-IA bucket in your own account</em> &mdash; Archived tapes are managed by the gateway service, not stored as objects in your own bucket.
+</div>
+</div>
+
+<!-- Q16 Storage Gateway -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Storage Gateway" data-level="A">
+<div class="q-tags"><span class="q-tag">Storage Gateway</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>An admin restores an older version of an object directly in the versioned S3 bucket behind an S3 File Gateway. On-premises users still see the old file. What is missing?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Calling the RefreshCache API on the gateway file share</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Turning on S3 Transfer Acceleration</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Rebooting every NFS client</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enabling S3 Cross-Region Replication on the bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Calling the RefreshCache API on the gateway file share<br><br>
+<strong>How to think about it:</strong> Changes made in S3 behind the gateway = call <b>RefreshCache</b> so the share sees them.<br><br>
+<strong>Why A is correct:</strong> The gateway does not watch the bucket for outside changes. RefreshCache updates its listing so clients see the restored version.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Turning on S3 Transfer Acceleration</em> &mdash; Transfer Acceleration speeds uploads over long distances and does not affect cached metadata.<br><em>C) Rebooting every NFS client</em> &mdash; The stale view lives in the gateway cache, so restarting clients does not help.<br><em>D) Enabling S3 Cross-Region Replication on the bucket</em> &mdash; Replication copies objects to another bucket; it does not refresh the gateway's view.
+</div>
+</div>
+
+<!-- Q17 Storage Gateway -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Storage Gateway" data-level="A">
+<div class="q-tags"><span class="q-tag">Storage Gateway</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>Files written through an S3 File Gateway must be kept in a write once, read many (WORM) state for compliance. What should you configure?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 Object Lock on the bucket behind the gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Backup Vault Lock</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An S3 Lifecycle rule to Glacier Deep Archive</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A read-only NFS export on the gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> S3 Object Lock on the bucket behind the gateway<br><br>
+<strong>How to think about it:</strong> File Gateway + WORM = <b>S3 Object Lock</b> on the bucket (edits become new versions).<br><br>
+<strong>Why A is correct:</strong> With Object Lock, changes made through the share create new object versions while the locked original stays unchanged.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS Backup Vault Lock</em> &mdash; Vault Lock protects backups in AWS Backup vaults, not live objects written through the gateway.<br><em>C) An S3 Lifecycle rule to Glacier Deep Archive</em> &mdash; Lifecycle rules change storage class and cost; they do not stop deletion or overwrite.<br><em>D) A read-only NFS export on the gateway</em> &mdash; A read-only share blocks writes entirely, and it is not a retention control on the stored data.
+</div>
+</div>
+
+<!-- Q18 Snowball -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Snowball" data-level="B">
+<div class="q-tags"><span class="q-tag">Snowball</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>What rule of thumb suggests an offline transfer device instead of the network for a large migration?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Whenever the data is encrypted at rest on premises</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">When the network transfer would take more than about a week</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only when Direct Connect is already installed</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Whenever the dataset is larger than 1 TB</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> When the network transfer would take more than about a week<br><br>
+<strong>How to think about it:</strong> Network transfer longer than about <b>a week</b> = think <b>offline device</b>.<br><br>
+<strong>Why B is correct:</strong> Past roughly a week of transfer time, shipping a device is often faster and cheaper than the link.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Whenever the data is encrypted at rest on premises</em> &mdash; Encryption does not affect whether the network or a device is faster.<br><em>C) Only when Direct Connect is already installed</em> &mdash; Direct Connect makes network transfer more attractive, not less.<br><em>D) Whenever the dataset is larger than 1 TB</em> &mdash; A terabyte moves in hours over a normal link, so size alone does not justify a device.
+</div>
+</div>
+
+<!-- Q19 Snowball -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Snowball" data-level="B">
+<div class="q-tags"><span class="q-tag">Snowball</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>A research ship with little connectivity must preprocess sensor data on board before it reaches AWS. What does Snowball Edge offer for this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Hosting an Amazon Redshift cluster on the device</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Running Amazon RDS databases on the device</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Running EC2-compatible instances on the Snowball Edge device</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Streaming data live through the device to S3</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Running EC2-compatible instances on the Snowball Edge device<br><br>
+<strong>How to think about it:</strong> Edge computing with poor connectivity = <b>Snowball Edge</b> running <b>EC2-compatible instances</b>.<br><br>
+<strong>Why C is correct:</strong> Snowball Edge can run compute locally to preprocess, transcode or run ML inference before the data is shipped.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Hosting an Amazon Redshift cluster on the device</em> &mdash; Redshift does not run on Snowball Edge.<br><em>B) Running Amazon RDS databases on the device</em> &mdash; RDS is not offered on Snowball Edge; local compute is through EC2-compatible instances.<br><em>D) Streaming data live through the device to S3</em> &mdash; The device works offline and is shipped back; it does not need a live link.
+</div>
+</div>
+
+<!-- Q20 Snowball -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Snowball" data-level="B">
+<div class="q-tags"><span class="q-tag">Snowball</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>Copying to a Snowball Edge through its file interface is slow. Which change usually increases throughput the most?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use the Amazon S3 adapter with parallel writes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Copy one file at a time to avoid contention</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Run antivirus scans on files during the copy</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Route the copy through more network hops</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Use the Amazon S3 adapter with parallel writes<br><br>
+<strong>How to think about it:</strong> Faster Snowball copies = use the <b>S3 adapter</b>, parallel writes, and batch small files.<br><br>
+<strong>Why A is correct:</strong> The S3-compatible endpoint is typically several times faster than the file interface, and parallel copies add more.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Copy one file at a time to avoid contention</em> &mdash; Serial copying wastes the device's bandwidth; multiple writers at once are faster.<br><em>C) Run antivirus scans on files during the copy</em> &mdash; Touching files during transfer slows it down and is listed as something to avoid.<br><em>D) Route the copy through more network hops</em> &mdash; Extra hops add latency; connecting the device directly is better.
+</div>
+</div>
+
+<!-- Q21 Snowball -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Snowball" data-level="B">
+<div class="q-tags"><span class="q-tag">Snowball</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>A dataset contains millions of tiny files and the Snowball Edge copy crawls. What helps most?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Order a Direct Connect link for the device</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable S3 Transfer Acceleration on the target bucket</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Turn on versioning in the target bucket</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Batch the small files into larger archives before copying</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Batch the small files into larger archives before copying<br><br>
+<strong>How to think about it:</strong> Millions of tiny files = <b>batch</b> them into larger archives before copying.<br><br>
+<strong>Why D is correct:</strong> Per-file overhead dominates with tiny files, so grouping them into bigger archives speeds up the transfer.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Order a Direct Connect link for the device</em> &mdash; Snowball Edge is loaded over the local network, not through Direct Connect.<br><em>B) Enable S3 Transfer Acceleration on the target bucket</em> &mdash; Transfer Acceleration speeds internet uploads to S3, not local copies onto a device.<br><em>C) Turn on versioning in the target bucket</em> &mdash; Versioning keeps old object versions and does nothing for copy speed.
+</div>
+</div>
+
+<!-- Q22 Snowball -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Snowball" data-level="A">
+<div class="q-tags"><span class="q-tag">Snowball</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>Data must end up in S3 Glacier Deep Archive after an offline Snowball Edge import. How is this done?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Order a separate Glacier-only import job for the device</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Select Deep Archive as the device's direct import target</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Copy the data into a Tape Gateway hosted on the device</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Import to S3, then let a Lifecycle rule move it to Deep Archive</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Import to S3, then let a Lifecycle rule move it to Deep Archive<br><br>
+<strong>How to think about it:</strong> Snowball imports to <b>S3</b>; then an <b>S3 Lifecycle</b> rule moves it to Glacier.<br><br>
+<strong>Why D is correct:</strong> The device loads objects into S3, and a lifecycle policy moves them to the archive class afterwards.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Order a separate Glacier-only import job for the device</em> &mdash; There is no separate Glacier import path for the device.<br><em>B) Select Deep Archive as the device's direct import target</em> &mdash; Snowball imports go into S3 buckets; Glacier classes are reached by lifecycle transitions.<br><em>C) Copy the data into a Tape Gateway hosted on the device</em> &mdash; Snowball Edge does not host a Tape Gateway for this purpose.
+</div>
+</div>
+
+<!-- Q23 Snowball -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Snowball" data-level="A">
+<div class="q-tags"><span class="q-tag">Snowball</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>A multi-terabyte Oracle database must move to Aurora, but the WAN link is too slow for the initial load. Which combined approach fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use S3 File Gateway to copy the raw database files to S3</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">SCT extracts to Snowball Edge; DMS loads from S3 and applies CDC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Take an EBS snapshot of the on-premises database server</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Run a DMS full load over the existing WAN link and wait</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> SCT extracts to Snowball Edge; DMS loads from S3 and applies CDC<br><br>
+<strong>How to think about it:</strong> Huge DB + slow link = <b>SCT</b> extracts to <b>Snowball Edge</b>, ship, <b>DMS</b> loads and applies CDC from S3.<br><br>
+<strong>Why B is correct:</strong> The device carries the bulk data to S3, and DMS loads it into the target and applies changes captured meanwhile.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use S3 File Gateway to copy the raw database files to S3</em> &mdash; Copying raw Oracle files to S3 does not convert or load them into Aurora.<br><em>C) Take an EBS snapshot of the on-premises database server</em> &mdash; On-premises servers do not have EBS snapshots to share with AWS.<br><em>D) Run a DMS full load over the existing WAN link and wait</em> &mdash; The slow link is exactly the problem, so a long network full load is what to avoid.
+</div>
+</div>
+
+<!-- Q24 DMS & SCT -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DMS & SCT" data-level="B">
+<div class="q-tags"><span class="q-tag">DMS & SCT</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>A database must move to AWS while it keeps serving users, with ongoing changes copied until cutover. Which DMS feature provides this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Multi-AZ replication instance</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Change data capture (CDC)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Table mapping rules</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Schema conversion</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Change data capture (CDC)<br><br>
+<strong>How to think about it:</strong> Source stays live + ongoing sync = <b>CDC</b> (change data capture).<br><br>
+<strong>Why B is correct:</strong> CDC reads the source's change log and keeps applying updates to the target, so the source stays in use until cutover.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Multi-AZ replication instance</em> &mdash; Multi-AZ makes the replication instance highly available but does not by itself copy ongoing changes.<br><em>C) Table mapping rules</em> &mdash; Table mappings choose and transform tables; they do not capture ongoing changes.<br><em>D) Schema conversion</em> &mdash; Schema conversion translates objects between engines; it does not keep data in sync.
+</div>
+</div>
+
+<!-- Q25 DMS & SCT -->
+<div class="question" data-type="mc" data-answer="0" data-topic="DMS & SCT" data-level="B">
+<div class="q-tags"><span class="q-tag">DMS & SCT</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>A company migrates from Microsoft SQL Server to Aurora PostgreSQL. What must happen to tables, views and stored procedures?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Convert them with AWS SCT or DMS Schema Conversion</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Recreate them automatically with Aurora zero-ETL</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Nothing; DMS copies them as is</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Export them with RDS native backup and restore</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Convert them with AWS SCT or DMS Schema Conversion<br><br>
+<strong>How to think about it:</strong> Different engine (<b>heterogeneous</b>) = convert schema with <b>SCT</b> / DMS Schema Conversion, then move data with DMS.<br><br>
+<strong>Why A is correct:</strong> A heterogeneous migration needs the schema and code objects translated to the new engine before DMS moves the data.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Recreate them automatically with Aurora zero-ETL</em> &mdash; Zero-ETL integrations feed analytics targets; they do not convert database schemas.<br><em>C) Nothing; DMS copies them as is</em> &mdash; DMS moves data, and SQL Server code objects will not run unchanged on PostgreSQL.<br><em>D) Export them with RDS native backup and restore</em> &mdash; Native backups only restore into the same engine, not across to PostgreSQL.
+</div>
+</div>
+
+<!-- Q26 DMS & SCT -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DMS & SCT" data-level="B">
+<div class="q-tags"><span class="q-tag">DMS & SCT</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>A company moves on-premises PostgreSQL to RDS for PostgreSQL. Is the Schema Conversion Tool needed?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Yes, SCT is always required by DMS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Yes, because RDS uses a modified storage format</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">No, but only Aurora is supported as the target</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">No, the engine is the same, so no schema conversion is needed</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> No, the engine is the same, so no schema conversion is needed<br><br>
+<strong>How to think about it:</strong> Same engine (<b>homogeneous</b>) = no schema conversion; RDS is just the platform.<br><br>
+<strong>Why D is correct:</strong> Both sides run PostgreSQL, so DMS or native tools can move it without translating the schema.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Yes, SCT is always required by DMS</em> &mdash; SCT is only needed when the source and target engines differ.<br><em>B) Yes, because RDS uses a modified storage format</em> &mdash; RDS PostgreSQL runs the standard engine, so schemas are compatible.<br><em>C) No, but only Aurora is supported as the target</em> &mdash; DMS supports RDS for PostgreSQL as a target as well as Aurora.
+</div>
+</div>
+
+<!-- Q27 DMS & SCT -->
+<div class="question" data-type="mc" data-answer="0" data-topic="DMS & SCT" data-level="B">
+<div class="q-tags"><span class="q-tag">DMS & SCT</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>What runs a DMS migration task?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A DMS replication instance, or DMS Serverless capacity</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The target database's built-in import process</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda function the user writes for each table</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An AWS Glue job running Spark</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A DMS replication instance, or DMS Serverless capacity<br><br>
+<strong>How to think about it:</strong> DMS tasks run on a <b>replication instance</b> (or capacity managed by <b>DMS Serverless</b>).<br><br>
+<strong>Why A is correct:</strong> A replication instance connects to source and target and moves the data; DMS Serverless can provision this capacity for you.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) The target database's built-in import process</em> &mdash; DMS has its own replication engine rather than relying on the target to pull data.<br><em>C) A Lambda function the user writes for each table</em> &mdash; DMS needs no custom functions; its managed engine does the copying.<br><em>D) An AWS Glue job running Spark</em> &mdash; Glue is an ETL service and is not the engine behind DMS tasks.
+</div>
+</div>
+
+<!-- Q28 DMS & SCT -->
+<div class="question" data-type="mc" data-answer="0" data-topic="DMS & SCT" data-level="B">
+<div class="q-tags"><span class="q-tag">DMS & SCT</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>A team already bulk loaded a database with native tools. Now they only need DMS to replicate ongoing changes from a known point. Which task type fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CDC only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Table validation only</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Full load only</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Full load plus CDC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> CDC only<br><br>
+<strong>How to think about it:</strong> DMS task types: <b>Full load</b>, <b>Full load + CDC</b>, or <b>CDC only</b>.<br><br>
+<strong>Why A is correct:</strong> A CDC-only task starts from a chosen point and replicates just the ongoing changes after a native bulk load.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Table validation only</em> &mdash; Validation compares source and target rows; it does not replicate changes.<br><em>C) Full load only</em> &mdash; Full load would copy all the data again and then stop without ongoing changes.<br><em>D) Full load plus CDC</em> &mdash; This repeats the bulk load the team already completed before switching to changes.
+</div>
+</div>
+
+<!-- Q29 DMS & SCT -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DMS & SCT" data-level="B">
+<div class="q-tags"><span class="q-tag">DMS & SCT</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>A data warehouse on Teradata is moving to Amazon Redshift. Which tool converts the warehouse schema?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Athena federated query</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Glue DataBrew</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Redshift Spectrum</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Schema Conversion Tool</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Schema Conversion Tool<br><br>
+<strong>How to think about it:</strong> OLAP schema (Teradata, Oracle) to <b>Redshift</b> = <b>SCT</b>.<br><br>
+<strong>Why D is correct:</strong> SCT converts data warehouse schemas such as Teradata or Oracle to Redshift, as well as OLTP schemas.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Athena federated query</em> &mdash; Federated query reads remote sources from Athena and does not convert warehouse schemas.<br><em>B) AWS Glue DataBrew</em> &mdash; DataBrew prepares and cleans data visually; it is not a schema conversion tool.<br><em>C) Redshift Spectrum</em> &mdash; Spectrum queries data in S3 from Redshift; it does not convert a source schema.
+</div>
+</div>
+
+<!-- Q30 DMS & SCT -->
+<div class="question" data-type="mc" data-answer="0" data-topic="DMS & SCT" data-level="A">
+<div class="q-tags"><span class="q-tag">DMS & SCT</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>A team wants DMS to keep an OpenSearch Service domain in sync from OpenSearch to another target. Why will this fail?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">OpenSearch Service is only a DMS target, never a source</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">OpenSearch must first be converted with SCT</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">DMS replication instances cannot run inside a VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">DMS supports only relational databases</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> OpenSearch Service is only a DMS target, never a source<br><br>
+<strong>How to think about it:</strong> OpenSearch Service is a DMS <b>target only</b>, never a source.<br><br>
+<strong>Why A is correct:</strong> DMS can load relational data into OpenSearch, but it cannot read from OpenSearch to replicate elsewhere.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) OpenSearch must first be converted with SCT</em> &mdash; SCT converts relational and warehouse schemas; it does not make OpenSearch a DMS source.<br><em>C) DMS replication instances cannot run inside a VPC</em> &mdash; DMS replication instances run inside your VPC.<br><em>D) DMS supports only relational databases</em> &mdash; DMS also supports targets such as DynamoDB, S3, Kinesis and OpenSearch.
+</div>
+</div>
+
+<!-- Q31 DMS & SCT -->
+<div class="question" data-type="mc" data-answer="0" data-topic="DMS & SCT" data-level="A">
+<div class="q-tags"><span class="q-tag">DMS & SCT</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>Every row change in an on-premises MySQL database must feed a real-time analytics stream. What is the simplest managed approach?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A DMS CDC task with Kinesis Data Streams as the target</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS SCT running in continuous mode</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A DMS full-load task to Amazon Redshift every hour</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Snowball Edge shipments every week</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A DMS CDC task with Kinesis Data Streams as the target<br><br>
+<strong>How to think about it:</strong> DB changes as a <b>stream</b> = DMS <b>CDC</b> with <b>Kinesis Data Streams</b> as target.<br><br>
+<strong>Why A is correct:</strong> DMS can publish each captured change as a record to Kinesis Data Streams for downstream consumers.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS SCT running in continuous mode</em> &mdash; SCT converts schemas; it does not replicate row changes.<br><em>C) A DMS full-load task to Amazon Redshift every hour</em> &mdash; Hourly full loads are batch copies, not a real-time stream of changes.<br><em>D) Snowball Edge shipments every week</em> &mdash; Weekly device shipments cannot provide real-time change data.
+</div>
+</div>
+
+<!-- Q32 DMS & SCT -->
+<div class="question" data-type="mc" data-answer="0" data-topic="DMS & SCT" data-level="A">
+<div class="q-tags"><span class="q-tag">DMS & SCT</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>Security requires that database data never crosses the public internet during a DMS migration from on premises. What should be used?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Site-to-Site VPN or Direct Connect into the DMS VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Transfer Acceleration for the DMS task</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A public source endpoint protected by an IP allowlist</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon CloudFront in front of the source database</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Site-to-Site VPN or Direct Connect into the DMS VPC<br><br>
+<strong>How to think about it:</strong> DMS connectivity = <b>Site-to-Site VPN</b>, <b>Direct Connect</b> or VPC peering to the replication instance.<br><br>
+<strong>Why A is correct:</strong> DMS works over private connectivity, so the replication instance reaches the source without public internet paths.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) S3 Transfer Acceleration for the DMS task</em> &mdash; Transfer Acceleration uses edge locations over the internet and is not a DMS network option.<br><em>C) A public source endpoint protected by an IP allowlist</em> &mdash; An allowlist still sends data over the public internet.<br><em>D) Amazon CloudFront in front of the source database</em> &mdash; CloudFront is a CDN for HTTP content, not a path for database replication.
+</div>
+</div>
+
+<!-- Q33 DMS & SCT -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DMS & SCT" data-level="A">
+<div class="q-tags"><span class="q-tag">DMS & SCT</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>A data lake needs rows from several relational databases landed as files in S3, with ongoing changes included. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Storage Gateway Volume Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon S3 Batch Operations</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Schema Conversion Tool alone</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS DMS with Amazon S3 as the target endpoint</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS DMS with Amazon S3 as the target endpoint<br><br>
+<strong>How to think about it:</strong> Relational rows to a <b>data lake</b> in S3, plus changes = <b>DMS</b> with an <b>S3 target</b>.<br><br>
+<strong>Why D is correct:</strong> DMS writes full-load and CDC data from relational sources into S3 as files such as CSV or Parquet.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Storage Gateway Volume Gateway</em> &mdash; Volume Gateway backs up block volumes; it does not extract table rows.<br><em>B) Amazon S3 Batch Operations</em> &mdash; Batch Operations act on objects already in S3; they do not read databases.<br><em>C) AWS Schema Conversion Tool alone</em> &mdash; SCT converts schemas but does not move rows or changes.
+</div>
+</div>
+
+<!-- Q34 Discovery & MGN -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Discovery & MGN" data-level="B">
+<div class="q-tags"><span class="q-tag">Discovery & MGN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>Before planning a migration, a company needs server utilization data and a map of dependencies between its on-premises servers. Which service collects this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Application Discovery Service</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Trusted Advisor</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Config</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Application Migration Service</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AWS Application Discovery Service<br><br>
+<strong>How to think about it:</strong> Plan a migration: utilization + <b>dependency mapping</b> = <b>Application Discovery Service</b>.<br><br>
+<strong>Why A is correct:</strong> Application Discovery Service gathers configuration, utilization and dependency data from on-premises servers.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS Trusted Advisor</em> &mdash; Trusted Advisor checks existing AWS accounts for best practices, not on-premises servers.<br><em>C) AWS Config</em> &mdash; AWS Config records the configuration of AWS resources, not on-premises dependency maps.<br><em>D) AWS Application Migration Service</em> &mdash; Application Migration Service replicates and launches servers; it does not plan the portfolio.
+</div>
+</div>
+
+<!-- Q35 Discovery & MGN -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Discovery & MGN" data-level="B">
+<div class="q-tags"><span class="q-tag">Discovery & MGN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>The migration team needs the running processes on each server and the network connections between systems. Which discovery method collects this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The Agentless Collector on vCenter</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The agent-based AWS Application Discovery Agent</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Migration Evaluator Quick Insights</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Inspector agent scans</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The agent-based AWS Application Discovery Agent<br><br>
+<strong>How to think about it:</strong> Processes + <b>network connections</b> = install the <b>Discovery Agent</b>. VM inventory only = agentless.<br><br>
+<strong>Why B is correct:</strong> The agent runs inside each OS and captures processes, performance and network connections for dependency mapping.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The Agentless Collector on vCenter</em> &mdash; Agentless discovery sees VM inventory and utilization from the hypervisor, not detailed processes and connections.<br><em>C) AWS Migration Evaluator Quick Insights</em> &mdash; Quick Insights is a cost report for the business case, not a process inventory.<br><em>D) Amazon Inspector agent scans</em> &mdash; Inspector looks for software vulnerabilities, not migration dependencies.
+</div>
+</div>
+
+<!-- Q36 Discovery & MGN -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Discovery & MGN" data-level="B">
+<div class="q-tags"><span class="q-tag">Discovery & MGN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>A VMware estate has thousands of VMs, and installing software on each guest is not allowed. How can you gather VM inventory and utilization?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Deploy the Agentless Collector appliance against vCenter</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable VPC Flow Logs for the data center network</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Run AWS Systems Manager Inventory on the VMs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Install the Discovery Agent on each VM anyway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Deploy the Agentless Collector appliance against vCenter<br><br>
+<strong>How to think about it:</strong> No software in guests + VMware = <b>Agentless Collector</b> (OVA on vCenter), OS-agnostic.<br><br>
+<strong>Why A is correct:</strong> The collector is a VM appliance that reads inventory and CPU, memory and disk history from vCenter without guest agents.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Enable VPC Flow Logs for the data center network</em> &mdash; Flow Logs record traffic in AWS VPCs, not inside an on-premises VMware estate.<br><em>C) Run AWS Systems Manager Inventory on the VMs</em> &mdash; SSM Inventory needs the SSM Agent installed in each guest.<br><em>D) Install the Discovery Agent on each VM anyway</em> &mdash; That requires software on every guest, which is not allowed here.
+</div>
+</div>
+
+<!-- Q37 Discovery & MGN -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Discovery & MGN" data-level="B">
+<div class="q-tags"><span class="q-tag">Discovery & MGN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>A company must rehost hundreds of physical, VMware and other-cloud servers to EC2 with minimal cutover downtime. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Application Migration Service (MGN)</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VM Import/Export only</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Database Migration Service</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS DataSync</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AWS Application Migration Service (MGN)<br><br>
+<strong>How to think about it:</strong> Rehost servers with continuous replication + short cutover = <b>Application Migration Service (MGN)</b>.<br><br>
+<strong>Why A is correct:</strong> MGN installs a replication agent, continuously replicates disks and converts servers to run natively on EC2 at cutover.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) VM Import/Export only</em> &mdash; VM Import converts single images offline, with no continuous replication for short cutovers.<br><em>C) AWS Database Migration Service</em> &mdash; DMS moves databases, not entire servers with their OS and applications.<br><em>D) AWS DataSync</em> &mdash; DataSync copies files and objects; it does not convert whole servers to EC2.
+</div>
+</div>
+
+<!-- Q38 Discovery & MGN -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Discovery & MGN" data-level="B">
+<div class="q-tags"><span class="q-tag">Discovery & MGN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>Application Migration Service is the recommended rehost tool. Which earlier services does it replace?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS DataSync and AWS Transfer Family</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Backup and Elastic Disaster Recovery</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CloudEndure Migration and AWS Server Migration Service</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Snowball and Storage Gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> CloudEndure Migration and AWS Server Migration Service<br><br>
+<strong>How to think about it:</strong> <b>MGN</b> = successor to <b>CloudEndure Migration</b> and <b>Server Migration Service (SMS)</b>.<br><br>
+<strong>Why C is correct:</strong> MGN evolved from CloudEndure Migration and replaced SMS, which has been retired.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS DataSync and AWS Transfer Family</em> &mdash; Those services move files; MGN did not replace them.<br><em>B) AWS Backup and Elastic Disaster Recovery</em> &mdash; Both remain separate services; DRS is a sibling of MGN, not its predecessor.<br><em>D) AWS Snowball and Storage Gateway</em> &mdash; Those are data transfer and hybrid storage services, still separate from MGN.
+</div>
+</div>
+
+<!-- Q39 Discovery & MGN -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Discovery & MGN" data-level="B">
+<div class="q-tags"><span class="q-tag">Discovery & MGN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Critical on-premises servers need a recovery site in AWS with continuous block-level replication and failover in minutes. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Backup</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Elastic Disaster Recovery</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Application Migration Service</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon S3 Cross-Region Replication</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS Elastic Disaster Recovery<br><br>
+<strong>How to think about it:</strong> Server-level DR into AWS (formerly CloudEndure DR) = <b>Elastic Disaster Recovery (DRS)</b>.<br><br>
+<strong>Why B is correct:</strong> DRS continuously replicates servers into a low-cost staging area and launches recovery instances in minutes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Backup</em> &mdash; AWS Backup takes scheduled backups, which gives a longer RPO than continuous replication.<br><em>C) AWS Application Migration Service</em> &mdash; MGN is built for one-time migrations, not ongoing disaster recovery.<br><em>D) Amazon S3 Cross-Region Replication</em> &mdash; CRR copies S3 objects; it does not protect whole servers.
+</div>
+</div>
+
+<!-- Q40 Discovery & MGN -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Discovery & MGN" data-level="B">
+<div class="q-tags"><span class="q-tag">Discovery & MGN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>Executives want a data-driven business case with projected AWS costs before approving a migration. Which service helps build it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Compute Optimizer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Cost Explorer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Migration Evaluator</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Pricing Calculator alone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS Migration Evaluator<br><br>
+<strong>How to think about it:</strong> Business case + cost projection = <b>Migration Evaluator</b>.<br><br>
+<strong>Why C is correct:</strong> Migration Evaluator collects on-premises inventory and utilization and produces cost insights for a migration business case.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Compute Optimizer</em> &mdash; Compute Optimizer right-sizes resources already running in AWS.<br><em>B) AWS Cost Explorer</em> &mdash; Cost Explorer analyzes spend already in AWS, not costs of servers yet to move.<br><em>D) AWS Pricing Calculator alone</em> &mdash; The calculator estimates costs you type in; it does not discover the current estate.
+</div>
+</div>
+
+<!-- Q41 Discovery & MGN -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Discovery & MGN" data-level="A">
+<div class="q-tags"><span class="q-tag">Discovery & MGN</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>While Application Migration Service replicates source servers before cutover, where does the replicated data land?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">On a Snowball Edge shipped to the data center</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Directly on the production target instances</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">In an S3 bucket as raw disk image files</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">In a staging area of low-cost servers and EBS volumes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> In a staging area of low-cost servers and EBS volumes<br><br>
+<strong>How to think about it:</strong> MGN: agent replicates to a <b>staging area</b> (cheap instances + EBS), then <b>cutover</b> launches target instances.<br><br>
+<strong>Why D is correct:</strong> MGN keeps costs low until cutover, then launches the right-sized target instances from the replicated data.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) On a Snowball Edge shipped to the data center</em> &mdash; MGN replicates continuously over the network, not via a shipped device.<br><em>B) Directly on the production target instances</em> &mdash; Target instances are launched only for tests and cutover, not during replication.<br><em>C) In an S3 bucket as raw disk image files</em> &mdash; Replication writes to EBS volumes in a staging area, not to files you manage in S3.
+</div>
+</div>
+
+<!-- Q42 Discovery & MGN -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Discovery & MGN" data-level="A">
+<div class="q-tags"><span class="q-tag">Discovery & MGN</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>After failing over to AWS with Elastic Disaster Recovery, the original data center is repaired. How does the company return?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Run AWS Backup restores into the data center</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Rebuild every server on premises from scratch by hand</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use DRS failback to replicate back to the original site</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use DMS to copy every server disk back</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Use DRS failback to replicate back to the original site<br><br>
+<strong>How to think about it:</strong> DRS supports <b>failback</b> to the original site once it is healthy.<br><br>
+<strong>Why C is correct:</strong> DRS can reverse replication and fail back to the recovered on-premises servers.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Run AWS Backup restores into the data center</em> &mdash; AWS Backup does not restore EC2 recovery instances back onto on-premises servers.<br><em>B) Rebuild every server on premises from scratch by hand</em> &mdash; DRS provides a failback path, so a full manual rebuild is not required.<br><em>D) Use DMS to copy every server disk back</em> &mdash; DMS moves database data, not whole server disks.
+</div>
+</div>
+
+<!-- Q43 Disaster Recovery -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Disaster Recovery" data-level="B">
+<div class="q-tags"><span class="q-tag">Disaster Recovery</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>In disaster recovery, what does RPO measure?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The number of Regions holding a copy of the data</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The maximum acceptable data loss, as time before the disaster</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The percentage of requests served during failover</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The maximum acceptable downtime after a disaster</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The maximum acceptable data loss, as time before the disaster<br><br>
+<strong>How to think about it:</strong> <b>RPO</b> = how much <b>data</b> you can lose (time back to last good copy). <b>RTO</b> = how long you are <b>down</b>.<br><br>
+<strong>Why B is correct:</strong> Recovery Point Objective is how far back the last usable copy of data may be.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The number of Regions holding a copy of the data</em> &mdash; Copy count affects resilience but is not the definition of RPO.<br><em>C) The percentage of requests served during failover</em> &mdash; That is an availability measure, not a recovery objective.<br><em>D) The maximum acceptable downtime after a disaster</em> &mdash; That is RTO, the time to restore service.
+</div>
+</div>
+
+<!-- Q44 Disaster Recovery -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Disaster Recovery" data-level="B">
+<div class="q-tags"><span class="q-tag">Disaster Recovery</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>In disaster recovery, what does RTO measure?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">How often backups are scheduled</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">How long backups are retained</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The downtime until service is restored</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">How much data can be lost in the disaster</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The downtime until service is restored<br><br>
+<strong>How to think about it:</strong> <b>RTO</b> = recovery <b>time</b>, the downtime between disaster and restored service.<br><br>
+<strong>Why C is correct:</strong> Recovery Time Objective is how long the business can tolerate the application being down.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) How often backups are scheduled</em> &mdash; Backup frequency drives RPO rather than defining RTO.<br><em>B) How long backups are retained</em> &mdash; Retention is a compliance setting, not a recovery objective.<br><em>D) How much data can be lost in the disaster</em> &mdash; Data loss is measured by RPO, not RTO.
+</div>
+</div>
+
+<!-- Q45 Disaster Recovery -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Disaster Recovery" data-level="B">
+<div class="q-tags"><span class="q-tag">Disaster Recovery</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>Which DR strategy is cheapest but has the highest RPO and RTO?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Pilot light</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Multi-site active/active</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Warm standby</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Backup and restore</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Backup and restore<br><br>
+<strong>How to think about it:</strong> DR ladder (slow to fast): <b>Backup &amp; Restore</b>, Pilot Light, Warm Standby, Multi-Site.<br><br>
+<strong>Why D is correct:</strong> Only backups are kept in AWS, so nothing runs until a disaster and recovery takes longest.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Pilot light</em> &mdash; Pilot light keeps core data live, giving faster recovery at slightly more cost.<br><em>B) Multi-site active/active</em> &mdash; Multi-site is the most expensive and the fastest to recover.<br><em>C) Warm standby</em> &mdash; Warm standby runs a full scaled-down copy, which costs more than backups.
+</div>
+</div>
+
+<!-- Q46 Disaster Recovery -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Disaster Recovery" data-level="B">
+<div class="q-tags"><span class="q-tag">Disaster Recovery</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>Only the core database is replicated and running in AWS; application servers exist as images and are started on failover. Which strategy is this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Backup and restore</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Pilot light</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Multi-site active/active</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Warm standby</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Pilot light<br><br>
+<strong>How to think about it:</strong> Only the critical core is lit (DB running, app servers off) = <b>Pilot Light</b>.<br><br>
+<strong>Why B is correct:</strong> A small critical core, usually the replicated database, runs all the time while the rest is started on demand.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Backup and restore</em> &mdash; Backup and restore has no live replicated database waiting in AWS.<br><em>C) Multi-site active/active</em> &mdash; Multi-site runs full production capacity in both places.<br><em>D) Warm standby</em> &mdash; Warm standby already runs the whole stack at minimum size, application servers included.
+</div>
+</div>
+
+<!-- Q47 Disaster Recovery -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Disaster Recovery" data-level="B">
+<div class="q-tags"><span class="q-tag">Disaster Recovery</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>A full copy of the stack runs in AWS at minimum size behind a load balancer and is scaled up to production when disaster strikes. Which strategy is this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Backup and restore</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Multi-site active/active</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Warm standby</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Pilot light</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Warm standby<br><br>
+<strong>How to think about it:</strong> Whole system running but <b>small</b>, scale up on failover = <b>Warm Standby</b>.<br><br>
+<strong>Why C is correct:</strong> Every tier runs at minimum capacity, so failover only needs scaling, which shortens RTO.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Backup and restore</em> &mdash; Backup and restore has no running servers before the disaster.<br><em>B) Multi-site active/active</em> &mdash; Multi-site runs at full production scale, not minimum size.<br><em>D) Pilot light</em> &mdash; Pilot light runs just the critical core, not the full stack.
+</div>
+</div>
+
+<!-- Q48 Disaster Recovery -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Disaster Recovery" data-level="B">
+<div class="q-tags"><span class="q-tag">Disaster Recovery</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>Which DR strategy gives an RTO of seconds to minutes by running full production capacity in two locations at once?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Warm standby</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Pilot light</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Backup and restore</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Multi-site active/active</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Multi-site active/active<br><br>
+<strong>How to think about it:</strong> Lowest RTO, highest cost, both sides live = <b>Multi-site / hot site (active/active)</b>.<br><br>
+<strong>Why D is correct:</strong> Both sites serve full production traffic, so failover is mostly a DNS or routing change.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Warm standby</em> &mdash; Warm standby must scale up before it can carry full load.<br><em>B) Pilot light</em> &mdash; Pilot light must launch application servers before serving traffic.<br><em>C) Backup and restore</em> &mdash; Restoring from backups takes hours, the slowest option.
+</div>
+</div>
+
+<!-- Q49 Disaster Recovery -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Disaster Recovery" data-level="B">
+<div class="q-tags"><span class="q-tag">Disaster Recovery</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>Which lists DR strategies from slowest RTO to fastest RTO?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Multi-site, warm standby, pilot light, backup and restore</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Backup and restore, warm standby, pilot light, multi-site</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Backup and restore, pilot light, warm standby, multi-site</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Pilot light, backup and restore, warm standby, multi-site</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Backup and restore, pilot light, warm standby, multi-site<br><br>
+<strong>How to think about it:</strong> Order by RTO: <b>Backup &amp; Restore, Pilot Light, Warm Standby, Multi-Site</b>.<br><br>
+<strong>Why C is correct:</strong> Each step keeps more running in advance, so recovery gets faster and cost rises.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Multi-site, warm standby, pilot light, backup and restore</em> &mdash; This is the fastest-to-slowest order, the reverse of what was asked.<br><em>B) Backup and restore, warm standby, pilot light, multi-site</em> &mdash; Warm standby runs more than pilot light, so it recovers faster.<br><em>D) Pilot light, backup and restore, warm standby, multi-site</em> &mdash; Pilot light already has a live core, so it is faster than backup and restore.
+</div>
+</div>
+
+<!-- Q50 Disaster Recovery -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Disaster Recovery" data-level="B">
+<div class="q-tags"><span class="q-tag">Disaster Recovery</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>Users must be sent automatically to a standby Region when the primary Region's endpoint fails health checks. Which feature does this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A VPC peering connection between Regions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudFront geographic restrictions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Route 53 failover routing with health checks</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An Application Load Balancer spanning both Regions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Route 53 failover routing with health checks<br><br>
+<strong>How to think about it:</strong> Automatic DNS switch between Regions = <b>Route 53 failover routing</b> + health checks.<br><br>
+<strong>Why C is correct:</strong> Route 53 answers with the secondary record when the primary's health check fails, moving traffic to the DR Region.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A VPC peering connection between Regions</em> &mdash; Peering connects networks but does not redirect client traffic.<br><em>B) CloudFront geographic restrictions</em> &mdash; Geo restrictions block countries; they do not fail over on health.<br><em>D) An Application Load Balancer spanning both Regions</em> &mdash; An ALB is Regional and cannot route across Regions.
+</div>
+</div>
+
+<!-- Q51 Disaster Recovery -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Disaster Recovery" data-level="B">
+<div class="q-tags"><span class="q-tag">Disaster Recovery</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>A team wants to test resilience by injecting CPU stress and instance terminations into EC2, ECS, EKS and RDS, with experiments stopping on a CloudWatch alarm. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Resilience Hub</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Fault Injection Service</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Elastic Disaster Recovery</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon CloudWatch Synthetics</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS Fault Injection Service<br><br>
+<strong>How to think about it:</strong> Managed chaos engineering = <b>AWS Fault Injection Service (FIS)</b>.<br><br>
+<strong>Why B is correct:</strong> FIS runs fault injection experiments from templates and can halt them automatically when a stop-condition alarm fires.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Resilience Hub</em> &mdash; Resilience Hub assesses apps against RTO and RPO targets; it is not the fault injection engine.<br><em>C) AWS Elastic Disaster Recovery</em> &mdash; DRS replicates servers for recovery; it does not run chaos experiments.<br><em>D) Amazon CloudWatch Synthetics</em> &mdash; Synthetics canaries probe endpoints; they do not inject failures.
+</div>
+</div>
+
+<!-- Q52 Disaster Recovery -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Disaster Recovery" data-level="A">
+<div class="q-tags"><span class="q-tag">Disaster Recovery</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>A global app needs a relational database with cross-Region RPO of about one second and promotion of the secondary Region in about a minute. Which fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Aurora Global Database</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">DynamoDB global tables</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Daily RDS snapshots copied to another Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">RDS Multi-AZ in one Region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon Aurora Global Database<br><br>
+<strong>How to think about it:</strong> Cross-Region relational DR with ~1 s RPO = <b>Aurora Global Database</b>.<br><br>
+<strong>Why A is correct:</strong> Aurora Global Database replicates storage to other Regions with typical lag under a second and supports fast promotion.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) DynamoDB global tables</em> &mdash; Global tables are NoSQL, while the requirement is relational.<br><em>C) Daily RDS snapshots copied to another Region</em> &mdash; Daily snapshots give an RPO of up to a day.<br><em>D) RDS Multi-AZ in one Region</em> &mdash; Multi-AZ protects against an AZ failure, not a Regional disaster.
+</div>
+</div>
+
+<!-- Q53 Disaster Recovery -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Disaster Recovery" data-level="A">
+<div class="q-tags"><span class="q-tag">Disaster Recovery</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>A company's only link to AWS is a single Direct Connect connection. What is the low-cost backup if it fails?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A second Direct Connect at the same location</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Global Accelerator</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Site-to-Site VPN over the internet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A NAT gateway in each Availability Zone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A Site-to-Site VPN over the internet<br><br>
+<strong>How to think about it:</strong> Cheap backup for Direct Connect = <b>Site-to-Site VPN</b> over the internet.<br><br>
+<strong>Why C is correct:</strong> A VPN costs little and keeps private connectivity if the Direct Connect link goes down.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A second Direct Connect at the same location</em> &mdash; A second link adds resilience but costs much more than a VPN.<br><em>B) AWS Global Accelerator</em> &mdash; Global Accelerator speeds public user traffic; it is not a private backup link.<br><em>D) A NAT gateway in each Availability Zone</em> &mdash; NAT gateways give outbound internet to private subnets, not a link to on premises.
+</div>
+</div>
+
+<!-- Q54 Disaster Recovery -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Disaster Recovery" data-level="A">
+<div class="q-tags"><span class="q-tag">Disaster Recovery</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>For a Region-level DR plan, which approach recreates an entire application environment quickly and consistently in the recovery Region?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Copy the VPC across Regions with VPC peering</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Deploy CloudFormation templates in the recovery Region</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Follow a written runbook of console clicks</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable S3 Cross-Region Replication only</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Deploy CloudFormation templates in the recovery Region<br><br>
+<strong>How to think about it:</strong> Rebuild environments fast and repeatably = <b>infrastructure as code</b> (CloudFormation).<br><br>
+<strong>Why B is correct:</strong> Infrastructure as code rebuilds every resource the same way, cutting RTO and removing manual errors.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Copy the VPC across Regions with VPC peering</em> &mdash; Peering connects VPCs; it does not copy resources into another Region.<br><em>C) Follow a written runbook of console clicks</em> &mdash; Manual console steps are slow and error-prone during a disaster.<br><em>D) Enable S3 Cross-Region Replication only</em> &mdash; CRR copies objects but does not rebuild compute, networking or databases.
+</div>
+</div>
+
+<!-- Q55 AWS Backup -->
+<div class="question" data-type="mc" data-answer="1" data-topic="AWS Backup" data-level="B">
+<div class="q-tags"><span class="q-tag">AWS Backup</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>A company wants one place to schedule and retain backups for EC2, EBS, RDS, DynamoDB, EFS and FSx without custom scripts. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Elastic Disaster Recovery</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Backup</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Storage Gateway</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Data Lifecycle Manager</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS Backup<br><br>
+<strong>How to think about it:</strong> Central, policy-driven backup across services = <b>AWS Backup</b>.<br><br>
+<strong>Why B is correct:</strong> AWS Backup centrally manages and automates backups across many AWS services with backup plans.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Elastic Disaster Recovery</em> &mdash; DRS replicates servers for failover rather than scheduling backups across services.<br><em>C) AWS Storage Gateway</em> &mdash; Storage Gateway connects on-premises storage to AWS; it is not a backup scheduler.<br><em>D) Amazon Data Lifecycle Manager</em> &mdash; Data Lifecycle Manager automates EBS snapshots and AMIs only, not RDS, DynamoDB or EFS.
+</div>
+</div>
+
+<!-- Q56 AWS Backup -->
+<div class="question" data-type="mc" data-answer="2" data-topic="AWS Backup" data-level="B">
+<div class="q-tags"><span class="q-tag">AWS Backup</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>In AWS Backup, which object defines backup frequency, the backup window, the move to cold storage and the retention period?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A recovery point</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A backup vault</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A backup plan</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A restore testing plan</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A backup plan<br><br>
+<strong>How to think about it:</strong> Frequency + window + cold storage + retention = <b>Backup Plan</b>.<br><br>
+<strong>Why C is correct:</strong> A backup plan holds rules for schedule, window, lifecycle to cold storage and retention.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A recovery point</em> &mdash; A recovery point is one backup copy, not the policy that creates it.<br><em>B) A backup vault</em> &mdash; A vault is where recovery points are stored and secured, not where schedules are set.<br><em>D) A restore testing plan</em> &mdash; Restore testing checks that backups can be restored; it does not schedule them.
+</div>
+</div>
+
+<!-- Q57 AWS Backup -->
+<div class="question" data-type="mc" data-answer="2" data-topic="AWS Backup" data-level="B">
+<div class="q-tags"><span class="q-tag">AWS Backup</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>New resources should be protected automatically as soon as they are created, without editing the backup plan each time. How?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turn on default encryption for the account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">List each resource ARN in the plan</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Assign resources to the plan by tag</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable versioning on each resource</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Assign resources to the plan by tag<br><br>
+<strong>How to think about it:</strong> Auto-include new resources = assign by <b>tags</b> in the backup plan.<br><br>
+<strong>Why C is correct:</strong> Tag-based resource assignment protects any resource carrying the tag, including ones created later.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Turn on default encryption for the account</em> &mdash; Encryption settings do not decide which resources get backed up.<br><em>B) List each resource ARN in the plan</em> &mdash; A fixed ARN list misses resources created after the plan was written.<br><em>D) Enable versioning on each resource</em> &mdash; Versioning is an S3 feature and does not enrol resources in a backup plan.
+</div>
+</div>
+
+<!-- Q58 AWS Backup -->
+<div class="question" data-type="mc" data-answer="3" data-topic="AWS Backup" data-level="A">
+<div class="q-tags"><span class="q-tag">AWS Backup</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>Auditors require that backups cannot be deleted or have retention shortened by anyone, even the root user. What should you enable?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">MFA Delete on the backup vault</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Object Lock on the vault bucket</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An IAM policy denying backup:DeleteRecoveryPoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Backup Vault Lock</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Backup Vault Lock<br><br>
+<strong>How to think about it:</strong> WORM backups that even root cannot delete = <b>AWS Backup Vault Lock</b>.<br><br>
+<strong>Why D is correct:</strong> Vault Lock puts the vault in a WORM state, blocking deletion and retention changes, even by the root user.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) MFA Delete on the backup vault</em> &mdash; MFA Delete is an S3 versioning feature, not an AWS Backup control.<br><em>B) S3 Object Lock on the vault bucket</em> &mdash; Backup vaults are not S3 buckets you manage, so Object Lock cannot be set on them.<br><em>C) An IAM policy denying backup:DeleteRecoveryPoint</em> &mdash; IAM policies do not restrict the root user, and admins can change them.
+</div>
+</div>
+
+<!-- Q59 AWS Backup -->
+<div class="question" data-type="mc" data-answer="0" data-topic="AWS Backup" data-level="A">
+<div class="q-tags"><span class="q-tag">AWS Backup</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>Backups must survive both a Regional outage and a compromise of the production account. What should the backup plan do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Copy recovery points to another Region and account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Transition backups to cold storage sooner</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Take backups more often in the same Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Increase retention in the same vault</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Copy recovery points to another Region and account<br><br>
+<strong>How to think about it:</strong> Survive Region loss + account compromise = <b>cross-Region and cross-account copies</b>.<br><br>
+<strong>Why A is correct:</strong> AWS Backup supports cross-Region and cross-account copies, isolating backups from both failure types.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Transition backups to cold storage sooner</em> &mdash; Cold storage lowers cost; it does not move backups out of the Region or account.<br><em>C) Take backups more often in the same Region</em> &mdash; More frequent backups improve RPO but not isolation.<br><em>D) Increase retention in the same vault</em> &mdash; Longer retention in one place still shares the Region and account risk.
+</div>
+</div>
+
+<!-- Q60 AWS Backup -->
+<div class="question" data-type="mc" data-answer="3" data-topic="AWS Backup" data-level="A">
+<div class="q-tags"><span class="q-tag">AWS Backup</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>An RDS database must be recoverable to any second within the last 35 days through AWS Backup. Which capability is needed?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A weekly backup plan with cron expressions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Cold storage transition after one day</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Daily snapshot backups with long retention</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Continuous backups with point-in-time recovery</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Continuous backups with point-in-time recovery<br><br>
+<strong>How to think about it:</strong> Restore to any second = <b>continuous backup</b> with <b>point-in-time recovery (PITR)</b>.<br><br>
+<strong>Why D is correct:</strong> AWS Backup continuous backups for supported services such as RDS allow restores to a chosen second within retention.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A weekly backup plan with cron expressions</em> &mdash; A weekly schedule gives even coarser restore points.<br><em>B) Cold storage transition after one day</em> &mdash; Cold storage lowers cost and does not add point-in-time restores.<br><em>C) Daily snapshot backups with long retention</em> &mdash; Daily snapshots restore only to each snapshot time, not to any second.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

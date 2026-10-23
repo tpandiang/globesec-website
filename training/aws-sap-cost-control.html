@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Cost Control - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Cost Control</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Cost Control</h2>
+        <p>60 refresher questions &mdash; Cost allocation tags, Tag Editor, Trusted Advisor, Service Quotas, Savings Plans &amp; Reserved Instances, S3 storage classes, AWS Budgets, Cost Explorer &amp; Compute Optimizer</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="Cost Tags" onclick="filterQ(this)">Cost Tags</button><button class="filter-btn" data-f="Trusted Advisor" onclick="filterQ(this)">Trusted Advisor</button><button class="filter-btn" data-f="Savings Plans" onclick="filterQ(this)">Savings Plans</button><button class="filter-btn" data-f="S3 Classes" onclick="filterQ(this)">S3 Classes</button><button class="filter-btn" data-f="Budgets" onclick="filterQ(this)">Budgets</button><button class="filter-btn" data-f="Cost Explorer" onclick="filterQ(this)">Cost Explorer</button><button class="filter-btn" data-f="Compute Optimizer" onclick="filterQ(this)">Compute Optimizer</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 Cost Tags -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Cost Tags" data-level="B">
+<div class="q-tags"><span class="q-tag">Cost Tags</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>Teams tagged every resource with CostCenter, but the tag never shows up as a column in billing reports or as a Cost Explorer grouping. What is missing?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Adding the tag again with the Tag Editor</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Turning on AWS Config recording for tags</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Renaming the key so it starts with aws:</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Activating CostCenter as a cost allocation tag</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Activating CostCenter as a cost allocation tag<br><br>
+<strong>How to think about it:</strong> A tag only reaches billing once it is <b>activated as a cost allocation tag</b>.<br><br>
+<strong>Why D is correct:</strong> User-defined tags must be activated for cost allocation before they appear in cost reports and Cost Explorer.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Adding the tag again with the Tag Editor</em> &mdash; Re-tagging changes nothing; the tag is not yet enabled for billing.<br><em>B) Turning on AWS Config recording for tags</em> &mdash; Config records resource configuration, not billing dimensions.<br><em>C) Renaming the key so it starts with aws:</em> &mdash; The aws: prefix is reserved for tags AWS generates; you cannot create it.
+</div>
+</div>
+
+<!-- Q2 Cost Tags -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Cost Tags" data-level="B">
+<div class="q-tags"><span class="q-tag">Cost Tags</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>In cost allocation reports, which prefix identifies tags that AWS generated automatically, such as the one recording who created a resource?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">user:</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">billing:</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">aws:</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sys:</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> aws:<br><br>
+<strong>How to think about it:</strong> <b>aws:</b> = AWS-generated (e.g. aws:createdBy). <b>user:</b> = tags you defined.<br><br>
+<strong>Why C is correct:</strong> AWS-generated cost allocation tags, like aws:createdBy, carry the aws: prefix.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) user:</em> &mdash; user: marks tags you defined yourself, not ones AWS generated.<br><em>B) billing:</em> &mdash; There is no billing: prefix for generated tags.<br><em>D) sys:</em> &mdash; AWS does not use a sys: prefix for cost allocation tags.
+</div>
+</div>
+
+<!-- Q3 Cost Tags -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Cost Tags" data-level="B">
+<div class="q-tags"><span class="q-tag">Cost Tags</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>A cost allocation tag was activated a few minutes ago. When can finance expect to see it in billing data?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Within about 24 hours</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only from the start of the next billing month</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only after a full 7-day refresh cycle</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Immediately, as soon as it is activated</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Within about 24 hours<br><br>
+<strong>How to think about it:</strong> Activated cost allocation tags take <b>up to 24 hours</b> to appear.<br><br>
+<strong>Why A is correct:</strong> Billing takes up to a day to start showing a newly activated cost allocation tag.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Only from the start of the next billing month</em> &mdash; Tags appear well before the next month begins.<br><em>C) Only after a full 7-day refresh cycle</em> &mdash; The delay is about a day, not a week.<br><em>D) Immediately, as soon as it is activated</em> &mdash; There is a processing delay before activated tags appear.
+</div>
+</div>
+
+<!-- Q4 Cost Tags -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Cost Tags" data-level="B">
+<div class="q-tags"><span class="q-tag">Cost Tags</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>An administrator needs to find untagged resources across every Region and add a Project tag to hundreds of them at once. Which tool fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Trusted Advisor</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The Cost and Usage data export</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Budgets</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Tag Editor in AWS Resource Groups</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Tag Editor in AWS Resource Groups<br><br>
+<strong>How to think about it:</strong> Bulk add, change or remove tags across Regions = <b>Tag Editor</b>.<br><br>
+<strong>Why D is correct:</strong> Tag Editor searches tagged and untagged resources across Regions and edits their tags in bulk.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Trusted Advisor</em> &mdash; Trusted Advisor gives recommendations; it does not edit tags.<br><em>B) The Cost and Usage data export</em> &mdash; Billing data shows tags but cannot change them.<br><em>C) AWS Budgets</em> &mdash; Budgets can filter on tags but cannot apply them.
+</div>
+</div>
+
+<!-- Q5 Cost Tags -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Cost Tags" data-level="A">
+<div class="q-tags"><span class="q-tag">Cost Tags</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>After activating the AWS-generated aws:createdBy tag, finance notices that older resources show no creator in the reports. Why?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudTrail must first be switched to data events</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The tag works only in the management account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The tag only covers EC2 instances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It is only applied to resources created after activation</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> It is only applied to resources created after activation<br><br>
+<strong>How to think about it:</strong> AWS-generated tags are <b>not applied retroactively</b> to resources created before activation.<br><br>
+<strong>Why D is correct:</strong> aws:createdBy is added at creation time, so resources that existed before activation never get it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) CloudTrail must first be switched to data events</em> &mdash; aws:createdBy relies on management events, not data events.<br><em>B) The tag works only in the management account</em> &mdash; The tag applies across member accounts once activated by the payer.<br><em>C) The tag only covers EC2 instances</em> &mdash; It applies to many resource types, not just EC2.
+</div>
+</div>
+
+<!-- Q6 Cost Tags -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Cost Tags" data-level="A">
+<div class="q-tags"><span class="q-tag">Cost Tags</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>Several projects share the same AWS accounts. Finance wants a monthly cost breakdown per project in Cost Explorer. What is the right approach?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Put each project's resources in a different Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Activate a Project cost allocation tag and group by it</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a separate IAM role for each project</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable Compute Optimizer for each project</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Activate a Project cost allocation tag and group by it<br><br>
+<strong>How to think about it:</strong> Per-project cost in shared accounts = <b>tag + activate</b> + <b>group by tag</b> in Cost Explorer.<br><br>
+<strong>Why B is correct:</strong> An activated cost allocation tag becomes a Cost Explorer dimension, so costs can be split by project.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Put each project's resources in a different Region</em> &mdash; Region splits are crude and force bad architecture choices.<br><em>C) Create a separate IAM role for each project</em> &mdash; Roles control access; billing is not broken down by the role that used it.<br><em>D) Enable Compute Optimizer for each project</em> &mdash; Compute Optimizer gives rightsizing advice, not cost splits.
+</div>
+</div>
+
+<!-- Q7 Trusted Advisor -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Trusted Advisor" data-level="B">
+<div class="q-tags"><span class="q-tag">Trusted Advisor</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>With nothing to install, a company wants account-wide recommendations on idle resources, open security groups, fault tolerance and service limits. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Config</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Inspector</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Trusted Advisor</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Compute Optimizer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS Trusted Advisor<br><br>
+<strong>How to think about it:</strong> High-level account health check across cost, security, performance, fault tolerance and limits = <b>Trusted Advisor</b>.<br><br>
+<strong>Why C is correct:</strong> Trusted Advisor inspects the account and recommends fixes across cost, performance, security, fault tolerance, limits and operations.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Config</em> &mdash; Config records configuration and checks rules you define; it is not a best-practice advisor.<br><em>B) Amazon Inspector</em> &mdash; Inspector scans workloads for software vulnerabilities, not idle resources or limits.<br><em>D) AWS Compute Optimizer</em> &mdash; Compute Optimizer rightsizes compute; it does not check security groups or limits.
+</div>
+</div>
+
+<!-- Q8 Trusted Advisor -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Trusted Advisor" data-level="B">
+<div class="q-tags"><span class="q-tag">Trusted Advisor</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>Which AWS Support plan level unlocks the full set of Trusted Advisor checks and programmatic access through the AWS Support API?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Developer Support</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Business Support or a higher plan</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Basic Support</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Any plan once weekly email reports are turned on</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Business Support or a higher plan<br><br>
+<strong>How to think about it:</strong> Basic and Developer = <b>core checks</b> only. <b>Business or higher</b> = all checks + Support API.<br><br>
+<strong>Why B is correct:</strong> The full check set and the Support API are included from the Business tier upward.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Developer Support</em> &mdash; Developer also gets just the core checks.<br><em>C) Basic Support</em> &mdash; Basic includes only the core checks and no Support API.<br><em>D) Any plan once weekly email reports are turned on</em> &mdash; Email notifications do not unlock extra checks.
+</div>
+</div>
+
+<!-- Q9 Trusted Advisor -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Trusted Advisor" data-level="B">
+<div class="q-tags"><span class="q-tag">Trusted Advisor</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>Trusted Advisor shows that a service limit is at 85%. How do you raise it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Click Increase on the Trusted Advisor check</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Raise the warning threshold on the Trusted Advisor check</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Attach an SCP that allows more resources</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Request an increase in Service Quotas or open a Support case</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Request an increase in Service Quotas or open a Support case<br><br>
+<strong>How to think about it:</strong> Trusted Advisor only <b>monitors</b> limits. Raise them with <b>Service Quotas</b> (or a Support case).<br><br>
+<strong>Why D is correct:</strong> Trusted Advisor cannot change limits; increases go through Service Quotas or AWS Support.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Click Increase on the Trusted Advisor check</em> &mdash; Trusted Advisor has no button to change a limit.<br><em>B) Raise the warning threshold on the Trusted Advisor check</em> &mdash; Changing a threshold hides the alert but leaves the limit as it is.<br><em>C) Attach an SCP that allows more resources</em> &mdash; SCPs restrict permissions; they never raise service quotas.
+</div>
+</div>
+
+<!-- Q10 Trusted Advisor -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Trusted Advisor" data-level="B">
+<div class="q-tags"><span class="q-tag">Trusted Advisor</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>Operations want a CloudWatch alarm before Lambda concurrent executions reach the account quota. Where is this set up?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The Trusted Advisor weekly email</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A usage budget in AWS Budgets for Lambda</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch alarm created in Service Quotas</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An AWS Config managed rule</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A CloudWatch alarm created in Service Quotas<br><br>
+<strong>How to think about it:</strong> Alarm when nearing a quota = <b>Service Quotas</b> + CloudWatch alarm.<br><br>
+<strong>Why C is correct:</strong> Service Quotas can create CloudWatch alarms that fire at a chosen percentage of a quota.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The Trusted Advisor weekly email</em> &mdash; A weekly email is too slow and is not an alarm.<br><em>B) A usage budget in AWS Budgets for Lambda</em> &mdash; Budgets track spend and usage, not proximity to a service quota.<br><em>D) An AWS Config managed rule</em> &mdash; Config rules check resource compliance, not live quota usage.
+</div>
+</div>
+
+<!-- Q11 Trusted Advisor -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Trusted Advisor" data-level="B">
+<div class="q-tags"><span class="q-tag">Trusted Advisor</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>Which of these does the Trusted Advisor S3 check NOT detect?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A bucket ACL that grants access to everyone</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A bucket whose policy allows public reads</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Public objects inside a bucket that is otherwise private</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A bucket ACL granting list rights to any user</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Public objects inside a bucket that is otherwise private<br><br>
+<strong>How to think about it:</strong> Trusted Advisor checks <b>bucket</b> permissions, not public <b>objects</b>. Use Config, Macie or S3 events for objects.<br><br>
+<strong>Why C is correct:</strong> The check looks at bucket ACLs and policies, not the ACLs on each object.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A bucket ACL that grants access to everyone</em> &mdash; Bucket-level ACL grants to all users are flagged.<br><em>B) A bucket whose policy allows public reads</em> &mdash; Open bucket permissions are exactly what the check flags.<br><em>D) A bucket ACL granting list rights to any user</em> &mdash; This is also a bucket-level permission the check reports.
+</div>
+</div>
+
+<!-- Q12 Trusted Advisor -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Trusted Advisor" data-level="A">
+<div class="q-tags"><span class="q-tag">Trusted Advisor</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>The operations team wants to be alerted within minutes whenever a Trusted Advisor check changes status to red, and to post it to a chat channel. What is the AWS-native design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An AWS Budgets alert on Trusted Advisor costs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An EventBridge rule on Trusted Advisor events, to SNS or Lambda</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An AWS Config aggregator across the accounts</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudTrail data events on the Trusted Advisor API</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An EventBridge rule on Trusted Advisor events, to SNS or Lambda<br><br>
+<strong>How to think about it:</strong> React to Trusted Advisor changes = <b>EventBridge rule</b> to SNS or Lambda.<br><br>
+<strong>Why B is correct:</strong> Trusted Advisor publishes check status changes to EventBridge, which can notify or call a Lambda to post the message.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An AWS Budgets alert on Trusted Advisor costs</em> &mdash; Budgets track spend, not Trusted Advisor results.<br><em>C) An AWS Config aggregator across the accounts</em> &mdash; Config aggregates configuration data, not Trusted Advisor results.<br><em>D) CloudTrail data events on the Trusted Advisor API</em> &mdash; Data events log API calls; they do not report a check turning red.
+</div>
+</div>
+
+<!-- Q13 Trusted Advisor -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Trusted Advisor" data-level="A">
+<div class="q-tags"><span class="q-tag">Trusted Advisor</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>A company with 80 accounts in AWS Organizations wants one consolidated report of Trusted Advisor checks across all member accounts. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Config conformance packs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Trusted Advisor organizational view</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Cost Explorer grouped by linked account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Sign in to each account and download its checks</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Trusted Advisor organizational view<br><br>
+<strong>How to think about it:</strong> Trusted Advisor across an org = <b>organizational view</b> (all features + Business or higher support).<br><br>
+<strong>Why B is correct:</strong> With all features enabled in Organizations, organizational view gathers check results from every member account.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Config conformance packs</em> &mdash; Conformance packs evaluate Config rules, not Trusted Advisor checks.<br><em>C) Cost Explorer grouped by linked account</em> &mdash; Cost Explorer shows spend, not Trusted Advisor findings.<br><em>D) Sign in to each account and download its checks</em> &mdash; This works but is manual and does not scale to 80 accounts.
+</div>
+</div>
+
+<!-- Q14 Savings Plans -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Savings Plans" data-level="B">
+<div class="q-tags"><span class="q-tag">Savings Plans</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>A company commits to $10 per hour under a Savings Plan. In one hour its eligible usage comes to $14 at Savings Plan rates. What happens to the extra?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The extra usage is blocked until the next hour</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The usage above the commitment is billed at On-Demand rates</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The plan grows automatically to cover $14</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The extra is moved to Spot pricing</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The usage above the commitment is billed at On-Demand rates<br><br>
+<strong>How to think about it:</strong> Savings Plan = hourly <b>$ commitment</b>; anything beyond it is billed <b>On-Demand</b>.<br><br>
+<strong>Why B is correct:</strong> The plan covers usage up to the hourly commitment, and the rest is charged at normal On-Demand prices.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The extra usage is blocked until the next hour</em> &mdash; Savings Plans are billing only; they never stop resources.<br><em>C) The plan grows automatically to cover $14</em> &mdash; A Savings Plan never raises its own commitment.<br><em>D) The extra is moved to Spot pricing</em> &mdash; Overflow usage is not switched to Spot.
+</div>
+</div>
+
+<!-- Q15 Savings Plans -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Savings Plans" data-level="B">
+<div class="q-tags"><span class="q-tag">Savings Plans</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>Over the next year a company will move workloads from EC2 to Fargate and Lambda and may shift Regions. Which commitment keeps the discount through these changes?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Standard Reserved Instances</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An On-Demand Capacity Reservation</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An EC2 Instance Savings Plan</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Compute Savings Plan</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A Compute Savings Plan<br><br>
+<strong>How to think about it:</strong> Flexible across family, Region and <b>EC2/Fargate/Lambda</b> = <b>Compute Savings Plan</b>.<br><br>
+<strong>Why D is correct:</strong> Compute Savings Plans apply across instance families, Regions, OS, tenancy and EC2, Fargate and Lambda.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Standard Reserved Instances</em> &mdash; Standard RIs are fixed to an instance family and do not cover Fargate or Lambda.<br><em>B) An On-Demand Capacity Reservation</em> &mdash; Capacity Reservations reserve EC2 capacity but give no discount by themselves.<br><em>C) An EC2 Instance Savings Plan</em> &mdash; This plan is tied to one instance family in one Region and does not cover Lambda.
+</div>
+</div>
+
+<!-- Q16 Savings Plans -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Savings Plans" data-level="B">
+<div class="q-tags"><span class="q-tag">Savings Plans</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>A steady workload will stay on the M instance family in one Region for three years, though instance sizes and OS may change. Which commitment gives the larger discount?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An EC2 Instance Savings Plan</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Spot Instances for the whole workload</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Dedicated Instances on demand</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Compute Savings Plan</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An EC2 Instance Savings Plan<br><br>
+<strong>How to think about it:</strong> Fixed family + Region, flexible size/OS/tenancy = <b>EC2 Instance Savings Plan</b> (deepest SP discount).<br><br>
+<strong>Why A is correct:</strong> It offers the biggest Savings Plan discount, up to about 72%, while still allowing size, OS and tenancy changes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Spot Instances for the whole workload</em> &mdash; A steady three-year workload should not depend on interruptible capacity.<br><em>C) Dedicated Instances on demand</em> &mdash; Dedicated tenancy costs more and is not a discount commitment.<br><em>D) A Compute Savings Plan</em> &mdash; Compute plans are more flexible but give a smaller discount, up to about 66%.
+</div>
+</div>
+
+<!-- Q17 Savings Plans -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Savings Plans" data-level="B">
+<div class="q-tags"><span class="q-tag">Savings Plans</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>Which pricing model offers the deepest savings for EC2 capacity, in exchange for possible interruption at short notice?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Spot Instances</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">On-Demand Instances</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Dedicated Hosts</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Convertible Reserved Instances</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Spot Instances<br><br>
+<strong>How to think about it:</strong> Cheapest EC2, can be <b>interrupted</b> = <b>Spot</b>.<br><br>
+<strong>Why A is correct:</strong> Spot uses spare EC2 capacity at large discounts, but AWS can reclaim it with a two-minute warning.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) On-Demand Instances</em> &mdash; On-Demand is the full price with no commitment.<br><em>C) Dedicated Hosts</em> &mdash; Dedicated Hosts are a premium option for licensing and isolation.<br><em>D) Convertible Reserved Instances</em> &mdash; Convertible RIs give a moderate discount for a 1 or 3-year commitment, without interruptions.
+</div>
+</div>
+
+<!-- Q18 Savings Plans -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Savings Plans" data-level="B">
+<div class="q-tags"><span class="q-tag">Savings Plans</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>A company wants RI-level discounts for three years but expects to change instance families and OS during that time. Which option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">On-Demand Capacity Reservations</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Convertible Reserved Instances</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Dedicated Host reservations</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Standard Reserved Instances</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Convertible Reserved Instances<br><br>
+<strong>How to think about it:</strong> RI discount that can be <b>exchanged</b> for other families = <b>Convertible RI</b>.<br><br>
+<strong>Why B is correct:</strong> Convertible RIs can be exchanged for different instance families, OS or tenancy during the term.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) On-Demand Capacity Reservations</em> &mdash; These reserve capacity at On-Demand prices, so there is no discount.<br><em>C) Dedicated Host reservations</em> &mdash; These discount specific Dedicated Hosts, which is not what is needed.<br><em>D) Standard Reserved Instances</em> &mdash; Standard RIs cannot be exchanged for another instance family.
+</div>
+</div>
+
+<!-- Q19 Savings Plans -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Savings Plans" data-level="B">
+<div class="q-tags"><span class="q-tag">Savings Plans</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>A vendor's software is licensed per physical socket, and the company wants to bring its own licences to EC2. Which purchase option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Compute Savings Plan</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Dedicated Instances</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Dedicated Hosts</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Spot Instances</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Dedicated Hosts<br><br>
+<strong>How to think about it:</strong> BYOL by <b>socket or core</b>, host affinity = <b>Dedicated Hosts</b>.<br><br>
+<strong>Why C is correct:</strong> A Dedicated Host is a whole physical server with visible sockets and cores, which per-socket licensing needs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Compute Savings Plan</em> &mdash; Savings Plans are a pricing discount, not a server you control.<br><em>B) Dedicated Instances</em> &mdash; Dedicated Instances isolate hardware but do not expose sockets or cores.<br><em>D) Spot Instances</em> &mdash; Spot capacity can disappear and gives no control over the host.
+</div>
+</div>
+
+<!-- Q20 Savings Plans -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Savings Plans" data-level="B">
+<div class="q-tags"><span class="q-tag">Savings Plans</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>A data science team runs SageMaker training and inference all year. Which commitment lowers that bill?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A SageMaker Savings Plan</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Compute Savings Plan</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Standard Reserved Instances for EC2</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Spot Instances bought through EC2 Fleet</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A SageMaker Savings Plan<br><br>
+<strong>How to think about it:</strong> Commit to SageMaker spend = <b>SageMaker Savings Plan</b>.<br><br>
+<strong>Why A is correct:</strong> SageMaker Savings Plans discount eligible SageMaker usage for a 1 or 3-year hourly commitment.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A Compute Savings Plan</em> &mdash; Compute Savings Plans cover EC2, Fargate and Lambda, not SageMaker.<br><em>C) Standard Reserved Instances for EC2</em> &mdash; EC2 RIs do not apply to SageMaker instances.<br><em>D) Spot Instances bought through EC2 Fleet</em> &mdash; EC2 Fleet Spot does not discount SageMaker's managed instances.
+</div>
+</div>
+
+<!-- Q21 Savings Plans -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Savings Plans" data-level="B">
+<div class="q-tags"><span class="q-tag">Savings Plans</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>Current Reserved Instances expire next month. How can the company make sure the discount continues without a gap?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Extend the current RI term in the console</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">RIs renew automatically at the end of the term</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Convert the RIs into a Savings Plan</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Queue a regional RI purchase to start at expiry</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Queue a regional RI purchase to start at expiry<br><br>
+<strong>How to think about it:</strong> Renew RIs by <b>queuing</b> a purchase to start when the old one ends.<br><br>
+<strong>Why D is correct:</strong> Queued purchases are scheduled ahead so the new reservation starts as the old one ends.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Extend the current RI term in the console</em> &mdash; An RI term cannot be extended.<br><em>B) RIs renew automatically at the end of the term</em> &mdash; Reserved Instances do not renew on their own.<br><em>C) Convert the RIs into a Savings Plan</em> &mdash; RIs cannot be converted into Savings Plans.
+</div>
+</div>
+
+<!-- Q22 Savings Plans -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Savings Plans" data-level="B">
+<div class="q-tags"><span class="q-tag">Savings Plans</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>Which EC2 commitment generally offers a larger maximum discount?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An On-Demand Capacity Reservation</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Compute Savings Plan</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Convertible Reserved Instance</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An EC2 Instance Savings Plan</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> An EC2 Instance Savings Plan<br><br>
+<strong>How to think about it:</strong> Max discounts: <b>EC2 Instance SP ~72%</b> (like Standard RIs) beats <b>Compute SP ~66%</b> (like Convertible RIs).<br><br>
+<strong>Why D is correct:</strong> Being tied to a family and Region lets it offer a larger discount, up to about 72%.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An On-Demand Capacity Reservation</em> &mdash; A Capacity Reservation alone gives no discount.<br><em>B) A Compute Savings Plan</em> &mdash; Its extra flexibility comes with a smaller maximum discount, about 66%.<br><em>C) A Convertible Reserved Instance</em> &mdash; Convertible RIs match the smaller Compute Savings Plan discount.
+</div>
+</div>
+
+<!-- Q23 Savings Plans -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Savings Plans" data-level="A">
+<div class="q-tags"><span class="q-tag">Savings Plans</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>Account A in an AWS Organization bought a Reserved Instance, but has no matching usage. Account B in the same organization runs a matching instance. What happens by default?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Account B must buy the RI from account A on the RI Marketplace</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The RI discount is applied to account B's matching usage</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The RI is cancelled and refunded</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The discount is wasted because it stays in account A</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The RI discount is applied to account B's matching usage<br><br>
+<strong>How to think about it:</strong> Consolidated billing = RI and Savings Plan discounts are <b>shared</b> across the organization by default.<br><br>
+<strong>Why B is correct:</strong> By default, RI and Savings Plan benefits flow across all accounts in the organization's consolidated bill.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Account B must buy the RI from account A on the RI Marketplace</em> &mdash; No transfer is needed; sharing happens automatically.<br><em>C) The RI is cancelled and refunded</em> &mdash; Unused RIs are never refunded automatically.<br><em>D) The discount is wasted because it stays in account A</em> &mdash; Sharing is on by default, so unused benefits move to other accounts.
+</div>
+</div>
+
+<!-- Q24 Savings Plans -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Savings Plans" data-level="A">
+<div class="q-tags"><span class="q-tag">Savings Plans</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>One subsidiary's account in the organization must not receive or share Reserved Instance and Savings Plan discounts. How is this done?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Move the account into its own OU</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The payer account turns off discount sharing for that account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Have the subsidiary account opt out in its own settings</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Attach an SCP that denies the purchase of Reserved Instances</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The payer account turns off discount sharing for that account<br><br>
+<strong>How to think about it:</strong> Only the <b>management (payer) account</b> can turn off RI/SP <b>discount sharing</b> per account.<br><br>
+<strong>Why B is correct:</strong> The payer account can switch off sharing for any account, including itself.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Move the account into its own OU</em> &mdash; OU placement does not affect billing discount sharing.<br><em>C) Have the subsidiary account opt out in its own settings</em> &mdash; Member accounts cannot change sharing; the payer account controls it.<br><em>D) Attach an SCP that denies the purchase of Reserved Instances</em> &mdash; An SCP stops purchases but does not stop discounts from being shared.
+</div>
+</div>
+
+<!-- Q25 Savings Plans -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Savings Plans" data-level="A">
+<div class="q-tags"><span class="q-tag">Savings Plans</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>A web tier needs 20 instances around the clock, rises to 50 during business hours, and a nightly batch job can restart after interruptions. Which pricing mix is most cost-effective?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Savings Plan for the base 20, On-Demand peaks, Spot batch</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">On-Demand for everything to keep full flexibility</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Reserved Instances for all 50 instances and the batch fleet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Spot Instances for the web tier and the batch job</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Savings Plan for the base 20, On-Demand peaks, Spot batch<br><br>
+<strong>How to think about it:</strong> Steady base = <b>Savings Plan/RI</b>, peaks = <b>On-Demand</b>, restartable batch = <b>Spot</b>.<br><br>
+<strong>Why A is correct:</strong> Each part of the workload uses the cheapest model that matches how predictable and interruptible it is.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) On-Demand for everything to keep full flexibility</em> &mdash; This misses large savings on the steady base and the batch job.<br><em>C) Reserved Instances for all 50 instances and the batch fleet</em> &mdash; Reserving peak capacity pays for 30 idle instances outside business hours.<br><em>D) Spot Instances for the web tier and the batch job</em> &mdash; Spot interruptions could take down the always-on web tier.
+</div>
+</div>
+
+<!-- Q26 Savings Plans -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Savings Plans" data-level="A">
+<div class="q-tags"><span class="q-tag">Savings Plans</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>A company signed a 3-year Compute Savings Plan at $50 per hour, then moved part of its workload off AWS. Eligible usage is now $30 per hour. What does it pay?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It pays only for the $30 of usage</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS lowers the plan to $30 automatically</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It can cancel the plan with a pro-rated refund</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It still pays $50 per hour for the rest of the term</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> It still pays $50 per hour for the rest of the term<br><br>
+<strong>How to think about it:</strong> A Savings Plan is a <b>commitment</b>: you pay the hourly amount <b>even if unused</b>.<br><br>
+<strong>Why D is correct:</strong> The commitment is charged every hour whether or not usage fills it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It pays only for the $30 of usage</em> &mdash; Unused commitment is still billed.<br><em>B) AWS lowers the plan to $30 automatically</em> &mdash; Savings Plans do not shrink to match usage.<br><em>C) It can cancel the plan with a pro-rated refund</em> &mdash; Savings Plans cannot be cancelled once the return window has passed.
+</div>
+</div>
+
+<!-- Q27 S3 Classes -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3 Classes" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>Backups are rarely read but must be available within milliseconds and survive the loss of an Availability Zone. Which storage class costs less than S3 Standard and fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 Standard-Infrequent Access</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Glacier Flexible Retrieval</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 One Zone-Infrequent Access</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Glacier Deep Archive</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> S3 Standard-Infrequent Access<br><br>
+<strong>How to think about it:</strong> Rare access, fast when needed, multi-AZ = <b>S3 Standard-IA</b>.<br><br>
+<strong>Why A is correct:</strong> Standard-IA stores data across AZs at a lower price than Standard, with a per-GB retrieval fee.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) S3 Glacier Flexible Retrieval</em> &mdash; Its retrievals take minutes to hours.<br><em>C) S3 One Zone-Infrequent Access</em> &mdash; One Zone-IA keeps data in one AZ, so an AZ loss could destroy it.<br><em>D) S3 Glacier Deep Archive</em> &mdash; Deep Archive retrieval takes hours, not milliseconds.
+</div>
+</div>
+
+<!-- Q28 S3 Classes -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3 Classes" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>Thumbnails can be regenerated from the originals at any time. Which infrequent-access class is cheapest for them?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 One Zone-Infrequent Access</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Intelligent-Tiering</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Standard</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Standard-Infrequent Access</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> S3 One Zone-Infrequent Access<br><br>
+<strong>How to think about it:</strong> Re-creatable or secondary copies = <b>One Zone-IA</b> (one AZ, 99.5% availability).<br><br>
+<strong>Why A is correct:</strong> One Zone-IA costs less than Standard-IA because it keeps data in a single AZ, which is fine for data you can recreate.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) S3 Intelligent-Tiering</em> &mdash; Its monitoring fee buys automation that fixed, known access patterns do not need.<br><em>C) S3 Standard</em> &mdash; Standard costs the most and is for frequently accessed data.<br><em>D) S3 Standard-Infrequent Access</em> &mdash; Standard-IA pays extra for multi-AZ resilience these files do not need.
+</div>
+</div>
+
+<!-- Q29 S3 Classes -->
+<div class="question" data-type="mc" data-answer="3" data-topic="S3 Classes" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>Medical images are opened about once a quarter, but when requested they must load in milliseconds. Which class gives the lowest storage cost?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 Standard</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Glacier Deep Archive</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Glacier Flexible Retrieval</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Glacier Instant Retrieval</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> S3 Glacier Instant Retrieval<br><br>
+<strong>How to think about it:</strong> Archive price with <b>millisecond</b> access, about once a quarter = <b>Glacier Instant Retrieval</b>.<br><br>
+<strong>Why D is correct:</strong> Glacier Instant Retrieval offers archive pricing with millisecond access and a 90-day minimum.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) S3 Standard</em> &mdash; Standard is fast but costs much more for data read four times a year.<br><em>B) S3 Glacier Deep Archive</em> &mdash; Deep Archive retrieval takes hours.<br><em>C) S3 Glacier Flexible Retrieval</em> &mdash; Retrievals take minutes to hours, which misses the millisecond need.
+</div>
+</div>
+
+<!-- Q30 S3 Classes -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3 Classes" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>A few objects in S3 Glacier Flexible Retrieval are needed urgently, within minutes. Which retrieval option should be used?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Expedited retrieval</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Copying the object to S3 Standard first</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Bulk retrieval</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Standard retrieval</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Expedited retrieval<br><br>
+<strong>How to think about it:</strong> Glacier Flexible: <b>Expedited 1-5 min</b>, Standard 3-5 h, Bulk 5-12 h (free).<br><br>
+<strong>Why A is correct:</strong> Expedited retrievals usually return data in 1 to 5 minutes, at the highest retrieval cost.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Copying the object to S3 Standard first</em> &mdash; An archived object must be restored before it can be copied.<br><em>C) Bulk retrieval</em> &mdash; Bulk is free but takes 5 to 12 hours.<br><em>D) Standard retrieval</em> &mdash; Standard retrievals take about 3 to 5 hours.
+</div>
+</div>
+
+<!-- Q31 S3 Classes -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3 Classes" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>Regulators require records to be kept for ten years. They are almost never read, and a retrieval time of 12 to 48 hours is acceptable. Which class is cheapest?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 Glacier Deep Archive</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Standard-Infrequent Access</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Glacier Instant Retrieval</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 One Zone-Infrequent Access</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> S3 Glacier Deep Archive<br><br>
+<strong>How to think about it:</strong> Cheapest storage, hours to retrieve, long-term retention = <b>Glacier Deep Archive</b>.<br><br>
+<strong>Why A is correct:</strong> Deep Archive has the lowest storage price, with retrievals in about 12 hours (standard) or 48 hours (bulk).<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) S3 Standard-Infrequent Access</em> &mdash; Standard-IA is far more expensive for decade-long archives.<br><em>C) S3 Glacier Instant Retrieval</em> &mdash; Instant Retrieval costs more because it offers millisecond access.<br><em>D) S3 One Zone-Infrequent Access</em> &mdash; One Zone-IA costs more and keeps data in a single AZ.
+</div>
+</div>
+
+<!-- Q32 S3 Classes -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3 Classes" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>A data lake has unknown and changing access patterns. The team wants automatic cost savings without retrieval fees. Which class fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 Intelligent-Tiering</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Glacier Instant Retrieval</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Standard-Infrequent Access</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 One Zone-Infrequent Access</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> S3 Intelligent-Tiering<br><br>
+<strong>How to think about it:</strong> Unknown or changing access = <b>Intelligent-Tiering</b> (small monitoring fee, <b>no retrieval fees</b>).<br><br>
+<strong>Why A is correct:</strong> Intelligent-Tiering moves objects between access tiers by usage, charges a small monitoring fee and no retrieval fees.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) S3 Glacier Instant Retrieval</em> &mdash; Its retrieval fees are high if data turns out to be read often.<br><em>C) S3 Standard-Infrequent Access</em> &mdash; Standard-IA charges for every retrieval, which can hurt when access is unpredictable.<br><em>D) S3 One Zone-Infrequent Access</em> &mdash; It has retrieval fees and single-AZ risk.
+</div>
+</div>
+
+<!-- Q33 S3 Classes -->
+<div class="question" data-type="mc" data-answer="3" data-topic="S3 Classes" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>In S3 Intelligent-Tiering, when does an object move from the Frequent Access tier to the Infrequent Access tier?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">After 7 days without access</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only when a lifecycle rule moves it</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">After 90 days without access</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">After 30 consecutive days without access</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> After 30 consecutive days without access<br><br>
+<strong>How to think about it:</strong> Intelligent-Tiering: <b>30 days</b> no access = Infrequent; <b>90 days</b> = Archive Instant Access.<br><br>
+<strong>Why D is correct:</strong> Objects not accessed for 30 days move automatically to the Infrequent Access tier.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) After 7 days without access</em> &mdash; Seven days is too short; the threshold is 30 days.<br><em>B) Only when a lifecycle rule moves it</em> &mdash; Moves inside Intelligent-Tiering happen automatically, with no lifecycle rule.<br><em>C) After 90 days without access</em> &mdash; 90 days is when objects move to the Archive Instant Access tier.
+</div>
+</div>
+
+<!-- Q34 S3 Classes -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3 Classes" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>Which statement about S3 durability and availability is correct?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Durability is equal across classes; availability varies</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Availability is 99.99% for every storage class</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">One Zone-IA has lower durability than Standard-IA</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Glacier classes are less durable than S3 Standard</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Durability is equal across classes; availability varies<br><br>
+<strong>How to think about it:</strong> <b>Durability</b> (11 nines) is the same for every class; <b>availability</b> varies by class.<br><br>
+<strong>Why A is correct:</strong> Every class is designed for 11 nines of durability, while availability ranges from 99.5% to 99.99%.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Availability is 99.99% for every storage class</em> &mdash; Availability is lower for the IA classes, for example 99.5% for One Zone-IA.<br><em>C) One Zone-IA has lower durability than Standard-IA</em> &mdash; It has the same design durability, but data is lost if its one AZ is destroyed.<br><em>D) Glacier classes are less durable than S3 Standard</em> &mdash; Glacier classes have the same 11 nines of durability.
+</div>
+</div>
+
+<!-- Q35 S3 Classes -->
+<div class="question" data-type="mc" data-answer="1" data-topic="S3 Classes" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>Log files should move automatically from S3 Standard to cheaper classes as they age and be deleted after a set period. What does this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 Replication rules</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Lifecycle configuration rules</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Object Lock</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Inventory reports</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> S3 Lifecycle configuration rules<br><br>
+<strong>How to think about it:</strong> Automatic transitions and expiry = <b>S3 Lifecycle rules</b>.<br><br>
+<strong>Why B is correct:</strong> Lifecycle rules transition objects between classes and expire them after a set number of days.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) S3 Replication rules</em> &mdash; Replication copies objects to another bucket; it does not age them out.<br><em>C) S3 Object Lock</em> &mdash; Object Lock prevents deletion, which is the opposite of what is needed.<br><em>D) S3 Inventory reports</em> &mdash; Inventory lists objects; it does not move or delete them.
+</div>
+</div>
+
+<!-- Q36 S3 Classes -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3 Classes" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>A research group shares a very large public dataset and wants the users who download it to pay for requests and data transfer. What should it enable?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 Requester Pays on the bucket</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A bucket policy charging each account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CloudFront signed URLs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Transfer Acceleration</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> S3 Requester Pays on the bucket<br><br>
+<strong>How to think about it:</strong> Downloader pays for <b>requests and transfer</b>, owner still pays storage = <b>Requester Pays</b>.<br><br>
+<strong>Why A is correct:</strong> With Requester Pays, the authenticated requester pays for requests and downloads, while the owner pays for storage.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A bucket policy charging each account</em> &mdash; Bucket policies control access; they cannot bill other accounts.<br><em>C) CloudFront signed URLs</em> &mdash; Signed URLs control access but leave transfer costs with the owner.<br><em>D) S3 Transfer Acceleration</em> &mdash; This speeds transfers and adds a fee for whoever pays transfer.
+</div>
+</div>
+
+<!-- Q37 S3 Classes -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3 Classes" data-level="A">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>An object is stored in S3 Glacier Deep Archive and deleted after 30 days. How is storage billed?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">As if it were stored for the 180-day minimum</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">For a full year, the minimum archive term</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only for the 30 days it was stored</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">As if it were stored for 90 days</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> As if it were stored for the 180-day minimum<br><br>
+<strong>How to think about it:</strong> Minimum storage duration: IA classes <b>30 days</b>, Glacier IR and Flexible <b>90</b>, Deep Archive <b>180</b>.<br><br>
+<strong>Why A is correct:</strong> Deleting early still incurs the charge for the remaining part of the 180-day minimum.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) For a full year, the minimum archive term</em> &mdash; There is no one-year minimum for Deep Archive.<br><em>C) Only for the 30 days it was stored</em> &mdash; Deep Archive has a minimum storage duration charge.<br><em>D) As if it were stored for 90 days</em> &mdash; 90 days is the minimum for Glacier Instant Retrieval and Flexible Retrieval.
+</div>
+</div>
+
+<!-- Q38 S3 Classes -->
+<div class="question" data-type="mc" data-answer="2" data-topic="S3 Classes" data-level="A">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>A partner reads from a Requester Pays bucket by assuming an IAM role that lives in the bucket owner's account. Who pays for the requests?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The partner's account, because it started the session</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">No one pays, since access is through a role</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The bucket owner's account, because it owns the assumed role</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Charges are split equally between the two accounts</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The bucket owner's account, because it owns the assumed role<br><br>
+<strong>How to think about it:</strong> Requester Pays + assumed role = the <b>account that owns the role</b> pays.<br><br>
+<strong>Why C is correct:</strong> When a role is assumed, the account owning that role is treated as the requester.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The partner's account, because it started the session</em> &mdash; The charge follows the role's account, not the account that called AssumeRole.<br><em>B) No one pays, since access is through a role</em> &mdash; Requests are always charged to some account.<br><em>D) Charges are split equally between the two accounts</em> &mdash; S3 does not split request charges between accounts.
+</div>
+</div>
+
+<!-- Q39 S3 Classes -->
+<div class="question" data-type="mc" data-answer="1" data-topic="S3 Classes" data-level="A">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Millions of 10 KB objects were moved from S3 Standard to Standard-IA to save money, but the bill went up. What is the most likely cause?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Standard-IA copies each object to three Regions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Each object is billed as at least 128 KB, plus transition fees</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Standard-IA is priced higher per GB than Standard</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The objects were encrypted again with new KMS keys</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Each object is billed as at least 128 KB, plus transition fees<br><br>
+<strong>How to think about it:</strong> IA classes bill each object as at least <b>128 KB</b>, and transitions cost per request.<br><br>
+<strong>Why B is correct:</strong> Small objects in IA classes pay for 128 KB each, and lifecycle transitions are charged per request.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Standard-IA copies each object to three Regions</em> &mdash; IA stores data across AZs in one Region, not three Regions.<br><em>C) Standard-IA is priced higher per GB than Standard</em> &mdash; Standard-IA is cheaper per GB; the problem is small-object billing.<br><em>D) The objects were encrypted again with new KMS keys</em> &mdash; Re-encryption is not part of a storage class change.
+</div>
+</div>
+
+<!-- Q40 S3 Classes -->
+<div class="question" data-type="mc" data-answer="2" data-topic="S3 Classes" data-level="A">
+<div class="q-tags"><span class="q-tag">S3 Classes</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>Logs are read often for 30 days, rarely for the rest of the first year, and must be kept for seven years; later restores can take up to 12 hours. Which lifecycle plan is cheapest?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Glacier Instant Retrieval from day one</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One Zone-IA from day one, expire at 7 years</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Standard, IA at 30 d, Deep Archive at 1 yr, expire at 7 yrs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Standard for the full seven years, then expire</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Standard, IA at 30 d, Deep Archive at 1 yr, expire at 7 yrs<br><br>
+<strong>How to think about it:</strong> Hot, then rare, then archive: <b>Standard</b> to <b>Standard-IA</b> (30 d) to <b>Deep Archive</b> (1 yr), expire at 7 yrs.<br><br>
+<strong>Why C is correct:</strong> Each step matches how the logs are used, and Deep Archive's 12-hour retrieval meets the restore window.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Glacier Instant Retrieval from day one</em> &mdash; Frequent reads in the first month would cost a lot in retrieval fees.<br><em>B) One Zone-IA from day one, expire at 7 years</em> &mdash; This risks losing compliance data to an AZ failure and skips archive pricing.<br><em>D) S3 Standard for the full seven years, then expire</em> &mdash; Paying Standard prices for years of cold logs wastes money.
+</div>
+</div>
+
+<!-- Q41 Budgets -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Budgets" data-level="B">
+<div class="q-tags"><span class="q-tag">Budgets</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>Finance wants an alert if Reserved Instance utilization falls below 80%. Which kind of budget is this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Trusted Advisor cost check</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A cost budget on EC2 spend</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch alarm on EstimatedCharges</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A reservation budget tracking RI utilization</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A reservation budget tracking RI utilization<br><br>
+<strong>How to think about it:</strong> Budget types: <b>Cost</b>, <b>Usage</b>, <b>Reservation</b> (RI utilization or coverage), <b>Savings Plans</b>.<br><br>
+<strong>Why D is correct:</strong> Reservation budgets alert when RI utilization or coverage drops below a target.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Trusted Advisor cost check</em> &mdash; Trusted Advisor gives recommendations but does not alert on a utilization target.<br><em>B) A cost budget on EC2 spend</em> &mdash; A cost budget watches spend, not how well RIs are used.<br><em>C) A CloudWatch alarm on EstimatedCharges</em> &mdash; That metric is total estimated charges, not RI utilization.
+</div>
+</div>
+
+<!-- Q42 Budgets -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Budgets" data-level="B">
+<div class="q-tags"><span class="q-tag">Budgets</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>A team wants an alert as soon as its spend is forecast to exceed $5,000 this month, before it actually does. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A saved Cost Explorer report</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A CloudWatch billing alarm on EstimatedCharges</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A cost budget in AWS Budgets with a forecasted-spend alert</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Trusted Advisor cost optimization checks</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A cost budget in AWS Budgets with a forecasted-spend alert<br><br>
+<strong>How to think about it:</strong> Alert on <b>forecasted</b> spend = <b>AWS Budgets</b> cost budget.<br><br>
+<strong>Why C is correct:</strong> Budgets can notify when forecasted costs are expected to pass the budgeted amount.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A saved Cost Explorer report</em> &mdash; Reports show data but do not send threshold alerts.<br><em>B) A CloudWatch billing alarm on EstimatedCharges</em> &mdash; Billing alarms fire on actual charges so far, not on a forecast.<br><em>D) Trusted Advisor cost optimization checks</em> &mdash; These suggest savings but do not track a monthly budget.
+</div>
+</div>
+
+<!-- Q43 Budgets -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Budgets" data-level="B">
+<div class="q-tags"><span class="q-tag">Budgets</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>Which of these can an AWS Budgets action perform automatically when a threshold is crossed?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Lower Lambda reserved concurrency</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Stop selected EC2 or RDS instances</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Delete objects from an S3 bucket</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Terminate the member account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Stop selected EC2 or RDS instances<br><br>
+<strong>How to think about it:</strong> Budget actions: apply an <b>IAM policy</b>, apply an <b>SCP</b>, or <b>stop EC2/RDS</b> instances.<br><br>
+<strong>Why B is correct:</strong> Stopping chosen EC2 or RDS instances is one of the three budget action types.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Lower Lambda reserved concurrency</em> &mdash; Changing Lambda settings is not a budget action type.<br><em>C) Delete objects from an S3 bucket</em> &mdash; Budget actions never delete data.<br><em>D) Terminate the member account</em> &mdash; Budgets cannot close or terminate accounts.
+</div>
+</div>
+
+<!-- Q44 Budgets -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Budgets" data-level="B">
+<div class="q-tags"><span class="q-tag">Budgets</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>Finance wants budget actions to wait for a person to approve them before anything changes. Is that possible?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only if the action is sent through AWS Step Functions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only for actions on the management account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Yes, an action can be set to require approval before it runs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">No, budget actions always run immediately</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Yes, an action can be set to require approval before it runs<br><br>
+<strong>How to think about it:</strong> Budget actions run <b>automatically</b> or after a <b>workflow approval</b>.<br><br>
+<strong>Why C is correct:</strong> Each budget action can run automatically or wait for manual approval.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only if the action is sent through AWS Step Functions</em> &mdash; Approval is built into Budgets; Step Functions is not required.<br><em>B) Only for actions on the management account</em> &mdash; Approval works for actions in member accounts too.<br><em>D) No, budget actions always run immediately</em> &mdash; Approval workflows are a built-in option.
+</div>
+</div>
+
+<!-- Q45 Budgets -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Budgets" data-level="B">
+<div class="q-tags"><span class="q-tag">Budgets</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>A budget should cover only resources tagged Project=Atlas across several accounts. How is this done?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create one IAM policy per project</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable a Trusted Advisor check for the tag</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Move Atlas resources into a separate Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A budget filtered on the Project tag</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A budget filtered on the Project tag<br><br>
+<strong>How to think about it:</strong> Budgets filter on the <b>same dimensions as Cost Explorer</b>: service, account, tag, Region and more.<br><br>
+<strong>Why D is correct:</strong> Budgets can filter by activated cost allocation tags, as well as service, account, Region and more.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Create one IAM policy per project</em> &mdash; IAM policies control access, not budget scope.<br><em>B) Enable a Trusted Advisor check for the tag</em> &mdash; Trusted Advisor does not track budgets.<br><em>C) Move Atlas resources into a separate Region</em> &mdash; A Region filter would be a workaround, not tag-based scoping.
+</div>
+</div>
+
+<!-- Q46 Budgets -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Budgets" data-level="B">
+<div class="q-tags"><span class="q-tag">Budgets</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>The team wants to know when S3 storage in an account passes 50 TB, whatever it costs. Which budget type fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Savings Plans coverage budget</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A usage budget</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A reservation utilization budget</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A cost budget</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A usage budget<br><br>
+<strong>How to think about it:</strong> Track an amount of <b>usage</b> (hours, GB) instead of dollars = <b>usage budget</b>.<br><br>
+<strong>Why B is correct:</strong> Usage budgets track amounts such as GB stored or instance hours, not dollars.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Savings Plans coverage budget</em> &mdash; Coverage budgets measure Savings Plan coverage of eligible usage.<br><em>C) A reservation utilization budget</em> &mdash; This measures how well RIs are used.<br><em>D) A cost budget</em> &mdash; Cost budgets track dollars, which is not the requirement.
+</div>
+</div>
+
+<!-- Q47 Budgets -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Budgets" data-level="A">
+<div class="q-tags"><span class="q-tag">Budgets</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>Developers in the Dev OU keep overspending. When the OU's budget is breached, new resource creation in those accounts must be blocked automatically. What should be configured?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Trusted Advisor check on idle resources</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Service Quotas decrease for EC2 instances</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A budget action that applies a restrictive SCP to the Dev OU</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudWatch billing alarm emailing the developers</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A budget action that applies a restrictive SCP to the Dev OU<br><br>
+<strong>How to think about it:</strong> Budget breach on an OU = budget action that <b>applies a restrictive SCP</b> to the OU.<br><br>
+<strong>Why C is correct:</strong> Budget actions can attach an SCP to an OU when a threshold is crossed, limiting what every account there can do.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Trusted Advisor check on idle resources</em> &mdash; Trusted Advisor flags waste but cannot block new resources.<br><em>B) A Service Quotas decrease for EC2 instances</em> &mdash; Lowering quotas is a manual Support process and not tied to budgets.<br><em>D) A CloudWatch billing alarm emailing the developers</em> &mdash; An email alerts but enforces nothing.
+</div>
+</div>
+
+<!-- Q48 Budgets -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Budgets" data-level="A">
+<div class="q-tags"><span class="q-tag">Budgets</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>The management account sets a budget for each member account. On a breach, the account must be moved into a restricted OU and the owner emailed. What design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A budget action that stops all RDS instances in the account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Cost Explorer report shared with each owner</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Config remediation on the member account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">SNS alert triggers a Lambda that moves the account and emails the owner</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> SNS alert triggers a Lambda that moves the account and emails the owner<br><br>
+<strong>How to think about it:</strong> Centralised control: budget alert to <b>SNS</b>, <b>Lambda</b> moves the account to a <b>restrictive OU</b> with an SCP.<br><br>
+<strong>Why D is correct:</strong> Lambda can call Organizations MoveAccount and send email, and the target OU's SCP restricts the account.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A budget action that stops all RDS instances in the account</em> &mdash; Stopping RDS does not move the account or restrict new resources.<br><em>B) A Cost Explorer report shared with each owner</em> &mdash; Reports inform but do not enforce.<br><em>C) AWS Config remediation on the member account</em> &mdash; Config reacts to resource configuration, not budget breaches.
+</div>
+</div>
+
+<!-- Q49 Budgets -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Budgets" data-level="A">
+<div class="q-tags"><span class="q-tag">Budgets</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>Each member account team wants to own its budget, with warning and critical alerts, but the central team wants the same setup in every account. How can this be rolled out?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Share one SNS topic through AWS RAM</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable Trusted Advisor organizational view</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Deploy budgets and SNS topics with CloudFormation StackSets</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create every budget in the management account only</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Deploy budgets and SNS topics with CloudFormation StackSets<br><br>
+<strong>How to think about it:</strong> Same budget config in every member account = <b>CloudFormation StackSets</b>.<br><br>
+<strong>Why C is correct:</strong> StackSets push one template to many accounts, so each team gets its own budget and alert topics.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Share one SNS topic through AWS RAM</em> &mdash; SNS topics cannot be shared through AWS RAM.<br><em>B) Enable Trusted Advisor organizational view</em> &mdash; This shows check results, not budgets.<br><em>D) Create every budget in the management account only</em> &mdash; That centralises control, the opposite of letting each team own its budget.
+</div>
+</div>
+
+<!-- Q50 Budgets -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Budgets" data-level="A">
+<div class="q-tags"><span class="q-tag">Budgets</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>When a sandbox account passes $500 this month, developers must be prevented from launching new EC2 instances, while running instances keep going. What fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An S3 Lifecycle rule that expires the team's objects</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A CloudWatch billing alarm that emails the team</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A budget action applying an IAM policy that denies RunInstances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A budget action that stops all EC2 instances</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A budget action applying an IAM policy that denies RunInstances<br><br>
+<strong>How to think about it:</strong> Block new launches but keep running ones = budget action applying an <b>IAM policy</b> that denies RunInstances.<br><br>
+<strong>Why C is correct:</strong> An IAM policy action stops new launches without touching existing instances.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An S3 Lifecycle rule that expires the team's objects</em> &mdash; This deletes data and has nothing to do with EC2 launches.<br><em>B) A CloudWatch billing alarm that emails the team</em> &mdash; An email does not prevent new launches.<br><em>D) A budget action that stops all EC2 instances</em> &mdash; Stopping instances would also halt the running workloads.
+</div>
+</div>
+
+<!-- Q51 Cost Explorer -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Cost Explorer" data-level="B">
+<div class="q-tags"><span class="q-tag">Cost Explorer</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>Which tool lets you visualise past AWS costs and usage over time and build custom reports grouped by service or account?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Budgets</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Cost Explorer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Trusted Advisor</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Compute Optimizer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS Cost Explorer<br><br>
+<strong>How to think about it:</strong> See and analyse <b>past and current</b> spend = <b>Cost Explorer</b>. Alerts on thresholds = Budgets.<br><br>
+<strong>Why B is correct:</strong> Cost Explorer charts cost and usage at monthly, daily or hourly granularity with filters and grouping.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Budgets</em> &mdash; Budgets alert on thresholds; they are not the main analysis tool.<br><em>C) AWS Trusted Advisor</em> &mdash; Trusted Advisor lists recommendations, not spending trends.<br><em>D) AWS Compute Optimizer</em> &mdash; Compute Optimizer gives rightsizing advice, not cost history.
+</div>
+</div>
+
+<!-- Q52 Cost Explorer -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Cost Explorer" data-level="B">
+<div class="q-tags"><span class="q-tag">Cost Explorer</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>Finance needs a projection of next quarter's AWS spend based on past usage. Which feature provides this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Cost Explorer cost forecasting</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An S3 Storage Lens dashboard</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Trusted Advisor service limit checks</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Compute Optimizer recommendations</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Cost Explorer cost forecasting<br><br>
+<strong>How to think about it:</strong> Predict future spend = <b>Cost Explorer forecast</b>.<br><br>
+<strong>Why A is correct:</strong> Cost Explorer forecasts future cost and usage from historical patterns.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An S3 Storage Lens dashboard</em> &mdash; Storage Lens covers S3 usage and activity, not total AWS spend.<br><em>C) Trusted Advisor service limit checks</em> &mdash; Limit checks are about quotas, not spending.<br><em>D) Compute Optimizer recommendations</em> &mdash; These rightsize resources; they do not forecast spend.
+</div>
+</div>
+
+<!-- Q53 Cost Explorer -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Cost Explorer" data-level="B">
+<div class="q-tags"><span class="q-tag">Cost Explorer</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>A company wants AWS to recommend how much Savings Plan commitment to buy, based on its recent usage. Where does it find this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Compute Optimizer EC2 recommendations</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Trusted Advisor security checks</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Savings Plans purchase recommendations</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The Service Quotas console for EC2</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Savings Plans purchase recommendations<br><br>
+<strong>How to think about it:</strong> Which Savings Plan to buy = <b>Savings Plans recommendations</b> in Billing and Cost Management / Cost Explorer.<br><br>
+<strong>Why C is correct:</strong> AWS analyses past usage and recommends an hourly commitment, term and payment option.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Compute Optimizer EC2 recommendations</em> &mdash; Compute Optimizer suggests instance types, not commitment amounts.<br><em>B) Trusted Advisor security checks</em> &mdash; Security checks do not cover purchasing.<br><em>D) The Service Quotas console for EC2</em> &mdash; Service Quotas manage limits, not pricing.
+</div>
+</div>
+
+<!-- Q54 Cost Explorer -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Cost Explorer" data-level="A">
+<div class="q-tags"><span class="q-tag">Cost Explorer</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>Analysts need detailed, line-item billing data with resource IDs and tags delivered to S3 regularly, so they can query it with Athena. What should be set up?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Budgets reports by email</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An AWS Data Exports (CUR 2.0) export</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A saved Cost Explorer report</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudTrail logs delivered to S3</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An AWS Data Exports (CUR 2.0) export<br><br>
+<strong>How to think about it:</strong> Line-item billing data in S3 for Athena = <b>Data Exports</b> (Cost and Usage Report / CUR 2.0).<br><br>
+<strong>Why B is correct:</strong> Data Exports delivers detailed cost and usage line items to S3 on a schedule, ready for Athena.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Budgets reports by email</em> &mdash; Budget reports summarise budget status, not every line item.<br><em>C) A saved Cost Explorer report</em> &mdash; Cost Explorer reports are summaries in the console, not line-item files.<br><em>D) CloudTrail logs delivered to S3</em> &mdash; CloudTrail records API calls, not billing charges.
+</div>
+</div>
+
+<!-- Q55 Cost Explorer -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Cost Explorer" data-level="A">
+<div class="q-tags"><span class="q-tag">Cost Explorer</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>EC2 spend jumped last week and the management account must find which member account caused it and on which day. What is the quickest approach?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudWatch CPUUtilization metrics for all instances</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Cost Explorer: EC2 filter, group by account, daily view</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A new usage budget for EC2 hours in each account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Trusted Advisor idle instance checks in each account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Cost Explorer: EC2 filter, group by account, daily view<br><br>
+<strong>How to think about it:</strong> Find who and when = Cost Explorer, <b>filter by service</b>, <b>group by linked account</b>, <b>daily</b> view.<br><br>
+<strong>Why B is correct:</strong> This shows each account's EC2 cost per day, exposing the account and the date of the spike.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) CloudWatch CPUUtilization metrics for all instances</em> &mdash; CPU metrics show load, not cost by account.<br><em>C) A new usage budget for EC2 hours in each account</em> &mdash; A new budget alerts in future but does not explain last week.<br><em>D) Trusted Advisor idle instance checks in each account</em> &mdash; Idle checks do not show when or where spend jumped.
+</div>
+</div>
+
+<!-- Q56 Compute Optimizer -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Compute Optimizer" data-level="B">
+<div class="q-tags"><span class="q-tag">Compute Optimizer</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>Which service uses machine learning on CloudWatch metrics to tell you whether EC2 instances are over- or under-provisioned?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon DevOps Guru</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Cost Explorer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Compute Optimizer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Budgets</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS Compute Optimizer<br><br>
+<strong>How to think about it:</strong> ML-based <b>rightsizing</b> from utilization metrics = <b>Compute Optimizer</b>.<br><br>
+<strong>Why C is correct:</strong> Compute Optimizer analyses configuration and utilization metrics and recommends better-sized resources.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon DevOps Guru</em> &mdash; DevOps Guru looks for operational anomalies, not instance sizing.<br><em>B) AWS Cost Explorer</em> &mdash; Cost Explorer shows spend; it is not the ML rightsizing engine.<br><em>D) AWS Budgets</em> &mdash; Budgets track spend against targets.
+</div>
+</div>
+
+<!-- Q57 Compute Optimizer -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Compute Optimizer" data-level="B">
+<div class="q-tags"><span class="q-tag">Compute Optimizer</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>Which of these can AWS Compute Optimizer give recommendations for?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Route 53 hosted zones</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 storage classes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">EBS volumes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudFront distributions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> EBS volumes<br><br>
+<strong>How to think about it:</strong> Compute Optimizer covers <b>EC2, Auto Scaling groups, EBS, Lambda</b> and more compute-related resources.<br><br>
+<strong>Why C is correct:</strong> Compute Optimizer recommends EBS volume types, sizes and IOPS based on usage.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Route 53 hosted zones</em> &mdash; DNS zones are not compute resources and are not covered.<br><em>B) S3 storage classes</em> &mdash; S3 storage class advice comes from Storage Lens or Intelligent-Tiering, not Compute Optimizer.<br><em>D) CloudFront distributions</em> &mdash; CloudFront is not covered by Compute Optimizer.
+</div>
+</div>
+
+<!-- Q58 Compute Optimizer -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Compute Optimizer" data-level="B">
+<div class="q-tags"><span class="q-tag">Compute Optimizer</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>A team suspects its Lambda functions have far more memory than they need. Which AWS service gives data-driven memory recommendations?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS X-Ray service maps</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Lambda reserved concurrency</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Trusted Advisor service limits</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Compute Optimizer Lambda recommendations</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Compute Optimizer Lambda recommendations<br><br>
+<strong>How to think about it:</strong> Lambda memory rightsizing = <b>Compute Optimizer</b>.<br><br>
+<strong>Why D is correct:</strong> Compute Optimizer studies invocation metrics and suggests memory settings that cut cost or improve speed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS X-Ray service maps</em> &mdash; X-Ray traces requests but gives no memory recommendation.<br><em>B) Lambda reserved concurrency</em> &mdash; Reserved concurrency limits parallel runs; it does not size memory.<br><em>C) AWS Trusted Advisor service limits</em> &mdash; Limit checks do not advise on function memory.
+</div>
+</div>
+
+<!-- Q59 Compute Optimizer -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Compute Optimizer" data-level="A">
+<div class="q-tags"><span class="q-tag">Compute Optimizer</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>Compute Optimizer recommends downsizing memory-heavy EC2 instances, but the team believes RAM is the real bottleneck. What will make the advice more accurate?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Install the CloudWatch agent to publish memory metrics</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Tag the instances as memory optimized</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable VPC Flow Logs on the instances' subnets</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Turn on detailed (1-minute) EC2 monitoring</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Install the CloudWatch agent to publish memory metrics<br><br>
+<strong>How to think about it:</strong> Compute Optimizer needs the <b>CloudWatch agent</b> to see <b>memory</b>; CPU, network and disk come by default.<br><br>
+<strong>Why A is correct:</strong> Without the agent AWS cannot see RAM inside the guest OS, so recommendations ignore memory pressure.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Tag the instances as memory optimized</em> &mdash; Tags do not feed metrics into Compute Optimizer.<br><em>C) Enable VPC Flow Logs on the instances' subnets</em> &mdash; Flow logs record network traffic, not memory use.<br><em>D) Turn on detailed (1-minute) EC2 monitoring</em> &mdash; Detailed monitoring makes default metrics more frequent but still has no memory metric.
+</div>
+</div>
+
+<!-- Q60 Compute Optimizer -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Compute Optimizer" data-level="A">
+<div class="q-tags"><span class="q-tag">Compute Optimizer</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>A central FinOps team wants Compute Optimizer recommendations from every account in the organization collected into files for its own analysis. What should it do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create a CloudWatch dashboard in each account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Run a Cost Explorer report grouped by instance type</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable Trusted Advisor organizational view</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Opt in the whole organization and export results to S3</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Opt in the whole organization and export results to S3<br><br>
+<strong>How to think about it:</strong> Org-wide rightsizing data = opt in at the <b>organization</b> level, then <b>export to S3</b>.<br><br>
+<strong>Why D is correct:</strong> Compute Optimizer can cover all member accounts and export its recommendations as files to an S3 bucket.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Create a CloudWatch dashboard in each account</em> &mdash; Dashboards show metrics but do not gather recommendations into files.<br><em>B) Run a Cost Explorer report grouped by instance type</em> &mdash; Cost Explorer shows spend, not rightsizing recommendations.<br><em>C) Enable Trusted Advisor organizational view</em> &mdash; This collects Trusted Advisor checks, not Compute Optimizer exports.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

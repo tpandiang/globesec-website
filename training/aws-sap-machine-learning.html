@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Machine Learning - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Machine Learning</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Machine Learning</h2>
+        <p>60 refresher questions &mdash; Bedrock, Rekognition, Textract, Transcribe, Polly, Translate, Comprehend, Lex, Connect, Kendra, Personalize, SageMaker AI</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="Bedrock" onclick="filterQ(this)">Bedrock</button><button class="filter-btn" data-f="Vision" onclick="filterQ(this)">Vision</button><button class="filter-btn" data-f="Speech" onclick="filterQ(this)">Speech</button><button class="filter-btn" data-f="Language" onclick="filterQ(this)">Language</button><button class="filter-btn" data-f="Bots & Contact Center" onclick="filterQ(this)">Bots & Contact Center</button><button class="filter-btn" data-f="Search & Recs" onclick="filterQ(this)">Search & Recs</button><button class="filter-btn" data-f="SageMaker AI" onclick="filterQ(this)">SageMaker AI</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 Bedrock -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Bedrock" data-level="B">
+<div class="q-tags"><span class="q-tag">Bedrock</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>A team wants to build a generative AI chat feature using foundation models from several providers through one API, without managing servers. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon SageMaker AI training jobs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Comprehend</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Lex</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Bedrock</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Amazon Bedrock<br><br>
+<strong>How to think about it:</strong> Managed foundation models behind one API = <b>Amazon Bedrock</b>.<br><br>
+<strong>Why D is correct:</strong> Bedrock is serverless and offers models from Amazon and other providers through a unified API with pay-per-use pricing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon SageMaker AI training jobs</em> &mdash; SageMaker is for building and training your own models, which is far more work than calling hosted FMs.<br><em>B) Amazon Comprehend</em> &mdash; Comprehend is a fixed NLP service for sentiment and entities, not a generative model platform.<br><em>C) Amazon Lex</em> &mdash; Lex builds intent-based chatbots; it is not a catalogue of foundation models.
+</div>
+</div>
+
+<!-- Q2 Bedrock -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Bedrock" data-level="B">
+<div class="q-tags"><span class="q-tag">Bedrock</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>A company fine-tunes a foundation model in Amazon Bedrock with its own data. What happens to that data and the resulting model?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The base model is retrained for every customer with your data</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Your tuned model is published in the Bedrock catalogue</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A private copy is tuned; your data never trains the base model</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The model provider receives a copy of your data for review</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A private copy is tuned; your data never trains the base model<br><br>
+<strong>How to think about it:</strong> Fine-tune in Bedrock = <b>your private copy</b>; your data does not train the base model.<br><br>
+<strong>Why C is correct:</strong> Customizations stay in your account, and prompts and training data are not used to improve the providers' models.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The base model is retrained for every customer with your data</em> &mdash; Your data is never folded into the shared base model.<br><em>B) Your tuned model is published in the Bedrock catalogue</em> &mdash; Custom models are private to your account, not listed for others.<br><em>D) The model provider receives a copy of your data for review</em> &mdash; Bedrock does not share your training data with the model provider.
+</div>
+</div>
+
+<!-- Q3 Bedrock -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Bedrock" data-level="B">
+<div class="q-tags"><span class="q-tag">Bedrock</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>A chatbot built on a foundation model gives generic answers because it does not know the company's internal documents. Which Bedrock feature adds that knowledge without retraining?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Bedrock Knowledge Bases (RAG)</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A higher temperature setting</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Bedrock Guardrails</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Continued pre-training on the documents</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Bedrock Knowledge Bases (RAG)<br><br>
+<strong>How to think about it:</strong> Ground answers in your documents = <b>Knowledge Bases</b> (RAG).<br><br>
+<strong>Why A is correct:</strong> Knowledge Bases index your documents into a vector store and pass relevant passages to the model at query time.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A higher temperature setting</em> &mdash; Temperature changes randomness, not what the model knows.<br><em>C) Bedrock Guardrails</em> &mdash; Guardrails filter content and topics; they do not add knowledge.<br><em>D) Continued pre-training on the documents</em> &mdash; This changes model weights, which is slower and costlier than retrieval for frequently changing documents.
+</div>
+</div>
+
+<!-- Q4 Bedrock -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Bedrock" data-level="B">
+<div class="q-tags"><span class="q-tag">Bedrock</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>In a Bedrock knowledge base, where are the document embeddings stored for retrieval?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Inside the foundation model's weights</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">In a DynamoDB table keyed by file name</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">In CloudWatch Logs for the application</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">In a vector store such as OpenSearch Serverless</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> In a vector store such as OpenSearch Serverless<br><br>
+<strong>How to think about it:</strong> RAG lookup = <b>vector store</b> (for example OpenSearch Serverless).<br><br>
+<strong>Why D is correct:</strong> Embeddings are written to a vector database so semantically similar chunks can be found quickly.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Inside the foundation model's weights</em> &mdash; RAG keeps the model unchanged and stores knowledge outside it.<br><em>B) In a DynamoDB table keyed by file name</em> &mdash; A key-value lookup by name cannot do semantic similarity search.<br><em>C) In CloudWatch Logs for the application</em> &mdash; Logs record activity; they are not a retrieval index.
+</div>
+</div>
+
+<!-- Q5 Bedrock -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Bedrock" data-level="B">
+<div class="q-tags"><span class="q-tag">Bedrock</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>An assistant must answer a question, then call a booking API and update a database as multi-step actions. Which Bedrock capability is designed for this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Bedrock provisioned throughput</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Bedrock model evaluation</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Translate</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Bedrock Agents with action groups</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Bedrock Agents with action groups<br><br>
+<strong>How to think about it:</strong> Model that plans and calls APIs = <b>Bedrock Agents</b> (action groups).<br><br>
+<strong>Why D is correct:</strong> Agents break a request into steps and call your APIs or Lambda functions to complete tasks.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Bedrock provisioned throughput</em> &mdash; Provisioned throughput reserves model capacity, not task orchestration.<br><em>B) Bedrock model evaluation</em> &mdash; Evaluation compares model quality; it does not run actions.<br><em>C) Amazon Translate</em> &mdash; Translate converts languages and cannot call booking APIs.
+</div>
+</div>
+
+<!-- Q6 Bedrock -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Bedrock" data-level="B">
+<div class="q-tags"><span class="q-tag">Bedrock</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>A public-facing generative AI app must block certain topics and remove personal data from responses. Which Bedrock feature fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Macie</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Bedrock Guardrails</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Bedrock Knowledge Bases</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS WAF on the API</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Bedrock Guardrails<br><br>
+<strong>How to think about it:</strong> Content filters, denied topics, PII masking = <b>Guardrails</b>.<br><br>
+<strong>Why B is correct:</strong> Guardrails apply content filters, denied topics, word filters and PII redaction to prompts and responses.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Macie</em> &mdash; Macie finds sensitive data in S3 buckets, not in live model responses.<br><em>C) Bedrock Knowledge Bases</em> &mdash; Knowledge Bases add document context; they do not enforce safety rules.<br><em>D) AWS WAF on the API</em> &mdash; WAF inspects HTTP requests and cannot judge the meaning of model output.
+</div>
+</div>
+
+<!-- Q7 Bedrock -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Bedrock" data-level="A">
+<div class="q-tags"><span class="q-tag">Bedrock</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>A financial firm's Bedrock calls from a VPC must not traverse the public internet. What should the architect configure?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A NAT gateway in a public subnet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A gateway VPC endpoint for Bedrock</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An interface VPC endpoint (PrivateLink) for Bedrock</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Direct Connect public virtual interface only</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An interface VPC endpoint (PrivateLink) for Bedrock<br><br>
+<strong>How to think about it:</strong> Private access to an AWS API = <b>interface VPC endpoint</b> (PrivateLink).<br><br>
+<strong>Why C is correct:</strong> The endpoint keeps calls on the AWS network, and its endpoint policy can limit which models are used.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A NAT gateway in a public subnet</em> &mdash; NAT sends traffic to the public Bedrock endpoint over the internet path.<br><em>B) A gateway VPC endpoint for Bedrock</em> &mdash; Gateway endpoints exist only for S3 and DynamoDB.<br><em>D) A Direct Connect public virtual interface only</em> &mdash; A public VIF reaches public endpoints and does not apply to VPC workloads.
+</div>
+</div>
+
+<!-- Q8 Bedrock -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Bedrock" data-level="A">
+<div class="q-tags"><span class="q-tag">Bedrock</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>An app has steady, high-volume traffic to one Bedrock model and needs guaranteed capacity rather than per-token on-demand limits. What should it buy?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An EC2 Savings Plan</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Bedrock Provisioned Throughput</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Bedrock batch inference</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A larger Lambda memory setting</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Bedrock Provisioned Throughput<br><br>
+<strong>How to think about it:</strong> Guaranteed model capacity = <b>Provisioned Throughput</b>.<br><br>
+<strong>Why B is correct:</strong> It reserves dedicated model units, giving consistent capacity for predictable heavy workloads.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An EC2 Savings Plan</em> &mdash; Savings Plans discount EC2, Fargate and Lambda, not Bedrock model capacity.<br><em>C) Bedrock batch inference</em> &mdash; Batch suits offline jobs at lower cost, not guaranteed real-time capacity.<br><em>D) A larger Lambda memory setting</em> &mdash; Lambda memory does not change how much model capacity Bedrock gives you.
+</div>
+</div>
+
+<!-- Q9 Bedrock -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Bedrock" data-level="A">
+<div class="q-tags"><span class="q-tag">Bedrock</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>A team has large volumes of labeled prompt-and-response examples and wants a model to follow its house style more closely. Which Bedrock customization fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Continued pre-training</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A knowledge base over the examples</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Raising the maximum output tokens</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Fine-tuning with the labeled examples</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Fine-tuning with the labeled examples<br><br>
+<strong>How to think about it:</strong> Labeled examples = <b>fine-tuning</b>. Unlabeled domain text = continued pre-training.<br><br>
+<strong>Why D is correct:</strong> Fine-tuning uses labeled pairs to adjust a private model copy toward the desired outputs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Continued pre-training</em> &mdash; This uses unlabeled domain text to teach vocabulary, not labeled style examples.<br><em>B) A knowledge base over the examples</em> &mdash; Retrieval adds facts at query time but does not reliably change style.<br><em>C) Raising the maximum output tokens</em> &mdash; Longer outputs do not teach the model a new style.
+</div>
+</div>
+
+<!-- Q10 Bedrock -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Bedrock" data-level="A">
+<div class="q-tags"><span class="q-tag">Bedrock</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>Answers must come from a policy library that changes daily, and stale answers are a compliance risk. Which approach keeps answers current at the lowest effort?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Increase the model's context window</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Fine-tune the model again every day</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A knowledge base that re-syncs the library</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Cache answers in ElastiCache for a week</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A knowledge base that re-syncs the library<br><br>
+<strong>How to think about it:</strong> Data changes often = <b>RAG with re-sync</b>, not repeated fine-tuning.<br><br>
+<strong>Why C is correct:</strong> Re-syncing indexes changed documents, so answers reflect current policies without retraining.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Increase the model's context window</em> &mdash; A bigger window still needs current documents fed in from somewhere.<br><em>B) Fine-tune the model again every day</em> &mdash; Daily fine-tuning is slow and costly, and the model can still mix up old content.<br><em>D) Cache answers in ElastiCache for a week</em> &mdash; Long caching would serve exactly the stale answers to avoid.
+</div>
+</div>
+
+<!-- Q11 Vision -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Vision" data-level="B">
+<div class="q-tags"><span class="q-tag">Vision</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>A social media app must flag user-uploaded images that contain nudity or violence. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Comprehend</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Textract</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Rekognition content moderation</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Kendra</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Rekognition content moderation<br><br>
+<strong>How to think about it:</strong> Unsafe images or video = <b>Rekognition content moderation</b>.<br><br>
+<strong>Why C is correct:</strong> It labels inappropriate content in images and video with a confidence score.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Comprehend</em> &mdash; Comprehend analyses text only and cannot see images.<br><em>B) Amazon Textract</em> &mdash; Textract extracts text and form data from documents, not unsafe imagery.<br><em>D) Amazon Kendra</em> &mdash; Kendra searches documents; it does not moderate pictures.
+</div>
+</div>
+
+<!-- Q12 Vision -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Vision" data-level="B">
+<div class="q-tags"><span class="q-tag">Vision</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>Rekognition flags borderline images with low confidence. The company wants humans to review only those cases. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Mechanical Turk with no integration</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Augmented AI (A2I) with a confidence threshold</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An SQS dead-letter queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">SageMaker Ground Truth labeling jobs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon Augmented AI (A2I) with a confidence threshold<br><br>
+<strong>How to think about it:</strong> Human review of low-confidence ML results = <b>Amazon Augmented AI (A2I)</b>.<br><br>
+<strong>Why B is correct:</strong> A2I sends predictions below your threshold to a human review workflow.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Mechanical Turk with no integration</em> &mdash; Raw Mechanical Turk lacks the built-in Rekognition review loop.<br><em>C) An SQS dead-letter queue</em> &mdash; A DLQ holds failed messages, not uncertain predictions for review.<br><em>D) SageMaker Ground Truth labeling jobs</em> &mdash; Ground Truth labels training data; A2I reviews live predictions.
+</div>
+</div>
+
+<!-- Q13 Vision -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Vision" data-level="B">
+<div class="q-tags"><span class="q-tag">Vision</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>A building access app must check whether a visitor's selfie matches a photo stored in a collection of employees' faces. Which feature fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Textract AnalyzeID</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Rekognition face search in a collection</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Rekognition label detection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Rekognition celebrity recognition</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Rekognition face search in a collection<br><br>
+<strong>How to think about it:</strong> Find a face among known faces = Rekognition <b>face collection search</b>.<br><br>
+<strong>Why B is correct:</strong> Faces are indexed into a collection, and new images are searched for the closest match.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Textract AnalyzeID</em> &mdash; AnalyzeID reads fields from identity documents, not face matching.<br><em>C) Rekognition label detection</em> &mdash; Labels name objects and scenes, not individual identities.<br><em>D) Rekognition celebrity recognition</em> &mdash; Celebrity recognition matches well-known public figures, not your employees.
+</div>
+</div>
+
+<!-- Q14 Vision -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Vision" data-level="B">
+<div class="q-tags"><span class="q-tag">Vision</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>A bank must pull fields such as names, dates and amounts from scanned loan forms, including tables and handwriting. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Comprehend</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Textract</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Rekognition text detection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Translate</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon Textract<br><br>
+<strong>How to think about it:</strong> Text, forms and tables from documents = <b>Textract</b>.<br><br>
+<strong>Why B is correct:</strong> Textract reads printed and handwritten text and returns form key-value pairs and table cells.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Comprehend</em> &mdash; Comprehend analyses text you already have; it cannot read scans.<br><em>C) Amazon Rekognition text detection</em> &mdash; Rekognition finds short text in images and video, not structured form fields.<br><em>D) Amazon Translate</em> &mdash; Translate converts languages but does not read images.
+</div>
+</div>
+
+<!-- Q15 Vision -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Vision" data-level="B">
+<div class="q-tags"><span class="q-tag">Vision</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>A media company wants to tag a photo library with labels like beach, car or dog so the photos can be searched. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Personalize</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Polly</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Textract</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Rekognition label detection</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Rekognition label detection<br><br>
+<strong>How to think about it:</strong> Objects and scenes in images = Rekognition <b>label detection</b>.<br><br>
+<strong>Why D is correct:</strong> It returns labels for objects, scenes and activities that you can store as searchable tags.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Personalize</em> &mdash; Personalize recommends items; it does not analyse image content.<br><em>B) Amazon Polly</em> &mdash; Polly turns text into speech and has no image capability.<br><em>C) Amazon Textract</em> &mdash; Textract reads text in documents, not general objects.
+</div>
+</div>
+
+<!-- Q16 Vision -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Vision" data-level="A">
+<div class="q-tags"><span class="q-tag">Vision</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>An expense app must read receipts from many vendors and return totals, tax and vendor names without custom templates. Which approach fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Textract AnalyzeExpense</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Comprehend custom entity recognition on the image</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Textract DetectDocumentText with regex parsing</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Rekognition custom labels trained on receipts</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Textract AnalyzeExpense<br><br>
+<strong>How to think about it:</strong> Receipts and invoices = Textract <b>AnalyzeExpense</b>.<br><br>
+<strong>Why A is correct:</strong> It understands invoice and receipt layouts and returns normalised fields such as total and vendor.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Comprehend custom entity recognition on the image</em> &mdash; Comprehend needs text input; it cannot read the receipt image.<br><em>C) Textract DetectDocumentText with regex parsing</em> &mdash; Raw text plus regex breaks across vendor layouts and adds custom work.<br><em>D) Rekognition custom labels trained on receipts</em> &mdash; Custom labels classify images and do not return field values.
+</div>
+</div>
+
+<!-- Q17 Vision -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Vision" data-level="A">
+<div class="q-tags"><span class="q-tag">Vision</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>A company needs to process thousands of multi-page PDF contracts in S3 with Textract. How should calls be made?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Asynchronous Textract jobs with SNS notification</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Send the PDFs to Rekognition Video</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Load the PDFs into Comprehend first</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use the synchronous API one page image at a time</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Asynchronous Textract jobs with SNS notification<br><br>
+<strong>How to think about it:</strong> Multi-page PDFs at scale = Textract <b>asynchronous</b> jobs with SNS completion.<br><br>
+<strong>Why A is correct:</strong> Async jobs handle multi-page files from S3 and notify when results are ready.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Send the PDFs to Rekognition Video</em> &mdash; Rekognition Video analyses video, not documents.<br><em>C) Load the PDFs into Comprehend first</em> &mdash; Comprehend needs text, which Textract has to extract first.<br><em>D) Use the synchronous API one page image at a time</em> &mdash; Sync calls suit single-page images and would need extra page splitting.
+</div>
+</div>
+
+<!-- Q18 Vision -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Vision" data-level="A">
+<div class="q-tags"><span class="q-tag">Vision</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>Live camera feeds in a warehouse must be analysed by Rekognition in near real time. What carries the video into Rekognition?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon SQS with video frames</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Kinesis Video Streams</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Elemental MediaConvert</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Data Firehose to S3</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon Kinesis Video Streams<br><br>
+<strong>How to think about it:</strong> Streaming video for Rekognition = <b>Kinesis Video Streams</b>.<br><br>
+<strong>Why B is correct:</strong> Rekognition stream processors read live video from Kinesis Video Streams.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon SQS with video frames</em> &mdash; Queueing frames manually adds latency and custom work.<br><em>C) AWS Elemental MediaConvert</em> &mdash; MediaConvert transcodes files; it does not feed live analysis.<br><em>D) Amazon Data Firehose to S3</em> &mdash; Firehose delivers records in batches and is not a video stream source for Rekognition.
+</div>
+</div>
+
+<!-- Q19 Vision -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Vision" data-level="B">
+<div class="q-tags"><span class="q-tag">Vision</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>A stock-photo site needs to detect its own product logos, which generic labels do not recognise. What should the team use with minimal ML expertise?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Comprehend custom classification</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Rekognition celebrity recognition</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Rekognition Custom Labels</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Textract queries</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Rekognition Custom Labels<br><br>
+<strong>How to think about it:</strong> Your own objects in images = <b>Rekognition Custom Labels</b>.<br><br>
+<strong>Why C is correct:</strong> You train a model on a small set of labeled images without building ML code yourself.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Comprehend custom classification</em> &mdash; Comprehend classifies text, not images.<br><em>B) Rekognition celebrity recognition</em> &mdash; Celebrity recognition is limited to famous people.<br><em>D) Textract queries</em> &mdash; Textract queries ask questions of documents, not logos in photos.
+</div>
+</div>
+
+<!-- Q20 Vision -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Vision" data-level="B">
+<div class="q-tags"><span class="q-tag">Vision</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>A sports news site wants to tag famous athletes automatically in photos it publishes. Which feature fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Rekognition celebrity recognition</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Rekognition face collection search</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Textract AnalyzeID</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Comprehend entity detection</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Rekognition celebrity recognition<br><br>
+<strong>How to think about it:</strong> Well-known public figures = Rekognition <b>celebrity recognition</b>.<br><br>
+<strong>Why A is correct:</strong> It identifies well-known people in images and video and returns their names.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Rekognition face collection search</em> &mdash; Collections need you to index the faces first, which is unnecessary for public figures.<br><em>C) Textract AnalyzeID</em> &mdash; AnalyzeID reads identity documents, not photos of athletes.<br><em>D) Comprehend entity detection</em> &mdash; Comprehend finds names in text, not faces in images.
+</div>
+</div>
+
+<!-- Q21 Speech -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Speech" data-level="B">
+<div class="q-tags"><span class="q-tag">Speech</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>A call centre wants written transcripts of recorded customer calls. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Translate</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Polly</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Lex</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Transcribe</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Amazon Transcribe<br><br>
+<strong>How to think about it:</strong> Speech to text = <b>Transcribe</b>. Text to speech = Polly.<br><br>
+<strong>Why D is correct:</strong> Transcribe uses automatic speech recognition to turn audio into text.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Translate</em> &mdash; Translate converts text between languages, not audio into text.<br><em>B) Amazon Polly</em> &mdash; Polly works the other way, turning text into speech.<br><em>C) Amazon Lex</em> &mdash; Lex understands intents in a live conversation; it is not a batch transcription service.
+</div>
+</div>
+
+<!-- Q22 Speech -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Speech" data-level="B">
+<div class="q-tags"><span class="q-tag">Speech</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>Transcripts of support calls must not contain credit card numbers or other personal data. Which Transcribe feature helps?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Polly lexicons</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Custom vocabularies</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 server-side encryption</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Automatic PII redaction in Transcribe</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Automatic PII redaction in Transcribe<br><br>
+<strong>How to think about it:</strong> Remove personal data from transcripts = Transcribe <b>PII redaction</b>.<br><br>
+<strong>Why D is correct:</strong> Transcribe can identify and mask personal data such as card numbers in the output.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Polly lexicons</em> &mdash; Lexicons change how Polly pronounces words.<br><em>B) Custom vocabularies</em> &mdash; Custom vocabularies improve recognition of terms; they do not hide data.<br><em>C) S3 server-side encryption</em> &mdash; Encryption protects the file at rest but leaves the data in the text.
+</div>
+</div>
+
+<!-- Q23 Speech -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Speech" data-level="B">
+<div class="q-tags"><span class="q-tag">Speech</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>Recordings from a global help desk contain several languages, and the language is not known in advance. Which Transcribe capability helps?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Speaker diarization</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Automatic language identification</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Comprehend language detection on the audio</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Translate custom terminology</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Automatic language identification<br><br>
+<strong>How to think about it:</strong> Unknown or mixed languages = Transcribe <b>automatic language identification</b>.<br><br>
+<strong>Why B is correct:</strong> Transcribe detects the spoken language, including multiple languages in one file.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Speaker diarization</em> &mdash; Diarization labels who spoke, not which language they used.<br><em>C) Comprehend language detection on the audio</em> &mdash; Comprehend works on text and cannot take audio input.<br><em>D) Amazon Translate custom terminology</em> &mdash; Custom terminology controls translation of brand terms, not speech recognition.
+</div>
+</div>
+
+<!-- Q24 Speech -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Speech" data-level="B">
+<div class="q-tags"><span class="q-tag">Speech</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>A media company wants subtitles generated for its video library and a searchable text archive of what was said. Which service is the core?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Polly</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Transcribe</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Kendra</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Rekognition Video</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon Transcribe<br><br>
+<strong>How to think about it:</strong> Captions and searchable audio = <b>Transcribe</b>.<br><br>
+<strong>Why B is correct:</strong> Transcribe produces timed transcripts that can be turned into subtitles and indexed for search.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Polly</em> &mdash; Polly creates speech; it cannot create subtitles from audio.<br><em>C) Amazon Kendra</em> &mdash; Kendra searches text, but something must transcribe the audio first.<br><em>D) Amazon Rekognition Video</em> &mdash; Rekognition Video sees objects and faces, not spoken words.
+</div>
+</div>
+
+<!-- Q25 Speech -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Speech" data-level="B">
+<div class="q-tags"><span class="q-tag">Speech</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>An e-learning app must read lessons aloud in a natural-sounding voice. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Polly</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Connect</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Transcribe</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Lex</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon Polly<br><br>
+<strong>How to think about it:</strong> Text to lifelike speech = <b>Polly</b>.<br><br>
+<strong>Why A is correct:</strong> Polly converts text into lifelike speech with many voices and languages.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon Connect</em> &mdash; Connect runs a contact centre; it is not a narration engine.<br><em>C) Amazon Transcribe</em> &mdash; Transcribe converts speech into text, the opposite direction.<br><em>D) Amazon Lex</em> &mdash; Lex handles conversational intent, not narration of long text.
+</div>
+</div>
+
+<!-- Q26 Speech -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Speech" data-level="B">
+<div class="q-tags"><span class="q-tag">Speech</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>Polly mispronounces the company name and reads <code>AWS</code> letter by letter instead of as Amazon Web Services. What fixes this for every request?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use Transcribe custom vocabularies</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Switch to a different AWS Region</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use Translate custom terminology</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Apply a pronunciation lexicon to requests</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Apply a pronunciation lexicon to requests<br><br>
+<strong>How to think about it:</strong> Custom pronunciations stored once = Polly <b>pronunciation lexicon</b>.<br><br>
+<strong>Why D is correct:</strong> Lexicons map words or acronyms to how they should be spoken across all requests.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use Transcribe custom vocabularies</em> &mdash; Custom vocabularies help Transcribe recognise words, not Polly speak them.<br><em>B) Switch to a different AWS Region</em> &mdash; Pronunciation is not controlled by Region.<br><em>C) Use Translate custom terminology</em> &mdash; Custom terminology applies to translation output, not speech.
+</div>
+</div>
+
+<!-- Q27 Speech -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Speech" data-level="B">
+<div class="q-tags"><span class="q-tag">Speech</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>A news app wants Polly to stress certain words, add pauses and use a newscaster style in some passages. What should the input use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Speech Synthesis Markup Language (SSML)</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">HTML bold tags in the text</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A pronunciation lexicon only</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Plain text with capital letters for emphasis</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Speech Synthesis Markup Language (SSML)<br><br>
+<strong>How to think about it:</strong> Emphasis, pauses, styles = <b>SSML</b> markup.<br><br>
+<strong>Why A is correct:</strong> SSML tags control emphasis, breaks, phonetic pronunciation and speaking styles where the voice supports them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) HTML bold tags in the text</em> &mdash; Polly does not interpret HTML formatting.<br><em>C) A pronunciation lexicon only</em> &mdash; Lexicons fix how words sound but do not add pauses or styles.<br><em>D) Plain text with capital letters for emphasis</em> &mdash; Polly does not read capital letters as emphasis.
+</div>
+</div>
+
+<!-- Q28 Speech -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Speech" data-level="B">
+<div class="q-tags"><span class="q-tag">Speech</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>Medical device manuals mention model names that Transcribe keeps getting wrong in recorded training sessions. What improves accuracy?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add a custom vocabulary to Transcribe</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Run the audio through Translate first</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add a Polly lexicon</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable PII redaction</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Add a custom vocabulary to Transcribe<br><br>
+<strong>How to think about it:</strong> Domain words misheard = Transcribe <b>custom vocabulary</b>.<br><br>
+<strong>Why A is correct:</strong> Custom vocabularies teach Transcribe the spelling of product names and jargon.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Run the audio through Translate first</em> &mdash; Translate needs text input, so it cannot help recognition.<br><em>C) Add a Polly lexicon</em> &mdash; Polly lexicons affect speech output, not transcription.<br><em>D) Enable PII redaction</em> &mdash; Redaction hides personal data but does not fix misrecognised words.
+</div>
+</div>
+
+<!-- Q29 Speech -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Speech" data-level="A">
+<div class="q-tags"><span class="q-tag">Speech</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>A contact centre wants sentiment, talk time and issue detection per speaker from call audio, with little custom code. Which option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Personalize with the call recordings</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Rekognition Video person tracking</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Polly speech marks</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Transcribe Call Analytics</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Amazon Transcribe Call Analytics<br><br>
+<strong>How to think about it:</strong> Call audio insights = <b>Transcribe Call Analytics</b>.<br><br>
+<strong>Why D is correct:</strong> Call Analytics adds per-speaker sentiment, interruptions, talk time and issue detection on top of transcription.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Personalize with the call recordings</em> &mdash; Personalize builds recommendations and cannot analyse audio.<br><em>B) Rekognition Video person tracking</em> &mdash; Rekognition analyses video, not voice calls.<br><em>C) Polly speech marks</em> &mdash; Speech marks describe Polly's own output timing, not caller audio.
+</div>
+</div>
+
+<!-- Q30 Language -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Language" data-level="B">
+<div class="q-tags"><span class="q-tag">Language</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>A retailer wants to know whether thousands of product reviews are positive or negative. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Comprehend</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Polly</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Textract</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Rekognition</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon Comprehend<br><br>
+<strong>How to think about it:</strong> Sentiment in text = <b>Comprehend</b>.<br><br>
+<strong>Why A is correct:</strong> Comprehend detects sentiment, entities, key phrases and language in text.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon Polly</em> &mdash; Polly reads text aloud and does not analyse it.<br><em>C) Amazon Textract</em> &mdash; Textract extracts text from documents but does not judge sentiment.<br><em>D) Amazon Rekognition</em> &mdash; Rekognition analyses images and video, not review text.
+</div>
+</div>
+
+<!-- Q31 Language -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Language" data-level="B">
+<div class="q-tags"><span class="q-tag">Language</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>Which set of tasks does Amazon Comprehend perform out of the box?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Language, entities, key phrases, sentiment, syntax</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Generate new articles from short prompts</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Convert speech to text and identify speakers</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Extract tables and forms from scanned PDFs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Language, entities, key phrases, sentiment, syntax<br><br>
+<strong>How to think about it:</strong> Comprehend = <b>NLP</b>: language, entities, key phrases, sentiment, syntax.<br><br>
+<strong>Why A is correct:</strong> These are Comprehend's built-in, serverless text analysis features.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Generate new articles from short prompts</em> &mdash; Text generation comes from foundation models in Bedrock.<br><em>C) Convert speech to text and identify speakers</em> &mdash; Speech recognition is Transcribe's job.<br><em>D) Extract tables and forms from scanned PDFs</em> &mdash; That is Textract.
+</div>
+</div>
+
+<!-- Q32 Language -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Language" data-level="B">
+<div class="q-tags"><span class="q-tag">Language</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>A hospital must pull medications, conditions and dosages from unstructured physician notes. Which service is purpose-built?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Comprehend Medical</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Textract</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Comprehend standard entities</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Kendra</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon Comprehend Medical<br><br>
+<strong>How to think about it:</strong> Clinical text = <b>Comprehend Medical</b>.<br><br>
+<strong>Why A is correct:</strong> It understands clinical text and returns medical entities such as medications, conditions and dosages.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon Textract</em> &mdash; Textract reads documents but does not interpret medical meaning.<br><em>C) Amazon Comprehend standard entities</em> &mdash; General entity detection does not recognise medical concepts well.<br><em>D) Amazon Kendra</em> &mdash; Kendra searches documents and does not extract clinical entities.
+</div>
+</div>
+
+<!-- Q33 Language -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Language" data-level="B">
+<div class="q-tags"><span class="q-tag">Language</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>Which Comprehend Medical API finds protected health information in clinical text?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">DetectSentiment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">StartTranscriptionJob</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AnalyzeID</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">DetectPHI</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> DetectPHI<br><br>
+<strong>How to think about it:</strong> Health identifiers in text = <b>DetectPHI</b>.<br><br>
+<strong>Why D is correct:</strong> DetectPHI returns protected health information such as names, dates and record numbers.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) DetectSentiment</em> &mdash; Sentiment is a standard Comprehend API and does not find PHI.<br><em>B) StartTranscriptionJob</em> &mdash; This is a Transcribe API that turns audio into text.<br><em>C) AnalyzeID</em> &mdash; AnalyzeID is a Textract API for identity documents.
+</div>
+</div>
+
+<!-- Q34 Language -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Language" data-level="B">
+<div class="q-tags"><span class="q-tag">Language</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>A company wants to localise its website and help articles into several languages automatically. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Translate</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Transcribe</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Polly</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Comprehend</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon Translate<br><br>
+<strong>How to think about it:</strong> Language A to language B = <b>Translate</b>.<br><br>
+<strong>Why A is correct:</strong> Translate provides neural machine translation for real-time and batch content.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon Transcribe</em> &mdash; Transcribe turns audio into text in the spoken language only.<br><em>C) Amazon Polly</em> &mdash; Polly speaks text in a language; it does not translate it.<br><em>D) Amazon Comprehend</em> &mdash; Comprehend can detect language, but it does not translate.
+</div>
+</div>
+
+<!-- Q35 Language -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Language" data-level="B">
+<div class="q-tags"><span class="q-tag">Language</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>Translated pages keep translating the company's product names into ordinary words. How do you keep them unchanged?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use Polly pronunciation lexicons</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use Translate custom terminology</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use Comprehend custom entity recognition</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use Transcribe custom vocabulary</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Use Translate custom terminology<br><br>
+<strong>How to think about it:</strong> Brand names in translations = Translate <b>custom terminology</b>.<br><br>
+<strong>Why B is correct:</strong> Custom terminology tells Translate exactly how to render or keep specific terms.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use Polly pronunciation lexicons</em> &mdash; Lexicons affect speech output, not translated text.<br><em>C) Use Comprehend custom entity recognition</em> &mdash; Recognising entities does not change translation output.<br><em>D) Use Transcribe custom vocabulary</em> &mdash; That improves speech recognition only.
+</div>
+</div>
+
+<!-- Q36 Language -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Language" data-level="A">
+<div class="q-tags"><span class="q-tag">Language</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Patient phone calls must be turned into text and then mined for medications and conditions. Which pipeline fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Transcribe, then Comprehend Medical on the text</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use Rekognition, then Textract</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use Polly, then Comprehend</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Send the audio straight to Comprehend Medical</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Transcribe, then Comprehend Medical on the text<br><br>
+<strong>How to think about it:</strong> Audio then clinical NLP = <b>Transcribe -&gt; Comprehend Medical</b>.<br><br>
+<strong>Why A is correct:</strong> Transcribe produces text and Comprehend Medical extracts clinical entities from it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Use Rekognition, then Textract</em> &mdash; Neither service processes speech.<br><em>C) Use Polly, then Comprehend</em> &mdash; Polly creates audio from text, which is the wrong direction.<br><em>D) Send the audio straight to Comprehend Medical</em> &mdash; Comprehend Medical accepts text, not audio.
+</div>
+</div>
+
+<!-- Q37 Language -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Language" data-level="A">
+<div class="q-tags"><span class="q-tag">Language</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>Support emails must be routed by category such as billing, outage or cancellation, using the company's own labeled history. Which approach fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Comprehend custom classification</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Translate batch jobs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Comprehend sentiment analysis</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Kendra relevance tuning</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Comprehend custom classification<br><br>
+<strong>How to think about it:</strong> Your own text categories = Comprehend <b>custom classification</b>.<br><br>
+<strong>Why A is correct:</strong> You train a classifier on your categories and call it on new emails.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Translate batch jobs</em> &mdash; Translation does not assign categories.<br><em>C) Comprehend sentiment analysis</em> &mdash; Sentiment says positive or negative, not billing or outage.<br><em>D) Kendra relevance tuning</em> &mdash; Kendra ranks search results; it does not route emails.
+</div>
+</div>
+
+<!-- Q38 Language -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Language" data-level="A">
+<div class="q-tags"><span class="q-tag">Language</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>Emails stream in continuously and must be analysed with Comprehend before landing in S3 for reporting. What is a simple serverless pipeline?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Run Comprehend on an EC2 instance polling an FTP server</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Load emails into Rekognition collections</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Firehose with a Lambda that calls Comprehend, then S3</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Send emails to Polly, then store the audio</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Firehose with a Lambda that calls Comprehend, then S3<br><br>
+<strong>How to think about it:</strong> Streaming text + NLP = Firehose or Kinesis with <b>Lambda calling Comprehend</b>.<br><br>
+<strong>Why C is correct:</strong> Lambda enriches each record with Comprehend results before the stream lands in S3.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Run Comprehend on an EC2 instance polling an FTP server</em> &mdash; This adds servers and polling for no benefit.<br><em>B) Load emails into Rekognition collections</em> &mdash; Rekognition collections hold faces, not text.<br><em>D) Send emails to Polly, then store the audio</em> &mdash; Polly produces audio, which does not help text analysis.
+</div>
+</div>
+
+<!-- Q39 Language -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Language" data-level="B">
+<div class="q-tags"><span class="q-tag">Language</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Customer chat logs must have names, addresses and phone numbers found and masked before analysts see them. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Macie on the analysts' bucket</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Comprehend PII detection and redaction</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Transcribe PII redaction</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Textract with the Queries feature</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Comprehend PII detection and redaction<br><br>
+<strong>How to think about it:</strong> Personal data in text = Comprehend <b>PII detection</b>. In audio = Transcribe redaction.<br><br>
+<strong>Why B is correct:</strong> Comprehend locates personal data entities in text and can return a redacted version.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Macie on the analysts' bucket</em> &mdash; Macie reports sensitive data in S3 objects but does not redact the text.<br><em>C) Transcribe PII redaction</em> &mdash; Transcribe redacts personal data from audio transcripts, not existing chat text.<br><em>D) Textract with the Queries feature</em> &mdash; Textract reads scanned documents and does not mask personal data.
+</div>
+</div>
+
+<!-- Q40 Bots & Contact Center -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Bots & Contact Center" data-level="B">
+<div class="q-tags"><span class="q-tag">Bots & Contact Center</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>Which service is used to build chatbots and voice bots that understand what a user intends, using the same technology as Alexa?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Comprehend</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Kendra</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Lex</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Polly</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon Lex<br><br>
+<strong>How to think about it:</strong> Chatbots with intents and slots = <b>Lex</b>.<br><br>
+<strong>Why C is correct:</strong> Lex combines speech recognition and natural language understanding to detect intents and collect slot values.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Comprehend</em> &mdash; Comprehend analyses text but does not run a dialogue.<br><em>B) Amazon Kendra</em> &mdash; Kendra answers search questions over documents, not conversational intents.<br><em>D) Amazon Polly</em> &mdash; Polly speaks but does not understand user input.
+</div>
+</div>
+
+<!-- Q41 Bots & Contact Center -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Bots & Contact Center" data-level="B">
+<div class="q-tags"><span class="q-tag">Bots & Contact Center</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>Which service provides a cloud contact centre with phone numbers, contact flows and pay-as-you-go pricing?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Chime SDK meetings</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Lex</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon SNS SMS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Connect</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Amazon Connect<br><br>
+<strong>How to think about it:</strong> Cloud call centre = <b>Amazon Connect</b>.<br><br>
+<strong>Why D is correct:</strong> Connect handles inbound and outbound calls and chat with configurable contact flows and no upfront cost.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Chime SDK meetings</em> &mdash; Chime SDK powers meetings and media, not a full contact centre.<br><em>B) Amazon Lex</em> &mdash; Lex supplies bots that can run inside a contact centre but does not provide phone lines.<br><em>C) Amazon SNS SMS</em> &mdash; SNS sends text messages but is not a contact centre.
+</div>
+</div>
+
+<!-- Q42 Bots & Contact Center -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Bots & Contact Center" data-level="B">
+<div class="q-tags"><span class="q-tag">Bots & Contact Center</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>A Lex bot has identified that a caller wants to book an appointment and has collected the date. What typically completes the booking?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Comprehend detecting the caller's sentiment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Polly reading the date back to the caller</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda function that calls the booking system</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudWatch alarm on the bot</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A Lambda function that calls the booking system<br><br>
+<strong>How to think about it:</strong> Lex fulfilment = <b>Lambda</b> calling your backend.<br><br>
+<strong>Why C is correct:</strong> Lex invokes Lambda for fulfilment, and Lambda writes to the CRM or scheduling API.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Comprehend detecting the caller's sentiment</em> &mdash; Sentiment does not create the appointment.<br><em>B) Polly reading the date back to the caller</em> &mdash; Reading back confirms but does not make the booking.<br><em>D) A CloudWatch alarm on the bot</em> &mdash; Alarms monitor metrics; they do not fulfil requests.
+</div>
+</div>
+
+<!-- Q43 Bots & Contact Center -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Bots & Contact Center" data-level="B">
+<div class="q-tags"><span class="q-tag">Bots & Contact Center</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>In Amazon Lex, what are slots?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Voices that can speak the bot's replies</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Details the bot must collect to fulfil an intent</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Reserved capacity units for the bot</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The phone numbers assigned to a contact centre</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Details the bot must collect to fulfil an intent<br><br>
+<strong>How to think about it:</strong> Intent = what they want. <b>Slot</b> = the details needed to do it.<br><br>
+<strong>Why B is correct:</strong> Slots hold values such as date, time or city that the intent needs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Voices that can speak the bot's replies</em> &mdash; Voices are chosen from Polly, not defined as slots.<br><em>C) Reserved capacity units for the bot</em> &mdash; Lex is serverless and has no capacity slots to buy.<br><em>D) The phone numbers assigned to a contact centre</em> &mdash; Phone numbers belong to Amazon Connect.
+</div>
+</div>
+
+<!-- Q44 Bots & Contact Center -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Bots & Contact Center" data-level="A">
+<div class="q-tags"><span class="q-tag">Bots & Contact Center</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>A clinic wants callers to phone a number, say what they need, and have appointments written to its CRM automatically. Which combination fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Polly answers the call and Kendra books the slot</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">SNS receives the call and SQS queues the booking</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Connect routes to a Lex bot that uses Lambda for the CRM</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Transcribe the call, then Comprehend writes to the CRM</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Connect routes to a Lex bot that uses Lambda for the CRM<br><br>
+<strong>How to think about it:</strong> Phone + understanding + action = <b>Connect + Lex + Lambda</b>.<br><br>
+<strong>Why C is correct:</strong> Connect handles telephony, Lex understands the request and Lambda performs the booking.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Polly answers the call and Kendra books the slot</em> &mdash; Polly cannot take calls and Kendra cannot write bookings.<br><em>B) SNS receives the call and SQS queues the booking</em> &mdash; SNS and SQS do not handle voice calls.<br><em>D) Transcribe the call, then Comprehend writes to the CRM</em> &mdash; Comprehend analyses text but cannot carry on a dialogue or call APIs.
+</div>
+</div>
+
+<!-- Q45 Bots & Contact Center -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Bots & Contact Center" data-level="A">
+<div class="q-tags"><span class="q-tag">Bots & Contact Center</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>A contact centre bot should answer free-form questions from a large policy library instead of only fixed intents. What is a sensible design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add one Lex intent for every possible question</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use Translate to rephrase the question</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use Polly SSML to read the whole library</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Lex with a Bedrock or Kendra knowledge fallback</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Lex with a Bedrock or Kendra knowledge fallback<br><br>
+<strong>How to think about it:</strong> Bot + document answers = <b>Lex with a generative or Kendra-backed fallback</b>.<br><br>
+<strong>Why D is correct:</strong> Unmatched questions go to retrieval over the policy library, while known intents stay in Lex.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Add one Lex intent for every possible question</em> &mdash; Thousands of hand-built intents do not scale for free-form questions.<br><em>B) Use Translate to rephrase the question</em> &mdash; Rephrasing alone finds no answer.<br><em>C) Use Polly SSML to read the whole library</em> &mdash; Reading documents aloud does not answer specific questions.
+</div>
+</div>
+
+<!-- Q46 Bots & Contact Center -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Bots & Contact Center" data-level="A">
+<div class="q-tags"><span class="q-tag">Bots & Contact Center</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>Supervisors want live transcripts and sentiment during calls in Amazon Connect, with minimal custom work. Which capability fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Polly neural voices</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Contact Lens for Amazon Connect</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Personalize real-time events</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Rekognition streaming video analysis</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Contact Lens for Amazon Connect<br><br>
+<strong>How to think about it:</strong> Built-in Connect call insights = <b>Contact Lens</b>.<br><br>
+<strong>Why B is correct:</strong> Contact Lens adds real-time and post-call transcripts, sentiment and alerts inside Connect.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Polly neural voices</em> &mdash; Polly voices speak to callers but do not analyse them.<br><em>C) Personalize real-time events</em> &mdash; Personalize produces recommendations, not call sentiment.<br><em>D) Rekognition streaming video analysis</em> &mdash; Rekognition works on video, not phone audio.
+</div>
+</div>
+
+<!-- Q47 Search & Recs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Search & Recs" data-level="B">
+<div class="q-tags"><span class="q-tag">Search & Recs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>Employees want to ask plain-language questions like where the IT desk is and get answers from documents in SharePoint and S3. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Athena</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Personalize</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Kendra</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon OpenSearch Service with keyword queries only</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon Kendra<br><br>
+<strong>How to think about it:</strong> ML-powered enterprise document search = <b>Kendra</b>.<br><br>
+<strong>Why C is correct:</strong> Kendra indexes documents from many sources and answers natural-language questions.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Athena</em> &mdash; Athena runs SQL over data in S3, not natural-language document search.<br><em>B) Amazon Personalize</em> &mdash; Personalize recommends items; it does not search documents.<br><em>D) Amazon OpenSearch Service with keyword queries only</em> &mdash; Keyword search finds matching words but does not extract direct answers.
+</div>
+</div>
+
+<!-- Q48 Search & Recs -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Search & Recs" data-level="B">
+<div class="q-tags"><span class="q-tag">Search & Recs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>How does Amazon Kendra connect to content in sources such as S3, SharePoint and Google Drive?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only through files uploaded manually in the console</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">By querying each source live at search time</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only through a Glue crawler</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Through built-in data source connectors that index the content</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Through built-in data source connectors that index the content<br><br>
+<strong>How to think about it:</strong> Kendra ingestion = built-in <b>data source connectors</b>.<br><br>
+<strong>Why D is correct:</strong> Connectors crawl each source and keep the Kendra index in sync.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only through files uploaded manually in the console</em> &mdash; Manual upload is possible but connectors are the normal path.<br><em>B) By querying each source live at search time</em> &mdash; Kendra searches its own index, not the sources directly.<br><em>C) Only through a Glue crawler</em> &mdash; Glue crawlers build data catalogues, not Kendra indexes.
+</div>
+</div>
+
+<!-- Q49 Search & Recs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Search & Recs" data-level="B">
+<div class="q-tags"><span class="q-tag">Search & Recs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>Kendra users keep clicking the third result rather than the first. How can Kendra improve ranking over time?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turning on S3 versioning for the documents</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Adding more replicas to the index</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Incremental learning from user interactions and feedback</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Rebuilding the index from scratch every night</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Incremental learning from user interactions and feedback<br><br>
+<strong>How to think about it:</strong> Kendra gets better from clicks = <b>incremental learning</b>.<br><br>
+<strong>Why C is correct:</strong> Kendra uses clicks and feedback to promote the results people prefer.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Turning on S3 versioning for the documents</em> &mdash; Versioning keeps old copies and does not affect ranking.<br><em>B) Adding more replicas to the index</em> &mdash; More capacity changes performance, not ranking quality.<br><em>D) Rebuilding the index from scratch every night</em> &mdash; Rebuilding refreshes content but does not learn preferences.
+</div>
+</div>
+
+<!-- Q50 Search & Recs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Search & Recs" data-level="B">
+<div class="q-tags"><span class="q-tag">Search & Recs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>An online store wants real-time product recommendations like those on Amazon.com without building its own ML pipeline. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Forecast</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Comprehend</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Personalize</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Kendra</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon Personalize<br><br>
+<strong>How to think about it:</strong> Recommendations as a service = <b>Personalize</b>.<br><br>
+<strong>Why C is correct:</strong> Personalize trains recommendation models on your data and serves them through an API in real time.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Forecast</em> &mdash; Forecasting predicts demand over time, not which item a user wants next.<br><em>B) Amazon Comprehend</em> &mdash; Comprehend analyses text, not purchase behaviour.<br><em>D) Amazon Kendra</em> &mdash; Kendra searches documents and does not recommend products.
+</div>
+</div>
+
+<!-- Q51 Search & Recs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Search & Recs" data-level="B">
+<div class="q-tags"><span class="q-tag">Search & Recs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>Where does Amazon Personalize typically get historical training data, and how does it learn from live clicks?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only from an RDS read replica it connects to</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">History from S3, live events via its event API</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">From Kendra indexes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only from CloudTrail logs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> History from S3, live events via its event API<br><br>
+<strong>How to think about it:</strong> Personalize data = <b>S3 for history</b>, <b>event tracking API</b> for live behaviour.<br><br>
+<strong>Why B is correct:</strong> Datasets import from S3, and real-time events keep recommendations current.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only from an RDS read replica it connects to</em> &mdash; Personalize does not query databases directly for training.<br><em>C) From Kendra indexes</em> &mdash; Kendra indexes documents, not interaction history.<br><em>D) Only from CloudTrail logs</em> &mdash; CloudTrail records API calls, not shopper behaviour.
+</div>
+</div>
+
+<!-- Q52 Search & Recs -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Search & Recs" data-level="A">
+<div class="q-tags"><span class="q-tag">Search & Recs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>A streaming service already has its own candidate list per user and only wants Personalize to put that list in the best order. Which capability fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Personalize personalized-ranking recipe</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A DynamoDB sort key on view count</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Personalize similar-items recipe</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Kendra relevance tuning</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A Personalize personalized-ranking recipe<br><br>
+<strong>How to think about it:</strong> Order my list for this user = Personalize <b>personalized ranking</b>.<br><br>
+<strong>Why A is correct:</strong> Ranking recipes re-rank a supplied list of items for a specific user.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A DynamoDB sort key on view count</em> &mdash; A static sort ignores each user's tastes.<br><em>C) Personalize similar-items recipe</em> &mdash; Similar-items finds related items rather than ordering your list.<br><em>D) Kendra relevance tuning</em> &mdash; Relevance tuning ranks document search results, not personal item lists.
+</div>
+</div>
+
+<!-- Q53 Search & Recs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Search & Recs" data-level="A">
+<div class="q-tags"><span class="q-tag">Search & Recs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>A company wants marketing emails with recommended products for each customer, generated nightly for millions of users. Which approach is efficient?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Call the real-time recommendation API once per user each night</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Kendra queries per customer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Personalize batch inference jobs writing results to S3</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Comprehend sentiment on past orders</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Personalize batch inference jobs writing results to S3<br><br>
+<strong>How to think about it:</strong> Many users, offline = Personalize <b>batch inference</b>.<br><br>
+<strong>Why C is correct:</strong> Batch jobs produce recommendations for many users at once without calling the real-time API per user.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Call the real-time recommendation API once per user each night</em> &mdash; Millions of real-time calls cost more and need a provisioned campaign.<br><em>B) Kendra queries per customer</em> &mdash; Kendra cannot generate product recommendations.<br><em>D) Comprehend sentiment on past orders</em> &mdash; Sentiment does not decide which products to recommend.
+</div>
+</div>
+
+<!-- Q54 Search & Recs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Search & Recs" data-level="A">
+<div class="q-tags"><span class="q-tag">Search & Recs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>Search results in Kendra should favour recently updated documents and content from the HR source. What should the team adjust?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Increase the Kendra index edition only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Kendra relevance tuning on those fields</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Personalize user segmentation</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Move HR documents to S3 Glacier</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Kendra relevance tuning on those fields<br><br>
+<strong>How to think about it:</strong> Boost freshness or a source = Kendra <b>relevance tuning</b>.<br><br>
+<strong>Why B is correct:</strong> You can boost the weight of fields such as update date or data source.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Increase the Kendra index edition only</em> &mdash; A bigger edition adds capacity but does not change ranking rules.<br><em>C) Personalize user segmentation</em> &mdash; Segments group users for marketing, not document ranking.<br><em>D) Move HR documents to S3 Glacier</em> &mdash; Archiving would make the content harder to reach, not boost it.
+</div>
+</div>
+
+<!-- Q55 SageMaker AI -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SageMaker AI" data-level="B">
+<div class="q-tags"><span class="q-tag">SageMaker AI</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>Data scientists need a managed service to build, train, tune and deploy their own custom ML models. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Glue</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon SageMaker AI</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Rekognition</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Comprehend</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon SageMaker AI<br><br>
+<strong>How to think about it:</strong> Your own models end to end = <b>SageMaker AI</b>.<br><br>
+<strong>Why B is correct:</strong> SageMaker AI provides managed notebooks, training, tuning and hosting for custom models.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Glue</em> &mdash; Glue prepares data but does not train or host ML models.<br><em>C) Amazon Rekognition</em> &mdash; Rekognition is a ready-made vision API.<br><em>D) Amazon Comprehend</em> &mdash; Comprehend offers ready-made NLP, not a general model-building platform.
+</div>
+</div>
+
+<!-- Q56 SageMaker AI -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SageMaker AI" data-level="B">
+<div class="q-tags"><span class="q-tag">SageMaker AI</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>When should you choose a ready-made AI service such as Rekognition or Comprehend over building a model in SageMaker AI?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">When you have a highly unusual prediction problem</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">When you need full control over the algorithm</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">When it is a common task the API already handles well</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">When you must tune hyperparameters yourself</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> When it is a common task the API already handles well<br><br>
+<strong>How to think about it:</strong> Common task already solved = <b>managed AI service</b>; unique problem = SageMaker.<br><br>
+<strong>Why C is correct:</strong> Managed AI services need no ML expertise, training data or hosting.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) When you have a highly unusual prediction problem</em> &mdash; Unusual problems usually need a custom model.<br><em>B) When you need full control over the algorithm</em> &mdash; Full control points to SageMaker, not a fixed API.<br><em>D) When you must tune hyperparameters yourself</em> &mdash; Managed AI APIs do not expose hyperparameters.
+</div>
+</div>
+
+<!-- Q57 SageMaker AI -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SageMaker AI" data-level="B">
+<div class="q-tags"><span class="q-tag">SageMaker AI</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>In a simple supervised learning workflow, what is the label?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The instance type used for training</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The name of the S3 bucket holding the data</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The known outcome the model learns to predict</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A cost allocation tag on the training job</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The known outcome the model learns to predict<br><br>
+<strong>How to think about it:</strong> <b>Label</b> = the known answer the model learns to predict.<br><br>
+<strong>Why C is correct:</strong> For example, past exam scores are labels when predicting a new student's score.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The instance type used for training</em> &mdash; Instance type affects speed and cost, not what is predicted.<br><em>B) The name of the S3 bucket holding the data</em> &mdash; Bucket names are storage details, not training targets.<br><em>D) A cost allocation tag on the training job</em> &mdash; Tags support billing, not learning.
+</div>
+</div>
+
+<!-- Q58 SageMaker AI -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SageMaker AI" data-level="A">
+<div class="q-tags"><span class="q-tag">SageMaker AI</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>A model receives a few requests per hour with long idle gaps, and the team wants to avoid paying for idle instances. Which SageMaker AI hosting option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Provisioned Throughput in Bedrock</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Batch transform running every minute</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A real-time endpoint on large GPU instances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">SageMaker Serverless Inference</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> SageMaker Serverless Inference<br><br>
+<strong>How to think about it:</strong> Spiky or rare traffic = <b>Serverless Inference</b>.<br><br>
+<strong>Why D is correct:</strong> Serverless endpoints scale with requests and charge only for use, suiting idle periods.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Provisioned Throughput in Bedrock</em> &mdash; Bedrock capacity applies to foundation models, not your SageMaker model.<br><em>B) Batch transform running every minute</em> &mdash; Batch transform suits large offline datasets, not per-request calls.<br><em>C) A real-time endpoint on large GPU instances</em> &mdash; Real-time endpoints bill for instances even while idle.
+</div>
+</div>
+
+<!-- Q59 SageMaker AI -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SageMaker AI" data-level="A">
+<div class="q-tags"><span class="q-tag">SageMaker AI</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>A team must score 50 million records in S3 once a week and does not need a persistent endpoint. Which option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">SageMaker Batch Transform</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Rekognition custom labels</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Serverless Inference with one call per record</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A real-time endpoint called in a loop</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> SageMaker Batch Transform<br><br>
+<strong>How to think about it:</strong> Big offline dataset, no endpoint = <b>Batch Transform</b>.<br><br>
+<strong>Why A is correct:</strong> Batch Transform reads from S3, scores the whole dataset and shuts down when done.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Rekognition custom labels</em> &mdash; Rekognition is for images, not general tabular scoring.<br><em>C) Serverless Inference with one call per record</em> &mdash; Millions of single calls are slower and costlier than batch.<br><em>D) A real-time endpoint called in a loop</em> &mdash; This keeps instances running and adds per-request overhead.
+</div>
+</div>
+
+<!-- Q60 SageMaker AI -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SageMaker AI" data-level="A">
+<div class="q-tags"><span class="q-tag">SageMaker AI</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>Before training, thousands of images need accurate human-applied labels, with automatic labeling to cut cost. Which service helps?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Glue DataBrew</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Rekognition label detection</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Augmented AI</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">SageMaker Ground Truth</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> SageMaker Ground Truth<br><br>
+<strong>How to think about it:</strong> Build labeled training data = <b>SageMaker Ground Truth</b>.<br><br>
+<strong>Why D is correct:</strong> Ground Truth manages human labeling workforces and can auto-label confident items.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Glue DataBrew</em> &mdash; DataBrew cleans tabular data and does not label images.<br><em>B) Rekognition label detection</em> &mdash; Generic labels may not match your classes and lack human checks.<br><em>C) Amazon Augmented AI</em> &mdash; A2I reviews live predictions, not bulk training labels.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Deployment &amp; Instance Management - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Deployment &amp; Instance Management</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Deployment &amp; Instance Management</h2>
+        <p>60 refresher questions &mdash; Elastic Beanstalk, CodeDeploy, CloudFormation, Service Catalog, SAM, CDK, Systems Manager &amp; Cloud Map</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="Beanstalk" onclick="filterQ(this)">Beanstalk</button><button class="filter-btn" data-f="CodeDeploy" onclick="filterQ(this)">CodeDeploy</button><button class="filter-btn" data-f="CloudFormation" onclick="filterQ(this)">CloudFormation</button><button class="filter-btn" data-f="Service Catalog" onclick="filterQ(this)">Service Catalog</button><button class="filter-btn" data-f="SAM & CDK" onclick="filterQ(this)">SAM & CDK</button><button class="filter-btn" data-f="Systems Manager" onclick="filterQ(this)">Systems Manager</button><button class="filter-btn" data-f="Cloud Map" onclick="filterQ(this)">Cloud Map</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 Beanstalk -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Beanstalk" data-level="B">
+<div class="q-tags"><span class="q-tag">Beanstalk</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>How is AWS Elastic Beanstalk itself charged?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A fixed monthly fee per environment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Per deployment, plus the resources it creates</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A per-hour fee for each managed platform version</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">No charge for Beanstalk; you pay for the resources it creates</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> No charge for Beanstalk; you pay for the resources it creates<br><br>
+<strong>How to think about it:</strong> Beanstalk = <b>free</b> orchestration; you pay for the <b>EC2, ELB, RDS</b> etc. it creates.<br><br>
+<strong>Why D is correct:</strong> Beanstalk is free to use, and billing comes from the EC2 instances, load balancers and other resources in the environment.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A fixed monthly fee per environment</em> &mdash; There is no per-environment fee for Elastic Beanstalk.<br><em>B) Per deployment, plus the resources it creates</em> &mdash; Deployments are not billed; only the underlying resources are.<br><em>C) A per-hour fee for each managed platform version</em> &mdash; Platform versions are provided at no extra charge.
+</div>
+</div>
+
+<!-- Q2 Beanstalk -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Beanstalk" data-level="B">
+<div class="q-tags"><span class="q-tag">Beanstalk</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>In an Elastic Beanstalk environment, what remains the developer's responsibility?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Patching the operating system by hand</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Writing the deployment orchestration logic</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The application code</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Building the Auto Scaling group manually</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The application code<br><br>
+<strong>How to think about it:</strong> Beanstalk runs the OS, instances and deploys; <b>you own the application code</b>.<br><br>
+<strong>Why C is correct:</strong> Beanstalk handles instance configuration, the OS platform and the deployment process, leaving the code to the developer.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Patching the operating system by hand</em> &mdash; Beanstalk manages the platform and can apply managed platform updates.<br><em>B) Writing the deployment orchestration logic</em> &mdash; Beanstalk performs deployments using the policy you choose.<br><em>D) Building the Auto Scaling group manually</em> &mdash; Beanstalk creates and configures the Auto Scaling group for you.
+</div>
+</div>
+
+<!-- Q3 Beanstalk -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Beanstalk" data-level="B">
+<div class="q-tags"><span class="q-tag">Beanstalk</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>Which Elastic Beanstalk environment type is the cheapest choice for a developer's test environment?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Single instance environment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Load-balanced environment with RDS Multi-AZ</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Worker environment with an SQS queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Load-balanced environment with Auto Scaling</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Single instance environment<br><br>
+<strong>How to think about it:</strong> Dev = <b>single instance</b> (one EC2 + Elastic IP). Prod web = LB + ASG.<br><br>
+<strong>Why A is correct:</strong> A single instance with an Elastic IP and no load balancer is the low-cost option for development.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Load-balanced environment with RDS Multi-AZ</em> &mdash; A Multi-AZ database adds a standby and is built for production availability.<br><em>C) Worker environment with an SQS queue</em> &mdash; A worker tier processes background jobs; it is not the minimal web test setup.<br><em>D) Load-balanced environment with Auto Scaling</em> &mdash; Load balancing and multiple instances cost more and suit production.
+</div>
+</div>
+
+<!-- Q4 Beanstalk -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Beanstalk" data-level="B">
+<div class="q-tags"><span class="q-tag">Beanstalk</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>A web app needs to hand off long-running jobs such as video encoding so web requests return quickly. What does Elastic Beanstalk provide?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A second web environment behind the same load balancer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A larger instance type in the web environment</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A single instance environment with an Elastic IP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A worker environment that pulls jobs from an SQS queue</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A worker environment that pulls jobs from an SQS queue<br><br>
+<strong>How to think about it:</strong> Long tasks off the web tier = <b>worker environment</b> (SQS queue + EC2).<br><br>
+<strong>Why D is correct:</strong> The web tier puts messages on the queue, and the worker tier's instances process them in the background.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A second web environment behind the same load balancer</em> &mdash; Another web tier still serves requests and does not decouple long jobs.<br><em>B) A larger instance type in the web environment</em> &mdash; Bigger instances do not stop long jobs from blocking web requests.<br><em>C) A single instance environment with an Elastic IP</em> &mdash; That is a low-cost dev setup and does not add a background job tier.
+</div>
+</div>
+
+<!-- Q5 Beanstalk -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Beanstalk" data-level="B">
+<div class="q-tags"><span class="q-tag">Beanstalk</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>A Beanstalk worker environment must run a cleanup job every night. Where is the schedule defined?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">In a CloudFormation DeletionPolicy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">In the appspec.yml file</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">In the Dockerrun.aws.json file</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">In a cron.yaml file in the application bundle</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> In a cron.yaml file in the application bundle<br><br>
+<strong>How to think about it:</strong> Periodic tasks in a worker tier = <b>cron.yaml</b>.<br><br>
+<strong>Why D is correct:</strong> The worker environment reads cron.yaml and posts scheduled messages to trigger the task.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) In a CloudFormation DeletionPolicy</em> &mdash; DeletionPolicy controls what happens to resources when a stack is deleted.<br><em>B) In the appspec.yml file</em> &mdash; appspec.yml is the CodeDeploy deployment specification, not a Beanstalk scheduler.<br><em>C) In the Dockerrun.aws.json file</em> &mdash; Dockerrun describes container settings, not scheduled jobs.
+</div>
+</div>
+
+<!-- Q6 Beanstalk -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Beanstalk" data-level="B">
+<div class="q-tags"><span class="q-tag">Beanstalk</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>Moving an on-premises Java app onto Elastic Beanstalk without changing its architecture is which migration strategy?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Repurchase</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Replatform</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Refactor</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Retain</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Replatform<br><br>
+<strong>How to think about it:</strong> Managed platform, same architecture = <b>Replatform</b>.<br><br>
+<strong>Why B is correct:</strong> Beanstalk takes over servers and deployments while the application stays the same, which is replatforming.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Repurchase</em> &mdash; Repurchase would replace the app with a commercial product.<br><em>C) Refactor</em> &mdash; Refactor would redesign the app, for example into microservices.<br><em>D) Retain</em> &mdash; Retain would leave the app on premises.
+</div>
+</div>
+
+<!-- Q7 Beanstalk -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Beanstalk" data-level="A">
+<div class="q-tags"><span class="q-tag">Beanstalk</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>A team deploys v2 to a separate Beanstalk environment, tests it, and then wants all users moved to it instantly with an easy way back. What should it do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Delete the old environment and rename the new one</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Run an in-place all-at-once deployment on the old environment</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Swap the environment URLs between the two environments</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Change the Auto Scaling group's launch template</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Swap the environment URLs between the two environments<br><br>
+<strong>How to think about it:</strong> Beanstalk blue/green = new environment + <b>swap environment URLs</b> (CNAME swap).<br><br>
+<strong>Why C is correct:</strong> The CNAME swap points the production URL at the new environment, and swapping back is the rollback.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Delete the old environment and rename the new one</em> &mdash; Deleting the old environment removes the quick rollback path.<br><em>B) Run an in-place all-at-once deployment on the old environment</em> &mdash; All at once updates the original instances and causes downtime.<br><em>D) Change the Auto Scaling group's launch template</em> &mdash; That updates instances in place rather than switching between environments.
+</div>
+</div>
+
+<!-- Q8 Beanstalk -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Beanstalk" data-level="A">
+<div class="q-tags"><span class="q-tag">Beanstalk</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>Before swapping Beanstalk environments, a team wants about 10% of users on the green environment to watch for errors. How?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A swap of environment URLs at 10%</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Route 53 weighted records pointing at both environment URLs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Route 53 failover records on both environment URLs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An immutable deployment with a 10% batch</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Route 53 weighted records pointing at both environment URLs<br><br>
+<strong>How to think about it:</strong> Send a slice of traffic to green = <b>Route 53 weighted records</b> on both environment URLs.<br><br>
+<strong>Why B is correct:</strong> Weights such as 90/10 send a small share of users to green while blue keeps most traffic.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A swap of environment URLs at 10%</em> &mdash; The URL swap is all or nothing; it has no percentage setting.<br><em>C) Route 53 failover records on both environment URLs</em> &mdash; Failover routing sends traffic to the secondary only when the primary is unhealthy.<br><em>D) An immutable deployment with a 10% batch</em> &mdash; Immutable deployments replace instances in one environment, not split traffic across two.
+</div>
+</div>
+
+<!-- Q9 CodeDeploy -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CodeDeploy" data-level="B">
+<div class="q-tags"><span class="q-tag">CodeDeploy</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>Which targets can AWS CodeDeploy deploy to?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only EC2 instances managed by Elastic Beanstalk</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only Lambda functions and API Gateway stages</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only on-premises servers registered in Systems Manager</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">EC2 and on-premises servers, Lambda functions and ECS services</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> EC2 and on-premises servers, Lambda functions and ECS services<br><br>
+<strong>How to think about it:</strong> CodeDeploy targets = <b>EC2/on-premises</b>, <b>Lambda</b> and <b>ECS</b>.<br><br>
+<strong>Why D is correct:</strong> CodeDeploy has three compute platforms: EC2/on-premises (including ASGs), Lambda and ECS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only EC2 instances managed by Elastic Beanstalk</em> &mdash; CodeDeploy works with instances that Beanstalk does not manage, and with more than EC2.<br><em>B) Only Lambda functions and API Gateway stages</em> &mdash; API Gateway is not a CodeDeploy target, and EC2 and ECS are.<br><em>C) Only on-premises servers registered in Systems Manager</em> &mdash; CodeDeploy deploys to AWS compute too, not just on-premises servers.
+</div>
+</div>
+
+<!-- Q10 CodeDeploy -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CodeDeploy" data-level="B">
+<div class="q-tags"><span class="q-tag">CodeDeploy</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>Which file tells CodeDeploy what to install on an EC2 instance and which scripts to run at each deployment stage?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">cron.yaml</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">buildspec.yml</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">appspec.yml</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">template.yaml</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> appspec.yml<br><br>
+<strong>How to think about it:</strong> CodeDeploy instructions = <b>appspec.yml</b> (files + lifecycle hooks).<br><br>
+<strong>Why C is correct:</strong> The AppSpec file maps files to destinations and lists the lifecycle event hooks to run.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) cron.yaml</em> &mdash; cron.yaml schedules periodic jobs in a Beanstalk worker environment.<br><em>B) buildspec.yml</em> &mdash; buildspec.yml drives CodeBuild build and test steps, not deployments.<br><em>D) template.yaml</em> &mdash; template.yaml is the usual name of a SAM template, not a CodeDeploy spec.
+</div>
+</div>
+
+<!-- Q11 CodeDeploy -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CodeDeploy" data-level="B">
+<div class="q-tags"><span class="q-tag">CodeDeploy</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>What must be running on an EC2 instance or on-premises server before CodeDeploy can deploy to it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An SSH server reachable from CodeDeploy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The CloudWatch agent</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The CodeDeploy agent</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The Elastic Beanstalk host manager</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The CodeDeploy agent<br><br>
+<strong>How to think about it:</strong> EC2/on-prem deploys need the <b>CodeDeploy agent</b> on each host.<br><br>
+<strong>Why C is correct:</strong> The agent polls CodeDeploy for work and runs the steps from the AppSpec file on the host.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An SSH server reachable from CodeDeploy</em> &mdash; CodeDeploy does not connect over SSH; the agent pulls instructions.<br><em>B) The CloudWatch agent</em> &mdash; The CloudWatch agent publishes metrics and logs; it does not perform deployments.<br><em>D) The Elastic Beanstalk host manager</em> &mdash; That component is part of Beanstalk environments, not CodeDeploy.
+</div>
+</div>
+
+<!-- Q12 CodeDeploy -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CodeDeploy" data-level="B">
+<div class="q-tags"><span class="q-tag">CodeDeploy</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>An in-place EC2 deployment must keep at least half the fleet serving traffic while the other half updates. Which deployment configuration fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CodeDeployDefault.LambdaCanary10Percent5Minutes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CodeDeployDefault.HalfAtATime</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CodeDeployDefault.ECSLinear10PercentEvery1Minutes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CodeDeployDefault.AllAtOnce</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> CodeDeployDefault.HalfAtATime<br><br>
+<strong>How to think about it:</strong> In-place, half the fleet at a time = <b>CodeDeployDefault.HalfAtATime</b>.<br><br>
+<strong>Why B is correct:</strong> This configuration updates up to half the instances at once, so the rest keep serving.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) CodeDeployDefault.LambdaCanary10Percent5Minutes</em> &mdash; That configuration shifts Lambda alias traffic, not EC2 instances.<br><em>C) CodeDeployDefault.ECSLinear10PercentEvery1Minutes</em> &mdash; That configuration shifts ECS traffic, not an EC2 fleet.<br><em>D) CodeDeployDefault.AllAtOnce</em> &mdash; All at once updates every instance together, so nothing is left serving the old version.
+</div>
+</div>
+
+<!-- Q13 CodeDeploy -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CodeDeploy" data-level="B">
+<div class="q-tags"><span class="q-tag">CodeDeploy</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>How can a team run its own checks on EC2 instances at specific stages of a CodeDeploy deployment, such as after the app starts?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Configure a Beanstalk worker environment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add scripts to lifecycle event hooks in the AppSpec file</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Turn on S3 event notifications for the bundle</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable CloudFormation drift detection</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Add scripts to lifecycle event hooks in the AppSpec file<br><br>
+<strong>How to think about it:</strong> Custom checks per stage = AppSpec <b>lifecycle event hooks</b> (e.g. ValidateService).<br><br>
+<strong>Why B is correct:</strong> Hooks such as ApplicationStart and ValidateService run your scripts and can fail the deployment.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Configure a Beanstalk worker environment</em> &mdash; A worker tier processes queued jobs and is unrelated to CodeDeploy checks.<br><em>C) Turn on S3 event notifications for the bundle</em> &mdash; Bundle upload events do not run validation on the instances.<br><em>D) Enable CloudFormation drift detection</em> &mdash; Drift detection compares stack resources with templates, not deployment health.
+</div>
+</div>
+
+<!-- Q14 CodeDeploy -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CodeDeploy" data-level="B">
+<div class="q-tags"><span class="q-tag">CodeDeploy</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>What does a CodeDeploy blue/green deployment to an Auto Scaling group require?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Beanstalk environment wrapping the ASG</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A load balancer to move traffic to the new instances</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Route 53 weighted record for each instance</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Spot Fleet to supply replacement capacity</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A load balancer to move traffic to the new instances<br><br>
+<strong>How to think about it:</strong> ASG blue/green = new ASG copied from the old + an <b>ELB</b> to switch traffic.<br><br>
+<strong>Why B is correct:</strong> CodeDeploy copies the ASG, registers the new instances with the ELB, then deregisters the old ones.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Beanstalk environment wrapping the ASG</em> &mdash; CodeDeploy blue/green does not need Elastic Beanstalk.<br><em>C) A Route 53 weighted record for each instance</em> &mdash; Traffic moves through the load balancer, not per-instance DNS records.<br><em>D) A Spot Fleet to supply replacement capacity</em> &mdash; The replacement group is a copy of the ASG; Spot Fleet is not required.
+</div>
+</div>
+
+<!-- Q15 CodeDeploy -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CodeDeploy" data-level="A">
+<div class="q-tags"><span class="q-tag">CodeDeploy</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>A new Lambda version should take 10% of traffic for five minutes, then all of it, and roll back automatically if errors rise. How?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Route 53 weighted records for each Lambda version</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Raise reserved concurrency on the new function version</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Publish the version and point $LATEST at it</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CodeDeploy canary shifting on an alias, with alarm rollback</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> CodeDeploy canary shifting on an alias, with alarm rollback<br><br>
+<strong>How to think about it:</strong> Lambda + gradual shift + auto rollback = <b>CodeDeploy</b> on an <b>alias</b> with <b>CloudWatch alarms</b>.<br><br>
+<strong>Why D is correct:</strong> CodeDeploy shifts alias weights by canary or linear steps and rolls back when an alarm fires.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Route 53 weighted records for each Lambda version</em> &mdash; Lambda versions are not DNS targets; alias weights do the split.<br><em>B) Raise reserved concurrency on the new function version</em> &mdash; Concurrency limits scaling and does not shift or roll back traffic.<br><em>C) Publish the version and point $LATEST at it</em> &mdash; $LATEST is unversioned code, and repointing it gives no gradual shift or rollback.
+</div>
+</div>
+
+<!-- Q16 CodeDeploy -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CodeDeploy" data-level="A">
+<div class="q-tags"><span class="q-tag">CodeDeploy</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>During a CodeDeploy blue/green deployment to ECS, what happens to traffic and the original tasks?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Traffic moves to a new task set; the old set waits, then stops</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Each running task container is patched in place</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A new ECS cluster is created in another Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Old tasks are stopped first, then new tasks start</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Traffic moves to a new task set; the old set waits, then stops<br><br>
+<strong>How to think about it:</strong> ECS blue/green: <b>new task set</b>, traffic shifted at the ALB, old set kept for a wait period.<br><br>
+<strong>Why A is correct:</strong> The wait gives time to spot problems and roll back before the original tasks are stopped.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Each running task container is patched in place</em> &mdash; Blue/green replaces task sets; it does not patch containers in place.<br><em>C) A new ECS cluster is created in another Region</em> &mdash; The deployment happens inside the same ECS service, not a new Regional cluster.<br><em>D) Old tasks are stopped first, then new tasks start</em> &mdash; Stopping first causes downtime, which blue/green avoids.
+</div>
+</div>
+
+<!-- Q17 CodeDeploy -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CodeDeploy" data-level="A">
+<div class="q-tags"><span class="q-tag">CodeDeploy</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>Before any traffic shifts to a new Lambda version, integration tests must run and be able to stop the deployment. Where do they go?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A pre-traffic hook Lambda function (BeforeAllowTraffic)</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A CloudFormation custom resource</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch Synthetics canary on the API</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A post-traffic hook Lambda function (AfterAllowTraffic)</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A pre-traffic hook Lambda function (BeforeAllowTraffic)<br><br>
+<strong>How to think about it:</strong> Tests before the shift = <b>BeforeAllowTraffic</b> (pre-traffic) hook; after = AfterAllowTraffic.<br><br>
+<strong>Why A is correct:</strong> The pre-traffic hook runs before the shift starts and reports success or failure to CodeDeploy.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A CloudFormation custom resource</em> &mdash; Custom resources run during stack operations, not during the traffic shift.<br><em>C) A CloudWatch Synthetics canary on the API</em> &mdash; A canary probes the live endpoint, but it is not a CodeDeploy deployment hook.<br><em>D) A post-traffic hook Lambda function (AfterAllowTraffic)</em> &mdash; The post-traffic hook runs after traffic has already moved.
+</div>
+</div>
+
+<!-- Q18 CloudFormation -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFormation" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>Which AWS services use CloudFormation underneath to provision resources?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Config, CloudTrail and GuardDuty</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Elastic Beanstalk, Service Catalog and SAM</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Route 53, CloudFront and Global Accelerator</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon S3, DynamoDB and SQS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Elastic Beanstalk, Service Catalog and SAM<br><br>
+<strong>How to think about it:</strong> CloudFormation is the backbone of <b>Beanstalk</b>, <b>Service Catalog</b>, <b>SAM</b> (and CDK).<br><br>
+<strong>Why B is correct:</strong> All three build their resources through CloudFormation stacks.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Config, CloudTrail and GuardDuty</em> &mdash; These monitor and audit accounts; they do not provision with CloudFormation.<br><em>C) Route 53, CloudFront and Global Accelerator</em> &mdash; These are networking services, not CloudFormation-based provisioning tools.<br><em>D) Amazon S3, DynamoDB and SQS</em> &mdash; These are resources a stack can create, not services built on CloudFormation.
+</div>
+</div>
+
+<!-- Q19 CloudFormation -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CloudFormation" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>An S3 bucket of audit logs must survive when its CloudFormation stack is deleted. What should you set on the resource?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A stack policy denying updates</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">DeletionPolicy: Delete</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">DeletionPolicy: Retain</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">UpdateReplacePolicy: Snapshot</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> DeletionPolicy: Retain<br><br>
+<strong>How to think about it:</strong> Keep a resource after stack delete = <b>DeletionPolicy: Retain</b>.<br><br>
+<strong>Why C is correct:</strong> Retain leaves the resource in place when the stack is deleted, and it works for any resource type.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A stack policy denying updates</em> &mdash; A stack policy guards against updates, not against deleting the whole stack.<br><em>B) DeletionPolicy: Delete</em> &mdash; Delete is the general default and removes the resource with the stack.<br><em>D) UpdateReplacePolicy: Snapshot</em> &mdash; UpdateReplacePolicy applies when a resource is replaced during an update, and S3 has no snapshots.
+</div>
+</div>
+
+<!-- Q20 CloudFormation -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFormation" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>Which resource type supports DeletionPolicy: Snapshot?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An RDS DB instance</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An S3 bucket</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda function</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An SQS queue</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An RDS DB instance<br><br>
+<strong>How to think about it:</strong> <b>Snapshot</b> works for snapshot-able data: EBS volumes, RDS, ElastiCache, Redshift, Neptune, DocumentDB.<br><br>
+<strong>Why A is correct:</strong> RDS supports Snapshot, so a final snapshot is taken before the instance is deleted.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An S3 bucket</em> &mdash; S3 has no snapshot feature; use Retain to keep a bucket.<br><em>C) A Lambda function</em> &mdash; Lambda functions cannot be snapshotted by CloudFormation.<br><em>D) An SQS queue</em> &mdash; SQS queues have no snapshot capability.
+</div>
+</div>
+
+<!-- Q21 CloudFormation -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudFormation" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>If you set no DeletionPolicy on an AWS::RDS::DBCluster, what happens when the stack is deleted?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The cluster is retained and detached from the stack</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The cluster is deleted with no snapshot</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Stack deletion fails until a policy is added</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A snapshot of the cluster is taken before it is deleted</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A snapshot of the cluster is taken before it is deleted<br><br>
+<strong>How to think about it:</strong> Most resources default to Delete, but <b>RDS DB clusters default to Snapshot</b>.<br><br>
+<strong>Why D is correct:</strong> For DB clusters CloudFormation defaults to Snapshot to protect the data.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The cluster is retained and detached from the stack</em> &mdash; Retain only happens when you set it explicitly.<br><em>B) The cluster is deleted with no snapshot</em> &mdash; Delete is the default for most resources, but not for DB clusters.<br><em>C) Stack deletion fails until a policy is added</em> &mdash; No policy is required; the default behaviour applies.
+</div>
+</div>
+
+<!-- Q22 CloudFormation -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudFormation" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>Deleting a stack fails on its S3 bucket resource. What is the most likely cause?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The bucket is in a different Region from the stack</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The bucket has default encryption enabled</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The bucket has a lifecycle rule</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The bucket still contains objects</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The bucket still contains objects<br><br>
+<strong>How to think about it:</strong> CloudFormation cannot delete a <b>non-empty</b> bucket; empty it first.<br><br>
+<strong>Why D is correct:</strong> CloudFormation only deletes empty buckets, so objects must be removed first.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The bucket is in a different Region from the stack</em> &mdash; A stack's bucket lives in the stack's Region.<br><em>B) The bucket has default encryption enabled</em> &mdash; Encryption settings do not block bucket deletion.<br><em>C) The bucket has a lifecycle rule</em> &mdash; Lifecycle rules do not stop CloudFormation from deleting a bucket.
+</div>
+</div>
+
+<!-- Q23 CloudFormation -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFormation" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>A stack must manage something CloudFormation has no resource type for, such as an on-premises resource. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A stack policy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Lambda-backed custom resource</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A WaitCondition with no handler</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A nested stack</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A Lambda-backed custom resource<br><br>
+<strong>How to think about it:</strong> Anything not supported natively = <b>custom resource</b> backed by <b>Lambda</b>.<br><br>
+<strong>Why B is correct:</strong> CloudFormation sends create, update and delete events to your function, which makes whatever calls are needed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A stack policy</em> &mdash; Stack policies restrict updates; they do not add new resource types.<br><em>C) A WaitCondition with no handler</em> &mdash; A wait condition pauses the stack for a signal but performs no work itself.<br><em>D) A nested stack</em> &mdash; Nested stacks reuse templates but can only contain supported resource types.
+</div>
+</div>
+
+<!-- Q24 CloudFormation -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFormation" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>A security baseline stack must be deployed to many accounts and Regions with one operation. Which feature fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Change sets</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudFormation StackSets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Stack termination protection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Nested stacks</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> CloudFormation StackSets<br><br>
+<strong>How to think about it:</strong> Many accounts + many Regions, one operation = <b>StackSets</b>.<br><br>
+<strong>Why B is correct:</strong> StackSets create, update or delete stack instances across accounts and Regions from one administrator account.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Change sets</em> &mdash; Change sets preview changes to a single stack.<br><em>C) Stack termination protection</em> &mdash; Termination protection prevents deleting a stack; it does not deploy anywhere.<br><em>D) Nested stacks</em> &mdash; Nested stacks split one stack into parts in one account and Region.
+</div>
+</div>
+
+<!-- Q25 CloudFormation -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFormation" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>Someone changed a security group managed by CloudFormation from the EC2 console. How can you find out?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Run drift detection on the stack or resource</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Check the stack's Outputs section</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a change set</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable termination protection</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Run drift detection on the stack or resource<br><br>
+<strong>How to think about it:</strong> Manual changes outside the template = <b>drift detection</b>.<br><br>
+<strong>Why A is correct:</strong> Drift detection compares the actual configuration with the template and reports differences.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Check the stack's Outputs section</em> &mdash; Outputs show values declared in the template, not live configuration differences.<br><em>C) Create a change set</em> &mdash; A change set previews template changes; it does not find manual edits.<br><em>D) Enable termination protection</em> &mdash; Termination protection stops deletion and does not detect changes.
+</div>
+</div>
+
+<!-- Q26 CloudFormation -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudFormation" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>A team has an existing S3 bucket created by hand and wants CloudFormation to manage it without recreating it. What should they use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Drift detection</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A custom resource that copies the bucket</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">StackSets automatic deployment</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudFormation resource import</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> CloudFormation resource import<br><br>
+<strong>How to think about it:</strong> Bring existing resources under a stack = <b>resource import</b>.<br><br>
+<strong>Why D is correct:</strong> Import adds existing resources to a new or existing stack without deleting and recreating them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Drift detection</em> &mdash; Drift detection reports differences but does not bring resources into a stack.<br><em>B) A custom resource that copies the bucket</em> &mdash; Copying creates a new bucket instead of managing the existing one.<br><em>C) StackSets automatic deployment</em> &mdash; Automatic deployment targets new accounts; it does not adopt existing resources.
+</div>
+</div>
+
+<!-- Q27 CloudFormation -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFormation" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>Every new account added to an OU must automatically get a baseline stack, and stacks should be removed if the account leaves. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">StackSets, service-managed, with automatic deployment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Config conformance packs alone</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">StackSets with self-managed permissions</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A nested stack deployed in the management account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> StackSets, service-managed, with automatic deployment<br><br>
+<strong>How to think about it:</strong> New accounts in an OU get the stack automatically = StackSets with <b>service-managed permissions</b> + <b>automatic deployment</b>.<br><br>
+<strong>Why A is correct:</strong> With Organizations integration, StackSets deploy to accounts joining the target OU and can remove stacks when they leave.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS Config conformance packs alone</em> &mdash; Conformance packs deploy Config rules, not general infrastructure stacks.<br><em>C) StackSets with self-managed permissions</em> &mdash; Self-managed StackSets need roles set up by hand and do not deploy to new accounts automatically.<br><em>D) A nested stack deployed in the management account</em> &mdash; A nested stack lives in one account and does not reach member accounts.
+</div>
+</div>
+
+<!-- Q28 CloudFormation -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFormation" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>Without AWS Organizations, what IAM setup do self-managed StackSets need?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An admin role plus an execution role in each target</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A resource-based policy attached to each stack</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An IAM user with access keys in every target account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A service control policy allowing CloudFormation</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An admin role plus an execution role in each target<br><br>
+<strong>How to think about it:</strong> Self-managed StackSets = <b>administration role</b> in admin account + <b>execution role</b> in each target.<br><br>
+<strong>Why A is correct:</strong> The admin role assumes the execution role in each target account to create the stack instances.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A resource-based policy attached to each stack</em> &mdash; CloudFormation stacks do not use resource-based policies for StackSets.<br><em>C) An IAM user with access keys in every target account</em> &mdash; StackSets use cross-account roles, not stored user keys.<br><em>D) A service control policy allowing CloudFormation</em> &mdash; SCPs need Organizations and only limit permissions; they grant nothing.
+</div>
+</div>
+
+<!-- Q29 CloudFormation -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudFormation" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>A resource import into a stack keeps failing. Which requirement is most likely missing from the template?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Lambda custom resource to adopt the resource</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An Outputs entry for each imported resource</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A stack policy covering the imported resources</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A DeletionPolicy attribute on each resource being imported</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A DeletionPolicy attribute on each resource being imported<br><br>
+<strong>How to think about it:</strong> Import needs the full template, a resource <b>identifier</b>, and a <b>DeletionPolicy</b> on each imported resource.<br><br>
+<strong>Why D is correct:</strong> Each imported resource needs a DeletionPolicy (any value) plus its unique identifier.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Lambda custom resource to adopt the resource</em> &mdash; Import is native and does not need a custom resource.<br><em>B) An Outputs entry for each imported resource</em> &mdash; Outputs are optional and not required for import.<br><em>C) A stack policy covering the imported resources</em> &mdash; Stack policies are optional and not part of import requirements.
+</div>
+</div>
+
+<!-- Q30 CloudFormation -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFormation" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>A template creates an RDS database and must not contain the master password in plain text. What is the best approach?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A generated Secrets Manager secret via dynamic reference</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Put the password in a stack tag for the database</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Store the password in the stack Outputs section</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Pass the password as a parameter default</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A generated Secrets Manager secret via dynamic reference<br><br>
+<strong>How to think about it:</strong> No passwords in templates = generate a <b>Secrets Manager</b> secret and use a <b>dynamic reference</b>.<br><br>
+<strong>Why A is correct:</strong> The stack creates a random secret, the database resolves it at deploy time, and the value never appears in the template.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Put the password in a stack tag for the database</em> &mdash; Tags are plain metadata and are widely visible.<br><em>C) Store the password in the stack Outputs section</em> &mdash; Outputs are visible to anyone who can describe the stack.<br><em>D) Pass the password as a parameter default</em> &mdash; A parameter default stores the password in the template itself.
+</div>
+</div>
+
+<!-- Q31 CloudFormation -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFormation" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>Deleting a stack should first empty its S3 bucket automatically so the delete succeeds. How?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Lambda-backed custom resource that empties the bucket on Delete</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Termination protection on the stack</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">DeletionPolicy: Snapshot on the bucket</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An S3 Lifecycle rule that expires objects after one day</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A Lambda-backed custom resource that empties the bucket on Delete<br><br>
+<strong>How to think about it:</strong> Run cleanup on delete = <b>custom resource</b> whose Lambda empties the bucket on the <b>Delete</b> event.<br><br>
+<strong>Why A is correct:</strong> On the Delete event the function removes the objects, so CloudFormation can then delete the bucket.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Termination protection on the stack</em> &mdash; Termination protection blocks deletion instead of making it succeed.<br><em>C) DeletionPolicy: Snapshot on the bucket</em> &mdash; S3 buckets do not support the Snapshot policy.<br><em>D) An S3 Lifecycle rule that expires objects after one day</em> &mdash; Lifecycle expiry is asynchronous and does not run when the stack deletes.
+</div>
+</div>
+
+<!-- Q32 CloudFormation -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFormation" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFormation</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>A template should always launch EC2 from the latest Amazon Linux AMI in each Region without code. What is the native way?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An SSM parameter type reading the public AMI parameter</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Look up the AMI ID in the stack Outputs section</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Hard-code AMI IDs in a Mappings section</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Pass the latest AMI ID through a stack tag</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An SSM parameter type reading the public AMI parameter<br><br>
+<strong>How to think about it:</strong> Latest AMI ID = parameter type <b>AWS::SSM::Parameter::Value</b> pointing at the public SSM parameter.<br><br>
+<strong>Why A is correct:</strong> CloudFormation resolves the public Systems Manager parameter at deploy time, giving the current AMI per Region.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Look up the AMI ID in the stack Outputs section</em> &mdash; Outputs return values after deployment; they do not look up AMIs.<br><em>C) Hard-code AMI IDs in a Mappings section</em> &mdash; Mappings are static and go stale when new AMIs are released.<br><em>D) Pass the latest AMI ID through a stack tag</em> &mdash; Tags do not resolve AMI IDs.
+</div>
+</div>
+
+<!-- Q33 Service Catalog -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Service Catalog" data-level="B">
+<div class="q-tags"><span class="q-tag">Service Catalog</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>New AWS users need a self-service portal to launch only admin-approved, compliant stacks such as standard VMs and databases. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Control Tower</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Resource Access Manager</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Marketplace</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Service Catalog</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Service Catalog<br><br>
+<strong>How to think about it:</strong> Self-service portal of <b>approved products</b> = <b>Service Catalog</b>.<br><br>
+<strong>Why D is correct:</strong> Service Catalog lets admins publish approved products that users launch through a self-service portal.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Control Tower</em> &mdash; Control Tower sets up and governs a multi-account landing zone, not a product portal.<br><em>B) AWS Resource Access Manager</em> &mdash; RAM shares resources between accounts; it does not offer launchable products.<br><em>C) AWS Marketplace</em> &mdash; Marketplace sells third-party software rather than an internal approved catalog.
+</div>
+</div>
+
+<!-- Q34 Service Catalog -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Service Catalog" data-level="B">
+<div class="q-tags"><span class="q-tag">Service Catalog</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>In AWS Service Catalog, what defines a product?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A CloudFormation (IaC) template</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An AWS Organizations SCP</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An IAM permission set</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An AMI shared to the account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A CloudFormation (IaC) template<br><br>
+<strong>How to think about it:</strong> Service Catalog <b>product</b> = an IaC template, typically <b>CloudFormation</b>.<br><br>
+<strong>Why A is correct:</strong> Each product version is a template that provisions the resources when a user launches it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An AWS Organizations SCP</em> &mdash; SCPs limit permissions; they are not launchable products.<br><em>C) An IAM permission set</em> &mdash; Permission sets come from IAM Identity Center and define access, not products.<br><em>D) An AMI shared to the account</em> &mdash; An AMI can be used inside a product, but the product itself is a template.
+</div>
+</div>
+
+<!-- Q35 Service Catalog -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Service Catalog" data-level="B">
+<div class="q-tags"><span class="q-tag">Service Catalog</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>In Service Catalog, how are products grouped and given to teams?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Into stack sets, one per member account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Into portfolios, which IAM principals are granted</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Into resource groups built from tags</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Into organizational units in Organizations</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Into portfolios, which IAM principals are granted<br><br>
+<strong>How to think about it:</strong> Products go into <b>portfolios</b>; IAM principals are granted access to a portfolio.<br><br>
+<strong>Why B is correct:</strong> A portfolio is a collection of products, and access to it decides who can launch them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Into stack sets, one per member account</em> &mdash; StackSets are CloudFormation's multi-account feature, not the catalog grouping.<br><em>C) Into resource groups built from tags</em> &mdash; Resource groups organize existing resources, not catalog offerings.<br><em>D) Into organizational units in Organizations</em> &mdash; OUs group accounts, not catalog products.
+</div>
+</div>
+
+<!-- Q36 Service Catalog -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Service Catalog" data-level="A">
+<div class="q-tags"><span class="q-tag">Service Catalog</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Developers should launch a product that creates EC2 and RDS without holding IAM permissions to create those resources directly. What enables this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A launch constraint that names an IAM role</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A tag option on the portfolio</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An SCP allowing ec2:RunInstances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A template constraint on parameter values</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A launch constraint that names an IAM role<br><br>
+<strong>How to think about it:</strong> Users launch with the <b>launch constraint</b> role's permissions, not their own.<br><br>
+<strong>Why A is correct:</strong> Service Catalog provisions the product with the launch role, so users need only catalog permissions.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A tag option on the portfolio</em> &mdash; Tag options control tags on launched products, not launch permissions.<br><em>C) An SCP allowing ec2:RunInstances</em> &mdash; SCPs never grant permissions; they only limit them.<br><em>D) A template constraint on parameter values</em> &mdash; Template constraints limit parameter choices; they do not supply permissions.
+</div>
+</div>
+
+<!-- Q37 Service Catalog -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Service Catalog" data-level="A">
+<div class="q-tags"><span class="q-tag">Service Catalog</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>Admins want users of a Service Catalog product to choose only t3.micro or t3.small. How?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add a template constraint to the product in the portfolio</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable termination protection on each provisioned product</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add a launch constraint with a smaller role</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a separate AWS account per instance type</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Add a template constraint to the product in the portfolio<br><br>
+<strong>How to think about it:</strong> Restrict parameter choices at launch = <b>template constraint</b>.<br><br>
+<strong>Why A is correct:</strong> Template constraints narrow allowed parameter values without editing the product template.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Enable termination protection on each provisioned product</em> &mdash; Termination protection does not limit instance types.<br><em>C) Add a launch constraint with a smaller role</em> &mdash; A launch constraint sets the role used to provision, not allowed parameter values.<br><em>D) Create a separate AWS account per instance type</em> &mdash; Separate accounts do not limit choices inside a product.
+</div>
+</div>
+
+<!-- Q38 SAM & CDK -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SAM & CDK" data-level="B">
+<div class="q-tags"><span class="q-tag">SAM & CDK</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>What is the AWS Serverless Application Model (SAM)?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A managed runtime that replaces AWS Lambda functions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A container orchestrator for serverless jobs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A YAML serverless framework that compiles to CloudFormation</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A programming-language library compiled to Terraform</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A YAML serverless framework that compiles to CloudFormation<br><br>
+<strong>How to think about it:</strong> <b>SAM</b> = YAML shorthand for serverless apps, transformed into <b>CloudFormation</b>.<br><br>
+<strong>Why C is correct:</strong> SAM templates use a short syntax for functions, APIs and tables and deploy through CloudFormation.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A managed runtime that replaces AWS Lambda functions</em> &mdash; SAM deploys Lambda functions; it is not a separate runtime.<br><em>B) A container orchestrator for serverless jobs</em> &mdash; SAM is a deployment framework, not an orchestrator.<br><em>D) A programming-language library compiled to Terraform</em> &mdash; SAM is YAML for CloudFormation, not a library for Terraform.
+</div>
+</div>
+
+<!-- Q39 SAM & CDK -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SAM & CDK" data-level="B">
+<div class="q-tags"><span class="q-tag">SAM & CDK</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Which SAM resource type defines a Lambda function?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS::Serverless::SimpleTable</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS::Serverless::Function</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS::Lambda::Alias</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS::Serverless::StateMachine</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS::Serverless::Function<br><br>
+<strong>How to think about it:</strong> SAM types start with <b>AWS::Serverless::</b> (Function, Api, SimpleTable, StateMachine).<br><br>
+<strong>Why B is correct:</strong> This SAM type defines a function plus its event sources in a few lines.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS::Serverless::SimpleTable</em> &mdash; SimpleTable defines a DynamoDB table, not a function.<br><em>C) AWS::Lambda::Alias</em> &mdash; This is a plain CloudFormation type for an alias, not the SAM function type.<br><em>D) AWS::Serverless::StateMachine</em> &mdash; StateMachine defines a Step Functions workflow, not a function.
+</div>
+</div>
+
+<!-- Q40 SAM & CDK -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SAM & CDK" data-level="B">
+<div class="q-tags"><span class="q-tag">SAM & CDK</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>A developer wants to run and debug Lambda functions behind an API on a laptop before deploying. Which tool helps?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Systems Manager Run Command</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CodeDeploy pre-traffic hooks</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The SAM CLI local commands</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudFormation drift detection</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The SAM CLI local commands<br><br>
+<strong>How to think about it:</strong> Run Lambda + API Gateway on your laptop = <b>SAM CLI local</b>.<br><br>
+<strong>Why C is correct:</strong> SAM can invoke functions and start a local API emulator so code is tested before deployment.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Systems Manager Run Command</em> &mdash; Run Command executes commands on managed instances, not local Lambda tests.<br><em>B) CodeDeploy pre-traffic hooks</em> &mdash; Hooks run during deployments in AWS, not on a laptop.<br><em>D) CloudFormation drift detection</em> &mdash; Drift detection compares deployed resources with templates, not local runs.
+</div>
+</div>
+
+<!-- Q41 SAM & CDK -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SAM & CDK" data-level="B">
+<div class="q-tags"><span class="q-tag">SAM & CDK</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>What does the AWS Cloud Development Kit (CDK) let teams do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Replace CloudFormation with a separate engine</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Write CloudFormation templates in XML syntax</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Deploy infrastructure only to Kubernetes clusters</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Write infrastructure in code that becomes CloudFormation</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Write infrastructure in code that becomes CloudFormation<br><br>
+<strong>How to think about it:</strong> <b>CDK</b> = infrastructure in TypeScript, Python, Java, .NET, Go, <b>synthesized</b> to CloudFormation.<br><br>
+<strong>Why D is correct:</strong> CDK code produces CloudFormation templates that are then deployed as stacks.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Replace CloudFormation with a separate engine</em> &mdash; CDK deploys through CloudFormation rather than replacing it.<br><em>B) Write CloudFormation templates in XML syntax</em> &mdash; CloudFormation templates are JSON or YAML; CDK uses general programming languages.<br><em>C) Deploy infrastructure only to Kubernetes clusters</em> &mdash; CDK targets CloudFormation and many AWS services, not just Kubernetes.
+</div>
+</div>
+
+<!-- Q42 SAM & CDK -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SAM & CDK" data-level="B">
+<div class="q-tags"><span class="q-tag">SAM & CDK</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>Which CDK command turns the CDK app into a CloudFormation template without deploying it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">cdk destroy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">cdk bootstrap</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">cdk synth</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sam local invoke</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> cdk synth<br><br>
+<strong>How to think about it:</strong> CDK code to template = <b>cdk synth</b>; deploy = cdk deploy.<br><br>
+<strong>Why C is correct:</strong> Synthesis runs the app and writes the CloudFormation template and assets.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) cdk destroy</em> &mdash; Destroy deletes deployed stacks.<br><em>B) cdk bootstrap</em> &mdash; Bootstrap prepares an account and Region with resources CDK needs for deployment.<br><em>D) sam local invoke</em> &mdash; That runs a function locally with the SAM CLI.
+</div>
+</div>
+
+<!-- Q43 SAM & CDK -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SAM & CDK" data-level="A">
+<div class="q-tags"><span class="q-tag">SAM & CDK</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>A SAM function should be released gradually, with traffic shifted in steps and rolled back on alarms. What does SAM use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Beanstalk rolling deployment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">DeploymentPreference with CodeDeploy shifting</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Route 53 weighted records for each version</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudFormation stack policy on the function</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> DeploymentPreference with CodeDeploy shifting<br><br>
+<strong>How to think about it:</strong> SAM <b>DeploymentPreference</b> = CodeDeploy traffic shifting on an alias.<br><br>
+<strong>Why B is correct:</strong> SAM creates a CodeDeploy application and shifts alias traffic by canary or linear steps, with alarm rollback.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Beanstalk rolling deployment</em> &mdash; Beanstalk deploys to EC2 environments, not Lambda versions.<br><em>C) Route 53 weighted records for each version</em> &mdash; Lambda versions are not DNS targets; alias weights do the split.<br><em>D) A CloudFormation stack policy on the function</em> &mdash; Stack policies protect resources from updates; they do not shift traffic.
+</div>
+</div>
+
+<!-- Q44 SAM & CDK -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SAM & CDK" data-level="A">
+<div class="q-tags"><span class="q-tag">SAM & CDK</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>A team wants one CDK app that builds a Docker image for ECS and its Lambda code and deploys them with the infrastructure. Is this supported?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">No, application code must always go through CodeDeploy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Yes, but only by converting the app to SAM first</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Yes, CDK assets ship code and images with the stack</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">No, CDK can only define networking resources</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Yes, CDK assets ship code and images with the stack<br><br>
+<strong>How to think about it:</strong> CDK <b>assets</b> package Lambda code and Docker images with the stack.<br><br>
+<strong>Why C is correct:</strong> CDK uploads code to S3 and images to ECR as part of deployment, so app and infrastructure ship together.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) No, application code must always go through CodeDeploy</em> &mdash; CodeDeploy is optional; CDK can deploy the code itself.<br><em>B) Yes, but only by converting the app to SAM first</em> &mdash; CDK handles assets natively without SAM.<br><em>D) No, CDK can only define networking resources</em> &mdash; CDK supports most AWS services, including Lambda and ECS.
+</div>
+</div>
+
+<!-- Q45 SAM & CDK -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SAM & CDK" data-level="A">
+<div class="q-tags"><span class="q-tag">SAM & CDK</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>Engineers want loops, classes and reusable typed constructs to define large amounts of infrastructure rather than long YAML files. Which fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS SAM</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Service Catalog portfolios</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Raw CloudFormation JSON</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS CDK</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS CDK<br><br>
+<strong>How to think about it:</strong> Need real code (loops, classes, reuse) = <b>CDK</b>; concise serverless YAML = SAM.<br><br>
+<strong>Why D is correct:</strong> CDK uses general programming languages, so constructs can be reused, looped and tested like code.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS SAM</em> &mdash; SAM is concise YAML for serverless apps but has no loops or classes.<br><em>B) Service Catalog portfolios</em> &mdash; Portfolios distribute approved products; they are not a way to write infrastructure.<br><em>C) Raw CloudFormation JSON</em> &mdash; Raw templates are even more verbose and lack programming constructs.
+</div>
+</div>
+
+<!-- Q46 Systems Manager -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Systems Manager" data-level="B">
+<div class="q-tags"><span class="q-tag">Systems Manager</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>An EC2 instance does not appear as a managed node in Systems Manager. Which two things should you check first?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The instance has an Elastic IP and detailed monitoring</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">SSM Agent running and an instance profile with SSM rights</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The instance runs in a default VPC with a public subnet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Port 22 is open and an SSH key pair is attached</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> SSM Agent running and an instance profile with SSM rights<br><br>
+<strong>How to think about it:</strong> SSM needs the <b>SSM Agent</b> running + an <b>IAM instance profile</b> with SSM permissions.<br><br>
+<strong>Why B is correct:</strong> Both are needed: the agent talks to Systems Manager, and the role authorizes it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The instance has an Elastic IP and detailed monitoring</em> &mdash; Neither is required for an instance to be managed.<br><em>C) The instance runs in a default VPC with a public subnet</em> &mdash; Managed nodes can be in private subnets with endpoints or NAT.<br><em>D) Port 22 is open and an SSH key pair is attached</em> &mdash; Systems Manager does not use SSH, so key pairs and port 22 are irrelevant.
+</div>
+</div>
+
+<!-- Q47 Systems Manager -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Systems Manager" data-level="B">
+<div class="q-tags"><span class="q-tag">Systems Manager</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>Can Systems Manager manage on-premises servers as well as EC2?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Yes, but only for Windows Server machines</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only when they run on an AWS Outposts rack</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Yes, with the SSM Agent and a hybrid activation</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">No, it works only with Amazon EC2 instances</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Yes, with the SSM Agent and a hybrid activation<br><br>
+<strong>How to think about it:</strong> <b>Hybrid</b>: install the agent + register with a <b>hybrid activation</b>.<br><br>
+<strong>Why C is correct:</strong> On-premises servers and VMs become managed nodes and support Run Command, patching and sessions.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Yes, but only for Windows Server machines</em> &mdash; The agent runs on Linux, Windows and macOS.<br><em>B) Only when they run on an AWS Outposts rack</em> &mdash; Outposts is not required to manage on-premises servers.<br><em>D) No, it works only with Amazon EC2 instances</em> &mdash; Systems Manager supports on-premises and other-cloud servers too.
+</div>
+</div>
+
+<!-- Q48 Systems Manager -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Systems Manager" data-level="B">
+<div class="q-tags"><span class="q-tag">Systems Manager</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>An admin must run a shell script on 500 instances without SSH, with results visible in the console and calls logged in CloudTrail. Which feature fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">EC2 user data</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Config remediation</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">EC2 Instance Connect</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Systems Manager Run Command</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Systems Manager Run Command<br><br>
+<strong>How to think about it:</strong> Run a script across the fleet, no SSH = <b>Run Command</b>.<br><br>
+<strong>Why D is correct:</strong> Run Command runs documents or commands on many managed nodes, integrates with IAM and logs to CloudTrail.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) EC2 user data</em> &mdash; User data runs at launch, not on demand across a running fleet.<br><em>B) AWS Config remediation</em> &mdash; Config remediation fixes rule violations, not ad hoc scripts.<br><em>C) EC2 Instance Connect</em> &mdash; Instance Connect opens SSH sessions to one instance at a time.
+</div>
+</div>
+
+<!-- Q49 Systems Manager -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Systems Manager" data-level="B">
+<div class="q-tags"><span class="q-tag">Systems Manager</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>Run Command should update 10 instances at a time and stop if more than 5 fail. Which settings control this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Instance profile permissions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Patch baseline approval rules</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Concurrency and error threshold</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Maintenance window duration</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Concurrency and error threshold<br><br>
+<strong>How to think about it:</strong> Run Command <b>rate control</b> = concurrency + error threshold.<br><br>
+<strong>Why C is correct:</strong> Concurrency limits how many targets run at once, and the error threshold stops the command after too many failures.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Instance profile permissions</em> &mdash; IAM permissions authorize the command but do not set its pace.<br><em>B) Patch baseline approval rules</em> &mdash; Approval rules decide which patches are approved.<br><em>D) Maintenance window duration</em> &mdash; Duration limits when tasks may run, not how many run at once.
+</div>
+</div>
+
+<!-- Q50 Systems Manager -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Systems Manager" data-level="B">
+<div class="q-tags"><span class="q-tag">Systems Manager</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>Admins need shell access to EC2 instances in private subnets with no inbound ports, bastion hosts or SSH keys. What should they use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Site-to-Site VPN with SSH keys</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">EC2 Instance Connect with public IPs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Systems Manager Session Manager</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A bastion host in a public subnet</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Systems Manager Session Manager<br><br>
+<strong>How to think about it:</strong> Shell with no SSH, no bastion, no keys = <b>Session Manager</b>.<br><br>
+<strong>Why C is correct:</strong> Session Manager opens shells through the SSM Agent, controlled by IAM and with no inbound ports needed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Site-to-Site VPN with SSH keys</em> &mdash; A VPN still relies on SSH and key management.<br><em>B) EC2 Instance Connect with public IPs</em> &mdash; Instance Connect still uses SSH and needs network access to port 22.<br><em>D) A bastion host in a public subnet</em> &mdash; A bastion is the extra host and open port this design avoids.
+</div>
+</div>
+
+<!-- Q51 Systems Manager -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Systems Manager" data-level="B">
+<div class="q-tags"><span class="q-tag">Systems Manager</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>Auditors want a record of every command typed during Session Manager sessions. Where can session logs be sent?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Config configuration history</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon S3 or CloudWatch Logs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Trusted Advisor</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">VPC Flow Logs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon S3 or CloudWatch Logs<br><br>
+<strong>How to think about it:</strong> Session logs = <b>S3</b> and/or <b>CloudWatch Logs</b>.<br><br>
+<strong>Why B is correct:</strong> Session Manager can stream or upload session output to S3 and CloudWatch Logs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Config configuration history</em> &mdash; Config records resource configuration, not commands typed in sessions.<br><em>C) AWS Trusted Advisor</em> &mdash; Trusted Advisor gives best-practice checks, not session logs.<br><em>D) VPC Flow Logs</em> &mdash; Flow Logs capture network metadata, not session commands.
+</div>
+</div>
+
+<!-- Q52 Systems Manager -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Systems Manager" data-level="B">
+<div class="q-tags"><span class="q-tag">Systems Manager</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>In Patch Manager, what defines which patches are approved for installation, such as critical security updates after seven days?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A patch baseline</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An SSM parameter</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A resource group</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A maintenance window</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A patch baseline<br><br>
+<strong>How to think about it:</strong> Which patches are approved = <b>patch baseline</b>.<br><br>
+<strong>Why A is correct:</strong> A patch baseline holds approval rules and lists of approved or rejected patches.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An SSM parameter</em> &mdash; Parameters store configuration values, not patch approval rules.<br><em>C) A resource group</em> &mdash; Resource groups collect targets but do not approve patches.<br><em>D) A maintenance window</em> &mdash; A maintenance window sets when tasks run, not which patches are approved.
+</div>
+</div>
+
+<!-- Q53 Systems Manager -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Systems Manager" data-level="B">
+<div class="q-tags"><span class="q-tag">Systems Manager</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>Patching must happen only on Sundays from 2 to 4 AM for production servers. Which feature schedules this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A CloudFormation StackSet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An EC2 Auto Scaling scheduled scaling action</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A maintenance window running AWS-RunPatchBaseline</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An S3 Lifecycle rule on the patch bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A maintenance window running AWS-RunPatchBaseline<br><br>
+<strong>How to think about it:</strong> Schedule + targets + tasks = <b>Maintenance Window</b> running <b>AWS-RunPatchBaseline</b>.<br><br>
+<strong>Why C is correct:</strong> The window sets the schedule and duration, and the registered task applies the baseline on the targets.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A CloudFormation StackSet</em> &mdash; StackSets deploy stacks; they do not schedule OS patching.<br><em>B) An EC2 Auto Scaling scheduled scaling action</em> &mdash; Scheduled actions change capacity, not patch instances.<br><em>D) An S3 Lifecycle rule on the patch bucket</em> &mdash; Lifecycle rules manage object storage classes.
+</div>
+</div>
+
+<!-- Q54 Systems Manager -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Systems Manager" data-level="B">
+<div class="q-tags"><span class="q-tag">Systems Manager</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>How can dev, test and prod servers each get a different patch baseline?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use separate IAM instance profiles per environment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Patch Group tag per environment, each mapped to a baseline</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Run each environment in a different Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Give each environment its own SSM Agent version</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A Patch Group tag per environment, each mapped to a baseline<br><br>
+<strong>How to think about it:</strong> Group servers for patching with the <b>Patch Group</b> tag, one baseline per group.<br><br>
+<strong>Why B is correct:</strong> Each patch group is tied to one baseline, so environments follow different approval rules.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use separate IAM instance profiles per environment</em> &mdash; Instance profiles grant permissions; they do not pick baselines.<br><em>C) Run each environment in a different Region</em> &mdash; Regions do not decide which baseline applies.<br><em>D) Give each environment its own SSM Agent version</em> &mdash; The agent version does not select a patch baseline.
+</div>
+</div>
+
+<!-- Q55 Systems Manager -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Systems Manager" data-level="A">
+<div class="q-tags"><span class="q-tag">Systems Manager</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>Before an Auto Scaling group terminates an instance, its logs must be copied to S3. How can this be automated?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Instance scale-in protection on every instance</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A termination lifecycle hook, EventBridge and SSM Automation</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An S3 Lifecycle rule on the log bucket</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An EC2 user data script that runs at shutdown</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A termination lifecycle hook, EventBridge and SSM Automation<br><br>
+<strong>How to think about it:</strong> Act before ASG termination = <b>lifecycle hook</b> (Terminating:Wait) + <b>EventBridge</b> + SSM command.<br><br>
+<strong>Why B is correct:</strong> The hook pauses the instance in Terminating:Wait, EventBridge catches it, and SSM runs the copy before completing the action.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Instance scale-in protection on every instance</em> &mdash; Scale-in protection stops termination altogether rather than allowing cleanup first.<br><em>C) An S3 Lifecycle rule on the log bucket</em> &mdash; Lifecycle rules manage objects already in S3; they cannot pull logs from instances.<br><em>D) An EC2 user data script that runs at shutdown</em> &mdash; User data runs at launch, and termination may not wait for scripts.
+</div>
+</div>
+
+<!-- Q56 Systems Manager -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Systems Manager" data-level="A">
+<div class="q-tags"><span class="q-tag">Systems Manager</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>Instances in private subnets with no NAT gateway or internet route must still use Session Manager. What do they need?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A gateway VPC endpoint for DynamoDB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An internet gateway on the private route table</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Interface VPC endpoints for the Systems Manager services</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Security group rules allowing inbound port 22</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Interface VPC endpoints for the Systems Manager services<br><br>
+<strong>How to think about it:</strong> Private subnets, no internet = <b>interface VPC endpoints</b> for the Systems Manager services.<br><br>
+<strong>Why C is correct:</strong> PrivateLink endpoints such as ssm and ssmmessages let the agent reach Systems Manager without internet access.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A gateway VPC endpoint for DynamoDB</em> &mdash; Gateway endpoints exist only for S3 and DynamoDB, and neither carries SSM traffic.<br><em>B) An internet gateway on the private route table</em> &mdash; That makes the subnet public, which goes against the design.<br><em>D) Security group rules allowing inbound port 22</em> &mdash; Session Manager needs no inbound ports at all.
+</div>
+</div>
+
+<!-- Q57 Systems Manager -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Systems Manager" data-level="A">
+<div class="q-tags"><span class="q-tag">Systems Manager</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>Security wants to know who started each Session Manager session and when. Which service records this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Inspector findings</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VPC Flow Logs for the subnet</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS CloudTrail StartSession events</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon GuardDuty findings</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS CloudTrail StartSession events<br><br>
+<strong>How to think about it:</strong> Who started a session = <b>CloudTrail</b> StartSession events.<br><br>
+<strong>Why C is correct:</strong> CloudTrail records the IAM identity, time and target of each session started.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Inspector findings</em> &mdash; Inspector reports vulnerabilities, not session starts.<br><em>B) VPC Flow Logs for the subnet</em> &mdash; Flow Logs show network flows, not the identity that opened a session.<br><em>D) Amazon GuardDuty findings</em> &mdash; GuardDuty detects threats but is not the record of who opened each session.
+</div>
+</div>
+
+<!-- Q58 Cloud Map -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Cloud Map" data-level="B">
+<div class="q-tags"><span class="q-tag">Cloud Map</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>Microservices need a registry where backends register their locations and health, so callers can look them up dynamically. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon CloudFront</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Systems Manager Inventory</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Service Catalog</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Cloud Map</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Cloud Map<br><br>
+<strong>How to think about it:</strong> Service discovery registry = <b>AWS Cloud Map</b>.<br><br>
+<strong>Why D is correct:</strong> Cloud Map stores service names, locations, attributes and health so apps can discover backends.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon CloudFront</em> &mdash; CloudFront is a CDN, not a service registry.<br><em>B) AWS Systems Manager Inventory</em> &mdash; Inventory collects software and configuration data from managed nodes.<br><em>C) AWS Service Catalog</em> &mdash; Service Catalog offers approved products to launch, not runtime discovery.
+</div>
+</div>
+
+<!-- Q59 Cloud Map -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Cloud Map" data-level="B">
+<div class="q-tags"><span class="q-tag">Cloud Map</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>How can applications query AWS Cloud Map to find healthy endpoints?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Through the AWS SDK or API, or through DNS queries</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only through CloudFormation stack outputs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only through SSH into a registry host</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only by reading an S3 manifest file</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Through the AWS SDK or API, or through DNS queries<br><br>
+<strong>How to think about it:</strong> Cloud Map lookup = <b>API/SDK</b> or <b>DNS</b>, with health checks filtering endpoints.<br><br>
+<strong>Why A is correct:</strong> Cloud Map supports API-based discovery and DNS records, and returns only healthy endpoints when health checks are used.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Only through CloudFormation stack outputs</em> &mdash; Stack outputs are static values, not live discovery.<br><em>C) Only through SSH into a registry host</em> &mdash; Cloud Map is a managed service with no hosts to log in to.<br><em>D) Only by reading an S3 manifest file</em> &mdash; Cloud Map is queried by API or DNS, not through S3 files.
+</div>
+</div>
+
+<!-- Q60 Cloud Map -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Cloud Map" data-level="A">
+<div class="q-tags"><span class="q-tag">Cloud Map</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>A frontend must move from backend v1 to v2 without a code change or redeploy of the frontend. How does Cloud Map help?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use a Service Catalog launch constraint</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create a CloudFormation drift report on the stack</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Hard-code both endpoints and use a feature flag</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Update the Cloud Map registration so lookups return v2</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Update the Cloud Map registration so lookups return v2<br><br>
+<strong>How to think about it:</strong> Swap backends without frontend changes = update the <b>Cloud Map</b> registration; callers look up dynamically.<br><br>
+<strong>Why D is correct:</strong> The frontend resolves the service name at runtime, so changing the registration redirects it to v2.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use a Service Catalog launch constraint</em> &mdash; Launch constraints control provisioning permissions, not service lookups.<br><em>B) Create a CloudFormation drift report on the stack</em> &mdash; Drift reports show configuration differences; they do not route traffic.<br><em>C) Hard-code both endpoints and use a feature flag</em> &mdash; That needs frontend code changes, which this design avoids.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

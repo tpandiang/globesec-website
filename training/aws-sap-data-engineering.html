@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Data Engineering - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Data Engineering</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Data Engineering</h2>
+        <p>60 refresher questions &mdash; Kinesis Data Streams, Data Firehose, MSK, Managed Service for Apache Flink, AWS Batch, EMR, Glue, Athena, Redshift &amp; QuickSight</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="Kinesis Streams" onclick="filterQ(this)">Kinesis Streams</button><button class="filter-btn" data-f="Data Firehose" onclick="filterQ(this)">Data Firehose</button><button class="filter-btn" data-f="MSK & Flink" onclick="filterQ(this)">MSK & Flink</button><button class="filter-btn" data-f="AWS Batch" onclick="filterQ(this)">AWS Batch</button><button class="filter-btn" data-f="EMR" onclick="filterQ(this)">EMR</button><button class="filter-btn" data-f="Glue & Athena" onclick="filterQ(this)">Glue & Athena</button><button class="filter-btn" data-f="Redshift" onclick="filterQ(this)">Redshift</button><button class="filter-btn" data-f="QuickSight" onclick="filterQ(this)">QuickSight</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 Kinesis Streams -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Kinesis Streams" data-level="B">
+<div class="q-tags"><span class="q-tag">Kinesis Streams</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>A new analytics consumer must reprocess the last six months of events from an existing Kinesis data stream. What makes this possible?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Nothing; Kinesis keeps records for at most 7 days</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Archiving each shard to S3 Glacier and replaying from there</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Switching the stream to on-demand capacity mode</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Extending the stream's retention period, which can go up to 365 days</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Extending the stream's retention period, which can go up to 365 days<br><br>
+<strong>How to think about it:</strong> <b>KDS retention</b> = 24 hours by default, extendable up to <b>365 days</b>, and consumers can replay.<br><br>
+<strong>Why D is correct:</strong> Kinesis Data Streams keeps records for 24 hours by default and can be extended to a year, so any consumer can re-read them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Nothing; Kinesis keeps records for at most 7 days</em> &mdash; Seven days was an old ceiling; long-term retention now goes up to 365 days.<br><em>B) Archiving each shard to S3 Glacier and replaying from there</em> &mdash; Kinesis has no shard archive to Glacier; replay happens from the stream itself.<br><em>C) Switching the stream to on-demand capacity mode</em> &mdash; Capacity mode controls throughput and billing, not how long records are kept.
+</div>
+</div>
+
+<!-- Q2 Kinesis Streams -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Kinesis Streams" data-level="B">
+<div class="q-tags"><span class="q-tag">Kinesis Streams</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>In provisioned capacity mode, how much write throughput does a single Kinesis shard accept?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">2 MB per second or 2,000 records per second</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">10 MB per second with no record count limit</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">1 MB per second or 1,000 records per second</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">5 MB per second or 500 records per second</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> 1 MB per second or 1,000 records per second<br><br>
+<strong>How to think about it:</strong> Per shard: <b>1 MB/s or 1,000 records/s in</b>, 2 MB/s out.<br><br>
+<strong>Why C is correct:</strong> Each shard ingests up to 1 MB/s or 1,000 records/s, whichever limit is hit first.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 2 MB per second or 2,000 records per second</em> &mdash; 2 MB/s is the per-shard read limit, not the write limit.<br><em>B) 10 MB per second with no record count limit</em> &mdash; A shard is far smaller than this and does have a record-rate cap.<br><em>D) 5 MB per second or 500 records per second</em> &mdash; These figures do not match any Kinesis shard limit.
+</div>
+</div>
+
+<!-- Q3 Kinesis Streams -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Kinesis Streams" data-level="B">
+<div class="q-tags"><span class="q-tag">Kinesis Streams</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>How does Kinesis Data Streams guarantee the order of records?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Records sharing a partition key land in the same shard and stay in order</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">By enabling a FIFO option when the stream is created</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">By setting a message group ID on each record</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">All records in the stream are ordered globally across every shard</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Records sharing a partition key land in the same shard and stay in order<br><br>
+<strong>How to think about it:</strong> Ordering in KDS = <b>same partition key</b> = same shard = in order.<br><br>
+<strong>Why A is correct:</strong> The partition key is hashed to a shard, and within a shard records keep their sequence.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) By enabling a FIFO option when the stream is created</em> &mdash; Kinesis streams have no FIFO setting; ordering always comes from the partition key.<br><em>C) By setting a message group ID on each record</em> &mdash; Message group IDs are how SQS FIFO queues order messages, not Kinesis.<br><em>D) All records in the stream are ordered globally across every shard</em> &mdash; There is no ordering across different shards, only within one shard.
+</div>
+</div>
+
+<!-- Q4 Kinesis Streams -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Kinesis Streams" data-level="B">
+<div class="q-tags"><span class="q-tag">Kinesis Streams</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>An application must consume a Kinesis stream with automatic checkpointing and with shards load-balanced across several worker instances. What should the developers use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The Kinesis Producer Library (KPL)</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The Kinesis Agent</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The PutRecords API from the AWS SDK</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The Kinesis Client Library (KCL)</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The Kinesis Client Library (KCL)<br><br>
+<strong>How to think about it:</strong> <b>KPL</b> = Producer (write), <b>KCL</b> = Client/Consumer (read, checkpoint, balance shards).<br><br>
+<strong>Why D is correct:</strong> KCL handles shard leases, load-balances shards across workers and stores checkpoints (in DynamoDB).<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The Kinesis Producer Library (KPL)</em> &mdash; KPL optimises writing records (batching, aggregation, retries), not reading them.<br><em>B) The Kinesis Agent</em> &mdash; The agent is a producer that tails log files and sends them to a stream.<br><em>C) The PutRecords API from the AWS SDK</em> &mdash; PutRecords writes batches into a stream; it has no consumer checkpointing.
+</div>
+</div>
+
+<!-- Q5 Kinesis Streams -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Kinesis Streams" data-level="B">
+<div class="q-tags"><span class="q-tag">Kinesis Streams</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>A producer wrote sensitive test records into a Kinesis data stream by mistake. How can they be removed?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Merge the affected shards so the records are discarded</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Call DeleteRecords with the sequence numbers of the bad records</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Purge the shard from the console as you would an SQS queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Not individually; they stay until the retention period expires</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Not individually; they stay until the retention period expires<br><br>
+<strong>How to think about it:</strong> KDS data is <b>immutable</b>: records cannot be deleted, they only <b>expire</b> after retention.<br><br>
+<strong>Why D is correct:</strong> Kinesis records are immutable, so the only ways to drop them are expiry or deleting the whole stream.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Merge the affected shards so the records are discarded</em> &mdash; Merging shards changes capacity; existing data is kept.<br><em>B) Call DeleteRecords with the sequence numbers of the bad records</em> &mdash; Kinesis has no API to delete single records.<br><em>C) Purge the shard from the console as you would an SQS queue</em> &mdash; Purging is an SQS feature; Kinesis shards cannot be purged.
+</div>
+</div>
+
+<!-- Q6 Kinesis Streams -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Kinesis Streams" data-level="B">
+<div class="q-tags"><span class="q-tag">Kinesis Streams</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>How is data in a Kinesis data stream protected at rest?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only client-side encryption is possible</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Server-side encryption with an AWS KMS key</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">SSE-S3 keys, because shards are stored in S3</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A dedicated CloudHSM cluster attached to the stream</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Server-side encryption with an AWS KMS key<br><br>
+<strong>How to think about it:</strong> KDS encryption: <b>KMS server-side</b> at rest, HTTPS in flight.<br><br>
+<strong>Why B is correct:</strong> Kinesis can encrypt records at rest with an AWS managed or customer managed KMS key.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only client-side encryption is possible</em> &mdash; Client-side encryption is optional; Kinesis also offers built-in server-side encryption.<br><em>C) SSE-S3 keys, because shards are stored in S3</em> &mdash; SSE-S3 is an S3 bucket feature; Kinesis uses KMS for at-rest encryption.<br><em>D) A dedicated CloudHSM cluster attached to the stream</em> &mdash; Kinesis does not attach to CloudHSM; it integrates with KMS.
+</div>
+</div>
+
+<!-- Q7 Kinesis Streams -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Kinesis Streams" data-level="A">
+<div class="q-tags"><span class="q-tag">Kinesis Streams</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>An IoT stream has highly unpredictable traffic that can jump tenfold without warning. The team does not want to plan or resize shards. Which choice fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Provisioned mode with shard splitting done by hand each week</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Provisioned mode sized for today's average traffic</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Kinesis Data Streams in on-demand capacity mode</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An SQS standard queue in place of the stream</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Kinesis Data Streams in on-demand capacity mode<br><br>
+<strong>How to think about it:</strong> Unknown or spiky traffic, no shard management = KDS <b>on-demand mode</b>.<br><br>
+<strong>Why C is correct:</strong> On-demand mode scales capacity automatically from observed traffic and bills per stream-hour and per GB.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Provisioned mode with shard splitting done by hand each week</em> &mdash; Manual resharding is exactly the management work the team wants to avoid.<br><em>B) Provisioned mode sized for today's average traffic</em> &mdash; Provisioned mode would throttle when traffic spikes past the fixed shard count.<br><em>D) An SQS standard queue in place of the stream</em> &mdash; SQS scales, but it gives up replay, ordering by key and multiple independent readers.
+</div>
+</div>
+
+<!-- Q8 Kinesis Streams -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Kinesis Streams" data-level="A">
+<div class="q-tags"><span class="q-tag">Kinesis Streams</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>Producers send 3,000 records per second, each about 1 KB, into a provisioned Kinesis stream. What is the minimum number of shards?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">2 shards</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">3 shards</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">1 shard</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">6 shards</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> 3 shards<br><br>
+<strong>How to think about it:</strong> Shards in = max(<b>MB/s / 1</b>, <b>records/s / 1,000</b>). 3 MB/s and 3,000 rec/s = 3 shards.<br><br>
+<strong>Why B is correct:</strong> 3,000 records of 1 KB is about 3 MB/s and 3,000 records/s, and each shard takes 1 MB/s and 1,000 records/s.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 2 shards</em> &mdash; Two shards would suit the 2 MB/s read limit, but writes are capped at 1 MB/s per shard.<br><em>C) 1 shard</em> &mdash; One shard takes only 1 MB/s and 1,000 records/s, a third of what is needed.<br><em>D) 6 shards</em> &mdash; Six shards would work but double the cost; three is the minimum.
+</div>
+</div>
+
+<!-- Q9 Kinesis Streams -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Kinesis Streams" data-level="A">
+<div class="q-tags"><span class="q-tag">Kinesis Streams</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>Five separate applications read the same Kinesis stream, and each is being throttled on reads. Every application needs its own full read throughput with the lowest latency. What should you enable?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A longer retention period</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">KPL record aggregation</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A larger GetRecords batch size</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enhanced fan-out for each consumer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Enhanced fan-out for each consumer<br><br>
+<strong>How to think about it:</strong> Many consumers on one stream = <b>enhanced fan-out</b> (2 MB/s per shard per consumer, push, ~70 ms).<br><br>
+<strong>Why D is correct:</strong> Each registered consumer gets its own 2 MB/s per shard pushed over HTTP/2, so they no longer share the read limit.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A longer retention period</em> &mdash; Retention controls how long data is kept, not how fast it can be read.<br><em>B) KPL record aggregation</em> &mdash; Aggregation improves producer efficiency; it does not add read throughput.<br><em>C) A larger GetRecords batch size</em> &mdash; Bigger batches still share the same 2 MB/s per shard among all five consumers.
+</div>
+</div>
+
+<!-- Q10 Kinesis Streams -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Kinesis Streams" data-level="A">
+<div class="q-tags"><span class="q-tag">Kinesis Streams</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>Several independent teams must each read the same ordered event stream at their own pace and be able to replay the last three days. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An SNS standard topic</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An SQS standard queue</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Kinesis Data Streams</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An SQS FIFO queue</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Kinesis Data Streams<br><br>
+<strong>How to think about it:</strong> Multiple readers + ordering + <b>replay</b> = <b>Kinesis Data Streams</b> (or MSK), not SQS or SNS.<br><br>
+<strong>Why C is correct:</strong> KDS keeps records for the retention period, orders them per shard, and lets many consumers read the same data independently.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An SNS standard topic</em> &mdash; SNS pushes and forgets; there is no retention or replay.<br><em>B) An SQS standard queue</em> &mdash; SQS deletes a message once it is consumed, has no ordering and cannot replay.<br><em>D) An SQS FIFO queue</em> &mdash; FIFO keeps order but still removes each message after a consumer deletes it.
+</div>
+</div>
+
+<!-- Q11 Data Firehose -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Data Firehose" data-level="B">
+<div class="q-tags"><span class="q-tag">Data Firehose</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>Clickstream events must land in Amazon S3 in near real time with automatic scaling and no consumer code to write or run. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon MSK with a custom Kafka consumer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Kinesis Data Streams with a KCL app on EC2</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Data Firehose</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An SQS queue drained by a cron job</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon Data Firehose<br><br>
+<strong>How to think about it:</strong> Load streaming data into S3, Redshift, OpenSearch, Splunk or HTTP with no code = <b>Amazon Data Firehose</b>.<br><br>
+<strong>Why C is correct:</strong> Firehose is fully managed and serverless: it buffers incoming records and delivers them to destinations such as S3.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon MSK with a custom Kafka consumer</em> &mdash; MSK needs consumer applications and broker sizing, which is not code-free.<br><em>B) Kinesis Data Streams with a KCL app on EC2</em> &mdash; This works, but you would write and operate the consumer code yourself.<br><em>D) An SQS queue drained by a cron job</em> &mdash; Polling SQS on a schedule is custom code and not near real time.
+</div>
+</div>
+
+<!-- Q12 Data Firehose -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Data Firehose" data-level="B">
+<div class="q-tags"><span class="q-tag">Data Firehose</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>How does Amazon Data Firehose load data into a provisioned Amazon Redshift cluster?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It registers the data as a Redshift Spectrum external table</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It stages files in S3, then runs a Redshift COPY</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It triggers an AWS Glue job that performs the load</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It sends one INSERT statement per record over JDBC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> It stages files in S3, then runs a Redshift COPY<br><br>
+<strong>How to think about it:</strong> Firehose to Redshift = <b>S3 first, then COPY</b>.<br><br>
+<strong>Why B is correct:</strong> Firehose stages batches in S3 and issues COPY, which is the efficient bulk-load path into Redshift.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It registers the data as a Redshift Spectrum external table</em> &mdash; Spectrum queries data left in S3; Firehose loads into cluster tables.<br><em>C) It triggers an AWS Glue job that performs the load</em> &mdash; Firehose handles the load itself without a Glue job.<br><em>D) It sends one INSERT statement per record over JDBC</em> &mdash; Row-by-row inserts would be very slow in Redshift; Firehose does not do this.
+</div>
+</div>
+
+<!-- Q13 Data Firehose -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Data Firehose" data-level="B">
+<div class="q-tags"><span class="q-tag">Data Firehose</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>Incoming records arrive as CSV and must be reshaped into JSON before Firehose delivers them. What is the simplest approach?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use the Kinesis Agent to rewrite the files on S3</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable Firehose data transformation with a Lambda function</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Configure an S3 Lifecycle rule to convert the objects</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Insert a Glue crawler between the producer and Firehose</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Enable Firehose data transformation with a Lambda function<br><br>
+<strong>How to think about it:</strong> Firehose custom transformation = <b>Lambda</b> (blueprints available).<br><br>
+<strong>Why B is correct:</strong> Firehose invokes Lambda on each buffered batch, and the function returns the reshaped records.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use the Kinesis Agent to rewrite the files on S3</em> &mdash; The agent ships log files; it does not convert data after delivery.<br><em>C) Configure an S3 Lifecycle rule to convert the objects</em> &mdash; Lifecycle rules move or expire objects; they never change their content.<br><em>D) Insert a Glue crawler between the producer and Firehose</em> &mdash; Crawlers discover schemas; they do not transform records in flight.
+</div>
+</div>
+
+<!-- Q14 Data Firehose -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Data Firehose" data-level="B">
+<div class="q-tags"><span class="q-tag">Data Firehose</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>Some records fail Lambda transformation or delivery to the destination. The team must keep them for later analysis. What should they configure?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A longer retention period on the Firehose stream</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An S3 backup location for failed (or all) records</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A dead-letter queue on the Firehose stream</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enhanced fan-out on the delivery stream</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An S3 backup location for failed (or all) records<br><br>
+<strong>How to think about it:</strong> Firehose failures (or all source data) go to an <b>S3 backup bucket</b>.<br><br>
+<strong>Why B is correct:</strong> Firehose writes records that fail transformation or delivery to an S3 bucket, and it can back up all source data too.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A longer retention period on the Firehose stream</em> &mdash; Firehose does not store data for replay, so there is no retention to extend.<br><em>C) A dead-letter queue on the Firehose stream</em> &mdash; Firehose has no SQS dead-letter queue; it uses S3 for failures.<br><em>D) Enhanced fan-out on the delivery stream</em> &mdash; Enhanced fan-out is a Kinesis Data Streams consumer feature.
+</div>
+</div>
+
+<!-- Q15 Data Firehose -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Data Firehose" data-level="B">
+<div class="q-tags"><span class="q-tag">Data Firehose</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>A Firehose stream receives very little traffic. Which buffering rule will usually cause it to flush data to the destination?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The shard count of the stream is exceeded</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The retention period expires</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The buffer size threshold is reached</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The buffer interval (time) is reached</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The buffer interval (time) is reached<br><br>
+<strong>How to think about it:</strong> Firehose buffer: <b>low traffic = time</b> limit hits, <b>high traffic = size</b> limit hits.<br><br>
+<strong>Why D is correct:</strong> With little data, the size threshold is rarely met, so the time limit triggers delivery.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The shard count of the stream is exceeded</em> &mdash; Firehose has no shards to manage.<br><em>B) The retention period expires</em> &mdash; Firehose has no retention period; it only buffers before delivery.<br><em>C) The buffer size threshold is reached</em> &mdash; Size is usually hit first when throughput is high, not low.
+</div>
+</div>
+
+<!-- Q16 Data Firehose -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Data Firehose" data-level="A">
+<div class="q-tags"><span class="q-tag">Data Firehose</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>JSON events must be stored in S3 as Apache Parquet so Athena scans less data, and the team wants to avoid writing conversion code. What should they do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable Firehose record format conversion with a Glue schema</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable server-side conversion on the Kinesis data stream</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Set the S3 bucket's default object format to Parquet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Write a Lambda transformation that builds Parquet files</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Enable Firehose record format conversion with a Glue schema<br><br>
+<strong>How to think about it:</strong> JSON to <b>Parquet/ORC</b> on the way into S3 = Firehose <b>record format conversion</b> (schema from Glue Data Catalog).<br><br>
+<strong>Why A is correct:</strong> Firehose can convert JSON to Parquet or ORC before writing to S3, using a table schema from the Glue Data Catalog.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Enable server-side conversion on the Kinesis data stream</em> &mdash; Kinesis Data Streams does not convert data formats.<br><em>C) Set the S3 bucket's default object format to Parquet</em> &mdash; S3 stores bytes as given; there is no bucket-level format setting.<br><em>D) Write a Lambda transformation that builds Parquet files</em> &mdash; Possible in theory, but it is custom code for something Firehose does natively.
+</div>
+</div>
+
+<!-- Q17 Data Firehose -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Data Firehose" data-level="A">
+<div class="q-tags"><span class="q-tag">Data Firehose</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>Events must be indexed in OpenSearch within a few hundred milliseconds, and the team must be able to replay the last week if indexing logic changes. Which design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Kinesis Data Streams with a Lambda consumer writing to OpenSearch</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">SNS fan-out to an OpenSearch HTTP endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Batch uploads to S3 loaded hourly by AWS Glue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Data Firehose delivering straight to OpenSearch</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Kinesis Data Streams with a Lambda consumer writing to OpenSearch<br><br>
+<strong>How to think about it:</strong> Real-time + <b>replay</b> = <b>KDS</b> + Lambda. Firehose is near real time and stores nothing.<br><br>
+<strong>Why A is correct:</strong> KDS offers real-time delivery and up to 365 days of replay, and Lambda can index each batch.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) SNS fan-out to an OpenSearch HTTP endpoint</em> &mdash; SNS has no retention, so it cannot replay a week of events.<br><em>C) Batch uploads to S3 loaded hourly by AWS Glue</em> &mdash; Hourly loads miss the sub-second requirement.<br><em>D) Amazon Data Firehose delivering straight to OpenSearch</em> &mdash; Firehose buffers before delivery and keeps no data, so replay is not possible.
+</div>
+</div>
+
+<!-- Q18 MSK & Flink -->
+<div class="question" data-type="mc" data-answer="1" data-topic="MSK & Flink" data-level="B">
+<div class="q-tags"><span class="q-tag">MSK & Flink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>A company runs Apache Kafka on premises and wants a managed service in AWS without changing its Kafka producers and consumers. What should it choose?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon MQ for RabbitMQ</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon MSK (managed Apache Kafka)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon SQS FIFO queues</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Kinesis Data Streams</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon MSK (managed Apache Kafka)<br><br>
+<strong>How to think about it:</strong> Keep the <b>Kafka API</b> = <b>Amazon MSK</b>.<br><br>
+<strong>Why B is correct:</strong> MSK runs real Apache Kafka brokers in your VPC across AZs, so existing Kafka clients keep working.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon MQ for RabbitMQ</em> &mdash; Amazon MQ hosts ActiveMQ and RabbitMQ, not Kafka.<br><em>C) Amazon SQS FIFO queues</em> &mdash; SQS is a queue service with its own API and no Kafka compatibility.<br><em>D) Amazon Kinesis Data Streams</em> &mdash; Kinesis has its own API, so the Kafka clients would need rewriting.
+</div>
+</div>
+
+<!-- Q19 MSK & Flink -->
+<div class="question" data-type="mc" data-answer="2" data-topic="MSK & Flink" data-level="B">
+<div class="q-tags"><span class="q-tag">MSK & Flink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>A team wants Kafka on AWS but does not want to choose broker sizes or manage cluster capacity. Which option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Kinesis Data Streams in provisioned mode</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">MSK provisioned with the largest broker type</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">MSK Serverless</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">MSK Connect</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> MSK Serverless<br><br>
+<strong>How to think about it:</strong> Kafka with no capacity planning = <b>MSK Serverless</b>.<br><br>
+<strong>Why C is correct:</strong> MSK Serverless provisions and scales compute and storage for you while keeping the Kafka API.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Kinesis Data Streams in provisioned mode</em> &mdash; This is not Kafka, and provisioned mode means managing shards.<br><em>B) MSK provisioned with the largest broker type</em> &mdash; Provisioned MSK still requires you to pick and scale brokers.<br><em>D) MSK Connect</em> &mdash; MSK Connect runs Kafka Connect connectors; it is not a broker capacity mode.
+</div>
+</div>
+
+<!-- Q20 MSK & Flink -->
+<div class="question" data-type="mc" data-answer="0" data-topic="MSK & Flink" data-level="B">
+<div class="q-tags"><span class="q-tag">MSK & Flink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>How do you scale the parallelism of a Kafka topic on Amazon MSK, and what is the main limit?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add partitions to the topic; partitions cannot later be removed</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Split partitions in two, then merge them back when load drops</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Switch the topic to on-demand mode</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Raise the message size limit on the topic</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Add partitions to the topic; partitions cannot later be removed<br><br>
+<strong>How to think about it:</strong> Kafka scaling = <b>add partitions</b> (never remove). Kinesis = split and merge shards.<br><br>
+<strong>Why A is correct:</strong> Kafka lets you increase a topic's partition count, but there is no way to reduce it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Split partitions in two, then merge them back when load drops</em> &mdash; Split and merge is how Kinesis shards scale, not Kafka partitions.<br><em>C) Switch the topic to on-demand mode</em> &mdash; On-demand capacity is a Kinesis Data Streams setting.<br><em>D) Raise the message size limit on the topic</em> &mdash; Message size affects record limits, not how many consumers can work in parallel.
+</div>
+</div>
+
+<!-- Q21 MSK & Flink -->
+<div class="question" data-type="mc" data-answer="3" data-topic="MSK & Flink" data-level="B">
+<div class="q-tags"><span class="q-tag">MSK & Flink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>Engineers want to run stateful, real-time Apache Flink applications in Java or SQL on data from Kinesis and MSK, without managing a cluster. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Glue crawlers</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Athena</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon EMR with Apache Hive</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Managed Service for Apache Flink</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Amazon Managed Service for Apache Flink<br><br>
+<strong>How to think about it:</strong> Managed Flink = <b>Amazon Managed Service for Apache Flink</b> (formerly Kinesis Data Analytics).<br><br>
+<strong>Why D is correct:</strong> It runs Flink applications on managed, auto-scaling compute with checkpoints and snapshots.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Glue crawlers</em> &mdash; Crawlers infer schemas for the Data Catalog; they do not process streams.<br><em>B) Amazon Athena</em> &mdash; Athena runs interactive SQL on data at rest in S3, not continuous stream processing.<br><em>C) Amazon EMR with Apache Hive</em> &mdash; Hive is batch SQL on Hadoop, and EMR on EC2 means managing a cluster.
+</div>
+</div>
+
+<!-- Q22 MSK & Flink -->
+<div class="question" data-type="mc" data-answer="3" data-topic="MSK & Flink" data-level="B">
+<div class="q-tags"><span class="q-tag">MSK & Flink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>Which of these cannot be used as a streaming source for a Managed Service for Apache Flink application?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A topic on an Amazon MSK cluster</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Kinesis data stream</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Files arriving in an S3 bucket</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An Amazon Data Firehose stream</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> An Amazon Data Firehose stream<br><br>
+<strong>How to think about it:</strong> Flink reads from <b>KDS or MSK</b>. <b>Firehose</b> is a destination-only service.<br><br>
+<strong>Why D is correct:</strong> Firehose only delivers to destinations; nothing can consume from it, including Flink.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A topic on an Amazon MSK cluster</em> &mdash; Kafka topics on MSK are a standard Flink source.<br><em>B) A Kinesis data stream</em> &mdash; Kinesis Data Streams is a standard Flink source.<br><em>C) Files arriving in an S3 bucket</em> &mdash; Flink's file source connectors can read data from S3.
+</div>
+</div>
+
+<!-- Q23 MSK & Flink -->
+<div class="question" data-type="mc" data-answer="1" data-topic="MSK & Flink" data-level="A">
+<div class="q-tags"><span class="q-tag">MSK & Flink</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>A Managed Service for Apache Flink application keeps running totals in state. After a code update it must resume with that state rather than start from zero. What provides this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Writing state to an SQS queue between runs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Restore from an application snapshot on restart</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enabling enhanced fan-out on the source stream</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Extending the source stream's retention to 365 days</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Restore from an application snapshot on restart<br><br>
+<strong>How to think about it:</strong> Flink app backups = <b>checkpoints and snapshots</b>.<br><br>
+<strong>Why B is correct:</strong> Snapshots capture the application state so a new version can restart from where the old one stopped.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Writing state to an SQS queue between runs</em> &mdash; SQS is not a state store, and Flink does not use it for recovery.<br><em>C) Enabling enhanced fan-out on the source stream</em> &mdash; Fan-out improves read throughput; it does not save application state.<br><em>D) Extending the source stream's retention to 365 days</em> &mdash; Re-reading a year of data is slow and is not the same as restoring state.
+</div>
+</div>
+
+<!-- Q24 MSK & Flink -->
+<div class="question" data-type="mc" data-answer="1" data-topic="MSK & Flink" data-level="A">
+<div class="q-tags"><span class="q-tag">MSK & Flink</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>Data on an MSK topic must be continuously cleaned and joined using Apache Spark Structured Streaming, then written to an S3 data lake, with no cluster to manage. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Redshift Spectrum</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An AWS Glue streaming ETL job</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An AWS Batch array job</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An Athena federated query</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An AWS Glue streaming ETL job<br><br>
+<strong>How to think about it:</strong> Serverless <b>Spark streaming</b> ETL from Kafka or Kinesis = <b>Glue streaming ETL job</b>.<br><br>
+<strong>Why B is correct:</strong> Glue streaming jobs run Spark Structured Streaming serverlessly and can read from MSK or Kinesis.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Redshift Spectrum</em> &mdash; Spectrum queries S3 from Redshift; it does not consume Kafka topics.<br><em>C) An AWS Batch array job</em> &mdash; Batch runs finite jobs, not a continuous streaming pipeline.<br><em>D) An Athena federated query</em> &mdash; Athena runs on-demand SQL queries; it does not run continuous streaming jobs.
+</div>
+</div>
+
+<!-- Q25 AWS Batch -->
+<div class="question" data-type="mc" data-answer="0" data-topic="AWS Batch" data-level="B">
+<div class="q-tags"><span class="q-tag">AWS Batch</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>Thousands of image-processing jobs are packaged as Docker images. AWS should choose instance types and scale the fleet up and down as jobs arrive. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Batch with a managed compute environment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon EMR with uniform instance groups</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Lambda with provisioned concurrency</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An EC2 Auto Scaling group on a CPU target</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AWS Batch with a managed compute environment<br><br>
+<strong>How to think about it:</strong> Containerised <b>batch jobs</b> with managed scaling = <b>AWS Batch</b>.<br><br>
+<strong>Why A is correct:</strong> Batch queues jobs and provisions EC2, Spot or Fargate capacity to match the work, and you pay only for that capacity.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon EMR with uniform instance groups</em> &mdash; EMR is for Hadoop and Spark frameworks, not general container jobs.<br><em>C) AWS Lambda with provisioned concurrency</em> &mdash; Provisioned concurrency keeps functions warm; it does not run arbitrary Docker jobs of any length.<br><em>D) An EC2 Auto Scaling group on a CPU target</em> &mdash; This scales instances, but you would have to build the job queue and scheduler yourself.
+</div>
+</div>
+
+<!-- Q26 AWS Batch -->
+<div class="question" data-type="mc" data-answer="3" data-topic="AWS Batch" data-level="B">
+<div class="q-tags"><span class="q-tag">AWS Batch</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>A data job runs for about three hours and needs 200 GB of scratch disk. Why is AWS Batch a better fit than Lambda?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Lambda cannot run code packaged as a container image</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Batch jobs always run on Spot, so they are cheaper</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Lambda cannot read input from Amazon S3</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Batch has no time limit and can use EBS or instance store</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Batch has no time limit and can use EBS or instance store<br><br>
+<strong>How to think about it:</strong> Lambda = <b>15 min</b>, up to 10 GB /tmp. <b>Batch</b> = no time limit, disk from EBS or instance store.<br><br>
+<strong>Why D is correct:</strong> Lambda stops at 15 minutes and offers at most 10 GB of temporary storage, while Batch jobs can run for hours.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Lambda cannot run code packaged as a container image</em> &mdash; Lambda does support container images; the limits here are time and disk.<br><em>B) Batch jobs always run on Spot, so they are cheaper</em> &mdash; Batch can use On-Demand, Spot or Fargate; cost is not the main reason here.<br><em>C) Lambda cannot read input from Amazon S3</em> &mdash; Lambda reads S3 easily; that is not the constraint.
+</div>
+</div>
+
+<!-- Q27 AWS Batch -->
+<div class="question" data-type="mc" data-answer="0" data-topic="AWS Batch" data-level="B">
+<div class="q-tags"><span class="q-tag">AWS Batch</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>Your team wants full control over the instances that run Batch jobs, including provisioning and scaling them itself. Which compute environment type is this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An unmanaged compute environment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A multi-node parallel job definition</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A managed compute environment using Spot</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A managed compute environment using Fargate</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An unmanaged compute environment<br><br>
+<strong>How to think about it:</strong> <b>Managed</b> CE = AWS picks and scales capacity. <b>Unmanaged</b> CE = you run the instances.<br><br>
+<strong>Why A is correct:</strong> With an unmanaged environment you create and scale the ECS container instances yourself.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A multi-node parallel job definition</em> &mdash; This describes the job shape, not who manages the compute.<br><em>C) A managed compute environment using Spot</em> &mdash; In a managed environment AWS Batch, not your team, controls the capacity.<br><em>D) A managed compute environment using Fargate</em> &mdash; Fargate removes instance management entirely, which is the opposite of full control.
+</div>
+</div>
+
+<!-- Q28 AWS Batch -->
+<div class="question" data-type="mc" data-answer="0" data-topic="AWS Batch" data-level="A">
+<div class="q-tags"><span class="q-tag">AWS Batch</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>Fault-tolerant, containerised jobs can be retried if interrupted. The team wants the lowest cost and no servers or instance types to manage. Which Batch setup fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A managed compute environment using Fargate Spot</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A multi-node parallel job on Spot capacity</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An unmanaged compute environment of On-Demand instances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A managed environment on EC2 Dedicated Hosts</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A managed compute environment using Fargate Spot<br><br>
+<strong>How to think about it:</strong> Serverless + cheapest + interruptible = Batch on <b>Fargate Spot</b>.<br><br>
+<strong>Why A is correct:</strong> Fargate removes instance management, and Spot pricing cuts cost for jobs that tolerate interruption.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A multi-node parallel job on Spot capacity</em> &mdash; Multi-node jobs suit tightly coupled HPC, not independent retryable jobs.<br><em>C) An unmanaged compute environment of On-Demand instances</em> &mdash; Unmanaged means running instances yourself, and On-Demand costs more.<br><em>D) A managed environment on EC2 Dedicated Hosts</em> &mdash; Dedicated Hosts are expensive and still involve instance choices.
+</div>
+</div>
+
+<!-- Q29 AWS Batch -->
+<div class="question" data-type="mc" data-answer="3" data-topic="AWS Batch" data-level="A">
+<div class="q-tags"><span class="q-tag">AWS Batch</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>A Batch managed compute environment runs in private subnets with no internet access, and its instances never join the cluster, so jobs stay RUNNABLE. What fixes this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Increase the maximum vCPUs of the compute environment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Switch the job queue to a higher priority value</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Assign Elastic IPs to every instance in the private subnets</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A NAT gateway or VPC endpoints for ECS, ECR and related services</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A NAT gateway or VPC endpoints for ECS, ECR and related services<br><br>
+<strong>How to think about it:</strong> Batch in a private subnet must reach <b>ECS</b>: give it a <b>NAT gateway</b> or <b>VPC endpoints</b>.<br><br>
+<strong>Why D is correct:</strong> Batch instances must reach the ECS service (and ECR to pull images), which needs NAT or VPC endpoints from private subnets.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Increase the maximum vCPUs of the compute environment</em> &mdash; More capacity does not help if the instances cannot register with ECS.<br><em>B) Switch the job queue to a higher priority value</em> &mdash; Priority orders jobs between queues; it does not fix network reachability.<br><em>C) Assign Elastic IPs to every instance in the private subnets</em> &mdash; An Elastic IP does nothing without an internet gateway route, and it defeats the private design.
+</div>
+</div>
+
+<!-- Q30 AWS Batch -->
+<div class="question" data-type="mc" data-answer="0" data-topic="AWS Batch" data-level="A">
+<div class="q-tags"><span class="q-tag">AWS Batch</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>A tightly coupled MPI simulation must run as one job across many instances with very low network latency between them. Which AWS Batch feature fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A multi-node parallel job in a cluster placement group</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Spot Instances in a spread placement group</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda fan-out with Step Functions Map state</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An array job with thousands of child jobs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A multi-node parallel job in a cluster placement group<br><br>
+<strong>How to think about it:</strong> Tightly coupled HPC in Batch = <b>multi-node parallel job</b>, best in a <b>cluster placement group</b>.<br><br>
+<strong>Why A is correct:</strong> Multi-node parallel jobs launch one main node and several child nodes for a single job, and cluster placement keeps them close.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Spot Instances in a spread placement group</em> &mdash; Spread placement increases distance between instances, raising latency.<br><em>C) A Lambda fan-out with Step Functions Map state</em> &mdash; Lambda functions cannot talk to each other with low latency the way MPI needs.<br><em>D) An array job with thousands of child jobs</em> &mdash; Array jobs are for independent tasks, not one tightly coupled job.
+</div>
+</div>
+
+<!-- Q31 AWS Batch -->
+<div class="question" data-type="mc" data-answer="0" data-topic="AWS Batch" data-level="B">
+<div class="q-tags"><span class="q-tag">AWS Batch</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>A Batch job must be submitted automatically every night at 02:00. What is the standard way to do this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An EventBridge schedule that targets the Batch job queue</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An AWS Config periodic rule</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A cron expression in the compute environment settings</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Raising the job queue priority each night</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An EventBridge schedule that targets the Batch job queue<br><br>
+<strong>How to think about it:</strong> Schedule Batch jobs with <b>EventBridge</b>; orchestrate multi-step flows with <b>Step Functions</b>.<br><br>
+<strong>Why A is correct:</strong> EventBridge can submit a Batch job on a cron or rate schedule.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An AWS Config periodic rule</em> &mdash; Config rules evaluate resource compliance; they do not launch Batch jobs.<br><em>C) A cron expression in the compute environment settings</em> &mdash; Compute environments define capacity; they have no schedule field.<br><em>D) Raising the job queue priority each night</em> &mdash; Queue priority affects ordering of submitted jobs, not when jobs are submitted.
+</div>
+</div>
+
+<!-- Q32 EMR -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EMR" data-level="B">
+<div class="q-tags"><span class="q-tag">EMR</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>A team has existing Apache Spark and Hive jobs and wants a managed cluster that AWS provisions and configures. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon EMR</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Redshift</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Athena</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Glue DataBrew</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon EMR<br><br>
+<strong>How to think about it:</strong> Hadoop, Spark, Hive, HBase, Presto on managed clusters = <b>Amazon EMR</b>.<br><br>
+<strong>Why A is correct:</strong> EMR builds and configures clusters for Hadoop-ecosystem frameworks such as Spark, Hive, HBase and Presto.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon Redshift</em> &mdash; Redshift is a SQL data warehouse, not a Hadoop or Spark platform.<br><em>C) Amazon Athena</em> &mdash; Athena runs SQL on S3; it does not run existing Spark and Hive job code as-is.<br><em>D) AWS Glue DataBrew</em> &mdash; DataBrew is a visual data-preparation tool, not a Spark cluster.
+</div>
+</div>
+
+<!-- Q33 EMR -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EMR" data-level="B">
+<div class="q-tags"><span class="q-tag">EMR</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>In an EMR cluster, which node type is optional, runs tasks only, stores no HDFS data, and is commonly run on Spot?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Core node</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Leader node</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Primary node</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Task node</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Task node<br><br>
+<strong>How to think about it:</strong> EMR nodes: <b>primary</b> = coordinates, <b>core</b> = tasks + HDFS, <b>task</b> = tasks only (Spot-friendly).<br><br>
+<strong>Why D is correct:</strong> Task nodes add processing power without holding HDFS data, so losing a Spot task node does not lose data.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Core node</em> &mdash; Core nodes store HDFS data as well as running tasks, so losing them risks data.<br><em>B) Leader node</em> &mdash; Leader nodes belong to Amazon Redshift, not EMR.<br><em>C) Primary node</em> &mdash; The primary node manages the cluster and tracks health; it is required.
+</div>
+</div>
+
+<!-- Q34 EMR -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EMR" data-level="B">
+<div class="q-tags"><span class="q-tag">EMR</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>Transient EMR clusters are terminated after each job, but the results must survive. Where should input and output data be kept?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">In Amazon S3 through EMRFS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">In an EFS file system mounted by the task nodes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">On the primary node's instance store</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">In HDFS on the core nodes' EBS volumes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> In Amazon S3 through EMRFS<br><br>
+<strong>How to think about it:</strong> <b>EMRFS on S3</b> = permanent storage. <b>HDFS on EBS</b> = temporary scratch.<br><br>
+<strong>Why A is correct:</strong> EMRFS lets jobs read and write S3 directly, so data outlives the cluster.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) In an EFS file system mounted by the task nodes</em> &mdash; EFS is not EMR's native storage layer for Spark and Hadoop jobs.<br><em>C) On the primary node's instance store</em> &mdash; Instance store is lost when the instance stops or terminates.<br><em>D) In HDFS on the core nodes' EBS volumes</em> &mdash; HDFS storage is deleted when the cluster terminates.
+</div>
+</div>
+
+<!-- Q35 EMR -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EMR" data-level="B">
+<div class="q-tags"><span class="q-tag">EMR</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>An EMR cluster should reach a target capacity using a mix of instance types and both On-Demand and Spot purchasing. Which configuration supports this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Uniform instance groups</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Instance fleets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A cluster placement group</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">EMR managed scaling alone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Instance fleets<br><br>
+<strong>How to think about it:</strong> Mix types + purchase options to a target = <b>instance fleets</b>. One type per group = uniform instance groups.<br><br>
+<strong>Why B is correct:</strong> Instance fleets let you list several instance types and set On-Demand and Spot target capacities per node type.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Uniform instance groups</em> &mdash; Each uniform group uses a single instance type and purchasing option.<br><em>C) A cluster placement group</em> &mdash; Placement groups control physical placement, not the instance mix.<br><em>D) EMR managed scaling alone</em> &mdash; Managed scaling resizes the cluster but does not define a mix of types and pricing.
+</div>
+</div>
+
+<!-- Q36 EMR -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EMR" data-level="B">
+<div class="q-tags"><span class="q-tag">EMR</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Where do the EC2 instances of a single Amazon EMR cluster run?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">All in one Availability Zone, inside a subnet of your VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Across several Regions for disaster recovery</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">In an AWS-owned VPC outside your account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Spread across three Availability Zones automatically</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> All in one Availability Zone, inside a subnet of your VPC<br><br>
+<strong>How to think about it:</strong> An EMR cluster lives in <b>one Availability Zone</b> (one subnet) for low-latency node traffic.<br><br>
+<strong>Why A is correct:</strong> EMR launches a cluster's nodes in a single AZ so they can exchange data quickly.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Across several Regions for disaster recovery</em> &mdash; A cluster never spans Regions.<br><em>C) In an AWS-owned VPC outside your account</em> &mdash; EMR on EC2 runs in your own VPC and subnet.<br><em>D) Spread across three Availability Zones automatically</em> &mdash; EMR does not spread one cluster across AZs; that would add latency.
+</div>
+</div>
+
+<!-- Q37 EMR -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EMR" data-level="A">
+<div class="q-tags"><span class="q-tag">EMR</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>A long-running EMR cluster must be as cheap as possible without risking the cluster or its HDFS data. Which purchasing mix fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Primary and core nodes On-Demand or Reserved, task nodes on Spot</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Core nodes on Spot, task nodes On-Demand</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Every node on Spot Instances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Primary node on Spot, core and task nodes On-Demand</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Primary and core nodes On-Demand or Reserved, task nodes on Spot<br><br>
+<strong>How to think about it:</strong> EMR cost: <b>primary + core On-Demand/Reserved</b>, <b>task nodes on Spot</b>.<br><br>
+<strong>Why A is correct:</strong> Stable nodes keep the cluster and its HDFS data safe, while Spot task nodes add cheap processing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Core nodes on Spot, task nodes On-Demand</em> &mdash; This puts HDFS data on the unstable nodes, the reverse of best practice.<br><em>C) Every node on Spot Instances</em> &mdash; Losing the primary or core nodes to Spot interruption can kill the cluster or lose data.<br><em>D) Primary node on Spot, core and task nodes On-Demand</em> &mdash; The primary node is the most critical one to keep stable.
+</div>
+</div>
+
+<!-- Q38 EMR -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EMR" data-level="A">
+<div class="q-tags"><span class="q-tag">EMR</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>A Spark job runs for two hours each night, and the EMR cluster sits idle for the rest of the day. How can cost be cut most?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Keep the cluster and buy Reserved Instances for its nodes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Switch from instance fleets to uniform instance groups</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A transient cluster per run that auto-terminates after its step</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Move the cluster's nodes to larger instance types</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A transient cluster per run that auto-terminates after its step<br><br>
+<strong>How to think about it:</strong> Periodic job, idle cluster = <b>transient cluster</b> with steps that <b>auto-terminates</b>.<br><br>
+<strong>Why C is correct:</strong> You pay only for the two hours of compute, and data stays in S3 through EMRFS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Keep the cluster and buy Reserved Instances for its nodes</em> &mdash; A discount on 24-hour capacity still pays for 22 idle hours.<br><em>B) Switch from instance fleets to uniform instance groups</em> &mdash; This changes how instances are chosen, not the idle time.<br><em>D) Move the cluster's nodes to larger instance types</em> &mdash; Bigger instances raise the hourly cost and the cluster still idles.
+</div>
+</div>
+
+<!-- Q39 Glue & Athena -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Glue & Athena" data-level="B">
+<div class="q-tags"><span class="q-tag">Glue & Athena</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>CSV files in S3 must be cleaned and loaded into Redshift each day using a fully serverless ETL service. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon QuickSight</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An AWS Glue ETL job</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Athena</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Batch on Fargate</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An AWS Glue ETL job<br><br>
+<strong>How to think about it:</strong> Serverless <b>ETL</b> (extract, transform, load) = <b>AWS Glue</b>.<br><br>
+<strong>Why B is correct:</strong> Glue runs serverless Spark or Python ETL jobs that read from S3 and load into targets like Redshift.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon QuickSight</em> &mdash; QuickSight visualises data; it does not transform and load it.<br><em>C) Amazon Athena</em> &mdash; Athena queries data; it is not built to run scheduled loads into Redshift.<br><em>D) AWS Batch on Fargate</em> &mdash; Batch could run custom code, but Glue is the purpose-built serverless ETL service.
+</div>
+</div>
+
+<!-- Q40 Glue & Athena -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Glue & Athena" data-level="B">
+<div class="q-tags"><span class="q-tag">Glue & Athena</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>Hundreds of new datasets land in S3, and their schemas must be discovered automatically and registered as tables. What does this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An S3 Event Notification to SNS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Macie sensitive data discovery jobs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Glue crawler writing to the Data Catalog</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Inventory reports on the bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A Glue crawler writing to the Data Catalog<br><br>
+<strong>How to think about it:</strong> Schema discovery = <b>Glue crawler</b>, which writes table metadata into the <b>Data Catalog</b>.<br><br>
+<strong>Why C is correct:</strong> Crawlers scan data stores, infer schemas and partitions, and create or update catalog tables.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An S3 Event Notification to SNS</em> &mdash; Notifications report that objects arrived; they do not infer schemas.<br><em>B) Amazon Macie sensitive data discovery jobs</em> &mdash; Macie finds sensitive data such as PII, not table schemas.<br><em>D) S3 Inventory reports on the bucket</em> &mdash; Inventory lists objects and their metadata, not table schemas.
+</div>
+</div>
+
+<!-- Q41 Glue & Athena -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Glue & Athena" data-level="B">
+<div class="q-tags"><span class="q-tag">Glue & Athena</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>Athena, Redshift Spectrum and EMR should all use the same table definitions for data in S3. Where should that metadata live?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Tags on the S3 objects</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A separate Hive metastore on RDS for each service</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A DynamoDB table holding the schemas</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The AWS Glue Data Catalog</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The AWS Glue Data Catalog<br><br>
+<strong>How to think about it:</strong> One shared metastore for Athena, Spectrum and EMR = <b>Glue Data Catalog</b>.<br><br>
+<strong>Why D is correct:</strong> The Data Catalog is a central, Hive-compatible metastore that Athena, Redshift Spectrum and EMR can all read.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Tags on the S3 objects</em> &mdash; Object tags hold key-value labels, not table schemas.<br><em>B) A separate Hive metastore on RDS for each service</em> &mdash; Separate metastores would drift apart and need managing.<br><em>C) A DynamoDB table holding the schemas</em> &mdash; None of these engines read table definitions from a custom DynamoDB table.
+</div>
+</div>
+
+<!-- Q42 Glue & Athena -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Glue & Athena" data-level="B">
+<div class="q-tags"><span class="q-tag">Glue & Athena</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>A security team wants to run ad hoc SQL queries on CloudTrail and VPC Flow Logs stored in S3 without setting up any servers. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon EMR with Hive</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A provisioned Amazon Redshift cluster</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Athena</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon RDS for PostgreSQL</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon Athena<br><br>
+<strong>How to think about it:</strong> Serverless SQL on data in S3 = <b>Athena</b>.<br><br>
+<strong>Why C is correct:</strong> Athena is serverless, uses standard SQL on files in S3 and charges only for data scanned.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon EMR with Hive</em> &mdash; EMR means provisioning and running a cluster.<br><em>B) A provisioned Amazon Redshift cluster</em> &mdash; Redshift needs a cluster and loading or Spectrum; it is not the serverless ad hoc choice.<br><em>D) Amazon RDS for PostgreSQL</em> &mdash; RDS needs the logs loaded into a database first.
+</div>
+</div>
+
+<!-- Q43 Glue & Athena -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Glue & Athena" data-level="B">
+<div class="q-tags"><span class="q-tag">Glue & Athena</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>Athena bills by the amount of data scanned. Which change cuts both cost and query time the most?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable S3 Transfer Acceleration on the bucket</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Convert the data to a columnar format such as Parquet or ORC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Move the data to S3 Glacier Flexible Retrieval</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Store the data as uncompressed CSV</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Convert the data to a columnar format such as Parquet or ORC<br><br>
+<strong>How to think about it:</strong> Athena cost = data scanned, so use <b>columnar Parquet/ORC</b> (plus compression).<br><br>
+<strong>Why B is correct:</strong> Columnar files let Athena read only the columns a query needs, which cuts the bytes scanned.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable S3 Transfer Acceleration on the bucket</em> &mdash; Transfer Acceleration speeds uploads over long distances; it has no effect on Athena scans.<br><em>C) Move the data to S3 Glacier Flexible Retrieval</em> &mdash; Athena cannot query objects sitting in Glacier Flexible Retrieval.<br><em>D) Store the data as uncompressed CSV</em> &mdash; Uncompressed row files make Athena scan everything.
+</div>
+</div>
+
+<!-- Q44 Glue & Athena -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Glue & Athena" data-level="B">
+<div class="q-tags"><span class="q-tag">Glue & Athena</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>Most Athena queries filter on date. How should the data be laid out in S3 to scan less?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use random prefixes to spread the load</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Encrypt each day's files with a different KMS key</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Partition it with prefixes such as year=2026/month=10/day=23</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Put all files in one flat prefix</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Partition it with prefixes such as year=2026/month=10/day=23<br><br>
+<strong>How to think about it:</strong> Filter on date = <b>partition</b> with prefixes like <code>year=/month=/day=</code>.<br><br>
+<strong>Why C is correct:</strong> Partitions let Athena skip every prefix that does not match the query's date filter.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use random prefixes to spread the load</em> &mdash; Random prefixes help request rates, not partition pruning.<br><em>B) Encrypt each day's files with a different KMS key</em> &mdash; Encryption keys do not affect how much data a query scans.<br><em>D) Put all files in one flat prefix</em> &mdash; A flat layout forces Athena to scan everything.
+</div>
+</div>
+
+<!-- Q45 Glue & Athena -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Glue & Athena" data-level="A">
+<div class="q-tags"><span class="q-tag">Glue & Athena</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>An Athena table is built from millions of 50 KB files and queries are slow even though the total data is small. What should you do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Split the files further into smaller pieces</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Increase the Athena workgroup data scan limit</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create more partitions so each holds one file</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Compact into fewer files of roughly 128 MB or more</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Compact into fewer files of roughly 128 MB or more<br><br>
+<strong>How to think about it:</strong> Many tiny files = overhead. Aim for <b>larger files (128 MB or more)</b>.<br><br>
+<strong>Why D is correct:</strong> Each file adds open-and-read overhead, so fewer large files speed Athena up.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Split the files further into smaller pieces</em> &mdash; Smaller files make the overhead problem worse.<br><em>B) Increase the Athena workgroup data scan limit</em> &mdash; A scan limit caps cost; it does not speed queries up.<br><em>C) Create more partitions so each holds one file</em> &mdash; Over-partitioning adds metadata overhead without fixing the small-file problem.
+</div>
+</div>
+
+<!-- Q46 Glue & Athena -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Glue & Athena" data-level="A">
+<div class="q-tags"><span class="q-tag">Glue & Athena</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>Analysts must join data in S3 with tables in DynamoDB and an on-premises MySQL database, using SQL and without first copying the data. What should they use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Glue crawler over all three sources</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Athena Federated Query with Lambda connectors</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon QuickSight SPICE imports</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Redshift Spectrum external tables</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Athena Federated Query with Lambda connectors<br><br>
+<strong>How to think about it:</strong> SQL across many sources without moving data = <b>Athena Federated Query</b> (Lambda connectors).<br><br>
+<strong>Why B is correct:</strong> Connectors on Lambda let Athena query DynamoDB, relational databases and more, and results can be saved to S3.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Glue crawler over all three sources</em> &mdash; Crawlers record metadata; they do not run join queries.<br><em>C) Amazon QuickSight SPICE imports</em> &mdash; SPICE imports copy data into QuickSight, which the analysts want to avoid.<br><em>D) Redshift Spectrum external tables</em> &mdash; Spectrum queries data in S3, not DynamoDB or on-premises MySQL.
+</div>
+</div>
+
+<!-- Q47 Glue & Athena -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Glue & Athena" data-level="A">
+<div class="q-tags"><span class="q-tag">Glue & Athena</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>A provisioned Redshift cluster sits idle most of the month, used only for a few simple queries on data that already lives in S3. What should replace it to save cost?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A long-running EMR cluster with Presto</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon RDS for MySQL loaded nightly</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Athena querying the data in place</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The same cluster with Concurrency Scaling</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon Athena querying the data in place<br><br>
+<strong>How to think about it:</strong> Sporadic SQL on S3 = <b>Athena</b>. Sustained, complex warehouse use = Redshift.<br><br>
+<strong>Why C is correct:</strong> Athena has no infrastructure and charges only per query, which suits occasional use.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A long-running EMR cluster with Presto</em> &mdash; A cluster that runs all month still pays for idle time.<br><em>B) Amazon RDS for MySQL loaded nightly</em> &mdash; RDS is an OLTP database and also runs all the time.<br><em>D) The same cluster with Concurrency Scaling</em> &mdash; Concurrency Scaling adds capacity at peaks; the idle base cluster still costs money.
+</div>
+</div>
+
+<!-- Q48 Redshift -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Redshift" data-level="B">
+<div class="q-tags"><span class="q-tag">Redshift</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>Which workload is Amazon Redshift built for?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">High-volume order entry with many small transactions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A key-value session store with millisecond reads</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Full-text search across product descriptions</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Analytical SQL queries over terabytes of historical data</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Analytical SQL queries over terabytes of historical data<br><br>
+<strong>How to think about it:</strong> Redshift = <b>OLAP</b>: columnar storage, MPP, data warehousing.<br><br>
+<strong>Why D is correct:</strong> Redshift is a columnar, massively parallel warehouse for analytics (OLAP).<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) High-volume order entry with many small transactions</em> &mdash; That is OLTP, better served by RDS, Aurora or DynamoDB.<br><em>B) A key-value session store with millisecond reads</em> &mdash; Session stores fit ElastiCache or DynamoDB.<br><em>C) Full-text search across product descriptions</em> &mdash; Full-text search is OpenSearch's job.
+</div>
+</div>
+
+<!-- Q49 Redshift -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Redshift" data-level="B">
+<div class="q-tags"><span class="q-tag">Redshift</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>In a provisioned Redshift cluster, what does the leader node do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Holds the standby replica used for failover</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Runs Apache Spark jobs submitted to the cluster</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Plans queries and combines compute node results</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Stores all of the table data for the cluster</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Plans queries and combines compute node results<br><br>
+<strong>How to think about it:</strong> Redshift <b>leader</b> = plans queries and aggregates results; <b>compute</b> nodes do the work.<br><br>
+<strong>Why C is correct:</strong> The leader parses and plans each query, sends work to compute nodes, then combines their results.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Holds the standby replica used for failover</em> &mdash; The leader node is not a standby replica.<br><em>B) Runs Apache Spark jobs submitted to the cluster</em> &mdash; Redshift does not run Spark; that is EMR or Glue.<br><em>D) Stores all of the table data for the cluster</em> &mdash; Table data lives on the compute nodes.
+</div>
+</div>
+
+<!-- Q50 Redshift -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Redshift" data-level="B">
+<div class="q-tags"><span class="q-tag">Redshift</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>Analysts want Redshift SQL to query large, rarely used datasets in S3 without loading them into the cluster. What should they use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">UNLOAD to S3</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Redshift Enhanced VPC Routing</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Redshift Spectrum external tables</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The COPY command</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Redshift Spectrum external tables<br><br>
+<strong>How to think about it:</strong> Query S3 from Redshift without loading = <b>Redshift Spectrum</b> (needs a cluster to start the query).<br><br>
+<strong>Why C is correct:</strong> Spectrum pushes the S3 scan to a fleet of Spectrum nodes and returns results to your cluster.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) UNLOAD to S3</em> &mdash; UNLOAD writes query results out to S3; it does not read from it.<br><em>B) Redshift Enhanced VPC Routing</em> &mdash; This changes the network path for COPY and UNLOAD; it does not query S3 in place.<br><em>D) The COPY command</em> &mdash; COPY loads data into the cluster, which they want to avoid.
+</div>
+</div>
+
+<!-- Q51 Redshift -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Redshift" data-level="B">
+<div class="q-tags"><span class="q-tag">Redshift</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>Which statement about Redshift manual snapshots is correct?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">They are deleted automatically after 35 days</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">They are kept until you delete them</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">They can only be restored into the same cluster</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">They are always deleted together with the cluster</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> They are kept until you delete them<br><br>
+<strong>How to think about it:</strong> Redshift snapshots: <b>automated</b> = on a schedule with retention; <b>manual</b> = kept until you delete them.<br><br>
+<strong>Why B is correct:</strong> Manual snapshots have no automatic expiry, unlike automated ones that follow a retention period.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) They are deleted automatically after 35 days</em> &mdash; Retention periods apply to automated snapshots, not manual ones.<br><em>C) They can only be restored into the same cluster</em> &mdash; Snapshots are restored into a new cluster.<br><em>D) They are always deleted together with the cluster</em> &mdash; Manual snapshots survive cluster deletion.
+</div>
+</div>
+
+<!-- Q52 Redshift -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Redshift" data-level="A">
+<div class="q-tags"><span class="q-tag">Redshift</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>A Redshift cluster encrypted with a KMS key in us-east-1 must copy its snapshots automatically to eu-west-2 for disaster recovery. What extra step is needed?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create a snapshot copy grant for a KMS key in eu-west-2</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable S3 Cross-Region Replication on the snapshot bucket</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Disable encryption before copying</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Share the us-east-1 KMS key directly with eu-west-2</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Create a snapshot copy grant for a KMS key in eu-west-2<br><br>
+<strong>How to think about it:</strong> Cross-Region copy of a KMS-encrypted Redshift snapshot = <b>snapshot copy grant</b> in the destination Region.<br><br>
+<strong>Why A is correct:</strong> The grant lets Redshift use a destination-Region KMS key to encrypt the copied snapshots.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Enable S3 Cross-Region Replication on the snapshot bucket</em> &mdash; Redshift snapshot storage is managed internally; you cannot set replication on it.<br><em>C) Disable encryption before copying</em> &mdash; Turning off encryption is not required and would weaken security.<br><em>D) Share the us-east-1 KMS key directly with eu-west-2</em> &mdash; KMS keys are Regional, so the copy needs a key in the destination Region.
+</div>
+</div>
+
+<!-- Q53 Redshift -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Redshift" data-level="B">
+<div class="q-tags"><span class="q-tag">Redshift</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>Short dashboard queries keep getting stuck behind long-running reports on the same Redshift cluster. Which feature addresses this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Redshift Spectrum</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Cross-Region snapshot copy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Workload Management (WLM) query queues</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enhanced VPC Routing</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Workload Management (WLM) query queues<br><br>
+<strong>How to think about it:</strong> Separate queues and priorities for query types = <b>Workload Management (WLM)</b>.<br><br>
+<strong>Why C is correct:</strong> WLM routes short and long queries to different queues so quick queries are not blocked.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Redshift Spectrum</em> &mdash; Spectrum queries S3 data; it does not prioritise queries.<br><em>B) Cross-Region snapshot copy</em> &mdash; Snapshots are backups and have no effect on query scheduling.<br><em>D) Enhanced VPC Routing</em> &mdash; This changes network paths for COPY and UNLOAD, not query priority.
+</div>
+</div>
+
+<!-- Q54 Redshift -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Redshift" data-level="A">
+<div class="q-tags"><span class="q-tag">Redshift</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>At month end, hundreds of extra users run read queries at once and the Redshift cluster starts queuing them. The rest of the month is quiet. How can performance stay consistent while paying only for extra capacity when used?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create a second cluster from a snapshot each month</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable Concurrency Scaling for the relevant WLM queues</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Double the node count permanently with a resize</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Move the busiest tables into Spectrum</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Enable Concurrency Scaling for the relevant WLM queues<br><br>
+<strong>How to think about it:</strong> Bursts of concurrent users, billed per second = <b>Concurrency Scaling</b>.<br><br>
+<strong>Why B is correct:</strong> Redshift adds temporary cluster capacity during bursts and bills per second only while it runs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Create a second cluster from a snapshot each month</em> &mdash; Restoring and pointing users to a new cluster is manual and slow.<br><em>C) Double the node count permanently with a resize</em> &mdash; A permanent resize pays for peak capacity all month.<br><em>D) Move the busiest tables into Spectrum</em> &mdash; Spectrum offloads S3 scans but does not add capacity for concurrent queries.
+</div>
+</div>
+
+<!-- Q55 Redshift -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Redshift" data-level="A">
+<div class="q-tags"><span class="q-tag">Redshift</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>Compliance requires Redshift COPY and UNLOAD traffic to stay inside the VPC so it can be controlled with endpoint policies and seen in VPC Flow Logs. What should be enabled?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">WLM query monitoring rules</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Redshift Enhanced VPC Routing</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A snapshot copy grant</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Redshift Concurrency Scaling</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Redshift Enhanced VPC Routing<br><br>
+<strong>How to think about it:</strong> Force COPY/UNLOAD through your VPC = <b>Enhanced VPC Routing</b>.<br><br>
+<strong>Why B is correct:</strong> Enhanced VPC Routing sends COPY and UNLOAD traffic through your VPC, so gateway endpoints, policies and flow logs apply.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) WLM query monitoring rules</em> &mdash; Query monitoring rules act on query behaviour, not network routing.<br><em>C) A snapshot copy grant</em> &mdash; Snapshot copy grants are for encrypting cross-Region snapshot copies.<br><em>D) Redshift Concurrency Scaling</em> &mdash; Concurrency Scaling adds query capacity; it does not change the network path.
+</div>
+</div>
+
+<!-- Q56 Redshift -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Redshift" data-level="B">
+<div class="q-tags"><span class="q-tag">Redshift</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>A team wants Redshift's SQL warehouse without choosing node types or managing a cluster, paying only while queries run. Which option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Redshift Spectrum without a cluster</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A provisioned RA3 cluster with pause and resume</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Redshift Serverless</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon RDS for PostgreSQL</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon Redshift Serverless<br><br>
+<strong>How to think about it:</strong> Redshift without clusters = <b>Redshift Serverless</b>.<br><br>
+<strong>Why C is correct:</strong> Redshift Serverless scales capacity automatically and bills for compute used while queries run.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Redshift Spectrum without a cluster</em> &mdash; Spectrum queries need a Redshift cluster or workgroup to start them.<br><em>B) A provisioned RA3 cluster with pause and resume</em> &mdash; This still means choosing and managing node types.<br><em>D) Amazon RDS for PostgreSQL</em> &mdash; Redshift began from PostgreSQL, but RDS is an OLTP database, not a warehouse.
+</div>
+</div>
+
+<!-- Q57 QuickSight -->
+<div class="question" data-type="mc" data-answer="2" data-topic="QuickSight" data-level="B">
+<div class="q-tags"><span class="q-tag">QuickSight</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>In Amazon QuickSight, what is SPICE?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The machine learning model behind forecasts</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A connector for querying S3 through Athena</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An in-memory engine for data imported into QuickSight</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A row-level permission model for dashboards</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An in-memory engine for data imported into QuickSight<br><br>
+<strong>How to think about it:</strong> <b>SPICE</b> = QuickSight's in-memory engine for <b>imported</b> data.<br><br>
+<strong>Why C is correct:</strong> Data imported into SPICE is held in memory so dashboards run fast without querying the source each time.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The machine learning model behind forecasts</em> &mdash; ML insights are separate from the SPICE storage engine.<br><em>B) A connector for querying S3 through Athena</em> &mdash; Athena is a data source; SPICE is the in-memory store.<br><em>D) A row-level permission model for dashboards</em> &mdash; Row-level security is a separate QuickSight feature.
+</div>
+</div>
+
+<!-- Q58 QuickSight -->
+<div class="question" data-type="mc" data-answer="3" data-topic="QuickSight" data-level="B">
+<div class="q-tags"><span class="q-tag">QuickSight</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>A QuickSight dashboard must hide a salary column from some viewers. What does this require?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Moving the column into a separate S3 bucket</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Encrypting the column with a KMS key</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An IAM policy denying the column</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">QuickSight Enterprise edition with column-level security</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> QuickSight Enterprise edition with column-level security<br><br>
+<strong>How to think about it:</strong> Hide specific columns = <b>column-level security</b>, an <b>Enterprise edition</b> feature.<br><br>
+<strong>Why D is correct:</strong> Column-level security, which restricts access to specific fields, is available in Enterprise edition.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Moving the column into a separate S3 bucket</em> &mdash; This rebuilds the data model instead of using QuickSight's access control.<br><em>B) Encrypting the column with a KMS key</em> &mdash; Encryption protects data at rest; it does not hide fields from dashboard viewers.<br><em>C) An IAM policy denying the column</em> &mdash; IAM policies do not reach individual columns in a QuickSight dataset.
+</div>
+</div>
+
+<!-- Q59 QuickSight -->
+<div class="question" data-type="mc" data-answer="0" data-topic="QuickSight" data-level="B">
+<div class="q-tags"><span class="q-tag">QuickSight</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>In QuickSight, what is a dashboard compared with an analysis?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A read-only, published snapshot of an analysis</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A SPICE dataset with refresh enabled</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A scheduled export of the data to S3</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An editable copy that every viewer can change</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A read-only, published snapshot of an analysis<br><br>
+<strong>How to think about it:</strong> <b>Dashboard</b> = read-only, <b>published</b> snapshot of an analysis that you share.<br><br>
+<strong>Why A is correct:</strong> A dashboard keeps the analysis's filters, parameters and controls, and viewers cannot change its design.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A SPICE dataset with refresh enabled</em> &mdash; A dataset is the data source; a dashboard is the visual layer.<br><em>C) A scheduled export of the data to S3</em> &mdash; Dashboards are interactive views, not data exports.<br><em>D) An editable copy that every viewer can change</em> &mdash; That describes sharing the analysis itself, not a dashboard.
+</div>
+</div>
+
+<!-- Q60 QuickSight -->
+<div class="question" data-type="mc" data-answer="3" data-topic="QuickSight" data-level="A">
+<div class="q-tags"><span class="q-tag">QuickSight</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>IoT data flows through Kinesis Data Streams and Firehose into S3. Business users need interactive dashboards on it with no servers anywhere in the pipeline. What completes the design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Run Tableau on EC2 against the S3 bucket</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Load the data into a provisioned Redshift cluster for QuickSight</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Point QuickSight directly at the Kinesis data stream</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Query the S3 data with Athena and build QuickSight dashboards on Athena</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Query the S3 data with Athena and build QuickSight dashboards on Athena<br><br>
+<strong>How to think about it:</strong> Serverless reporting on S3 = <b>Athena</b> as the source for <b>QuickSight</b>.<br><br>
+<strong>Why D is correct:</strong> Athena and QuickSight are both serverless, and QuickSight connects to Athena natively.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Run Tableau on EC2 against the S3 bucket</em> &mdash; Self-managed BI servers on EC2 break the serverless requirement.<br><em>B) Load the data into a provisioned Redshift cluster for QuickSight</em> &mdash; A provisioned cluster adds servers, which the design rules out.<br><em>C) Point QuickSight directly at the Kinesis data stream</em> &mdash; QuickSight cannot use a Kinesis stream as a data source.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

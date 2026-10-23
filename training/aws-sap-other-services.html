@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Other Services - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Other Services</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Other Services</h2>
+        <p>60 refresher questions &mdash; CI/CD (CodePipeline, CodeBuild, CodeDeploy), WorkSpaces, AppStream 2.0, Lex, Connect, Kinesis Video Streams, Device Farm, Macie, SES, EC2 Image Builder, IoT Core</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="CI/CD" onclick="filterQ(this)">CI/CD</button><button class="filter-btn" data-f="WorkSpaces & AppStream" onclick="filterQ(this)">WorkSpaces & AppStream</button><button class="filter-btn" data-f="Lex & Connect" onclick="filterQ(this)">Lex & Connect</button><button class="filter-btn" data-f="Kinesis Video Streams" onclick="filterQ(this)">Kinesis Video Streams</button><button class="filter-btn" data-f="Device Farm" onclick="filterQ(this)">Device Farm</button><button class="filter-btn" data-f="Macie" onclick="filterQ(this)">Macie</button><button class="filter-btn" data-f="SES" onclick="filterQ(this)">SES</button><button class="filter-btn" data-f="EC2 Image Builder" onclick="filterQ(this)">EC2 Image Builder</button><button class="filter-btn" data-f="IoT Core" onclick="filterQ(this)">IoT Core</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 CI/CD -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CI/CD" data-level="B">
+<div class="q-tags"><span class="q-tag">CI/CD</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>What best describes continuous integration (CI)?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Every release is deployed to production by hand once a quarter</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Infrastructure is defined in templates instead of the console</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Servers are patched automatically during maintenance windows</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Developers merge code often and each push is built and tested automatically</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Developers merge code often and each push is built and tested automatically<br><br>
+<strong>How to think about it:</strong> <b>CI</b> = push often, <b>every push is built and tested automatically</b>.<br><br>
+<strong>Why D is correct:</strong> CI gives quick feedback on every change so bugs are found and fixed early.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Every release is deployed to production by hand once a quarter</em> &mdash; Infrequent manual releases are what CI and CD are meant to replace.<br><em>B) Infrastructure is defined in templates instead of the console</em> &mdash; That is infrastructure as code, a related but separate practice.<br><em>C) Servers are patched automatically during maintenance windows</em> &mdash; Patch automation is operations work, not integration of code changes.
+</div>
+</div>
+
+<!-- Q2 CI/CD -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CI/CD" data-level="B">
+<div class="q-tags"><span class="q-tag">CI/CD</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>What does continuous delivery add on top of continuous integration?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Developers commit code to a shared repository several times a day</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Builds run on a single shared on-premises server</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Every passing build is deployed automatically and reliably</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Code reviews are replaced by automated unit tests</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Every passing build is deployed automatically and reliably<br><br>
+<strong>How to think about it:</strong> <b>CD</b> = every passing build can be <b>released reliably, often, automatically</b>.<br><br>
+<strong>Why C is correct:</strong> Continuous delivery automates deployment so a team can ship many small releases a day.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Developers commit code to a shared repository several times a day</em> &mdash; Frequent commits are the CI part, not what delivery adds.<br><em>B) Builds run on a single shared on-premises server</em> &mdash; Where builds run is not what defines continuous delivery.<br><em>D) Code reviews are replaced by automated unit tests</em> &mdash; Delivery does not remove reviews; it automates the release path.
+</div>
+</div>
+
+<!-- Q3 CI/CD -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CI/CD" data-level="B">
+<div class="q-tags"><span class="q-tag">CI/CD</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>Which AWS service orchestrates a release workflow made of source, build, test and deploy stages?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS CodePipeline</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS CloudFormation</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS CodeDeploy</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS CodeBuild</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AWS CodePipeline<br><br>
+<strong>How to think about it:</strong> Orchestrate the stages = <b>CodePipeline</b>; build = CodeBuild; deploy = CodeDeploy.<br><br>
+<strong>Why A is correct:</strong> CodePipeline models the release as stages and actions and moves each change through them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS CloudFormation</em> &mdash; CloudFormation provisions infrastructure and can be a deploy action, but it is not the orchestrator.<br><em>C) AWS CodeDeploy</em> &mdash; CodeDeploy performs deployments; it is one action inside a pipeline.<br><em>D) AWS CodeBuild</em> &mdash; CodeBuild runs the build and test steps; it does not orchestrate the whole workflow.
+</div>
+</div>
+
+<!-- Q4 CI/CD -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CI/CD" data-level="B">
+<div class="q-tags"><span class="q-tag">CI/CD</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>A team wants a fully managed service that compiles code and runs unit tests in containers, paying only for build minutes. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS CodeDeploy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A self-managed Jenkins fleet on EC2</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS CodeArtifact</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS CodeBuild</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS CodeBuild<br><br>
+<strong>How to think about it:</strong> Managed build and test server = <b>CodeBuild</b> (the AWS answer to a Jenkins build farm).<br><br>
+<strong>Why D is correct:</strong> CodeBuild runs builds in managed containers that scale on demand and are billed per minute.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS CodeDeploy</em> &mdash; CodeDeploy pushes built artifacts to targets; it does not compile or test code.<br><em>B) A self-managed Jenkins fleet on EC2</em> &mdash; Jenkins works but means running and scaling build servers yourself.<br><em>C) AWS CodeArtifact</em> &mdash; CodeArtifact stores packages and dependencies; it does not run builds.
+</div>
+</div>
+
+<!-- Q5 CI/CD -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CI/CD" data-level="B">
+<div class="q-tags"><span class="q-tag">CI/CD</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>Which service automates application deployments to EC2 instances, on-premises servers, Lambda functions and ECS services?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Systems Manager Patch Manager</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS CodeBuild</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon EC2 Image Builder</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS CodeDeploy</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS CodeDeploy<br><br>
+<strong>How to think about it:</strong> Deploy to EC2 / on-prem / Lambda / ECS = <b>CodeDeploy</b>.<br><br>
+<strong>Why D is correct:</strong> CodeDeploy rolls out new versions, with in-place or blue/green strategies and automatic rollback.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Systems Manager Patch Manager</em> &mdash; Patch Manager installs OS patches, not application releases.<br><em>B) AWS CodeBuild</em> &mdash; CodeBuild produces the artifacts but does not roll them out to servers.<br><em>C) Amazon EC2 Image Builder</em> &mdash; Image Builder creates AMIs; it does not deploy application versions to running targets.
+</div>
+</div>
+
+<!-- Q6 CI/CD -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CI/CD" data-level="B">
+<div class="q-tags"><span class="q-tag">CI/CD</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>Before a release reaches production, a release manager must sign off in the pipeline. How is this done in CodePipeline?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Require MFA on the CodeDeploy deployment group</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add a manual approval action before the production deploy stage</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Disable the pipeline's automatic trigger and run it by hand</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Add a CodeBuild step that waits 24 hours</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Add a manual approval action before the production deploy stage<br><br>
+<strong>How to think about it:</strong> Human sign-off = <b>manual approval action</b> in a pipeline stage.<br><br>
+<strong>Why B is correct:</strong> The pipeline pauses at the approval action until someone approves or rejects it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Require MFA on the CodeDeploy deployment group</em> &mdash; Deployment groups have no MFA approval setting.<br><em>C) Disable the pipeline's automatic trigger and run it by hand</em> &mdash; This removes automation instead of adding a controlled gate.<br><em>D) Add a CodeBuild step that waits 24 hours</em> &mdash; A timed wait is not an approval and wastes build minutes.
+</div>
+</div>
+
+<!-- Q7 CI/CD -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CI/CD" data-level="B">
+<div class="q-tags"><span class="q-tag">CI/CD</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>In a container pipeline, which pair of services builds the Docker image and stores it for later deployment?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">EC2 Image Builder to build it and AWS CodeArtifact to store it</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS CodeDeploy to build the image and Amazon S3 to store it</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS CodeBuild to build the image and Amazon ECR to store it</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS CodePipeline to build it and Amazon EFS to store it</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS CodeBuild to build the image and Amazon ECR to store it<br><br>
+<strong>How to think about it:</strong> Build image = <b>CodeBuild</b>; store image = <b>Amazon ECR</b>.<br><br>
+<strong>Why C is correct:</strong> CodeBuild runs docker build and push, and ECR is the managed container registry.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) EC2 Image Builder to build it and AWS CodeArtifact to store it</em> &mdash; CodeArtifact holds software packages, not container images for ECS or EKS.<br><em>B) AWS CodeDeploy to build the image and Amazon S3 to store it</em> &mdash; CodeDeploy does not build images, and S3 is not a container registry.<br><em>D) AWS CodePipeline to build it and Amazon EFS to store it</em> &mdash; CodePipeline orchestrates but delegates builds, and EFS is not a registry.
+</div>
+</div>
+
+<!-- Q8 CI/CD -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CI/CD" data-level="A">
+<div class="q-tags"><span class="q-tag">CI/CD</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>Source code lives in GitHub. A new CodePipeline should start automatically on every push to the main branch, without polling or storing personal tokens. How do you set up the source stage?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Mirror the repository to an S3 bucket each night</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use a GitHub source action through an AWS CodeConnections connection</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Poll the GitHub repository from CodePipeline every minute</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Have a cron job on EC2 start the pipeline each hour</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Use a GitHub source action through an AWS CodeConnections connection<br><br>
+<strong>How to think about it:</strong> GitHub source today = a <b>CodeConnections</b> connection (GitHub App), not polling.<br><br>
+<strong>Why B is correct:</strong> The connection installs a GitHub App and triggers the pipeline on push events, with no stored personal token.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Mirror the repository to an S3 bucket each night</em> &mdash; A nightly copy cannot start the pipeline on every push.<br><em>C) Poll the GitHub repository from CodePipeline every minute</em> &mdash; Polling is the legacy approach and adds delay and API calls.<br><em>D) Have a cron job on EC2 start the pipeline each hour</em> &mdash; A scheduled start ignores pushes and adds a server to manage.
+</div>
+</div>
+
+<!-- Q9 CI/CD -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CI/CD" data-level="A">
+<div class="q-tags"><span class="q-tag">CI/CD</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>A pipeline must deploy infrastructure changes safely: show what will change, then apply it after approval. Which CodePipeline design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A CodeBuild step that runs AWS CLI create-stack on every commit</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A CodeDeploy deployment of the template file to EC2</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda function that edits resources directly</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudFormation change set, manual approval, then execute it</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> CloudFormation change set, manual approval, then execute it<br><br>
+<strong>How to think about it:</strong> Pipeline + IaC = <b>CloudFormation deploy actions</b>: create a change set, approve, execute.<br><br>
+<strong>Why D is correct:</strong> The change set previews resource changes, and executing it only after approval makes the rollout safe.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A CodeBuild step that runs AWS CLI create-stack on every commit</em> &mdash; This skips the preview and reinvents the built-in CloudFormation action.<br><em>B) A CodeDeploy deployment of the template file to EC2</em> &mdash; CodeDeploy ships application code; it does not provision CloudFormation stacks.<br><em>C) A Lambda function that edits resources directly</em> &mdash; Direct edits create drift and bypass the template as the source of truth.
+</div>
+</div>
+
+<!-- Q10 CI/CD -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CI/CD" data-level="A">
+<div class="q-tags"><span class="q-tag">CI/CD</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>Developers work on a dev branch and merge into a prod branch through pull requests. Each branch needs its own build and deploy flow. What is a clean setup?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Separate repositories for dev and prod code</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One pipeline that deploys every commit on any branch to production</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A dev-branch pipeline to dev and a prod-branch pipeline to prod</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Manual deploys to prod after copying artifacts from dev</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A dev-branch pipeline to dev and a prod-branch pipeline to prod<br><br>
+<strong>How to think about it:</strong> One branch, one pipeline: <b>dev pipeline</b> deploys to dev, <b>prod pipeline</b> on merge.<br><br>
+<strong>Why C is correct:</strong> Separate pipelines per branch keep environments isolated while sharing the same build and deploy steps.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Separate repositories for dev and prod code</em> &mdash; Copying code between repositories breaks the pull-request flow.<br><em>B) One pipeline that deploys every commit on any branch to production</em> &mdash; Unmerged dev work would go straight to production.<br><em>D) Manual deploys to prod after copying artifacts from dev</em> &mdash; Manual copying gives up the reliability that continuous delivery provides.
+</div>
+</div>
+
+<!-- Q11 WorkSpaces & AppStream -->
+<div class="question" data-type="mc" data-answer="2" data-topic="WorkSpaces & AppStream" data-level="B">
+<div class="q-tags"><span class="q-tag">WorkSpaces & AppStream</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>A company wants to retire its on-premises VDI farm and give each employee a managed, persistent Windows or Linux cloud desktop. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon EC2 with Remote Desktop enabled</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon AppStream 2.0</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon WorkSpaces</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Client VPN</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon WorkSpaces<br><br>
+<strong>How to think about it:</strong> Managed persistent cloud desktop (VDI) = <b>Amazon WorkSpaces</b>.<br><br>
+<strong>Why C is correct:</strong> WorkSpaces gives each user a managed cloud desktop, removing on-premises VDI infrastructure.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon EC2 with Remote Desktop enabled</em> &mdash; Users could connect, but you would manage every instance like a server.<br><em>B) Amazon AppStream 2.0</em> &mdash; AppStream streams individual applications, not a persistent full desktop per user.<br><em>D) AWS Client VPN</em> &mdash; Client VPN gives network access but no desktop to work on.
+</div>
+</div>
+
+<!-- Q12 WorkSpaces & AppStream -->
+<div class="question" data-type="mc" data-answer="1" data-topic="WorkSpaces & AppStream" data-level="B">
+<div class="q-tags"><span class="q-tag">WorkSpaces & AppStream</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>Users must run one desktop application from any device through a web browser, without connecting to a full virtual desktop. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Amplify Hosting</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon AppStream 2.0</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Lightsail</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon WorkSpaces</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon AppStream 2.0<br><br>
+<strong>How to think about it:</strong> Stream <b>one app to a browser</b> = <b>AppStream 2.0</b>; full desktop = WorkSpaces.<br><br>
+<strong>Why B is correct:</strong> AppStream streams desktop applications to an HTML5 browser on any device.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Amplify Hosting</em> &mdash; Amplify hosts web front ends; it does not stream native desktop applications.<br><em>C) Amazon Lightsail</em> &mdash; Lightsail offers simple virtual servers, not app streaming.<br><em>D) Amazon WorkSpaces</em> &mdash; WorkSpaces delivers a full desktop that users log into.
+</div>
+</div>
+
+<!-- Q13 WorkSpaces & AppStream -->
+<div class="question" data-type="mc" data-answer="1" data-topic="WorkSpaces & AppStream" data-level="B">
+<div class="q-tags"><span class="q-tag">WorkSpaces & AppStream</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>Some staff use their WorkSpaces only a few hours a month, while others work in them all day. How should the running modes be chosen?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">EC2 Reserved Instances bought for the light users</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AutoStop (hourly) for light users, AlwaysOn (monthly) for others</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Spot pricing for the heavy users</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AlwaysOn for everyone, because it is always cheaper</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AutoStop (hourly) for light users, AlwaysOn (monthly) for others<br><br>
+<strong>How to think about it:</strong> Light use = <b>AutoStop</b> (hourly); full-time use = <b>AlwaysOn</b> (monthly).<br><br>
+<strong>Why B is correct:</strong> AutoStop stops after idle time and bills by the hour, while AlwaysOn has a flat monthly price.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) EC2 Reserved Instances bought for the light users</em> &mdash; WorkSpaces are not bought with EC2 Reserved Instances.<br><em>C) Spot pricing for the heavy users</em> &mdash; WorkSpaces have no Spot pricing option.<br><em>D) AlwaysOn for everyone, because it is always cheaper</em> &mdash; A flat monthly price wastes money for someone who logs in rarely.
+</div>
+</div>
+
+<!-- Q14 WorkSpaces & AppStream -->
+<div class="question" data-type="mc" data-answer="1" data-topic="WorkSpaces & AppStream" data-level="B">
+<div class="q-tags"><span class="q-tag">WorkSpaces & AppStream</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>Which identity source do Amazon WorkSpaces users normally sign in with?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Cognito user pools only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Microsoft Active Directory (Managed AD or AD Connector)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">IAM users created in the WorkSpaces account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Local Windows accounts created on each desktop</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Microsoft Active Directory (Managed AD or AD Connector)<br><br>
+<strong>How to think about it:</strong> WorkSpaces users = <b>Microsoft Active Directory</b> (AWS Managed Microsoft AD or AD Connector).<br><br>
+<strong>Why B is correct:</strong> WorkSpaces registers with a directory so users sign in with their corporate credentials.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Cognito user pools only</em> &mdash; Cognito authenticates web and mobile app users, not WorkSpaces sessions.<br><em>C) IAM users created in the WorkSpaces account</em> &mdash; IAM users manage AWS resources; they are not desktop logins.<br><em>D) Local Windows accounts created on each desktop</em> &mdash; Separate local accounts would not scale or tie into corporate identity.
+</div>
+</div>
+
+<!-- Q15 WorkSpaces & AppStream -->
+<div class="question" data-type="mc" data-answer="3" data-topic="WorkSpaces & AppStream" data-level="B">
+<div class="q-tags"><span class="q-tag">WorkSpaces & AppStream</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>Security wants WorkSpaces to accept connections only from the corporate office's IP ranges. What feature does this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A NACL on the WorkSpaces subnet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An IAM policy with an aws:SourceIp condition</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A security group on each WorkSpace</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">IP access control groups on the directory</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> IP access control groups on the directory<br><br>
+<strong>How to think about it:</strong> Limit where users connect from = <b>IP access control groups</b>.<br><br>
+<strong>Why D is correct:</strong> They act like a firewall list of trusted source IP ranges for WorkSpaces clients.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A NACL on the WorkSpaces subnet</em> &mdash; The streaming connection does not pass through your subnet's NACL in the same way.<br><em>B) An IAM policy with an aws:SourceIp condition</em> &mdash; IAM governs API calls, not desktop streaming sessions.<br><em>C) A security group on each WorkSpace</em> &mdash; WorkSpace security groups govern VPC traffic, not which client IPs may stream the desktop.
+</div>
+</div>
+
+<!-- Q16 WorkSpaces & AppStream -->
+<div class="question" data-type="mc" data-answer="0" data-topic="WorkSpaces & AppStream" data-level="A">
+<div class="q-tags"><span class="q-tag">WorkSpaces & AppStream</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>IP access control groups list the office's internal 10.x ranges, yet remote staff on the corporate VPN are blocked. What is wrong?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It must list the public egress IPs of the corporate NAT or VPN</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VPN users must connect through AWS Client VPN instead</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The groups only support IPv6 addresses</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Remote staff need a separate WorkSpaces directory</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> It must list the public egress IPs of the corporate NAT or VPN<br><br>
+<strong>How to think about it:</strong> IP access groups see the <b>public egress IP</b> of your NAT or VPN, not internal addresses.<br><br>
+<strong>Why A is correct:</strong> WorkSpaces sees the public source address of the connection, so internal ranges never match.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) VPN users must connect through AWS Client VPN instead</em> &mdash; Client VPN is not required; the allow list just needs the right public addresses.<br><em>C) The groups only support IPv6 addresses</em> &mdash; IP access control groups use IPv4 CIDR ranges.<br><em>D) Remote staff need a separate WorkSpaces directory</em> &mdash; A second directory does not change how source IPs are evaluated.
+</div>
+</div>
+
+<!-- Q17 WorkSpaces & AppStream -->
+<div class="question" data-type="mc" data-answer="0" data-topic="WorkSpaces & AppStream" data-level="B">
+<div class="q-tags"><span class="q-tag">WorkSpaces & AppStream</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>An engineering application needs a GPU while a simple office tool does not. How does AppStream 2.0 handle this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Each app fleet can use its own instance type, including GPU</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AppStream adds GPUs automatically when it detects load</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">GPU applications must run on WorkSpaces instead</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">All applications share one instance type set for the account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Each app fleet can use its own instance type, including GPU<br><br>
+<strong>How to think about it:</strong> AppStream = choose the <b>instance type per application</b> (CPU, memory, GPU).<br><br>
+<strong>Why A is correct:</strong> You size fleets per application, so only the heavy tool pays for GPU instances.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AppStream adds GPUs automatically when it detects load</em> &mdash; You choose the instance type; AppStream does not change hardware on its own.<br><em>C) GPU applications must run on WorkSpaces instead</em> &mdash; AppStream offers graphics instance families for this.<br><em>D) All applications share one instance type set for the account</em> &mdash; Instance types are chosen per fleet, not once for the account.
+</div>
+</div>
+
+<!-- Q18 WorkSpaces & AppStream -->
+<div class="question" data-type="mc" data-answer="1" data-topic="WorkSpaces & AppStream" data-level="A">
+<div class="q-tags"><span class="q-tag">WorkSpaces & AppStream</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>Contractors on unmanaged laptops need a GPU-heavy CAD tool for a six-month project. The company does not want to manage desktops or ship hardware. What is the best fit?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Install the tool on the laptops and connect via Site-to-Site VPN</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Stream the CAD tool from an AppStream 2.0 fleet using graphics instances</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Run the tool on EC2 G instances with RDP open to the internet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Give each contractor a GPU-enabled WorkSpace</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Stream the CAD tool from an AppStream 2.0 fleet using graphics instances<br><br>
+<strong>How to think about it:</strong> Unmanaged devices + one heavy app + no desktops = <b>AppStream 2.0 graphics fleet</b>.<br><br>
+<strong>Why B is correct:</strong> Users run it in a browser on any device, while data and compute stay in AWS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Install the tool on the laptops and connect via Site-to-Site VPN</em> &mdash; The company would have to support unmanaged hardware and local installs.<br><em>C) Run the tool on EC2 G instances with RDP open to the internet</em> &mdash; Exposed RDP on self-managed servers is a security and operations burden.<br><em>D) Give each contractor a GPU-enabled WorkSpace</em> &mdash; This works, but means managing full desktops when only one app is needed.
+</div>
+</div>
+
+<!-- Q19 WorkSpaces & AppStream -->
+<div class="question" data-type="mc" data-answer="2" data-topic="WorkSpaces & AppStream" data-level="A">
+<div class="q-tags"><span class="q-tag">WorkSpaces & AppStream</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>If the primary Region fails, WorkSpaces users should be sent to standby WorkSpaces in a second Region using the same sign-in address. What feature supports this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Global Accelerator in front of the WorkSpaces directory</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Route 53 latency record pointing to each WorkSpace's IP</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Cross-Region Redirection with Route 53 failover</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Elastic Disaster Recovery replication of each WorkSpace</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Cross-Region Redirection with Route 53 failover<br><br>
+<strong>How to think about it:</strong> WorkSpaces DR = <b>Cross-Region Redirection</b>: connection aliases + <b>Route 53 failover</b>.<br><br>
+<strong>Why C is correct:</strong> Users sign in with one FQDN, and DNS failover points it at the standby Region's directory.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Global Accelerator in front of the WorkSpaces directory</em> &mdash; Global Accelerator does not redirect WorkSpaces client sign-in.<br><em>B) A Route 53 latency record pointing to each WorkSpace's IP</em> &mdash; Users do not connect to individual WorkSpace IPs, and latency routing is not failover.<br><em>D) AWS Elastic Disaster Recovery replication of each WorkSpace</em> &mdash; Elastic Disaster Recovery replicates servers, not WorkSpaces desktops.
+</div>
+</div>
+
+<!-- Q20 WorkSpaces & AppStream -->
+<div class="question" data-type="mc" data-answer="0" data-topic="WorkSpaces & AppStream" data-level="B">
+<div class="q-tags"><span class="q-tag">WorkSpaces & AppStream</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>How can data stored on a WorkSpace's volumes be encrypted at rest?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Root and user volume encryption with an AWS KMS key</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Turn on S3 default encryption in the account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Rely on BitLocker inside Windows, since AWS has no option</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Encrypt the IP access control group</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Root and user volume encryption with an AWS KMS key<br><br>
+<strong>How to think about it:</strong> WorkSpaces volumes = encrypt with <b>AWS KMS</b> keys at launch.<br><br>
+<strong>Why A is correct:</strong> WorkSpaces integrates with KMS to encrypt both volumes at rest.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Turn on S3 default encryption in the account</em> &mdash; WorkSpace volumes are not S3 objects.<br><em>C) Rely on BitLocker inside Windows, since AWS has no option</em> &mdash; AWS provides KMS-based volume encryption natively.<br><em>D) Encrypt the IP access control group</em> &mdash; Access groups are allow lists; they hold no user data.
+</div>
+</div>
+
+<!-- Q21 Lex & Connect -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Lex & Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Lex & Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>Which service provides speech recognition and natural language understanding to build chatbots and voice bots?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Comprehend</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Polly</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Translate</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Lex</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Amazon Lex<br><br>
+<strong>How to think about it:</strong> Conversational bot (ASR + NLU) = <b>Amazon Lex</b>, the technology behind Alexa.<br><br>
+<strong>Why D is correct:</strong> Lex turns speech into text and works out the user's intent so you can build bots.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Comprehend</em> &mdash; Comprehend analyses text for entities and sentiment, but it does not run conversations.<br><em>B) Amazon Polly</em> &mdash; Polly turns text into lifelike speech; it does not understand intent.<br><em>C) Amazon Translate</em> &mdash; Translate converts text between languages.
+</div>
+</div>
+
+<!-- Q22 Lex & Connect -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Lex & Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Lex & Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>A company wants a cloud-based contact center to receive customer calls, with no telephony hardware. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon SNS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Chime SDK</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Lex</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Connect</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Amazon Connect<br><br>
+<strong>How to think about it:</strong> Cloud contact center = <b>Amazon Connect</b>.<br><br>
+<strong>Why D is correct:</strong> Connect is a pay-as-you-go cloud contact center with phone numbers, queues and agents.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon SNS</em> &mdash; SNS can send SMS and notifications but cannot run inbound call queues.<br><em>B) Amazon Chime SDK</em> &mdash; The Chime SDK embeds meetings and calls in apps, not a full contact center.<br><em>C) Amazon Lex</em> &mdash; Lex can power a bot inside a contact center, but it is not the contact center itself.
+</div>
+</div>
+
+<!-- Q23 Lex & Connect -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Lex & Connect" data-level="A">
+<div class="q-tags"><span class="q-tag">Lex & Connect</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>Callers should phone in, say they want an appointment, and have it booked in the CRM with no agent involved. Which flow fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Transcribe saves the call to S3 for later processing</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Connect hands the call to a Lex bot that calls Lambda to book it</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon SNS forwards the caller's voice to a CRM queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Polly reads the call audio and calls the CRM API</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Connect hands the call to a Lex bot that calls Lambda to book it<br><br>
+<strong>How to think about it:</strong> Phone + intent + booking = <b>Connect</b> -&gt; <b>Lex</b> -&gt; <b>Lambda</b> -&gt; CRM.<br><br>
+<strong>Why B is correct:</strong> Connect handles the call, Lex recognises the intent and slots, and Lambda books the appointment.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Transcribe saves the call to S3 for later processing</em> &mdash; A later batch job cannot book the appointment while the caller waits.<br><em>C) Amazon SNS forwards the caller's voice to a CRM queue</em> &mdash; SNS does not handle live voice calls or intent.<br><em>D) Amazon Polly reads the call audio and calls the CRM API</em> &mdash; Polly only produces speech; it cannot understand callers.
+</div>
+</div>
+
+<!-- Q24 Lex & Connect -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Lex & Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Lex & Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>In an Amazon Lex bot, what is an intent?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The IAM role the bot uses to call Lambda</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The goal the user wants, such as booking a room</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The language the bot speaks</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The audio format used to receive speech</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The goal the user wants, such as booking a room<br><br>
+<strong>How to think about it:</strong> Lex <b>intent</b> = the goal (BookHotel); <b>slots</b> = the details it needs.<br><br>
+<strong>Why B is correct:</strong> Lex matches each utterance to an intent and then collects the slot values it needs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The IAM role the bot uses to call Lambda</em> &mdash; Permissions are configured separately from intents.<br><em>C) The language the bot speaks</em> &mdash; Languages are set per bot locale, not as intents.<br><em>D) The audio format used to receive speech</em> &mdash; Audio format is a technical setting, not an intent.
+</div>
+</div>
+
+<!-- Q25 Lex & Connect -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Lex & Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Lex & Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>In Amazon Connect, what defines the caller experience, such as prompts, menus and routing to queues?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Contact flows</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Lex slot types</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Routing profiles only</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Step Functions state machines</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Contact flows<br><br>
+<strong>How to think about it:</strong> Caller journey in Connect = <b>contact flows</b>.<br><br>
+<strong>Why A is correct:</strong> Contact flows define each step of a call, from greeting to menu choices to routing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Lex slot types</em> &mdash; Slot types describe data a bot collects, not the full call path.<br><em>C) Routing profiles only</em> &mdash; Routing profiles decide which queues an agent handles, not the caller's menu.<br><em>D) Step Functions state machines</em> &mdash; Step Functions orchestrates AWS workflows; it does not script phone calls.
+</div>
+</div>
+
+<!-- Q26 Lex & Connect -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Lex & Connect" data-level="A">
+<div class="q-tags"><span class="q-tag">Lex & Connect</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>When a call arrives, agents should see the caller's account details pulled from an external CRM. How is this usually done in Amazon Connect?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Connect copies the CRM database into DynamoDB every night</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The agent searches the CRM by hand for each call</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Lex stores CRM records inside the bot</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The contact flow invokes a Lambda function that queries the CRM</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The contact flow invokes a Lambda function that queries the CRM<br><br>
+<strong>How to think about it:</strong> Connect data lookup = <b>invoke a Lambda function</b> from the contact flow.<br><br>
+<strong>Why D is correct:</strong> Lambda integration lets the flow fetch and use external data during the call.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Connect copies the CRM database into DynamoDB every night</em> &mdash; A nightly copy is stale and is not how Connect integrates.<br><em>B) The agent searches the CRM by hand for each call</em> &mdash; This works but ignores the automation the requirement asks for.<br><em>C) Amazon Lex stores CRM records inside the bot</em> &mdash; Lex bots do not hold customer records.
+</div>
+</div>
+
+<!-- Q27 Lex & Connect -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Lex & Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Lex & Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>How is Amazon Connect priced?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Pay per use, with no upfront commitment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It is free when used with Amazon Lex</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A fixed annual licence per agent seat</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Reserved capacity bought for one or three years</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Pay per use, with no upfront commitment<br><br>
+<strong>How to think about it:</strong> Connect = <b>pay per use</b>, no upfront seats or long-term contract.<br><br>
+<strong>Why A is correct:</strong> There are no seat licences or long-term contracts; you pay for what you use.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) It is free when used with Amazon Lex</em> &mdash; Both services are billed on usage.<br><em>C) A fixed annual licence per agent seat</em> &mdash; Connect does not need per-seat licences purchased up front.<br><em>D) Reserved capacity bought for one or three years</em> &mdash; There is no reserved-capacity purchase for Connect.
+</div>
+</div>
+
+<!-- Q28 Kinesis Video Streams -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Kinesis Video Streams" data-level="B">
+<div class="q-tags"><span class="q-tag">Kinesis Video Streams</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>Thousands of security cameras must stream live video into AWS for storage and analysis. Which service ingests it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Kinesis Video Streams</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon S3 multipart upload from each camera</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Kinesis Data Streams</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Elemental MediaConvert</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon Kinesis Video Streams<br><br>
+<strong>How to think about it:</strong> Live video from devices = <b>Kinesis Video Streams</b>, one stream per device.<br><br>
+<strong>Why A is correct:</strong> It ingests, stores and indexes video from many devices, with one stream per producer.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon S3 multipart upload from each camera</em> &mdash; Uploading files is not live streaming and gives no playback or analysis pipeline.<br><em>C) Amazon Kinesis Data Streams</em> &mdash; Data Streams handles data records, not video media streams.<br><em>D) AWS Elemental MediaConvert</em> &mdash; MediaConvert transcodes stored files rather than ingesting live camera feeds.
+</div>
+</div>
+
+<!-- Q29 Kinesis Video Streams -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Kinesis Video Streams" data-level="B">
+<div class="q-tags"><span class="q-tag">Kinesis Video Streams</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>Live camera feeds must be checked against a collection of known faces. Which service pairs with Kinesis Video Streams for this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Macie</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Comprehend</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Textract</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Rekognition</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Amazon Rekognition<br><br>
+<strong>How to think about it:</strong> Faces in streaming video = KVS + <b>Rekognition Video</b> stream processor.<br><br>
+<strong>Why D is correct:</strong> A Rekognition Video stream processor reads the KVS stream and matches faces against a face collection.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Macie</em> &mdash; Macie finds sensitive data in S3; it does not process video.<br><em>B) Amazon Comprehend</em> &mdash; Comprehend analyses text, not images or video.<br><em>C) Amazon Textract</em> &mdash; Textract extracts text from documents, not faces from video.
+</div>
+</div>
+
+<!-- Q30 Kinesis Video Streams -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Kinesis Video Streams" data-level="B">
+<div class="q-tags"><span class="q-tag">Kinesis Video Streams</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>How do devices such as cameras typically send video into Kinesis Video Streams?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Using the Kinesis Video Streams Producer SDK on the device</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Mounting an EFS file system on the camera</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Sending frames as SQS messages</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Writing records with the Kinesis Producer Library for Data Streams</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Using the Kinesis Video Streams Producer SDK on the device<br><br>
+<strong>How to think about it:</strong> Devices send with the <b>KVS Producer SDK/library</b>.<br><br>
+<strong>Why A is correct:</strong> The producer library handles packaging media and streaming it to the service.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Mounting an EFS file system on the camera</em> &mdash; Cameras do not stream into AWS by writing to a network file system.<br><em>C) Sending frames as SQS messages</em> &mdash; SQS is a message queue with small message sizes, not a video pipeline.<br><em>D) Writing records with the Kinesis Producer Library for Data Streams</em> &mdash; KPL targets Kinesis Data Streams, not video streams.
+</div>
+</div>
+
+<!-- Q31 Kinesis Video Streams -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Kinesis Video Streams" data-level="B">
+<div class="q-tags"><span class="q-tag">Kinesis Video Streams</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>How long does Kinesis Video Streams keep the video it ingests?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">For a retention period that you configure on the stream</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Forever, in a bucket you can browse in S3</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only while a consumer is reading it</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Exactly 24 hours, fixed</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> For a retention period that you configure on the stream<br><br>
+<strong>How to think about it:</strong> KVS stores video durably for a <b>retention period you configure</b>.<br><br>
+<strong>Why A is correct:</strong> Media is stored durably and can be played back or processed until the retention period ends.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Forever, in a bucket you can browse in S3</em> &mdash; KVS stores media internally; you cannot browse it as objects in your own bucket.<br><em>C) Only while a consumer is reading it</em> &mdash; KVS stores the video so consumers can read it later as well.<br><em>D) Exactly 24 hours, fixed</em> &mdash; The retention period is configurable, not fixed at one day.
+</div>
+</div>
+
+<!-- Q32 Kinesis Video Streams -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Kinesis Video Streams" data-level="A">
+<div class="q-tags"><span class="q-tag">Kinesis Video Streams</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>Face-match results from Rekognition on live video must trigger alerts and be kept for later analysis. What is a sensible pipeline?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Rekognition outputs to Kinesis Data Streams for Lambda and Firehose</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Kinesis Video Streams emails the results with SES</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Rekognition writes results straight into Redshift tables</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Rekognition stores results in the face collection</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Rekognition outputs to Kinesis Data Streams for Lambda and Firehose<br><br>
+<strong>How to think about it:</strong> KVS -&gt; Rekognition -&gt; <b>Kinesis Data Streams</b> -&gt; consumers (Lambda alerts, Firehose to S3).<br><br>
+<strong>Why A is correct:</strong> The stream processor publishes match metadata to Data Streams, which fans out to real-time and archival consumers.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Kinesis Video Streams emails the results with SES</em> &mdash; KVS stores and delivers media; it does not send result notifications.<br><em>C) Rekognition writes results straight into Redshift tables</em> &mdash; Rekognition stream processors output to Data Streams, not directly to Redshift.<br><em>D) Rekognition stores results in the face collection</em> &mdash; Face collections hold indexed faces, not match events.
+</div>
+</div>
+
+<!-- Q33 Device Farm -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Device Farm" data-level="B">
+<div class="q-tags"><span class="q-tag">Device Farm</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>A mobile team wants to run automated tests of its Android and iOS app on many real phones and tablets without buying devices. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Amplify</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS CodeBuild with Android emulators</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon CloudWatch Synthetics</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Device Farm</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Device Farm<br><br>
+<strong>How to think about it:</strong> Test on <b>real devices</b> in the cloud = <b>AWS Device Farm</b>.<br><br>
+<strong>Why D is correct:</strong> Device Farm runs your tests on real mobile devices and desktop browsers hosted by AWS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Amplify</em> &mdash; Amplify builds and hosts apps; it does not supply a fleet of physical test devices.<br><em>B) AWS CodeBuild with Android emulators</em> &mdash; Emulators are not the same as testing on real hardware.<br><em>C) Amazon CloudWatch Synthetics</em> &mdash; Synthetics canaries script checks of web endpoints and APIs, not native apps on real phones.
+</div>
+</div>
+
+<!-- Q34 Device Farm -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Device Farm" data-level="B">
+<div class="q-tags"><span class="q-tag">Device Farm</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>Besides automated test runs, what does AWS Device Farm provide to help investigate failures?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Videos, logs, screenshots and remote device access</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Load testing of the app's backend at scale</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A copy of each device's operating system image</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Automatic fixes for the failing test code</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Videos, logs, screenshots and remote device access<br><br>
+<strong>How to think about it:</strong> Device Farm = <b>videos, logs, screenshots</b> + <b>remote access</b> to real devices.<br><br>
+<strong>Why A is correct:</strong> These artifacts show what went wrong, and remote access lets you reproduce the bug by hand.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Load testing of the app's backend at scale</em> &mdash; Device Farm tests apps on devices, not backend load.<br><em>C) A copy of each device's operating system image</em> &mdash; You do not get device images to download.<br><em>D) Automatic fixes for the failing test code</em> &mdash; Device Farm reports problems; it does not change your code.
+</div>
+</div>
+
+<!-- Q35 Device Farm -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Device Farm" data-level="A">
+<div class="q-tags"><span class="q-tag">Device Farm</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>Every release must run its mobile UI test suite on a set of real devices before it can be deployed. How do you automate this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Have testers run the suite on their own phones after each build</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add a Device Farm test action to CodePipeline before deploy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Run the tests in a CodeBuild job on Linux containers</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use CodeDeploy hooks to install the app on testers' phones</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Add a Device Farm test action to CodePipeline before deploy<br><br>
+<strong>How to think about it:</strong> Real-device tests in the release flow = <b>Device Farm test action in CodePipeline</b>.<br><br>
+<strong>Why B is correct:</strong> The pipeline runs the suite on real devices and stops the release if the tests fail.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Have testers run the suite on their own phones after each build</em> &mdash; Manual runs are slow, inconsistent and hard to enforce.<br><em>C) Run the tests in a CodeBuild job on Linux containers</em> &mdash; CodeBuild containers are not real iOS or Android devices.<br><em>D) Use CodeDeploy hooks to install the app on testers' phones</em> &mdash; CodeDeploy deploys to servers and Lambda, not to phones.
+</div>
+</div>
+
+<!-- Q36 Macie -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Macie" data-level="B">
+<div class="q-tags"><span class="q-tag">Macie</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Which service uses machine learning and pattern matching to discover personally identifiable information stored in Amazon S3?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Macie</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Security Hub</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Inspector</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon GuardDuty</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon Macie<br><br>
+<strong>How to think about it:</strong> PII in S3 = <b>Amazon Macie</b>.<br><br>
+<strong>Why A is correct:</strong> Macie scans S3 buckets and reports sensitive data such as names, credentials and card numbers.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS Security Hub</em> &mdash; Security Hub gathers findings from other services; it does not scan objects itself.<br><em>C) Amazon Inspector</em> &mdash; Inspector scans workloads for software vulnerabilities, not stored data.<br><em>D) Amazon GuardDuty</em> &mdash; GuardDuty detects threats from logs; it does not classify data in objects.
+</div>
+</div>
+
+<!-- Q37 Macie -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Macie" data-level="B">
+<div class="q-tags"><span class="q-tag">Macie</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>Which data store does Amazon Macie analyze for sensitive data?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon S3</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon DynamoDB tables</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon RDS databases</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon EBS volumes attached to EC2</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon S3<br><br>
+<strong>How to think about it:</strong> Macie looks at <b>Amazon S3</b> only.<br><br>
+<strong>Why A is correct:</strong> Macie evaluates bucket security and inspects objects in S3 for sensitive data.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon DynamoDB tables</em> &mdash; Macie does not scan DynamoDB items.<br><em>C) Amazon RDS databases</em> &mdash; Macie does not query relational databases.<br><em>D) Amazon EBS volumes attached to EC2</em> &mdash; Macie does not read block storage volumes.
+</div>
+</div>
+
+<!-- Q38 Macie -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Macie" data-level="B">
+<div class="q-tags"><span class="q-tag">Macie</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>A company stores employee IDs in a custom format that Macie does not recognise out of the box. How can Macie detect them?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Tag the S3 objects that contain the employee IDs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable GuardDuty S3 protection</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a custom data identifier (regex plus keywords)</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Turn on S3 Object Lock for the bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Create a custom data identifier (regex plus keywords)<br><br>
+<strong>How to think about it:</strong> Company-specific patterns = Macie <b>custom data identifiers</b> (regex + keywords).<br><br>
+<strong>Why C is correct:</strong> Custom identifiers let Macie find formats unique to your organisation.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Tag the S3 objects that contain the employee IDs</em> &mdash; Tags do not tell Macie what pattern to look for.<br><em>B) Enable GuardDuty S3 protection</em> &mdash; GuardDuty watches access activity, not object contents.<br><em>D) Turn on S3 Object Lock for the bucket</em> &mdash; Object Lock prevents deletion; it does not classify data.
+</div>
+</div>
+
+<!-- Q39 Macie -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Macie" data-level="A">
+<div class="q-tags"><span class="q-tag">Macie</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Whenever Macie finds PII in a bucket, the security team must get a notification automatically. What is the simplest design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 event notifications on the bucket</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An EventBridge rule on Macie findings that sends to an SNS topic</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda function that polls Macie every minute</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudTrail trail filtered for Macie API calls</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An EventBridge rule on Macie findings that sends to an SNS topic<br><br>
+<strong>How to think about it:</strong> Macie finding -&gt; <b>EventBridge rule</b> -&gt; SNS (or Lambda).<br><br>
+<strong>Why B is correct:</strong> Macie publishes findings to EventBridge, where a rule routes them to notifications or automation.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) S3 event notifications on the bucket</em> &mdash; S3 events fire on object changes, not on Macie findings.<br><em>C) A Lambda function that polls Macie every minute</em> &mdash; Polling is unnecessary when findings already arrive as events.<br><em>D) A CloudTrail trail filtered for Macie API calls</em> &mdash; Management API calls are not the findings themselves.
+</div>
+</div>
+
+<!-- Q40 SES -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SES" data-level="B">
+<div class="q-tags"><span class="q-tag">SES</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>An application must send password-reset and receipt emails to millions of users. Which managed service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon SQS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon WorkMail</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Simple Email Service (SES)</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon SNS email subscriptions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon Simple Email Service (SES)<br><br>
+<strong>How to think about it:</strong> Transactional and bulk email from apps = <b>Amazon SES</b>.<br><br>
+<strong>Why C is correct:</strong> SES sends email at scale through an API or SMTP and tracks deliveries and bounces.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon SQS</em> &mdash; SQS queues messages between systems; it does not deliver email.<br><em>B) Amazon WorkMail</em> &mdash; WorkMail provides staff mailboxes, not high-volume app sending.<br><em>D) Amazon SNS email subscriptions</em> &mdash; SNS email is meant for notifying topic subscribers, not branded email to customers.
+</div>
+</div>
+
+<!-- Q41 SES -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SES" data-level="B">
+<div class="q-tags"><span class="q-tag">SES</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>Why should a domain set up DKIM and SPF when sending email with SES?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">They let SES receive inbound mail for the domain</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">They encrypt the message body end to end</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">They raise the SES sending quota automatically</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">They authenticate the sender, improving deliverability</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> They authenticate the sender, improving deliverability<br><br>
+<strong>How to think about it:</strong> <b>DKIM + SPF</b> = prove the sender is legitimate, improve deliverability.<br><br>
+<strong>Why D is correct:</strong> DKIM signs messages and SPF lists allowed senders, which protects reputation and deliverability.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) They let SES receive inbound mail for the domain</em> &mdash; Receiving mail depends on MX records and receipt rules.<br><em>B) They encrypt the message body end to end</em> &mdash; Neither DKIM nor SPF encrypts content.<br><em>C) They raise the SES sending quota automatically</em> &mdash; Quota increases are requested separately.
+</div>
+</div>
+
+<!-- Q42 SES -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SES" data-level="B">
+<div class="q-tags"><span class="q-tag">SES</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>In SES, what lets you group send events and publish them, for example to CloudWatch or Data Firehose?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Verified identities</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Receipt rule sets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Configuration sets</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Suppression lists</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Configuration sets<br><br>
+<strong>How to think about it:</strong> Track and route SES send events = <b>configuration sets</b> + event destinations.<br><br>
+<strong>Why C is correct:</strong> A configuration set applied to messages publishes sends, deliveries, opens, clicks, bounces and complaints.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Verified identities</em> &mdash; Identities prove domain or address ownership; they do not publish events.<br><em>B) Receipt rule sets</em> &mdash; Receipt rules handle incoming mail, not outbound events.<br><em>D) Suppression lists</em> &mdash; Suppression lists block sends to bad addresses; they do not stream events.
+</div>
+</div>
+
+<!-- Q43 SES -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SES" data-level="A">
+<div class="q-tags"><span class="q-tag">SES</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>Bounces and complaints must be handled within seconds so bad addresses stop being mailed. Which event destination fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Writing bounces to the SES sending log by hand</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An SNS topic whose subscriber updates the mailing list</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch dashboard that staff watch</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Data Firehose into S3 for a weekly report</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An SNS topic whose subscriber updates the mailing list<br><br>
+<strong>How to think about it:</strong> Immediate bounce/complaint handling = <b>SNS</b> event destination.<br><br>
+<strong>Why B is correct:</strong> SNS delivers bounce and complaint events right away so an app can act on them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Writing bounces to the SES sending log by hand</em> &mdash; There is no manual bounce log to maintain.<br><em>C) A CloudWatch dashboard that staff watch</em> &mdash; Watching a dashboard is not automatic handling.<br><em>D) Amazon Data Firehose into S3 for a weekly report</em> &mdash; A batch report is too slow for stopping sends to bad addresses.
+</div>
+</div>
+
+<!-- Q44 SES -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SES" data-level="A">
+<div class="q-tags"><span class="q-tag">SES</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>Marketing wants SQL reports on opens, clicks and deliveries across months of SES campaigns. Which design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">SES suppression list exports</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudTrail logs of SendEmail calls</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Configuration set to Data Firehose, S3 and Athena</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">SNS email notifications for each open and click</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Configuration set to Data Firehose, S3 and Athena<br><br>
+<strong>How to think about it:</strong> SES analytics = configuration set -&gt; <b>Data Firehose -&gt; S3 -&gt; Athena</b>.<br><br>
+<strong>Why C is correct:</strong> Firehose delivers every event to S3, where Athena runs SQL over the history.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) SES suppression list exports</em> &mdash; Suppression lists hold blocked addresses, not engagement events.<br><em>B) CloudTrail logs of SendEmail calls</em> &mdash; CloudTrail records API calls, not opens, clicks or deliveries.<br><em>D) SNS email notifications for each open and click</em> &mdash; Emails per event cannot be queried with SQL.
+</div>
+</div>
+
+<!-- Q45 SES -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SES" data-level="B">
+<div class="q-tags"><span class="q-tag">SES</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>In which ways can an application send email through Amazon SES?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only by uploading message files to S3</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only through SNS topics</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only through the AWS console</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Via the SES API/SDK or the SMTP interface</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Via the SES API/SDK or the SMTP interface<br><br>
+<strong>How to think about it:</strong> Send via SES = <b>API/SDK</b> or the <b>SMTP interface</b>.<br><br>
+<strong>Why D is correct:</strong> Apps can call the API or point existing mail software at the SMTP endpoint.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only by uploading message files to S3</em> &mdash; S3 is not the sending path for SES.<br><em>B) Only through SNS topics</em> &mdash; SNS is a separate service and not how SES sends email.<br><em>C) Only through the AWS console</em> &mdash; The console is for testing; production sending uses the API or SMTP.
+</div>
+</div>
+
+<!-- Q46 SES -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SES" data-level="A">
+<div class="q-tags"><span class="q-tag">SES</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>A high-volume sender does not want its reputation affected by other SES customers, and wants to separate marketing from transactional mail. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A separate SES account per recipient</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Dedicated IPs in separate pools per mail type</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Sending through a NAT gateway Elastic IP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The default shared IP pool for all mail</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Dedicated IPs in separate pools per mail type<br><br>
+<strong>How to think about it:</strong> Own your reputation = <b>dedicated IPs</b> + <b>IP pools</b> per mail type.<br><br>
+<strong>Why B is correct:</strong> Dedicated IPs carry only your reputation, and pools keep marketing and transactional streams apart.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A separate SES account per recipient</em> &mdash; Splitting accounts by recipient is impractical and does not isolate IPs.<br><em>C) Sending through a NAT gateway Elastic IP</em> &mdash; SES sends from its own infrastructure, not from your VPC's addresses.<br><em>D) The default shared IP pool for all mail</em> &mdash; Shared IPs mix your reputation with other senders.
+</div>
+</div>
+
+<!-- Q47 EC2 Image Builder -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EC2 Image Builder" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2 Image Builder</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>Which service automates building, testing and distributing hardened AMIs on a schedule?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS CodeDeploy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Backup</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">EC2 Image Builder</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Systems Manager Patch Manager</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> EC2 Image Builder<br><br>
+<strong>How to think about it:</strong> Automated golden AMIs = <b>EC2 Image Builder</b>.<br><br>
+<strong>Why C is correct:</strong> Image Builder pipelines customise a build instance, test the result and distribute the new AMI.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS CodeDeploy</em> &mdash; CodeDeploy deploys application code, not machine images.<br><em>B) AWS Backup</em> &mdash; AWS Backup takes snapshots for recovery, not hardened image builds.<br><em>D) AWS Systems Manager Patch Manager</em> &mdash; Patch Manager patches running instances; it does not produce new AMIs.
+</div>
+</div>
+
+<!-- Q48 EC2 Image Builder -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EC2 Image Builder" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2 Image Builder</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>What does EC2 Image Builder itself cost?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A fixed fee for every AMI produced</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A monthly charge for each pipeline</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It requires an Enterprise Support plan</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Nothing extra; only the resources it uses</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Nothing extra; only the resources it uses<br><br>
+<strong>How to think about it:</strong> Image Builder is <b>free</b>: pay only for the <b>underlying resources</b>.<br><br>
+<strong>Why D is correct:</strong> There is no service charge; costs come from build instances, snapshots and the like.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A fixed fee for every AMI produced</em> &mdash; There is no per-image fee.<br><em>B) A monthly charge for each pipeline</em> &mdash; Pipelines are not billed on their own.<br><em>C) It requires an Enterprise Support plan</em> &mdash; No support plan is needed to use Image Builder.
+</div>
+</div>
+
+<!-- Q49 EC2 Image Builder -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EC2 Image Builder" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2 Image Builder</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>What happens in an EC2 Image Builder pipeline after the build components customise the instance?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The source instance is terminated and replaced in production</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The AMI is copied to S3 Glacier for archive</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A new AMI is created and a test instance runs test components against it</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The build instance is converted into an Auto Scaling group</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A new AMI is created and a test instance runs test components against it<br><br>
+<strong>How to think about it:</strong> Image Builder flow = <b>build</b> -&gt; create AMI -&gt; <b>test</b> -&gt; distribute.<br><br>
+<strong>Why C is correct:</strong> Tests check that the image works and is secure before it is distributed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The source instance is terminated and replaced in production</em> &mdash; Image Builder does not touch production instances.<br><em>B) The AMI is copied to S3 Glacier for archive</em> &mdash; AMIs are not archived to Glacier as part of the pipeline.<br><em>D) The build instance is converted into an Auto Scaling group</em> &mdash; Image Builder outputs images; it does not create scaling groups.
+</div>
+</div>
+
+<!-- Q50 EC2 Image Builder -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EC2 Image Builder" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2 Image Builder</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>How can an Image Builder pipeline be triggered to produce fresh images?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only when an IAM user logs in</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only through an AWS Support case</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">On a schedule, on dependency updates, or manually</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only when an EC2 instance fails a health check</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> On a schedule, on dependency updates, or manually<br><br>
+<strong>How to think about it:</strong> Image Builder runs on a <b>schedule</b> or <b>when dependencies update</b> (or manually).<br><br>
+<strong>Why C is correct:</strong> Schedules and update checks keep images current without someone remembering to rebuild.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only when an IAM user logs in</em> &mdash; Sign-in events do not start image builds.<br><em>B) Only through an AWS Support case</em> &mdash; Customers run pipelines themselves.<br><em>D) Only when an EC2 instance fails a health check</em> &mdash; Instance health is not a trigger for image pipelines.
+</div>
+</div>
+
+<!-- Q51 EC2 Image Builder -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EC2 Image Builder" data-level="A">
+<div class="q-tags"><span class="q-tag">EC2 Image Builder</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>Golden AMIs must be available in four Regions and shared with twenty workload accounts in the organization. How should this be done?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Run a separate Image Builder pipeline in each account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use the pipeline's distribution settings for Regions and accounts</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Snapshot the build instance with AWS Backup</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Export the AMI to S3 and import it in each account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Use the pipeline's distribution settings for Regions and accounts<br><br>
+<strong>How to think about it:</strong> Multi-Region, multi-account AMIs = Image Builder <b>distribution settings</b>.<br><br>
+<strong>Why B is correct:</strong> Distribution settings handle Region copies and account sharing as part of each build.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Run a separate Image Builder pipeline in each account</em> &mdash; Twenty-plus duplicate pipelines add drift and maintenance.<br><em>C) Snapshot the build instance with AWS Backup</em> &mdash; Backups are not a distribution mechanism for golden images.<br><em>D) Export the AMI to S3 and import it in each account</em> &mdash; Export and import is slow manual work the distribution step already covers.
+</div>
+</div>
+
+<!-- Q52 EC2 Image Builder -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EC2 Image Builder" data-level="A">
+<div class="q-tags"><span class="q-tag">EC2 Image Builder</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>Each release should build code, bake a new AMI with it, then roll it out to an Auto Scaling group with no downtime. Which design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CodePipeline: CodeBuild, Image Builder, CloudFormation rolling update</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create the AMI by hand and edit the launch template</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Terminate every instance at once so the group relaunches</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Patch the running instances in place after each release</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> CodePipeline: CodeBuild, Image Builder, CloudFormation rolling update<br><br>
+<strong>How to think about it:</strong> Bake and roll = CodePipeline: build -&gt; <b>Image Builder AMI</b> -&gt; <b>CloudFormation rolling update</b>.<br><br>
+<strong>Why A is correct:</strong> Each stage hands its output to the next, and the rolling update replaces instances gradually.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Create the AMI by hand and edit the launch template</em> &mdash; Manual steps defeat the automation the requirement asks for.<br><em>C) Terminate every instance at once so the group relaunches</em> &mdash; Replacing everything at once causes downtime.<br><em>D) Patch the running instances in place after each release</em> &mdash; Patching in place drifts away from an immutable, tested image.
+</div>
+</div>
+
+<!-- Q53 IoT Core -->
+<div class="question" data-type="mc" data-answer="2" data-topic="IoT Core" data-level="B">
+<div class="q-tags"><span class="q-tag">IoT Core</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>Which service lets millions of internet-connected devices securely connect to AWS and exchange messages?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon SQS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Kinesis Video Streams</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS IoT Core</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Direct Connect</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS IoT Core<br><br>
+<strong>How to think about it:</strong> Connect devices + pub/sub messages = <b>AWS IoT Core</b>.<br><br>
+<strong>Why C is correct:</strong> IoT Core is a serverless message broker and device gateway that scales to billions of devices.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon SQS</em> &mdash; SQS queues messages between applications, but has no device identity or broker.<br><em>B) Amazon Kinesis Video Streams</em> &mdash; Kinesis Video Streams ingests video, not general device messages.<br><em>D) AWS Direct Connect</em> &mdash; Direct Connect is a private network link, not an IoT service.
+</div>
+</div>
+
+<!-- Q54 IoT Core -->
+<div class="question" data-type="mc" data-answer="1" data-topic="IoT Core" data-level="B">
+<div class="q-tags"><span class="q-tag">IoT Core</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>Which lightweight publish/subscribe protocol do IoT devices most commonly use with AWS IoT Core?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">FTP</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">MQTT</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">SMTP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">BGP</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> MQTT<br><br>
+<strong>How to think about it:</strong> IoT Core protocol = <b>MQTT</b> (also HTTPS and MQTT over WebSockets).<br><br>
+<strong>Why B is correct:</strong> MQTT is a small-footprint pub/sub protocol suited to constrained devices and unreliable networks.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) FTP</em> &mdash; FTP transfers files and does not support pub/sub messaging.<br><em>C) SMTP</em> &mdash; SMTP is for sending email.<br><em>D) BGP</em> &mdash; BGP exchanges network routes between routers.
+</div>
+</div>
+
+<!-- Q55 IoT Core -->
+<div class="question" data-type="mc" data-answer="1" data-topic="IoT Core" data-level="B">
+<div class="q-tags"><span class="q-tag">IoT Core</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>How do messages published to IoT Core topics get sent on to services like DynamoDB, S3 or Lambda?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Kinesis Client Library app subscribed to all topics</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">IoT rules with SQL statements and rule actions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon EventBridge Pipes reading the MQTT broker</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Devices must call each AWS service API directly</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> IoT rules with SQL statements and rule actions<br><br>
+<strong>How to think about it:</strong> Route device messages = <b>IoT rules</b> (SQL on topics) + <b>rule actions</b>.<br><br>
+<strong>Why B is correct:</strong> Rules filter and transform topic data and then send it to targets such as Lambda, S3 or DynamoDB.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Kinesis Client Library app subscribed to all topics</em> &mdash; This adds custom code that the rules engine already replaces.<br><em>C) Amazon EventBridge Pipes reading the MQTT broker</em> &mdash; Pipes do not read IoT Core topics directly; rules are the built-in routing.<br><em>D) Devices must call each AWS service API directly</em> &mdash; Rules remove the need for devices to know about back-end services.
+</div>
+</div>
+
+<!-- Q56 IoT Core -->
+<div class="question" data-type="mc" data-answer="2" data-topic="IoT Core" data-level="B">
+<div class="q-tags"><span class="q-tag">IoT Core</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>How do devices typically authenticate to AWS IoT Core?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">With the root user credentials</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">With IAM user access keys stored on each device</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">X.509 client certificates plus IoT policies</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">With an IP allow list on the IoT endpoint</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> X.509 client certificates plus IoT policies<br><br>
+<strong>How to think about it:</strong> Device identity = <b>X.509 certificates</b> + IoT policies.<br><br>
+<strong>Why C is correct:</strong> Each device gets a certificate, and IoT policies decide which topics it may use.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) With the root user credentials</em> &mdash; Root credentials must never be placed on devices.<br><em>B) With IAM user access keys stored on each device</em> &mdash; Long-lived IAM keys on devices are hard to rotate and risky.<br><em>D) With an IP allow list on the IoT endpoint</em> &mdash; IoT Core identifies devices by credentials, not by source IP.
+</div>
+</div>
+
+<!-- Q57 IoT Core -->
+<div class="question" data-type="mc" data-answer="2" data-topic="IoT Core" data-level="A">
+<div class="q-tags"><span class="q-tag">IoT Core</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>Sensor telemetry must land in S3 and Redshift in batches, without writing or running any servers. Which rule action fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An EC2 consumer polling the MQTT topics</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An IoT rule that writes each message to DynamoDB</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An IoT rule that sends messages to Amazon Data Firehose</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Devices upload files to S3 every hour</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An IoT rule that sends messages to Amazon Data Firehose<br><br>
+<strong>How to think about it:</strong> Buffered delivery to S3/Redshift/OpenSearch = IoT rule -&gt; <b>Amazon Data Firehose</b>.<br><br>
+<strong>Why C is correct:</strong> Firehose buffers, can transform with Lambda, and delivers to S3, Redshift or OpenSearch.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An EC2 consumer polling the MQTT topics</em> &mdash; This adds servers, which the requirement wants to avoid.<br><em>B) An IoT rule that writes each message to DynamoDB</em> &mdash; DynamoDB stores items; it does not batch-load S3 or Redshift.<br><em>D) Devices upload files to S3 every hour</em> &mdash; This moves batching work onto constrained devices.
+</div>
+</div>
+
+<!-- Q58 IoT Core -->
+<div class="question" data-type="mc" data-answer="3" data-topic="IoT Core" data-level="A">
+<div class="q-tags"><span class="q-tag">IoT Core</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>A dashboard needs each device's latest reading with single-digit millisecond lookups. Which IoT rule action fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Publish messages to an SNS topic</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Send messages to an SQS queue</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Send messages to Amazon Data Firehose and query S3</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Write each message to a DynamoDB table keyed by device ID</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Write each message to a DynamoDB table keyed by device ID<br><br>
+<strong>How to think about it:</strong> Latest value per device, fast key lookup = IoT rule -&gt; <b>DynamoDB</b>.<br><br>
+<strong>Why D is correct:</strong> DynamoDB gives fast key-value reads of the most recent reading per device.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Publish messages to an SNS topic</em> &mdash; SNS fans out notifications but keeps no state.<br><em>B) Send messages to an SQS queue</em> &mdash; Queues are consumed once; they are not a lookup store.<br><em>C) Send messages to Amazon Data Firehose and query S3</em> &mdash; S3 queries are far slower than single-digit millisecond lookups.
+</div>
+</div>
+
+<!-- Q59 IoT Core -->
+<div class="question" data-type="mc" data-answer="0" data-topic="IoT Core" data-level="A">
+<div class="q-tags"><span class="q-tag">IoT Core</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>An app must set a thermostat's target temperature even while the device is offline; the device should apply it when it reconnects. Which feature handles this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The IoT Device Shadow, holding desired and reported state</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A DynamoDB table the device polls each second</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An SQS queue per device</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Retrying the MQTT publish until the device answers</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> The IoT Device Shadow, holding desired and reported state<br><br>
+<strong>How to think about it:</strong> Desired vs reported state for offline devices = <b>Device Shadow</b>.<br><br>
+<strong>Why A is correct:</strong> The app writes the desired state, and the device syncs it and reports back when it reconnects.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A DynamoDB table the device polls each second</em> &mdash; Constant polling drains power and bandwidth on devices.<br><em>C) An SQS queue per device</em> &mdash; Per-device queues add infrastructure that shadows already provide.<br><em>D) Retrying the MQTT publish until the device answers</em> &mdash; Endless retries are fragile and the app has to keep running them.
+</div>
+</div>
+
+<!-- Q60 IoT Core -->
+<div class="question" data-type="mc" data-answer="3" data-topic="IoT Core" data-level="A">
+<div class="q-tags"><span class="q-tag">IoT Core</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>Telemetry must feed several independent real-time consumers that can each replay the last day of data. Which IoT rule action fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Send the messages to Amazon SNS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Send the messages to an SQS standard queue</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Send the messages to Amazon Data Firehose</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Send the messages to Amazon Kinesis Data Streams</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Send the messages to Amazon Kinesis Data Streams<br><br>
+<strong>How to think about it:</strong> Many real-time consumers + replay = IoT rule -&gt; <b>Kinesis Data Streams</b>.<br><br>
+<strong>Why D is correct:</strong> Data Streams keeps ordered records for the retention period, so several consumers can read and replay them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Send the messages to Amazon SNS</em> &mdash; SNS pushes messages but cannot replay past data.<br><em>B) Send the messages to an SQS standard queue</em> &mdash; SQS messages are removed once processed, so they cannot be replayed.<br><em>C) Send the messages to Amazon Data Firehose</em> &mdash; Firehose delivers to destinations but does not let consumers replay records.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

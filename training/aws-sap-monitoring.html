@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Monitoring - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Monitoring</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Monitoring</h2>
+        <p>60 refresher questions &mdash; CloudWatch metrics, alarms, Logs, Logs Insights, subscriptions, agent &amp; Synthetics, EventBridge, X-Ray, AWS Health</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="Metrics" onclick="filterQ(this)">Metrics</button><button class="filter-btn" data-f="Alarms" onclick="filterQ(this)">Alarms</button><button class="filter-btn" data-f="Logs" onclick="filterQ(this)">Logs</button><button class="filter-btn" data-f="Log Subscriptions" onclick="filterQ(this)">Log Subscriptions</button><button class="filter-btn" data-f="Agent" onclick="filterQ(this)">Agent</button><button class="filter-btn" data-f="Synthetics" onclick="filterQ(this)">Synthetics</button><button class="filter-btn" data-f="EventBridge" onclick="filterQ(this)">EventBridge</button><button class="filter-btn" data-f="X-Ray" onclick="filterQ(this)">X-Ray</button><button class="filter-btn" data-f="Health" onclick="filterQ(this)">Health</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 Metrics -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Metrics" data-level="B">
+<div class="q-tags"><span class="q-tag">Metrics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>An EC2 instance uses default monitoring. How often does it send metrics such as CPUUtilization to CloudWatch, and how do you make it every minute?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Every minute; enable high-resolution mode for 1-second data</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Every 15 minutes; install the agent for 5-minute data</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Every 10 seconds; nothing more granular exists</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Every 5 minutes; enable detailed monitoring for 1-minute data</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Every 5 minutes; enable detailed monitoring for 1-minute data<br><br>
+<strong>How to think about it:</strong> EC2 <b>basic = 5 min</b> (free); <b>detailed = 1 min</b> (paid).<br><br>
+<strong>Why D is correct:</strong> Basic monitoring publishes at 5-minute intervals, and detailed monitoring raises that to every minute for a charge.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Every minute; enable high-resolution mode for 1-second data</em> &mdash; Default EC2 metrics are 5-minute, and built-in EC2 metrics cannot be made 1-second.<br><em>B) Every 15 minutes; install the agent for 5-minute data</em> &mdash; Neither interval is right; basic is 5 minutes and detailed is 1 minute.<br><em>C) Every 10 seconds; nothing more granular exists</em> &mdash; Ten-second granularity applies only to high-resolution custom metrics.
+</div>
+</div>
+
+<!-- Q2 Metrics -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Metrics" data-level="B">
+<div class="q-tags"><span class="q-tag">Metrics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>An application must publish a custom latency metric with one-second granularity. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Detailed monitoring on the instance</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A CloudWatch Logs metric filter on access logs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A high-resolution custom metric published with PutMetricData</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A standard-resolution custom metric</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A high-resolution custom metric published with PutMetricData<br><br>
+<strong>How to think about it:</strong> Custom metric at 1 s = <b>high-resolution</b> metric via PutMetricData.<br><br>
+<strong>Why C is correct:</strong> Custom metrics can be stored at 1-second resolution when published with a storage resolution of 1.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Detailed monitoring on the instance</em> &mdash; Detailed monitoring gives 1-minute data for built-in EC2 metrics only.<br><em>B) A CloudWatch Logs metric filter on access logs</em> &mdash; Metric filters produce metrics from logs but are not the way to push 1-second data points.<br><em>D) A standard-resolution custom metric</em> &mdash; Standard resolution stores data at 1-minute granularity.
+</div>
+</div>
+
+<!-- Q3 Metrics -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Metrics" data-level="B">
+<div class="q-tags"><span class="q-tag">Metrics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>A custom metric must be broken out per environment and per instance so each can be graphed separately. What do you add when publishing it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Dimensions such as Environment and InstanceId</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A different metric unit for each environment</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Resource tags on the metric</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A separate CloudWatch namespace per instance</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Dimensions such as Environment and InstanceId<br><br>
+<strong>How to think about it:</strong> Slice a metric by attributes = <b>dimensions</b> (name/value pairs).<br><br>
+<strong>Why A is correct:</strong> Dimensions are name/value pairs that identify a distinct metric series you can graph and alarm on.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A different metric unit for each environment</em> &mdash; Units describe measurement types such as Seconds, not which series a point belongs to.<br><em>C) Resource tags on the metric</em> &mdash; Metrics are selected by namespace, name and dimensions, not by tags you attach to them.<br><em>D) A separate CloudWatch namespace per instance</em> &mdash; Namespaces group related metrics; one per instance is unmanageable and not their purpose.
+</div>
+</div>
+
+<!-- Q4 Metrics -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Metrics" data-level="B">
+<div class="q-tags"><span class="q-tag">Metrics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>How long does CloudWatch keep metric data, at the longest?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">90 days at full resolution</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">7 years with no extra setting</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Forever unless you delete the metric</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">15 months, as hourly aggregates</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> 15 months, as hourly aggregates<br><br>
+<strong>How to think about it:</strong> Metric retention tops out at <b>15 months</b> (rolled up to 1-hour points).<br><br>
+<strong>Why D is correct:</strong> CloudWatch keeps finer data for shorter periods and rolls it up so hourly points remain for 15 months.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 90 days at full resolution</em> &mdash; Ninety days is the CloudTrail event history window, not metric retention.<br><em>B) 7 years with no extra setting</em> &mdash; Seven years would require exporting data elsewhere.<br><em>C) Forever unless you delete the metric</em> &mdash; Metrics cannot be kept indefinitely; old data points expire.
+</div>
+</div>
+
+<!-- Q5 Metrics -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Metrics" data-level="B">
+<div class="q-tags"><span class="q-tag">Metrics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>Operations wants one screen showing the key metrics and alarms for workloads in us-east-1 and eu-west-1. What should they build?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An AWS Health Dashboard view</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One CloudWatch dashboard per Region, viewed side by side</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Logs Insights query saved per Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudWatch dashboard with widgets from both Regions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A CloudWatch dashboard with widgets from both Regions<br><br>
+<strong>How to think about it:</strong> One screen, many Regions (and accounts) = <b>CloudWatch dashboard</b>.<br><br>
+<strong>Why D is correct:</strong> Dashboards are global and can show metrics and alarms from several Regions and accounts together.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An AWS Health Dashboard view</em> &mdash; Health shows AWS service events, not your application metrics.<br><em>B) One CloudWatch dashboard per Region, viewed side by side</em> &mdash; A single dashboard can already combine Regions, so this adds needless clutter.<br><em>C) A Logs Insights query saved per Region</em> &mdash; Insights queries search log data and do not replace metric dashboards.
+</div>
+</div>
+
+<!-- Q6 Metrics -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Metrics" data-level="B">
+<div class="q-tags"><span class="q-tag">Metrics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>Which API does an application call to send its own business metric, such as orders per minute, to CloudWatch?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">PutEvents</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">PutMetricData</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">PutLogEvents</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">PutMetricAlarm</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> PutMetricData<br><br>
+<strong>How to think about it:</strong> Push your own numbers = <b>PutMetricData</b>.<br><br>
+<strong>Why B is correct:</strong> PutMetricData publishes data points for custom metrics into a namespace you choose.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) PutEvents</em> &mdash; PutEvents sends events to an EventBridge bus.<br><em>C) PutLogEvents</em> &mdash; PutLogEvents writes log events to CloudWatch Logs, not metric data points.<br><em>D) PutMetricAlarm</em> &mdash; PutMetricAlarm creates or updates an alarm; it does not publish data.
+</div>
+</div>
+
+<!-- Q7 Metrics -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Metrics" data-level="A">
+<div class="q-tags"><span class="q-tag">Metrics</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>A third-party observability platform must receive CloudWatch metrics for hundreds of namespaces continuously with low latency, without polling the API. What fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A CloudWatch Logs subscription filter</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Lambda function calling GetMetricData every minute</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CloudWatch Metric Streams delivering through Amazon Data Firehose</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Exporting metrics with CreateExportTask</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> CloudWatch Metric Streams delivering through Amazon Data Firehose<br><br>
+<strong>How to think about it:</strong> Continuous push of metrics out of CloudWatch = <b>Metric Streams</b> to Firehose.<br><br>
+<strong>Why C is correct:</strong> Metric Streams push metric updates continuously to Firehose, which forwards them to partner or custom endpoints.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A CloudWatch Logs subscription filter</em> &mdash; Subscription filters stream log events, not metric data.<br><em>B) A Lambda function calling GetMetricData every minute</em> &mdash; Polling works but is slower, costlier at scale, and what the requirement wants to avoid.<br><em>D) Exporting metrics with CreateExportTask</em> &mdash; CreateExportTask exports log data to S3, not metrics.
+</div>
+</div>
+
+<!-- Q8 Metrics -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Metrics" data-level="A">
+<div class="q-tags"><span class="q-tag">Metrics</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>A central monitoring account must view metrics, logs and traces from 30 workload accounts without assuming roles into each one. What should you set up?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">VPC peering from the monitoring account to each account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudWatch cross-account observability</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch dashboard in every workload account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Config aggregator in the monitoring account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> CloudWatch cross-account observability<br><br>
+<strong>How to think about it:</strong> One monitoring account seeing many source accounts = <b>CloudWatch cross-account observability</b>.<br><br>
+<strong>Why B is correct:</strong> Linked source accounts share telemetry so the monitoring account can search and graph it directly.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) VPC peering from the monitoring account to each account</em> &mdash; Network peering does not share CloudWatch telemetry.<br><em>C) A CloudWatch dashboard in every workload account</em> &mdash; Per-account dashboards still require signing in to each account.<br><em>D) AWS Config aggregator in the monitoring account</em> &mdash; Config aggregators combine resource configuration, not metrics, logs or traces.
+</div>
+</div>
+
+<!-- Q9 Alarms -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Alarms" data-level="B">
+<div class="q-tags"><span class="q-tag">Alarms</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>A CloudWatch alarm has just been created and the metric has no data yet. What state is it in?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">OK</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">ALARM</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">PENDING</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">INSUFFICIENT_DATA</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> INSUFFICIENT_DATA<br><br>
+<strong>How to think about it:</strong> Alarm states = <b>OK, ALARM, INSUFFICIENT_DATA</b>.<br><br>
+<strong>Why D is correct:</strong> Without enough data points to evaluate, the alarm reports INSUFFICIENT_DATA.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) OK</em> &mdash; OK means data exists and is within the threshold.<br><em>B) ALARM</em> &mdash; ALARM means data has breached the threshold for the required periods.<br><em>C) PENDING</em> &mdash; PENDING is not a CloudWatch alarm state.
+</div>
+</div>
+
+<!-- Q10 Alarms -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Alarms" data-level="B">
+<div class="q-tags"><span class="q-tag">Alarms</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>Development instances often sit idle overnight. Which alarm action stops an instance when CPU stays below 2% for an hour, without writing code?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An AWS Config rule with an idle-instance check</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A CloudWatch alarm that notifies an SQS queue</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch alarm with the EC2 stop action</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudWatch dashboard widget with a threshold</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A CloudWatch alarm with the EC2 stop action<br><br>
+<strong>How to think about it:</strong> Alarm can act on EC2 directly: <b>stop, terminate, reboot, recover</b>.<br><br>
+<strong>Why C is correct:</strong> Alarms on per-instance metrics can stop, terminate, reboot or recover the instance directly.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An AWS Config rule with an idle-instance check</em> &mdash; Config rules evaluate configuration, not live CPU utilisation.<br><em>B) A CloudWatch alarm that notifies an SQS queue</em> &mdash; Alarms do not target SQS directly, and a queue would not stop the instance.<br><em>D) A CloudWatch dashboard widget with a threshold</em> &mdash; Dashboard thresholds are visual only and take no action.
+</div>
+</div>
+
+<!-- Q11 Alarms -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Alarms" data-level="B">
+<div class="q-tags"><span class="q-tag">Alarms</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>An alarm watches a high-resolution custom metric. What is the shortest evaluation period it can use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">1 minute</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">1 second</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">10 seconds</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">5 minutes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> 10 seconds<br><br>
+<strong>How to think about it:</strong> High-resolution alarm periods = <b>10 s, 30 s</b> or multiples of 60 s.<br><br>
+<strong>Why C is correct:</strong> Alarms on high-resolution metrics can evaluate every 10 or 30 seconds, as well as multiples of a minute.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 1 minute</em> &mdash; One minute is the minimum for standard-resolution metrics, not high-resolution ones.<br><em>B) 1 second</em> &mdash; Data can be stored at 1 second, but the shortest alarm period is 10 seconds.<br><em>D) 5 minutes</em> &mdash; Five minutes matches basic EC2 monitoring, not the alarm minimum.
+</div>
+</div>
+
+<!-- Q12 Alarms -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Alarms" data-level="B">
+<div class="q-tags"><span class="q-tag">Alarms</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>An on-call team gets dozens of separate pages when one database problem trips CPU, latency and error alarms together. What reduces the noise?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Switching each alarm to INSUFFICIENT_DATA</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A composite alarm over the related alarms</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Sending every alarm to one SNS topic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Raising every threshold until fewer alarms fire</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A composite alarm over the related alarms<br><br>
+<strong>How to think about it:</strong> Combine several alarms with AND/OR = <b>composite alarm</b>.<br><br>
+<strong>Why B is correct:</strong> Composite alarms evaluate other alarms with AND/OR logic, so one page replaces many.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Switching each alarm to INSUFFICIENT_DATA</em> &mdash; Alarm state is computed, not set as a noise filter.<br><em>C) Sending every alarm to one SNS topic</em> &mdash; One topic still delivers one message per alarm, so the page count stays high.<br><em>D) Raising every threshold until fewer alarms fire</em> &mdash; Higher thresholds hide real problems instead of grouping related ones.
+</div>
+</div>
+
+<!-- Q13 Alarms -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Alarms" data-level="B">
+<div class="q-tags"><span class="q-tag">Alarms</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>Which CloudWatch alarm action lets an Auto Scaling group add instances when queue depth grows?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Systems Manager Run Command document</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An Auto Scaling scaling policy as the alarm action</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch Logs subscription</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The EC2 recover action</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An Auto Scaling scaling policy as the alarm action<br><br>
+<strong>How to think about it:</strong> Alarm action can be an <b>Auto Scaling policy</b>.<br><br>
+<strong>Why B is correct:</strong> Step and simple scaling policies are triggered by CloudWatch alarms to change group capacity.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Systems Manager Run Command document</em> &mdash; Run Command executes scripts on instances and does not change group size.<br><em>C) A CloudWatch Logs subscription</em> &mdash; Subscriptions stream logs; they are not alarm actions.<br><em>D) The EC2 recover action</em> &mdash; Recover moves one impaired instance to new hardware; it does not add capacity.
+</div>
+</div>
+
+<!-- Q14 Alarms -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Alarms" data-level="A">
+<div class="q-tags"><span class="q-tag">Alarms</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>An alarm on API latency keeps flipping between OK and ALARM because of single brief spikes. You want it to fire only when 3 of the last 5 minutes breach. What do you change?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Treat missing data as breaching</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Set datapoints to alarm to 3 and evaluation periods to 5</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Switch the metric to high resolution</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Put the alarm inside a composite alarm alone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Set datapoints to alarm to 3 and evaluation periods to 5<br><br>
+<strong>How to think about it:</strong> Avoid flapping = <b>M out of N</b> datapoints to alarm.<br><br>
+<strong>Why B is correct:</strong> M out of N evaluation requires 3 breaching points in any 5-period window before the state changes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Treat missing data as breaching</em> &mdash; This changes how gaps are handled, not how spikes are counted.<br><em>C) Switch the metric to high resolution</em> &mdash; Finer data would surface even more short spikes.<br><em>D) Put the alarm inside a composite alarm alone</em> &mdash; A composite with one child still follows the same flapping child.
+</div>
+</div>
+
+<!-- Q15 Alarms -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Alarms" data-level="A">
+<div class="q-tags"><span class="q-tag">Alarms</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>When a critical alarm enters ALARM, a multi-step runbook in Step Functions must start automatically. Which design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The EC2 reboot action on the alarm</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An alarm status widget on a CloudWatch dashboard</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An SNS topic with an email subscription for the on-call team</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">EventBridge rule on the alarm state change, targeting Step Functions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> EventBridge rule on the alarm state change, targeting Step Functions<br><br>
+<strong>How to think about it:</strong> Alarm state changes are events: <b>EventBridge rule</b> to many targets (Step Functions, Lambda, SQS).<br><br>
+<strong>Why D is correct:</strong> Alarm state changes are emitted to EventBridge, which can start a state machine directly.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The EC2 reboot action on the alarm</em> &mdash; Rebooting one instance is not a multi-step runbook.<br><em>B) An alarm status widget on a CloudWatch dashboard</em> &mdash; Widgets show state but cannot trigger workflows.<br><em>C) An SNS topic with an email subscription for the on-call team</em> &mdash; Email notifies a person but starts no automation.
+</div>
+</div>
+
+<!-- Q16 Logs -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>In CloudWatch Logs, what is the relationship between a log group and a log stream?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A log group holds many log streams, each from one source</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">They are two names for the same object</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Log streams are only used for VPC Flow Logs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A log stream holds many log groups</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A log group holds many log streams, each from one source<br><br>
+<strong>How to think about it:</strong> <b>Log group</b> = the app; <b>log stream</b> = one source (instance, container, file).<br><br>
+<strong>Why A is correct:</strong> Groups usually represent an application, and each instance, container or file writes its own stream.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) They are two names for the same object</em> &mdash; They are distinct levels with different settings such as retention on the group.<br><em>C) Log streams are only used for VPC Flow Logs</em> &mdash; Every log source writes to streams, not only Flow Logs.<br><em>D) A log stream holds many log groups</em> &mdash; The hierarchy is the other way round: groups contain streams.
+</div>
+</div>
+
+<!-- Q17 Logs -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>A new log group is created by an application with default settings. How long are its events kept?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Forever (never expire)</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">14 days, then archived</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">90 days, matching CloudTrail</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">30 days, then deleted</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Forever (never expire)<br><br>
+<strong>How to think about it:</strong> Default log retention = <b>never expire</b>; set a retention policy to control cost.<br><br>
+<strong>Why A is correct:</strong> New log groups never expire by default, so you should set retention to control storage cost.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) 14 days, then archived</em> &mdash; Fourteen days is an option, not the default.<br><em>C) 90 days, matching CloudTrail</em> &mdash; Ninety days is unrelated to CloudWatch Logs defaults.<br><em>D) 30 days, then deleted</em> &mdash; Thirty days is a common choice you can set, not the default.
+</div>
+</div>
+
+<!-- Q18 Logs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>Compliance requires that log data in CloudWatch Logs be encrypted with a key the company controls. What should you do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turn on TLS for the CloudWatch agent</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Associate a customer managed KMS key with the log group</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Store the logs in Parameter Store SecureString</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable SSE-S3 on the log group</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Associate a customer managed KMS key with the log group<br><br>
+<strong>How to think about it:</strong> CloudWatch Logs encryption = associate a <b>KMS key with the log group</b>.<br><br>
+<strong>Why B is correct:</strong> Log groups can be encrypted with a KMS key you control, whose policy must allow the Logs service.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Turn on TLS for the CloudWatch agent</em> &mdash; Agent traffic already uses TLS; this does not change encryption at rest.<br><em>C) Store the logs in Parameter Store SecureString</em> &mdash; Parameter Store is for configuration values, not log streams.<br><em>D) Enable SSE-S3 on the log group</em> &mdash; SSE-S3 is an S3 encryption option and does not apply to log groups.
+</div>
+</div>
+
+<!-- Q19 Logs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>Operations wants a CloudWatch metric that counts how many log lines contain ERROR, so it can alarm on it. What do you create?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An export task to S3</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A subscription filter to Lambda</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A metric filter on the log group</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Logs Insights saved query</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A metric filter on the log group<br><br>
+<strong>How to think about it:</strong> Count a pattern in logs = <b>metric filter</b>.<br><br>
+<strong>Why C is correct:</strong> A metric filter matches a pattern in incoming events and increments a metric you can alarm on.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An export task to S3</em> &mdash; Exports copy data for archiving; they do not produce metrics.<br><em>B) A subscription filter to Lambda</em> &mdash; A subscription streams events to a destination; counting would need custom code.<br><em>D) A Logs Insights saved query</em> &mdash; Insights runs queries on demand and does not continuously publish a metric.
+</div>
+</div>
+
+<!-- Q20 Logs -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>A metric filter was added today. Why does its metric show nothing for last week's errors?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Metric filters only evaluate events ingested after the filter is created</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Metric filters need detailed monitoring to be enabled</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Metric filters only process logs from the CloudWatch agent</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The log group must be encrypted for filters to work</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Metric filters only evaluate events ingested after the filter is created<br><br>
+<strong>How to think about it:</strong> Metric filters are <b>not retroactive</b>: only new events count.<br><br>
+<strong>Why A is correct:</strong> Filters apply to new log data, so historical events are never counted.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Metric filters need detailed monitoring to be enabled</em> &mdash; Detailed monitoring is an EC2 setting and has nothing to do with log filters.<br><em>C) Metric filters only process logs from the CloudWatch agent</em> &mdash; Filters work on any events in the group, whatever their source.<br><em>D) The log group must be encrypted for filters to work</em> &mdash; Encryption does not affect metric filter evaluation.
+</div>
+</div>
+
+<!-- Q21 Logs -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>An engineer needs to search several log groups right now for the 20 slowest requests in the last hour. Which feature fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An export task followed by manual download</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A metric filter with a high threshold</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CloudWatch Synthetics</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudWatch Logs Insights</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> CloudWatch Logs Insights<br><br>
+<strong>How to think about it:</strong> Ad-hoc query over logs = <b>CloudWatch Logs Insights</b>.<br><br>
+<strong>Why D is correct:</strong> Insights runs interactive queries with filtering, stats and sorting across log groups and can add results to dashboards.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An export task followed by manual download</em> &mdash; Exports can take hours and are not interactive.<br><em>B) A metric filter with a high threshold</em> &mdash; Metric filters count matches going forward and cannot rank past requests.<br><em>C) CloudWatch Synthetics</em> &mdash; Synthetics runs canary scripts against endpoints; it does not query logs.
+</div>
+</div>
+
+<!-- Q22 Logs -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>Which statement about exporting a log group to S3 with CreateExportTask is true?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It works only with unencrypted buckets</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It streams each event to S3 within seconds</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It converts logs into CloudWatch metrics</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It is a batch job that can take up to 12 hours</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> It is a batch job that can take up to 12 hours<br><br>
+<strong>How to think about it:</strong> Export to S3 = <b>batch, can take up to 12 h</b>; real time = subscription filter.<br><br>
+<strong>Why D is correct:</strong> Export tasks are not real-time; use subscription filters for streaming.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It works only with unencrypted buckets</em> &mdash; Export destinations can use SSE-S3 or SSE-KMS encryption.<br><em>B) It streams each event to S3 within seconds</em> &mdash; Streaming is what subscription filters do, not exports.<br><em>C) It converts logs into CloudWatch metrics</em> &mdash; Exports copy raw log data and create no metrics.
+</div>
+</div>
+
+<!-- Q23 Logs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Logs" data-level="A">
+<div class="q-tags"><span class="q-tag">Logs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>A Lambda function runs successfully but no log group ever appears for it. What is the most likely cause?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The log group retention is set to one day</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The execution role lacks CloudWatch Logs write permissions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Lambda logs only go to S3 by default</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The CloudWatch agent is not installed in the function</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The execution role lacks CloudWatch Logs write permissions<br><br>
+<strong>How to think about it:</strong> Lambda logging needs <b>logs:CreateLogGroup/CreateLogStream/PutLogEvents</b> on its execution role.<br><br>
+<strong>Why B is correct:</strong> Lambda writes logs as its execution role, so without these permissions nothing is created.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The log group retention is set to one day</em> &mdash; Retention removes old events but does not stop a group being created.<br><em>C) Lambda logs only go to S3 by default</em> &mdash; Lambda sends logs to CloudWatch Logs by default, not to S3.<br><em>D) The CloudWatch agent is not installed in the function</em> &mdash; Lambda sends logs itself; no agent is installed in functions.
+</div>
+</div>
+
+<!-- Q24 Logs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Logs" data-level="A">
+<div class="q-tags"><span class="q-tag">Logs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>Application logs must be searchable in CloudWatch for 30 days but kept for 7 years at the lowest cost. What design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A metric filter that keeps a count of every log line</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">30-day retention plus Firehose to S3 with lifecycle to Glacier</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Daily Logs Insights queries saved as dashboards</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Never-expire retention on the log group for 7 years</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> 30-day retention plus Firehose to S3 with lifecycle to Glacier<br><br>
+<strong>How to think about it:</strong> Short hot retention in CloudWatch + <b>stream to S3</b> via Firehose + lifecycle to Glacier.<br><br>
+<strong>Why B is correct:</strong> CloudWatch keeps recent logs searchable, while S3 and Glacier hold the long-term copy cheaply.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A metric filter that keeps a count of every log line</em> &mdash; Counts lose the actual log content needed for retention.<br><em>C) Daily Logs Insights queries saved as dashboards</em> &mdash; Saved queries keep no log data once the group's retention expires.<br><em>D) Never-expire retention on the log group for 7 years</em> &mdash; Keeping years of logs in CloudWatch costs far more than S3 archival storage.
+</div>
+</div>
+
+<!-- Q25 Logs -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Logs" data-level="A">
+<div class="q-tags"><span class="q-tag">Logs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>Security wants a continuously updated ranking of the source IPs generating the most rejected connections in VPC Flow Logs. Which CloudWatch feature fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudWatch Contributor Insights rules on the flow log group</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An alarm on the NAT gateway's BytesOutToDestination</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A single metric filter on REJECT</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudWatch Synthetics heartbeat canary</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> CloudWatch Contributor Insights rules on the flow log group<br><br>
+<strong>How to think about it:</strong> Top-N contributors over time = <b>Contributor Insights</b>.<br><br>
+<strong>Why A is correct:</strong> Contributor Insights analyses log events continuously and ranks the top contributors such as source IPs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An alarm on the NAT gateway's BytesOutToDestination</em> &mdash; That metric totals bytes and does not break traffic down by source IP.<br><em>C) A single metric filter on REJECT</em> &mdash; A metric filter gives a total count but cannot rank individual IP addresses.<br><em>D) CloudWatch Synthetics heartbeat canary</em> &mdash; A heartbeat canary checks endpoint availability, not traffic sources.
+</div>
+</div>
+
+<!-- Q26 Log Subscriptions -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Log Subscriptions" data-level="B">
+<div class="q-tags"><span class="q-tag">Log Subscriptions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>Log events must reach a processing system within seconds of being written. What should you configure on the log group?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An export task to S3</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A metric filter</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A longer retention period</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A subscription filter</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A subscription filter<br><br>
+<strong>How to think about it:</strong> Real-time log delivery = <b>subscription filter</b>.<br><br>
+<strong>Why D is correct:</strong> Subscription filters stream matching events to destinations such as Kinesis or Lambda as they arrive.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An export task to S3</em> &mdash; Exports are batch jobs that can take hours.<br><em>B) A metric filter</em> &mdash; Metric filters produce numbers, not a stream of the events themselves.<br><em>C) A longer retention period</em> &mdash; Retention controls how long data is kept, not where it goes.
+</div>
+</div>
+
+<!-- Q27 Log Subscriptions -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Log Subscriptions" data-level="B">
+<div class="q-tags"><span class="q-tag">Log Subscriptions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>Which of these is a valid direct destination for a CloudWatch Logs subscription filter?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Kinesis Data Streams</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon SNS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon SQS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon DynamoDB</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon Kinesis Data Streams<br><br>
+<strong>How to think about it:</strong> Subscription destinations = <b>Kinesis Data Streams, Firehose, Lambda, OpenSearch</b>.<br><br>
+<strong>Why A is correct:</strong> Kinesis Data Streams is a native subscription destination for real-time processing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon SNS</em> &mdash; SNS is not a supported subscription filter destination.<br><em>C) Amazon SQS</em> &mdash; SQS is not a supported subscription filter destination.<br><em>D) Amazon DynamoDB</em> &mdash; DynamoDB cannot be a subscription destination without custom code in between.
+</div>
+</div>
+
+<!-- Q28 Log Subscriptions -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Log Subscriptions" data-level="B">
+<div class="q-tags"><span class="q-tag">Log Subscriptions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>Logs must land in S3 in near real time, batched and compressed, with no servers or custom code. Which subscription destination fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Data Firehose delivering to S3</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Kinesis Data Streams alone</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda function that writes each event to S3</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CreateExportTask on a schedule</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon Data Firehose delivering to S3<br><br>
+<strong>How to think about it:</strong> Logs to S3 near real time, managed = <b>Firehose</b>.<br><br>
+<strong>Why A is correct:</strong> Firehose buffers, compresses and writes to S3 within about a minute without code.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Kinesis Data Streams alone</em> &mdash; Streams need a consumer to write to S3, so this is not complete.<br><em>C) A Lambda function that writes each event to S3</em> &mdash; This works but is custom code and creates many small objects.<br><em>D) CreateExportTask on a schedule</em> &mdash; Exports are batch and can take up to 12 hours.
+</div>
+</div>
+
+<!-- Q29 Log Subscriptions -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Log Subscriptions" data-level="B">
+<div class="q-tags"><span class="q-tag">Log Subscriptions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>How many subscription filters can a single log group have?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Unlimited</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Ten</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">One</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Two</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Two<br><br>
+<strong>How to think about it:</strong> Subscription filters per log group = <b>2</b>.<br><br>
+<strong>Why D is correct:</strong> Each log group supports up to two subscription filters.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Unlimited</em> &mdash; There is a fixed quota of two subscription filters per log group.<br><em>B) Ten</em> &mdash; Ten is too many; the quota is two per log group.<br><em>C) One</em> &mdash; The limit was raised from one; two are allowed now.
+</div>
+</div>
+
+<!-- Q30 Log Subscriptions -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Log Subscriptions" data-level="A">
+<div class="q-tags"><span class="q-tag">Log Subscriptions</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>Log groups in many accounts and Regions must be streamed into one central account for analysis. What is the standard design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A central Logs destination on Kinesis, subscribed from each account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VPC peering between all accounts and the central account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch dashboard that shows logs from all accounts</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Cross-Region Replication of each account's log groups</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A central Logs destination on Kinesis, subscribed from each account<br><br>
+<strong>How to think about it:</strong> Central log aggregation = <b>Logs destination</b> (backed by Kinesis) + destination policy + subscriptions in each account.<br><br>
+<strong>Why A is correct:</strong> Each sender subscribes to the cross-account destination, whose policy allows those accounts to send.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) VPC peering between all accounts and the central account</em> &mdash; Log delivery happens through the service, not over peered VPCs.<br><em>C) A CloudWatch dashboard that shows logs from all accounts</em> &mdash; Dashboards display data; they do not copy logs centrally for processing.<br><em>D) S3 Cross-Region Replication of each account's log groups</em> &mdash; Log groups are not S3 objects and cannot be replicated that way.
+</div>
+</div>
+
+<!-- Q31 Log Subscriptions -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Log Subscriptions" data-level="A">
+<div class="q-tags"><span class="q-tag">Log Subscriptions</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>Every log group in an account, including those created in future, must stream to Firehose without adding a filter to each group. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An account-level subscription filter policy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A metric filter policy for the account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda that adds a filter to each group every night</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An SCP requiring a subscription on each log group</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An account-level subscription filter policy<br><br>
+<strong>How to think about it:</strong> All log groups, present and future = <b>account-level subscription filter policy</b>.<br><br>
+<strong>Why A is correct:</strong> An account policy applies a subscription to all log groups, or a selection, including new ones.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A metric filter policy for the account</em> &mdash; Metric filters create metrics, not delivery to Firehose.<br><em>C) A Lambda that adds a filter to each group every night</em> &mdash; This works but leaves gaps between runs and is custom code.<br><em>D) An SCP requiring a subscription on each log group</em> &mdash; SCPs restrict actions; they cannot create subscriptions.
+</div>
+</div>
+
+<!-- Q32 Log Subscriptions -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Log Subscriptions" data-level="A">
+<div class="q-tags"><span class="q-tag">Log Subscriptions</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>Application logs must be searchable in Amazon OpenSearch Service in near real time with the least custom code. What is the simplest option?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A subscription filter that streams the log group to OpenSearch</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A metric filter that forwards events to OpenSearch</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A daily export to S3 followed by manual loading</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Logs Insights queries copied into OpenSearch</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A subscription filter that streams the log group to OpenSearch<br><br>
+<strong>How to think about it:</strong> Logs to OpenSearch = <b>subscription filter to OpenSearch</b> (AWS-managed Lambda) or Firehose.<br><br>
+<strong>Why A is correct:</strong> CloudWatch Logs can stream to OpenSearch through an AWS-provided Lambda function without your own code.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A metric filter that forwards events to OpenSearch</em> &mdash; Metric filters only produce metrics; they forward no events.<br><em>C) A daily export to S3 followed by manual loading</em> &mdash; Exports are slow batch jobs and loading is manual.<br><em>D) Logs Insights queries copied into OpenSearch</em> &mdash; Copying query results by hand is neither real time nor automated.
+</div>
+</div>
+
+<!-- Q33 Agent -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Agent" data-level="B">
+<div class="q-tags"><span class="q-tag">Agent</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>You need memory utilisation and free disk space from EC2 instances in CloudWatch. What must you install?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The Amazon Inspector agent</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The Systems Manager agent only</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Detailed monitoring</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The unified CloudWatch agent</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The unified CloudWatch agent<br><br>
+<strong>How to think about it:</strong> Inside-the-OS metrics (RAM, disk) = <b>unified CloudWatch agent</b>.<br><br>
+<strong>Why D is correct:</strong> The agent reads OS-level data such as memory and disk use and publishes it as custom metrics.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The Amazon Inspector agent</em> &mdash; Inspector looks for vulnerabilities; it does not publish CloudWatch metrics.<br><em>B) The Systems Manager agent only</em> &mdash; SSM Agent helps install the CloudWatch agent but does not publish these metrics itself.<br><em>C) Detailed monitoring</em> &mdash; Detailed monitoring only makes the built-in hypervisor metrics more frequent.
+</div>
+</div>
+
+<!-- Q34 Agent -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Agent" data-level="B">
+<div class="q-tags"><span class="q-tag">Agent</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>Can the CloudWatch agent send logs and metrics from on-premises servers?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Yes, given credentials that allow CloudWatch writes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only for logs, never for metrics</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only through a Direct Connect private link</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">No, it only runs on Amazon EC2 instances</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Yes, given credentials that allow CloudWatch writes<br><br>
+<strong>How to think about it:</strong> CloudWatch agent works <b>on EC2 and on-premises</b> (with credentials).<br><br>
+<strong>Why A is correct:</strong> The agent runs on on-premises Linux and Windows hosts and uses configured credentials to publish.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Only for logs, never for metrics</em> &mdash; On-premises agents can publish both metrics and logs.<br><em>C) Only through a Direct Connect private link</em> &mdash; Connectivity can use the internet; Direct Connect is not required.<br><em>D) No, it only runs on Amazon EC2 instances</em> &mdash; The agent also supports servers outside AWS.
+</div>
+</div>
+
+<!-- Q35 Agent -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Agent" data-level="B">
+<div class="q-tags"><span class="q-tag">Agent</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>How can you install the CloudWatch agent on 200 existing EC2 instances without logging in to each?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Edit the user data of each running instance</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Run Command with the AWS-ConfigureAWSPackage document</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable detailed monitoring on the instances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Attach the CloudWatchAgentServerPolicy only</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Run Command with the AWS-ConfigureAWSPackage document<br><br>
+<strong>How to think about it:</strong> Fleet install = <b>SSM Run Command</b> with AWS-ConfigureAWSPackage (AmazonCloudWatchAgent).<br><br>
+<strong>Why B is correct:</strong> Run Command installs the AmazonCloudWatchAgent package on many managed instances at once.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Edit the user data of each running instance</em> &mdash; User data runs at launch, so changing it does not affect running instances.<br><em>C) Enable detailed monitoring on the instances</em> &mdash; Detailed monitoring changes metric frequency and installs nothing.<br><em>D) Attach the CloudWatchAgentServerPolicy only</em> &mdash; The policy grants permissions but does not install software.
+</div>
+</div>
+
+<!-- Q36 Agent -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Agent" data-level="B">
+<div class="q-tags"><span class="q-tag">Agent</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Where is the recommended place to store one shared CloudWatch agent configuration for the whole fleet?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">SSM Parameter Store</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An EBS snapshot</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch dashboard</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Secrets Manager</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> SSM Parameter Store<br><br>
+<strong>How to think about it:</strong> Shared agent config = <b>SSM Parameter Store</b>.<br><br>
+<strong>Why A is correct:</strong> Instances download the agent configuration from a parameter, so one update reaches the whole fleet.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An EBS snapshot</em> &mdash; Snapshots back up volumes and are not used to distribute configuration.<br><em>C) A CloudWatch dashboard</em> &mdash; Dashboards display data and cannot hold agent configuration.<br><em>D) AWS Secrets Manager</em> &mdash; The configuration is not a secret and needs no rotation.
+</div>
+</div>
+
+<!-- Q37 Agent -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Agent" data-level="A">
+<div class="q-tags"><span class="q-tag">Agent</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>The CloudWatch agent must stay installed and configured on every instance, including ones launched later by Auto Scaling, with drift corrected automatically. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A State Manager association for the agent</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An EventBridge archive of instance launch events</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A single Run Command execution</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudWatch alarm that fires on missing metrics</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A State Manager association for the agent<br><br>
+<strong>How to think about it:</strong> Keep instances in a desired state over time = <b>SSM State Manager</b> association.<br><br>
+<strong>Why A is correct:</strong> State Manager reapplies the association on a schedule and to new matching instances.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An EventBridge archive of instance launch events</em> &mdash; Archives store events for replay and do not configure instances.<br><em>C) A single Run Command execution</em> &mdash; Run Command is one-off and misses instances launched afterwards.<br><em>D) A CloudWatch alarm that fires on missing metrics</em> &mdash; An alarm could notice the gap but would not install anything.
+</div>
+</div>
+
+<!-- Q38 Synthetics -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Synthetics" data-level="B">
+<div class="q-tags"><span class="q-tag">Synthetics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>A team wants to detect a broken checkout page before customers report it, by running scripted user actions every five minutes. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudWatch Logs Insights</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Route 53 Resolver query logging</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch Synthetics canary</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS X-Ray sampling rules</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A CloudWatch Synthetics canary<br><br>
+<strong>How to think about it:</strong> Scripted user journeys on a schedule = <b>CloudWatch Synthetics canary</b>.<br><br>
+<strong>Why C is correct:</strong> Canaries run scripts in a headless browser on a schedule and record availability, latency and screenshots.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) CloudWatch Logs Insights</em> &mdash; Insights queries existing logs and cannot drive a browser.<br><em>B) Route 53 Resolver query logging</em> &mdash; Query logging records DNS lookups, not page behaviour.<br><em>D) AWS X-Ray sampling rules</em> &mdash; Sampling controls which real requests are traced, not synthetic tests.
+</div>
+</div>
+
+<!-- Q39 Synthetics -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Synthetics" data-level="B">
+<div class="q-tags"><span class="q-tag">Synthetics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Which canary blueprint compares a screenshot from each run with a baseline image?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">API canary</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Visual monitoring</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Heartbeat monitor</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Broken link checker</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Visual monitoring<br><br>
+<strong>How to think about it:</strong> Screenshot vs baseline = <b>visual monitoring</b>.<br><br>
+<strong>Why B is correct:</strong> This blueprint flags runs whose screenshot differs from the stored baseline.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) API canary</em> &mdash; API canaries test REST API calls, not page appearance.<br><em>C) Heartbeat monitor</em> &mdash; Heartbeat loads a URL and saves a screenshot but does not compare it.<br><em>D) Broken link checker</em> &mdash; This blueprint follows links to find broken ones.
+</div>
+</div>
+
+<!-- Q40 Synthetics -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Synthetics" data-level="B">
+<div class="q-tags"><span class="q-tag">Synthetics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>Which canary blueprint crawls a page and reports links that return errors?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Visual monitoring</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Heartbeat monitor</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Broken link checker</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Canary recorder</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Broken link checker<br><br>
+<strong>How to think about it:</strong> Dead links on a site = <b>broken link checker</b>.<br><br>
+<strong>Why C is correct:</strong> It collects the links on the tested URL and checks each one for failures.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Visual monitoring</em> &mdash; Visual monitoring compares screenshots with a baseline.<br><em>B) Heartbeat monitor</em> &mdash; Heartbeat checks one URL loads, not every link.<br><em>D) Canary recorder</em> &mdash; The recorder turns your recorded browser actions into a script.
+</div>
+</div>
+
+<!-- Q41 Synthetics -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Synthetics" data-level="A">
+<div class="q-tags"><span class="q-tag">Synthetics</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>A canary should verify that users can sign in through a web form and reach their dashboard. Which blueprint fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">API canary</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Heartbeat monitor</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Broken link checker</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">GUI workflow builder</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> GUI workflow builder<br><br>
+<strong>How to think about it:</strong> Multi-step UI actions like a login form = <b>GUI workflow builder</b>.<br><br>
+<strong>Why D is correct:</strong> This blueprint scripts a sequence of UI actions, such as filling a login form, and checks each step.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) API canary</em> &mdash; API canaries call REST endpoints, not browser forms.<br><em>B) Heartbeat monitor</em> &mdash; Heartbeat only loads a page and cannot complete a form.<br><em>C) Broken link checker</em> &mdash; Checking links does not prove a sign-in works.
+</div>
+</div>
+
+<!-- Q42 Synthetics -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Synthetics" data-level="A">
+<div class="q-tags"><span class="q-tag">Synthetics</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>An active-passive web app must fail over DNS to the standby Region when a canary shows the primary site is down. What design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An X-Ray service map refreshed every minute</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Logs Insights query run by an operator</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Canary alarm invoking a Lambda that updates Route 53</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Health Dashboard notification only</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Canary alarm invoking a Lambda that updates Route 53<br><br>
+<strong>How to think about it:</strong> Canary fails = <b>alarm</b> = Lambda updates <b>Route 53</b>.<br><br>
+<strong>Why C is correct:</strong> The canary's success metric drives an alarm, and automation switches DNS to the healthy Region.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An X-Ray service map refreshed every minute</em> &mdash; Service maps help diagnose, but they trigger no failover.<br><em>B) A Logs Insights query run by an operator</em> &mdash; Manual querying is slow and is not automatic failover.<br><em>D) A Health Dashboard notification only</em> &mdash; Health covers AWS service events, not your application's availability.
+</div>
+</div>
+
+<!-- Q43 EventBridge -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EventBridge" data-level="B">
+<div class="q-tags"><span class="q-tag">EventBridge</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>A Lambda clean-up job must run every day at 02:00 UTC with no servers. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A CloudWatch Synthetics canary</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon EventBridge Scheduler with a cron expression</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An SQS delay queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudWatch alarm with a time threshold</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon EventBridge Scheduler with a cron expression<br><br>
+<strong>How to think about it:</strong> Cron in the cloud = <b>EventBridge Scheduler</b> (or a scheduled rule).<br><br>
+<strong>Why B is correct:</strong> Scheduler invokes targets such as Lambda on cron or rate schedules, fully managed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A CloudWatch Synthetics canary</em> &mdash; Canaries test endpoints and are not a general job scheduler.<br><em>C) An SQS delay queue</em> &mdash; Delay queues hold messages for at most 15 minutes.<br><em>D) A CloudWatch alarm with a time threshold</em> &mdash; Alarms react to metric values, not clock times.
+</div>
+</div>
+
+<!-- Q44 EventBridge -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EventBridge" data-level="B">
+<div class="q-tags"><span class="q-tag">EventBridge</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>Every time an EC2 instance changes to the stopped state, a message must go to an SNS topic. What is the simplest setup?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An AWS Config rule run every 24 hours</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Synthetics canary pinging each instance</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">EventBridge rule on EC2 state-change events, SNS target</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudWatch Logs metric filter on instance logs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> EventBridge rule on EC2 state-change events, SNS target<br><br>
+<strong>How to think about it:</strong> React to a service doing something = <b>EventBridge rule with an event pattern</b>.<br><br>
+<strong>Why C is correct:</strong> AWS services emit events to the default bus, and a rule's pattern selects them for the target.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An AWS Config rule run every 24 hours</em> &mdash; A daily evaluation is not immediate and is meant for compliance.<br><em>B) A Synthetics canary pinging each instance</em> &mdash; Pings show reachability, not state-change events.<br><em>D) A CloudWatch Logs metric filter on instance logs</em> &mdash; Instance logs do not reliably record state changes, and filters do not notify by themselves.
+</div>
+</div>
+
+<!-- Q45 EventBridge -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EventBridge" data-level="B">
+<div class="q-tags"><span class="q-tag">EventBridge</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>Events from a SaaS provider such as a ticketing platform must be received in AWS without building a webhook. Which bus receives them?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The default event bus</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An SNS topic</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An SQS FIFO queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A partner event bus</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A partner event bus<br><br>
+<strong>How to think about it:</strong> SaaS integrations = <b>partner event bus</b>.<br><br>
+<strong>Why D is correct:</strong> Supported SaaS partners publish events to a partner event source that you attach to a partner bus.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The default event bus</em> &mdash; The default bus receives AWS service events, not partner events.<br><em>B) An SNS topic</em> &mdash; SNS is not how EventBridge partner integrations deliver events.<br><em>C) An SQS FIFO queue</em> &mdash; Queues are not where EventBridge partner sources deliver.
+</div>
+</div>
+
+<!-- Q46 EventBridge -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EventBridge" data-level="B">
+<div class="q-tags"><span class="q-tag">EventBridge</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>Events must be kept for 30 days so they can be sent again later. Which EventBridge feature does this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Dead-letter queue on a rule</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Event archive with replay</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Input transformer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Schema registry</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Event archive with replay<br><br>
+<strong>How to think about it:</strong> Keep and resend events = <b>archive and replay</b>.<br><br>
+<strong>Why B is correct:</strong> An archive stores all or filtered events for a set period, and replay resends them to the bus.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Dead-letter queue on a rule</em> &mdash; A DLQ captures failed deliveries only, not all events.<br><em>C) Input transformer</em> &mdash; Input transformers reshape events for a target and store nothing.<br><em>D) Schema registry</em> &mdash; The registry records event structures; it does not keep the events.
+</div>
+</div>
+
+<!-- Q47 EventBridge -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EventBridge" data-level="B">
+<div class="q-tags"><span class="q-tag">EventBridge</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>Developers want typed code bindings for the events on a custom bus without reading raw JSON. What helps?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS X-Ray annotations on traces</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An EventBridge archive</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Schema registry with schema discovery</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudWatch Logs Insights</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Schema registry with schema discovery<br><br>
+<strong>How to think about it:</strong> Infer event structure + generate code = <b>schema registry</b>.<br><br>
+<strong>Why C is correct:</strong> Discovery infers versioned schemas from events, and you can download code bindings for them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS X-Ray annotations on traces</em> &mdash; Annotations index trace data, not event schemas.<br><em>B) An EventBridge archive</em> &mdash; Archives keep events for replay and generate no code.<br><em>D) CloudWatch Logs Insights</em> &mdash; Insights queries logs; it does not generate application code.
+</div>
+</div>
+
+<!-- Q48 EventBridge -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EventBridge" data-level="B">
+<div class="q-tags"><span class="q-tag">EventBridge</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>Which statement about EventBridge event buses is correct?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An account can only ever have the default bus</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Buses can only receive events from their own account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Event buses store every event forever by default</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Custom buses take app events and can be shared by policy</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Custom buses take app events and can be shared by policy<br><br>
+<strong>How to think about it:</strong> Buses: <b>default</b> (AWS), <b>partner</b> (SaaS), <b>custom</b> (your apps); share with a resource policy.<br><br>
+<strong>Why D is correct:</strong> Apps call PutEvents on a custom bus, and a bus policy can grant other accounts or the organization access.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An account can only ever have the default bus</em> &mdash; You can create custom buses and partner buses as well.<br><em>B) Buses can only receive events from their own account</em> &mdash; Resource-based policies allow cross-account events.<br><em>C) Event buses store every event forever by default</em> &mdash; Events are not retained unless you create an archive.
+</div>
+</div>
+
+<!-- Q49 EventBridge -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EventBridge" data-level="A">
+<div class="q-tags"><span class="q-tag">EventBridge</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>All EventBridge events from every account in an AWS Organization must be collected in one security account. How should the central bus be secured?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A VPC endpoint policy on each member VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An SCP granting events:PutEvents</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A bus resource policy allowing PutEvents for the organization ID</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An IAM user in the security account shared with all teams</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A bus resource policy allowing PutEvents for the organization ID<br><br>
+<strong>How to think about it:</strong> Central event bus for the org = bus resource policy with <b>aws:PrincipalOrgID</b>.<br><br>
+<strong>Why C is correct:</strong> The policy lets any member account send while blocking outside accounts, and new accounts are included.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A VPC endpoint policy on each member VPC</em> &mdash; Endpoint policies control network access, not which accounts a bus accepts.<br><em>B) An SCP granting events:PutEvents</em> &mdash; SCPs only restrict permissions; they do not grant access to a bus.<br><em>D) An IAM user in the security account shared with all teams</em> &mdash; Sharing a user's keys is insecure and does not route events.
+</div>
+</div>
+
+<!-- Q50 EventBridge -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EventBridge" data-level="A">
+<div class="q-tags"><span class="q-tag">EventBridge</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>A bug in a consumer corrupted orders for six hours. After fixing it, the team wants to reprocess those events. What should already be in place?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Higher retry settings on the target</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The schema registry's version history</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An archive on the bus, then replay the six-hour window</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudWatch Logs export of the event bus</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An archive on the bus, then replay the six-hour window<br><br>
+<strong>How to think about it:</strong> Reprocess past events = <b>archive</b> then <b>replay</b> a time window.<br><br>
+<strong>Why C is correct:</strong> Replay resends archived events from a chosen time range so the fixed consumer can process them again.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Higher retry settings on the target</em> &mdash; Retries apply to delivery failures, not to events processed wrongly.<br><em>B) The schema registry's version history</em> &mdash; Schemas describe structure; they do not hold event data.<br><em>D) A CloudWatch Logs export of the event bus</em> &mdash; Buses do not export to logs by default, and an export cannot resend events.
+</div>
+</div>
+
+<!-- Q51 EventBridge -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EventBridge" data-level="A">
+<div class="q-tags"><span class="q-tag">EventBridge</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>A rule's Lambda target is sometimes throttled, and events are lost after retries are exhausted. How do you keep them?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create a second rule with the same pattern</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Configure an SQS dead-letter queue on the rule target</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Increase the alarm evaluation period</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable schema discovery on the bus</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Configure an SQS dead-letter queue on the rule target<br><br>
+<strong>How to think about it:</strong> Undeliverable events = <b>DLQ (SQS)</b> on the rule target + retry policy.<br><br>
+<strong>Why B is correct:</strong> Events that cannot be delivered after the retry policy are sent to the DLQ for later processing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Create a second rule with the same pattern</em> &mdash; A duplicate rule doubles deliveries but does not capture failed ones.<br><em>C) Increase the alarm evaluation period</em> &mdash; Alarms are unrelated to EventBridge target delivery.<br><em>D) Enable schema discovery on the bus</em> &mdash; Discovery records event structure only.
+</div>
+</div>
+
+<!-- Q52 EventBridge -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EventBridge" data-level="A">
+<div class="q-tags"><span class="q-tag">EventBridge</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>Events produced in eu-west-1 must also be processed by a workflow that runs only in us-east-1. What is the simplest approach?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A rule in eu-west-1 targeting the event bus in us-east-1</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A composite alarm spanning both Regions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A VPC peering connection between the Regions</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Cross-Region Replication of the events</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A rule in eu-west-1 targeting the event bus in us-east-1<br><br>
+<strong>How to think about it:</strong> Move events across Regions = rule with <b>another Region's event bus</b> as target.<br><br>
+<strong>Why A is correct:</strong> EventBridge supports buses in other Regions as targets, so events flow across Regions natively.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A composite alarm spanning both Regions</em> &mdash; Alarms watch metrics and do not forward events.<br><em>C) A VPC peering connection between the Regions</em> &mdash; Event routing is a service feature and needs no customer networking.<br><em>D) S3 Cross-Region Replication of the events</em> &mdash; Events are not S3 objects, so replication cannot move them.
+</div>
+</div>
+
+<!-- Q53 X-Ray -->
+<div class="question" data-type="mc" data-answer="2" data-topic="X-Ray" data-level="B">
+<div class="q-tags"><span class="q-tag">X-Ray</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>A request passes through API Gateway, three Lambda functions and DynamoDB. Which service shows where latency is added along that path?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS CloudTrail</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VPC Flow Logs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS X-Ray</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Config</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS X-Ray<br><br>
+<strong>How to think about it:</strong> End-to-end request tracing + service map = <b>AWS X-Ray</b>.<br><br>
+<strong>Why C is correct:</strong> X-Ray traces requests across services and shows a service map with latency and errors for each segment.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS CloudTrail</em> &mdash; CloudTrail records control-plane API calls, not the timing of application requests.<br><em>B) VPC Flow Logs</em> &mdash; Flow Logs capture IP flows and cannot follow a request through serverless services.<br><em>D) AWS Config</em> &mdash; Config tracks resource configuration changes, not request latency.
+</div>
+</div>
+
+<!-- Q54 X-Ray -->
+<div class="question" data-type="mc" data-answer="1" data-topic="X-Ray" data-level="B">
+<div class="q-tags"><span class="q-tag">X-Ray</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>How do you start sending X-Ray traces for an existing Lambda function?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable detailed monitoring for the function</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable active tracing on the function</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Install the X-Ray agent inside the function's VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a CloudWatch Logs subscription for its log group</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Enable active tracing on the function<br><br>
+<strong>How to think about it:</strong> Lambda + X-Ray = turn on <b>active tracing</b>.<br><br>
+<strong>Why B is correct:</strong> With active tracing, Lambda samples invocations and sends trace data, given X-Ray write permissions.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable detailed monitoring for the function</em> &mdash; Detailed monitoring is an EC2 option, not a Lambda tracing switch.<br><em>C) Install the X-Ray agent inside the function's VPC</em> &mdash; Lambda handles trace sending itself; no agent is installed.<br><em>D) Create a CloudWatch Logs subscription for its log group</em> &mdash; Subscriptions stream logs and create no traces.
+</div>
+</div>
+
+<!-- Q55 X-Ray -->
+<div class="question" data-type="mc" data-answer="1" data-topic="X-Ray" data-level="B">
+<div class="q-tags"><span class="q-tag">X-Ray</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>You need to filter X-Ray traces by customer ID. Where should the ID be recorded?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">As a tag on the Lambda function</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">As an annotation on the segment</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">As a CloudWatch metric dimension</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">As metadata on the segment</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> As an annotation on the segment<br><br>
+<strong>How to think about it:</strong> Searchable = <b>annotations</b> (indexed); extra detail = metadata (not indexed).<br><br>
+<strong>Why B is correct:</strong> Annotations are indexed key-value pairs, so you can filter traces by them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) As a tag on the Lambda function</em> &mdash; Resource tags do not let you filter individual traces.<br><em>C) As a CloudWatch metric dimension</em> &mdash; Dimensions apply to metrics, not to trace search.<br><em>D) As metadata on the segment</em> &mdash; Metadata is stored with the trace but is not indexed for filtering.
+</div>
+</div>
+
+<!-- Q56 X-Ray -->
+<div class="question" data-type="mc" data-answer="2" data-topic="X-Ray" data-level="A">
+<div class="q-tags"><span class="q-tag">X-Ray</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>Tracing was added to an application on EC2, but no traces appear in X-Ray. The code and collector are running. What is the most likely cause?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The VPC has no NAT gateway for CloudTrail</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Detailed monitoring is disabled on the instance</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The instance role lacks X-Ray write permissions</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">X-Ray works only with Lambda functions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The instance role lacks X-Ray write permissions<br><br>
+<strong>How to think about it:</strong> X-Ray senders need <b>IAM permission</b> (xray:PutTraceSegments) on the instance role.<br><br>
+<strong>Why C is correct:</strong> Whatever collector forwards the segments needs permission such as PutTraceSegments to deliver them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The VPC has no NAT gateway for CloudTrail</em> &mdash; CloudTrail is unrelated to sending trace data.<br><em>B) Detailed monitoring is disabled on the instance</em> &mdash; Metric frequency has no effect on trace delivery.<br><em>D) X-Ray works only with Lambda functions</em> &mdash; X-Ray traces applications on EC2, containers and more.
+</div>
+</div>
+
+<!-- Q57 Health -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Health" data-level="B">
+<div class="q-tags"><span class="q-tag">Health</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>Which view shows AWS events that affect your specific account's resources, such as scheduled maintenance on your instances?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Trusted Advisor cost checks</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The CloudTrail event history</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Your account health in AWS Health</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudWatch Logs Insights</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Your account health in AWS Health<br><br>
+<strong>How to think about it:</strong> Account-specific AWS events = <b>AWS Health Dashboard, your account health</b>.<br><br>
+<strong>Why C is correct:</strong> It lists issues and scheduled changes that affect your resources, with guidance on actions.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Trusted Advisor cost checks</em> &mdash; Cost checks show savings ideas, not service events.<br><em>B) The CloudTrail event history</em> &mdash; CloudTrail shows API calls, not AWS service events or maintenance.<br><em>D) CloudWatch Logs Insights</em> &mdash; Insights queries your logs, not AWS operational events.
+</div>
+</div>
+
+<!-- Q58 Health -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Health" data-level="B">
+<div class="q-tags"><span class="q-tag">Health</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>Which support plan level is needed to call the AWS Health API programmatically?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">No plan; it is available to every account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Developer Support</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Basic Support</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Business, Enterprise On-Ramp or Enterprise Support</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Business, Enterprise On-Ramp or Enterprise Support<br><br>
+<strong>How to think about it:</strong> AWS Health API = <b>Business, Enterprise On-Ramp or Enterprise</b> support.<br><br>
+<strong>Why D is correct:</strong> The Health API is available only to accounts on these support plans.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) No plan; it is available to every account</em> &mdash; API access depends on the support plan.<br><em>B) Developer Support</em> &mdash; Developer Support does not include Health API access.<br><em>C) Basic Support</em> &mdash; Basic accounts can see the dashboard but cannot call the Health API.
+</div>
+</div>
+
+<!-- Q59 Health -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Health" data-level="A">
+<div class="q-tags"><span class="q-tag">Health</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>Engineers must get an email automatically whenever AWS schedules maintenance for EC2 instances in the account. What should you configure?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">EventBridge rule on AWS Health EC2 events, targeting SNS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Synthetics canary against each instance</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Config rule on instance types</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudWatch alarm on StatusCheckFailed_System</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> EventBridge rule on AWS Health EC2 events, targeting SNS<br><br>
+<strong>How to think about it:</strong> React to Health events = <b>EventBridge rule on aws.health</b> to SNS.<br><br>
+<strong>Why A is correct:</strong> Health events reach EventBridge, so a rule can match EC2 maintenance and email through SNS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A Synthetics canary against each instance</em> &mdash; Canaries test endpoints and know nothing of planned maintenance.<br><em>C) A Config rule on instance types</em> &mdash; Config rules check configuration, not AWS maintenance schedules.<br><em>D) A CloudWatch alarm on StatusCheckFailed_System</em> &mdash; This fires on hardware failure, not on advance maintenance notices.
+</div>
+</div>
+
+<!-- Q60 Health -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Health" data-level="A">
+<div class="q-tags"><span class="q-tag">Health</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>A central operations team must see AWS Health events for every account in the organization in one place. What should they enable?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Security Hub with every standard enabled</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudTrail organization trail</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch dashboard in each member account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Health organizational view</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Health organizational view<br><br>
+<strong>How to think about it:</strong> Org-wide Health events = <b>organizational view</b> (with a delegated administrator if wanted).<br><br>
+<strong>Why D is correct:</strong> Organizational view aggregates Health events from all member accounts for central review.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Security Hub with every standard enabled</em> &mdash; Security Hub aggregates security findings, not Health views.<br><em>B) CloudTrail organization trail</em> &mdash; An organization trail collects API calls, not AWS Health events.<br><em>C) A CloudWatch dashboard in each member account</em> &mdash; Per-account dashboards do not aggregate Health events.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

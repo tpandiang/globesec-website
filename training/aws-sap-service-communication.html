@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Service Communication - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Service Communication</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Service Communication</h2>
+        <p>60 refresher questions &mdash; Step Functions (Standard &amp; Express), SQS &amp; dead-letter queues, Amazon MQ, SNS, SNS FIFO, message filtering &amp; SNS + SQS fan-out</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="Step Functions" onclick="filterQ(this)">Step Functions</button><button class="filter-btn" data-f="Standard vs Express" onclick="filterQ(this)">Standard vs Express</button><button class="filter-btn" data-f="SQS" onclick="filterQ(this)">SQS</button><button class="filter-btn" data-f="SQS DLQ" onclick="filterQ(this)">SQS DLQ</button><button class="filter-btn" data-f="Amazon MQ" onclick="filterQ(this)">Amazon MQ</button><button class="filter-btn" data-f="SNS" onclick="filterQ(this)">SNS</button><button class="filter-btn" data-f="SNS Delivery" onclick="filterQ(this)">SNS Delivery</button><button class="filter-btn" data-f="Fan-out" onclick="filterQ(this)">Fan-out</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 Step Functions -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Step Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Step Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>A team wants to orchestrate several Lambda functions as a visual workflow with branches, retries and timeouts, without writing glue code. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon SQS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon SNS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon EventBridge Scheduler</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Step Functions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Step Functions<br><br>
+<strong>How to think about it:</strong> Serverless <b>orchestration</b> as a JSON state machine = <b>Step Functions</b>.<br><br>
+<strong>Why D is correct:</strong> Step Functions models the workflow as a state machine in Amazon States Language, with built-in branching, retries and timeouts.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon SQS</em> &mdash; A queue decouples two parts but does not model a multi-step workflow.<br><em>B) Amazon SNS</em> &mdash; SNS pushes messages to subscribers; it keeps no workflow state.<br><em>C) Amazon EventBridge Scheduler</em> &mdash; Scheduler starts targets on a schedule but does not orchestrate the steps.
+</div>
+</div>
+
+<!-- Q2 Step Functions -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Step Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Step Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>A workflow must pause until a manager approves a request by clicking a link in an email, which may take days. Which Step Functions pattern supports this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Wait state set to a fixed number of days</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Parallel state with a timeout branch</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A task using .waitForTaskToken, resumed by SendTaskSuccess</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Lambda function that sleeps until approval</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A task using .waitForTaskToken, resumed by SendTaskSuccess<br><br>
+<strong>How to think about it:</strong> Human approval = <b>callback with a task token</b> (.waitForTaskToken).<br><br>
+<strong>Why C is correct:</strong> The workflow waits on a token, and the approval link calls back with that token to continue.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Wait state set to a fixed number of days</em> &mdash; A fixed wait cannot react to when the manager actually approves.<br><em>B) A Parallel state with a timeout branch</em> &mdash; Parallel runs branches together; it does not wait for an outside signal.<br><em>D) A Lambda function that sleeps until approval</em> &mdash; Lambda runs for at most 15 minutes, so it cannot wait for days.
+</div>
+</div>
+
+<!-- Q3 Step Functions -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Step Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Step Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>A state must run an ECS task and move on only after the container finishes. What does Step Functions offer for this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The optimized ECS integration with .sync</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An SNS topic that the task publishes to</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda function that polls ECS every minute</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An activity task polled by the ECS container</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> The optimized ECS integration with .sync<br><br>
+<strong>How to think about it:</strong> Optimized integration with <b>.sync</b> = run the job and <b>wait for it to complete</b>.<br><br>
+<strong>Why A is correct:</strong> Step Functions starts the task and waits for it to stop before the next state.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An SNS topic that the task publishes to</em> &mdash; SNS cannot pause a workflow until a reply arrives.<br><em>C) A Lambda function that polls ECS every minute</em> &mdash; This is custom code and pays for idle Lambda time.<br><em>D) An activity task polled by the ECS container</em> &mdash; Activities need a custom worker loop the native integration already provides.
+</div>
+</div>
+
+<!-- Q4 Step Functions -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Step Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Step Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>A state machine must call an AWS service API that has no optimized Step Functions integration. What is the simplest option?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Lambda function that wraps the API call</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An activity worker on EC2 that calls the API</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An HTTP task pointed at the service endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An AWS SDK service integration task</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> An AWS SDK service integration task<br><br>
+<strong>How to think about it:</strong> Not in the optimized list = <b>AWS SDK service integration</b> (200+ services, called like an SDK API).<br><br>
+<strong>Why D is correct:</strong> SDK integrations let a Task state call almost any AWS API directly, like a normal SDK call.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Lambda function that wraps the API call</em> &mdash; This works but adds code and cost the SDK integration avoids.<br><em>B) An activity worker on EC2 that calls the API</em> &mdash; Running a worker fleet for one API call is unnecessary.<br><em>C) An HTTP task pointed at the service endpoint</em> &mdash; HTTP tasks target third-party APIs, and AWS calls would need manual signing.
+</div>
+</div>
+
+<!-- Q5 Step Functions -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Step Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Step Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>A workflow step must be done by a program running on a server in the company's data center. How does that server get work from Step Functions?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It subscribes the server's email address to the workflow</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Step Functions pushes the task to the server over SSH</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It reads the task from the workflow's CloudWatch Logs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It runs an activity worker that polls Step Functions for tasks</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> It runs an activity worker that polls Step Functions for tasks<br><br>
+<strong>How to think about it:</strong> On-premises or custom worker = <b>activity task</b>; the worker <b>polls</b> Step Functions.<br><br>
+<strong>Why D is correct:</strong> Activity workers call GetActivityTask, do the work and report the result back.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It subscribes the server's email address to the workflow</em> &mdash; Email is not a way to receive and complete workflow tasks.<br><em>B) Step Functions pushes the task to the server over SSH</em> &mdash; Step Functions never opens connections into your servers.<br><em>C) It reads the task from the workflow's CloudWatch Logs</em> &mdash; Logs are for history and debugging, not task delivery.
+</div>
+</div>
+
+<!-- Q6 Step Functions -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Step Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Step Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>A workflow must pause until 09:00 on a given date before sending a reminder. Which state type fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Pass state with a delay field</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Wait state with a timestamp</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Choice state comparing the clock</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Map state over the remaining hours</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A Wait state with a timestamp<br><br>
+<strong>How to think about it:</strong> Pause for a duration or until a timestamp = <b>Wait state</b>.<br><br>
+<strong>Why B is correct:</strong> A Wait state can pause for seconds or until a specific timestamp, at no compute cost.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Pass state with a delay field</em> &mdash; A Pass state just forwards or reshapes input.<br><em>C) A Choice state comparing the clock</em> &mdash; Choice branches on input values; it does not pause.<br><em>D) A Map state over the remaining hours</em> &mdash; Map iterates over items; it is not a timer.
+</div>
+</div>
+
+<!-- Q7 Step Functions -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Step Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Step Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>A state machine should start each time a specific event happens in the AWS account, such as an object upload notification. What is the usual trigger?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An SQS queue that Step Functions polls</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A CloudWatch metric alarm on the bucket</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An EventBridge rule targeting the state machine</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CodePipeline stage watching the bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An EventBridge rule targeting the state machine<br><br>
+<strong>How to think about it:</strong> Event-driven start = <b>EventBridge rule</b> with the state machine as target.<br><br>
+<strong>Why C is correct:</strong> EventBridge matches the event and calls StartExecution, passing the event as input.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An SQS queue that Step Functions polls</em> &mdash; Step Functions has no built-in poller for SQS to start executions.<br><em>B) A CloudWatch metric alarm on the bucket</em> &mdash; Alarms react to metric thresholds, not individual events.<br><em>D) A CodePipeline stage watching the bucket</em> &mdash; CodePipeline can invoke Step Functions, but it is a CI/CD tool, not an event router.
+</div>
+</div>
+
+<!-- Q8 Step Functions -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Step Functions" data-level="A">
+<div class="q-tags"><span class="q-tag">Step Functions</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>A REST API must start a Step Functions workflow without any Lambda function in between. How can this be done?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Lambda authorizer that starts the workflow</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A service integration calling StartExecution</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An API Gateway mock integration</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A VPC link to the Step Functions endpoint</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A service integration calling StartExecution<br><br>
+<strong>How to think about it:</strong> API Gateway can call <b>StartExecution directly</b> as an AWS service integration.<br><br>
+<strong>Why B is correct:</strong> API Gateway signs and sends the StartExecution call itself, with no Lambda needed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Lambda authorizer that starts the workflow</em> &mdash; Authorizers decide access; they are not meant to start backends.<br><em>C) An API Gateway mock integration</em> &mdash; Mock integrations return fixed responses and call nothing.<br><em>D) A VPC link to the Step Functions endpoint</em> &mdash; VPC links reach private load balancers, not Step Functions APIs.
+</div>
+</div>
+
+<!-- Q9 Step Functions -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Step Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Step Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>A Lambda step sometimes fails with a throttling error. Where do you define automatic retries with backoff and a fallback path?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">In a dead-letter queue on the Lambda function</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">In the state machine's IAM role</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">In a CloudWatch alarm on Lambda errors</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">In the state's Retry and Catch fields</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> In the state's Retry and Catch fields<br><br>
+<strong>How to think about it:</strong> Errors in a state machine = <b>Retry</b> and <b>Catch</b> fields on the state.<br><br>
+<strong>Why D is correct:</strong> Retry sets attempts and backoff per error type, and Catch routes to a fallback state when retries run out.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) In a dead-letter queue on the Lambda function</em> &mdash; A Lambda DLQ applies to async invokes and does not drive workflow retries.<br><em>B) In the state machine's IAM role</em> &mdash; The role grants permissions; it has no retry settings.<br><em>C) In a CloudWatch alarm on Lambda errors</em> &mdash; Alarms notify people; they do not retry a step.
+</div>
+</div>
+
+<!-- Q10 Step Functions -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Step Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Step Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>Three independent Lambda checks must run at the same time, and the workflow continues only when all finish. Which state fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Three Task states in sequence</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Choice state with three rules</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Parallel state with three branches</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Wait state followed by three tasks</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A Parallel state with three branches<br><br>
+<strong>How to think about it:</strong> Fixed branches at once = <b>Parallel</b>; same steps over each item of an array = Map.<br><br>
+<strong>Why C is correct:</strong> Parallel runs its branches at the same time and waits for every branch before moving on.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Three Task states in sequence</em> &mdash; This runs the checks one after another, not together.<br><em>B) A Choice state with three rules</em> &mdash; Choice selects one branch; it does not run all of them.<br><em>D) A Wait state followed by three tasks</em> &mdash; A Wait adds a delay but does not run work at the same time.
+</div>
+</div>
+
+<!-- Q11 Step Functions -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Step Functions" data-level="A">
+<div class="q-tags"><span class="q-tag">Step Functions</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>Operations want an email whenever any execution of a state machine fails. What is the simplest setup?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A daily Lambda that lists executions and emails failures</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Catch block in every state that sends an email</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An EventBridge rule on FAILED status sending to SNS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enabling X-Ray tracing on the state machine</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An EventBridge rule on FAILED status sending to SNS<br><br>
+<strong>How to think about it:</strong> Failure alerts = <b>EventBridge rule on execution status FAILED</b> to an <b>SNS</b> topic.<br><br>
+<strong>Why C is correct:</strong> Step Functions emits status-change events, and the rule sends failures to email subscribers.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A daily Lambda that lists executions and emails failures</em> &mdash; This is delayed and custom when events already exist.<br><em>B) A Catch block in every state that sends an email</em> &mdash; This adds logic to each state and misses failures outside them.<br><em>D) Enabling X-Ray tracing on the state machine</em> &mdash; X-Ray shows traces but sends no notifications.
+</div>
+</div>
+
+<!-- Q12 Step Functions -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Step Functions" data-level="A">
+<div class="q-tags"><span class="q-tag">Step Functions</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>A large order workflow should hand off a self-contained sub-process to another state machine and wait for it to finish. How?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Copy the child's states into the parent</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Start the child state machine with the .sync integration</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Publish to an SNS topic that the child subscribes to</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Send a message to an SQS queue the child polls</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Start the child state machine with the .sync integration<br><br>
+<strong>How to think about it:</strong> Nested workflow = <b>StartExecution .sync</b> of a child state machine.<br><br>
+<strong>Why B is correct:</strong> The parent calls StartExecution on the child and waits for its result.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Copy the child's states into the parent</em> &mdash; This works but loses reuse and separate ownership of the sub-process.<br><em>C) Publish to an SNS topic that the child subscribes to</em> &mdash; A state machine cannot subscribe to SNS, and the parent would not wait.<br><em>D) Send a message to an SQS queue the child polls</em> &mdash; State machines do not poll queues to start, and the parent would not wait.
+</div>
+</div>
+
+<!-- Q13 Standard vs Express -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Standard vs Express" data-level="B">
+<div class="q-tags"><span class="q-tag">Standard vs Express</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>What is the maximum duration of a Step Functions Standard workflow execution?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">15 minutes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">1 year</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">30 days</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">5 minutes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> 1 year<br><br>
+<strong>How to think about it:</strong> <b>Standard = up to 1 year</b>; Express = up to 5 minutes.<br><br>
+<strong>Why B is correct:</strong> Standard workflows can run for up to a year, which suits long processes and human approvals.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 15 minutes</em> &mdash; Fifteen minutes is the Lambda timeout, not a workflow limit.<br><em>C) 30 days</em> &mdash; Thirty days is not a Step Functions limit.<br><em>D) 5 minutes</em> &mdash; Five minutes is the Express workflow limit.
+</div>
+</div>
+
+<!-- Q14 Standard vs Express -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Standard vs Express" data-level="B">
+<div class="q-tags"><span class="q-tag">Standard vs Express</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>What is the maximum duration of a Step Functions Express workflow execution?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">1 hour</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">5 minutes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">1 year</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">24 hours</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> 5 minutes<br><br>
+<strong>How to think about it:</strong> <b>Express = 5 minutes</b>, high volume, short-lived.<br><br>
+<strong>Why B is correct:</strong> Express workflows are built for short, high-rate event processing and stop after five minutes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 1 hour</em> &mdash; One hour is not an Express limit.<br><em>C) 1 year</em> &mdash; One year applies to Standard workflows.<br><em>D) 24 hours</em> &mdash; Twenty-four hours is not an Express limit.
+</div>
+</div>
+
+<!-- Q15 Standard vs Express -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Standard vs Express" data-level="B">
+<div class="q-tags"><span class="q-tag">Standard vs Express</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>A payment workflow must never run a step twice, even after an internal retry. Which workflow type gives that guarantee?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Synchronous Express workflow</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Any type, if logging is enabled</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Asynchronous Express workflow</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Standard workflow</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Standard workflow<br><br>
+<strong>How to think about it:</strong> <b>Standard = exactly-once</b> execution; asynchronous Express = at-least-once.<br><br>
+<strong>Why D is correct:</strong> Standard workflows run each step exactly once unless you set retries yourself.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Synchronous Express workflow</em> &mdash; Sync Express is at-most-once and caps runs at five minutes.<br><em>B) Any type, if logging is enabled</em> &mdash; Logging records history; it does not change execution guarantees.<br><em>C) Asynchronous Express workflow</em> &mdash; Async Express gives at-least-once execution, so a step may run twice.
+</div>
+</div>
+
+<!-- Q16 Standard vs Express -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Standard vs Express" data-level="A">
+<div class="q-tags"><span class="q-tag">Standard vs Express</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>An IoT backend must process about 50,000 short events per second, each finishing in under a second, at the lowest cost. Which option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Express workflows</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Standard workflows with activity workers</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Standard workflow per device per day</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Standard workflows</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Express workflows<br><br>
+<strong>How to think about it:</strong> Very high rate, short runs, cost focus = <b>Express</b> (billed by executions, duration, memory).<br><br>
+<strong>Why A is correct:</strong> Express handles very high start rates and is billed by run count, duration and memory, which is cheap for short runs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Standard workflows with activity workers</em> &mdash; Activity workers add polling servers and do not fix Standard pricing.<br><em>C) A Standard workflow per device per day</em> &mdash; Long runs per device misuse the service and still pay per transition.<br><em>D) Standard workflows</em> &mdash; Standard is billed per state transition and is slower to start at this volume.
+</div>
+</div>
+
+<!-- Q17 Standard vs Express -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Standard vs Express" data-level="B">
+<div class="q-tags"><span class="q-tag">Standard vs Express</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>How is a Step Functions Standard workflow priced?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Per state transition</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Per Lambda invocation only</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Per hour that the state machine exists</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Per execution, duration and memory used</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Per state transition<br><br>
+<strong>How to think about it:</strong> <b>Standard = per state transition</b>; Express = executions + duration + memory.<br><br>
+<strong>Why A is correct:</strong> Each completed step counts as a transition, which makes Standard costlier at high volume.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Per Lambda invocation only</em> &mdash; Lambda is billed separately; Step Functions has its own charge.<br><em>C) Per hour that the state machine exists</em> &mdash; There is no hourly charge for defining a state machine.<br><em>D) Per execution, duration and memory used</em> &mdash; That is the Express pricing model.
+</div>
+</div>
+
+<!-- Q18 Standard vs Express -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Standard vs Express" data-level="A">
+<div class="q-tags"><span class="q-tag">Standard vs Express</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>An API Gateway endpoint should run a short multi-step workflow and return the workflow's output to the caller in the same HTTP response. Which option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Standard workflow started with StartExecution</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A synchronous Express workflow</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Standard workflow behind an SQS queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An asynchronous Express workflow</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A synchronous Express workflow<br><br>
+<strong>How to think about it:</strong> Need the result in the response = <b>synchronous Express</b> (StartSyncExecution).<br><br>
+<strong>Why B is correct:</strong> Sync Express waits for the workflow to finish and returns its output to API Gateway.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Standard workflow started with StartExecution</em> &mdash; StartExecution returns an execution ARN immediately, not the result.<br><em>C) A Standard workflow behind an SQS queue</em> &mdash; Queuing makes the call asynchronous, so no result comes back.<br><em>D) An asynchronous Express workflow</em> &mdash; Async Express only confirms the start and does not return the output.
+</div>
+</div>
+
+<!-- Q19 SQS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SQS" data-level="B">
+<div class="q-tags"><span class="q-tag">SQS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>An order front end must keep accepting requests even when the slower processing tier is down or overloaded. What should sit between them?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Route 53 failover record</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An Amazon SNS topic</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An Amazon SQS queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An Application Load Balancer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An Amazon SQS queue<br><br>
+<strong>How to think about it:</strong> Decouple and buffer = <b>SQS queue</b>.<br><br>
+<strong>Why C is correct:</strong> The queue stores messages durably until consumers are ready, so producers are not blocked.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Route 53 failover record</em> &mdash; DNS failover changes targets but does not buffer work.<br><em>B) An Amazon SNS topic</em> &mdash; SNS pushes immediately and does not hold work for a consumer that is down.<br><em>D) An Application Load Balancer</em> &mdash; An ALB forwards requests live and fails when targets are down.
+</div>
+</div>
+
+<!-- Q20 SQS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SQS" data-level="B">
+<div class="q-tags"><span class="q-tag">SQS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>Some messages a producer sends are larger than the SQS message size limit. What is the standard pattern?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Store the payload in S3 and send its location in the message</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Compress and split it across several FIFO messages</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Switch the queue to a FIFO queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Send it through SNS instead</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Store the payload in S3 and send its location in the message<br><br>
+<strong>How to think about it:</strong> Too big for SQS = <b>put the payload in S3, send a pointer</b> (Extended Client Library).<br><br>
+<strong>Why A is correct:</strong> The SQS Extended Client Library does this, keeping the queue message small.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Compress and split it across several FIFO messages</em> &mdash; Reassembly logic is fragile and is what the S3 pointer pattern avoids.<br><em>C) Switch the queue to a FIFO queue</em> &mdash; FIFO queues have the same message size limit.<br><em>D) Send it through SNS instead</em> &mdash; SNS also has a payload limit and uses the same S3 pointer approach.
+</div>
+</div>
+
+<!-- Q21 SQS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SQS" data-level="B">
+<div class="q-tags"><span class="q-tag">SQS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>Messages for each customer account must be processed in the order they were sent, without duplicates. Which queue setup fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A standard queue with long polling</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A standard queue with a delay of zero</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An SNS standard topic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A FIFO queue grouped by account ID</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A FIFO queue grouped by account ID<br><br>
+<strong>How to think about it:</strong> Ordering + deduplication = <b>FIFO queue</b>, ordered per <b>message group ID</b>.<br><br>
+<strong>Why D is correct:</strong> FIFO keeps strict order within each group and removes duplicates using a deduplication ID.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A standard queue with long polling</em> &mdash; Long polling cuts empty receives but does not order messages.<br><em>B) A standard queue with a delay of zero</em> &mdash; Standard queues give best-effort order and can deliver duplicates.<br><em>C) An SNS standard topic</em> &mdash; Standard SNS topics do not guarantee order or deduplication.
+</div>
+</div>
+
+<!-- Q22 SQS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SQS" data-level="B">
+<div class="q-tags"><span class="q-tag">SQS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>After a consumer receives an SQS message, what keeps other consumers from receiving it while it is being processed?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The delivery delay</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The message retention period</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The receive wait time</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The visibility timeout</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The visibility timeout<br><br>
+<strong>How to think about it:</strong> Hidden while in progress = <b>visibility timeout</b>; delete when done or it reappears.<br><br>
+<strong>Why D is correct:</strong> The message is hidden for that period, and it reappears if the consumer does not delete it in time.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The delivery delay</em> &mdash; Delivery delay hides new messages before first receipt, not during processing.<br><em>B) The message retention period</em> &mdash; Retention sets how long a message lives in the queue overall.<br><em>C) The receive wait time</em> &mdash; Wait time sets long polling; it does not hide received messages.
+</div>
+</div>
+
+<!-- Q23 SQS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SQS" data-level="B">
+<div class="q-tags"><span class="q-tag">SQS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>Consumers make many ReceiveMessage calls that return nothing, which wastes money. What reduces this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Lower the message retention period</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable long polling with a receive wait time</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Switch to a FIFO queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Raise the visibility timeout</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Enable long polling with a receive wait time<br><br>
+<strong>How to think about it:</strong> Fewer empty receives = <b>long polling</b> (receive wait time up to 20 seconds).<br><br>
+<strong>Why B is correct:</strong> The call waits for messages to arrive before returning, cutting empty responses.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Lower the message retention period</em> &mdash; Retention does not change how often polls come back empty.<br><em>C) Switch to a FIFO queue</em> &mdash; FIFO changes ordering, not the polling behaviour.<br><em>D) Raise the visibility timeout</em> &mdash; Visibility timeout affects received messages, not empty polls.
+</div>
+</div>
+
+<!-- Q24 SQS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SQS" data-level="A">
+<div class="q-tags"><span class="q-tag">SQS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>An SQS consumer occasionally processes the same message twice after a timeout, creating duplicate rows in DynamoDB. What is the right fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add more consumers to finish work faster</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Make the write idempotent, such as a PutItem keyed on the order ID</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Switch from long polling to short polling</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Lower the visibility timeout so retries happen sooner</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Make the write idempotent, such as a PutItem keyed on the order ID<br><br>
+<strong>How to think about it:</strong> At-least-once delivery means make the consumer <b>idempotent</b>, e.g. <b>upsert</b> by a unique key.<br><br>
+<strong>Why B is correct:</strong> Repeating the same write with the same key leaves one row, so duplicates do no harm.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Add more consumers to finish work faster</em> &mdash; More consumers do not stop a message being delivered twice.<br><em>C) Switch from long polling to short polling</em> &mdash; Polling mode does not affect redelivery.<br><em>D) Lower the visibility timeout so retries happen sooner</em> &mdash; Shorter timeouts cause more duplicate receives, not fewer.
+</div>
+</div>
+
+<!-- Q25 SQS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SQS" data-level="A">
+<div class="q-tags"><span class="q-tag">SQS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>Traffic spikes send writes to DynamoDB faster than its provisioned capacity allows, causing throttling and lost requests. Which pattern smooths this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Buffer the writes in SQS, drain steadily</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add a global secondary index</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Put DAX in front of the table for writes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Send the writes to an SNS topic</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Buffer the writes in SQS, drain steadily<br><br>
+<strong>How to think about it:</strong> Absorb write spikes = <b>SQS as a write buffer</b> in front of the database.<br><br>
+<strong>Why A is correct:</strong> The queue absorbs bursts, and consumers write at a rate the table can accept.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Add a global secondary index</em> &mdash; A GSI consumes extra write capacity rather than saving it.<br><em>C) Put DAX in front of the table for writes</em> &mdash; DAX is a read cache; writes still hit the table at the same rate.<br><em>D) Send the writes to an SNS topic</em> &mdash; SNS pushes immediately and does not smooth the rate.
+</div>
+</div>
+
+<!-- Q26 SQS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SQS" data-level="B">
+<div class="q-tags"><span class="q-tag">SQS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>Lambda consumes an SQS queue through an event source mapping. What is the recommended queue visibility timeout?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Exactly equal to the Lambda timeout</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Half the Lambda timeout</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Zero, so failed messages return at once</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">At least six times the Lambda function timeout</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> At least six times the Lambda function timeout<br><br>
+<strong>How to think about it:</strong> SQS + Lambda: visibility timeout <b>at least 6x the function timeout</b>.<br><br>
+<strong>Why D is correct:</strong> This leaves room for retries and throttling before the message becomes visible again.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Exactly equal to the Lambda timeout</em> &mdash; Any delay or retry would let the message reappear while still being processed.<br><em>B) Half the Lambda timeout</em> &mdash; Messages would reappear before the function could finish.<br><em>C) Zero, so failed messages return at once</em> &mdash; Messages would be picked up again immediately by other invocations.
+</div>
+</div>
+
+<!-- Q27 SQS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SQS" data-level="A">
+<div class="q-tags"><span class="q-tag">SQS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>Clients send jobs to workers through SQS and need each answer routed back to the right client asynchronously. What is the usual design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Request and response queues with a correlation ID</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A DynamoDB stream between client and worker</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">One FIFO queue shared for requests and replies</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A single SNS topic for requests and replies</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Request and response queues with a correlation ID<br><br>
+<strong>How to think about it:</strong> Request/response over queues = <b>request queue + response queue + correlation ID</b>.<br><br>
+<strong>Why A is correct:</strong> Workers reply to the response queue, and clients match replies using the correlation ID.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A DynamoDB stream between client and worker</em> &mdash; Streams record table changes, not a request/reply channel.<br><em>C) One FIFO queue shared for requests and replies</em> &mdash; Mixing both directions on one queue makes consumers read each other's messages.<br><em>D) A single SNS topic for requests and replies</em> &mdash; Every subscriber would get every reply, with no routing.
+</div>
+</div>
+
+<!-- Q28 SQS DLQ -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SQS DLQ" data-level="B">
+<div class="q-tags"><span class="q-tag">SQS DLQ</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>When does SQS move a message to a dead-letter queue?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">After more receives than maxReceiveCount allows</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">When the message is older than one hour</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">As soon as the consumer throws an exception</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">When the visibility timeout is set to zero</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> After more receives than maxReceiveCount allows<br><br>
+<strong>How to think about it:</strong> DLQ = message received more than <b>maxReceiveCount</b> times (redrive policy).<br><br>
+<strong>Why A is correct:</strong> Each failed attempt returns the message to the queue, and past the threshold it moves to the DLQ.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) When the message is older than one hour</em> &mdash; Age alone does not move messages; expiry deletes them.<br><em>C) As soon as the consumer throws an exception</em> &mdash; SQS does not see consumer errors; it only counts receives.<br><em>D) When the visibility timeout is set to zero</em> &mdash; This changes timing but does not trigger the DLQ.
+</div>
+</div>
+
+<!-- Q29 SQS DLQ -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SQS DLQ" data-level="B">
+<div class="q-tags"><span class="q-tag">SQS DLQ</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>Which dead-letter queue can be attached to a FIFO source queue?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Either queue type</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An SNS FIFO topic</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A standard queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A FIFO queue</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A FIFO queue<br><br>
+<strong>How to think about it:</strong> DLQ type must match: <b>FIFO to FIFO</b>, standard to standard.<br><br>
+<strong>Why D is correct:</strong> A FIFO queue's dead-letter queue must also be a FIFO queue.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Either queue type</em> &mdash; SQS requires the DLQ to match the source queue type.<br><em>B) An SNS FIFO topic</em> &mdash; SQS dead-letter targets are SQS queues, not topics.<br><em>C) A standard queue</em> &mdash; Standard queues can only be DLQs for standard source queues.
+</div>
+</div>
+
+<!-- Q30 SQS DLQ -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SQS DLQ" data-level="B">
+<div class="q-tags"><span class="q-tag">SQS DLQ</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>Why is it good practice to give an SQS dead-letter queue a long retention period, such as 14 days?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">So failed messages stay long enough to inspect and reprocess</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">So SQS can automatically retry failed messages</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Because the DLQ must match the source's visibility timeout</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">So the DLQ delivers failed messages faster</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> So failed messages stay long enough to inspect and reprocess<br><br>
+<strong>How to think about it:</strong> DLQ messages can expire before you debug them, so set <b>long retention</b> on the DLQ.<br><br>
+<strong>Why A is correct:</strong> Messages in the DLQ still expire, so a long retention gives time to debug and redrive.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) So SQS can automatically retry failed messages</em> &mdash; SQS does not automatically retry messages in a DLQ.<br><em>C) Because the DLQ must match the source's visibility timeout</em> &mdash; Retention and visibility timeout are unrelated settings.<br><em>D) So the DLQ delivers failed messages faster</em> &mdash; Retention does not affect delivery speed.
+</div>
+</div>
+
+<!-- Q31 SQS DLQ -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SQS DLQ" data-level="B">
+<div class="q-tags"><span class="q-tag">SQS DLQ</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>A bug has been fixed, and thousands of messages waiting in the DLQ should be processed again by the normal consumer. What is the easiest way?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Run a DLQ redrive to the source queue</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Raise maxReceiveCount on the source queue</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Delete and recreate the source queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Point the consumer at the DLQ permanently</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Run a DLQ redrive to the source queue<br><br>
+<strong>How to think about it:</strong> Return DLQ messages to the source = <b>DLQ redrive</b>, no custom code.<br><br>
+<strong>Why A is correct:</strong> SQS redrive moves the messages back in batches without custom code.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Raise maxReceiveCount on the source queue</em> &mdash; That affects future messages, not those already in the DLQ.<br><em>C) Delete and recreate the source queue</em> &mdash; This would lose the queue's messages and settings.<br><em>D) Point the consumer at the DLQ permanently</em> &mdash; The DLQ should stay a quarantine, not a production queue.
+</div>
+</div>
+
+<!-- Q32 SQS DLQ -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SQS DLQ" data-level="A">
+<div class="q-tags"><span class="q-tag">SQS DLQ</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>Lambda reads from an SQS queue through an event source mapping, and failing messages must be kept for investigation. Where should the DLQ go?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">On the source SQS queue, through its redrive policy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">On an SNS topic subscribed to the function</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">On the Lambda function's asynchronous invoke settings</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">On the event source mapping as a second queue trigger</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> On the source SQS queue, through its redrive policy<br><br>
+<strong>How to think about it:</strong> SQS-triggered Lambda: put the <b>DLQ on the SQS queue</b> (Lambda's own DLQ is for async invokes).<br><br>
+<strong>Why A is correct:</strong> With polling, messages return to the queue, so the queue's own redrive policy sends failures to the DLQ.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) On an SNS topic subscribed to the function</em> &mdash; Functions are not SNS publishers of their own failures.<br><em>C) On the Lambda function's asynchronous invoke settings</em> &mdash; The function's DLQ applies only to asynchronous invokes, not SQS polling.<br><em>D) On the event source mapping as a second queue trigger</em> &mdash; A second trigger would just process messages again.
+</div>
+</div>
+
+<!-- Q33 SQS DLQ -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SQS DLQ" data-level="A">
+<div class="q-tags"><span class="q-tag">SQS DLQ</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>In a FIFO queue, one malformed message keeps failing and blocks all later messages in its message group. What should you set up?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Switch the queue to a standard queue</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add more consumers for the queue</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Increase the visibility timeout to 12 hours</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A FIFO dead-letter queue with a suitable maxReceiveCount</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A FIFO dead-letter queue with a suitable maxReceiveCount<br><br>
+<strong>How to think about it:</strong> Poison message blocking a FIFO group = <b>DLQ with maxReceiveCount</b> to remove it.<br><br>
+<strong>Why D is correct:</strong> After the set retries the bad message moves to the DLQ, unblocking the rest of the group.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Switch the queue to a standard queue</em> &mdash; This removes ordering, which the workload needs.<br><em>B) Add more consumers for the queue</em> &mdash; Only one message per group is in flight, so more consumers cannot pass it.<br><em>C) Increase the visibility timeout to 12 hours</em> &mdash; The message still fails, and the group stays blocked longer.
+</div>
+</div>
+
+<!-- Q34 Amazon MQ -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Amazon MQ" data-level="B">
+<div class="q-tags"><span class="q-tag">Amazon MQ</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>An on-premises app uses AMQP and MQTT with a message broker, and the team wants to move it to AWS without rewriting it for SQS and SNS. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon MQ</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Kinesis Data Streams</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon SNS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon SQS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon MQ<br><br>
+<strong>How to think about it:</strong> Open protocols (<b>AMQP, MQTT, STOMP, OpenWire, WSS</b>) without a rewrite = <b>Amazon MQ</b>.<br><br>
+<strong>Why A is correct:</strong> Amazon MQ is a managed broker that speaks the same open protocols, so apps move with little change.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon Kinesis Data Streams</em> &mdash; Kinesis is a streaming service with its own API, not a protocol-compatible broker.<br><em>C) Amazon SNS</em> &mdash; SNS has its own API and does not speak these broker protocols.<br><em>D) Amazon SQS</em> &mdash; SQS uses an AWS-specific API, so the app would need rewriting.
+</div>
+</div>
+
+<!-- Q35 Amazon MQ -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Amazon MQ" data-level="B">
+<div class="q-tags"><span class="q-tag">Amazon MQ</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>Which broker engines does Amazon MQ offer?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Apache Kafka and RabbitMQ</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Apache ActiveMQ and RabbitMQ</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">IBM MQ and TIBCO EMS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Apache ActiveMQ and Apache Pulsar</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Apache ActiveMQ and RabbitMQ<br><br>
+<strong>How to think about it:</strong> Amazon MQ = managed <b>Apache ActiveMQ</b> or <b>RabbitMQ</b>.<br><br>
+<strong>Why B is correct:</strong> These are the two managed broker engines Amazon MQ provides.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Apache Kafka and RabbitMQ</em> &mdash; Kafka runs on Amazon MSK, not Amazon MQ.<br><em>C) IBM MQ and TIBCO EMS</em> &mdash; These can be migrated to Amazon MQ but are not engines it runs.<br><em>D) Apache ActiveMQ and Apache Pulsar</em> &mdash; Pulsar is not an Amazon MQ engine.
+</div>
+</div>
+
+<!-- Q36 Amazon MQ -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Amazon MQ" data-level="B">
+<div class="q-tags"><span class="q-tag">Amazon MQ</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>How does Amazon MQ for ActiveMQ achieve high availability?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An active/standby broker pair across two AZs with failover</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A read replica that serves consumers</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Automatic replication to a second Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Serverless partitions that scale without brokers</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An active/standby broker pair across two AZs with failover<br><br>
+<strong>How to think about it:</strong> Amazon MQ runs on brokers; HA = <b>active/standby across AZs</b> with failover.<br><br>
+<strong>Why A is correct:</strong> If the active broker fails, the standby in the other AZ takes over.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A read replica that serves consumers</em> &mdash; Brokers do not use database-style read replicas.<br><em>C) Automatic replication to a second Region</em> &mdash; Standard HA is within one Region across AZs.<br><em>D) Serverless partitions that scale without brokers</em> &mdash; Amazon MQ runs on brokers you size.
+</div>
+</div>
+
+<!-- Q37 Amazon MQ -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Amazon MQ" data-level="A">
+<div class="q-tags"><span class="q-tag">Amazon MQ</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>A new cloud-native app will send millions of messages with highly variable load, and no legacy broker protocol is involved. What should the architect pick?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon SQS and SNS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">RabbitMQ on self-managed EC2</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon MQ with a larger broker instance</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon MQ with a network of brokers</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon SQS and SNS<br><br>
+<strong>How to think about it:</strong> No legacy protocol, massive scale = <b>SQS/SNS</b>; Amazon MQ does not scale as far.<br><br>
+<strong>Why A is correct:</strong> These serverless services scale almost without limit and need no broker sizing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) RabbitMQ on self-managed EC2</em> &mdash; This adds operations work with no need for the protocol.<br><em>C) Amazon MQ with a larger broker instance</em> &mdash; Amazon MQ suits protocol compatibility, but its brokers do not scale like SQS and SNS.<br><em>D) Amazon MQ with a network of brokers</em> &mdash; This still requires sizing and managing brokers.
+</div>
+</div>
+
+<!-- Q38 Amazon MQ -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Amazon MQ" data-level="A">
+<div class="q-tags"><span class="q-tag">Amazon MQ</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>A company runs Java apps that use JMS with an on-premises IBM MQ broker and wants a managed broker on AWS with minimal code changes. Which target fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon SQS FIFO queues</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon MSK</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon MQ for ActiveMQ</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon EventBridge</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon MQ for ActiveMQ<br><br>
+<strong>How to think about it:</strong> JMS / IBM MQ / TIBCO re-platform = <b>Amazon MQ for ActiveMQ</b>.<br><br>
+<strong>Why C is correct:</strong> ActiveMQ supports JMS, so apps can switch brokers with limited changes, often in phases.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon SQS FIFO queues</em> &mdash; SQS has JMS client support but different semantics, so it is more of a rewrite.<br><em>B) Amazon MSK</em> &mdash; Kafka has its own client model, not JMS queues and topics.<br><em>D) Amazon EventBridge</em> &mdash; EventBridge is an event bus with its own API, not a JMS broker.
+</div>
+</div>
+
+<!-- Q39 SNS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SNS" data-level="B">
+<div class="q-tags"><span class="q-tag">SNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>A buying service must send each new order to email, fraud and shipping services without calling each one directly. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Step Functions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon SNS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A single Amazon SQS queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon MQ</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon SNS<br><br>
+<strong>How to think about it:</strong> One message to many receivers = <b>SNS</b> pub/sub topic.<br><br>
+<strong>Why B is correct:</strong> The producer publishes once to a topic, and every subscription gets a copy.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Step Functions</em> &mdash; Step Functions orchestrates steps, not broadcast notifications.<br><em>C) A single Amazon SQS queue</em> &mdash; Each queue message goes to only one consumer.<br><em>D) Amazon MQ</em> &mdash; A broker could do it, but SNS is the serverless, native fit.
+</div>
+</div>
+
+<!-- Q40 SNS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SNS" data-level="B">
+<div class="q-tags"><span class="q-tag">SNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>Which of these is NOT a supported subscription type for a standard SNS topic?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">HTTPS endpoint</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Lambda</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Kinesis Data Streams</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Data Firehose</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon Kinesis Data Streams<br><br>
+<strong>How to think about it:</strong> SNS delivers to SQS, Lambda, <b>Firehose</b>, HTTP(S), email, SMS, mobile push; <b>not Kinesis Data Streams</b> directly.<br><br>
+<strong>Why C is correct:</strong> SNS cannot deliver straight to a Kinesis data stream; it uses Firehose instead.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) HTTPS endpoint</em> &mdash; HTTP and HTTPS endpoints are supported subscription types.<br><em>B) AWS Lambda</em> &mdash; Lambda is a common SNS subscriber.<br><em>D) Amazon Data Firehose</em> &mdash; Firehose is a supported subscriber, used to land messages in S3 and more.
+</div>
+</div>
+
+<!-- Q41 SNS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SNS" data-level="B">
+<div class="q-tags"><span class="q-tag">SNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>An SQS subscription should receive only order messages whose state attribute is Cancelled. What should you configure?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A delivery policy on the topic</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A separate topic per state value</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda function that drops unwanted messages</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A filter policy on that subscription</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A filter policy on that subscription<br><br>
+<strong>How to think about it:</strong> Subscriber gets a subset = <b>filter policy</b> on the <b>subscription</b>.<br><br>
+<strong>Why D is correct:</strong> A JSON filter policy lets SNS deliver only matching messages to that subscriber.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A delivery policy on the topic</em> &mdash; Delivery policies control retries, not which messages are sent.<br><em>B) A separate topic per state value</em> &mdash; This forces the publisher to choose topics, which filtering avoids.<br><em>C) A Lambda function that drops unwanted messages</em> &mdash; This adds code and cost that a filter policy removes.
+</div>
+</div>
+
+<!-- Q42 SNS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SNS" data-level="B">
+<div class="q-tags"><span class="q-tag">SNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>An SNS topic has several subscriptions with filter policies and one subscription without any. What does the unfiltered subscription receive?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only messages that match no other policy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">No messages until a policy is added</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Every message published to the topic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only messages with no attributes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Every message published to the topic<br><br>
+<strong>How to think about it:</strong> <b>No filter policy = every message</b>.<br><br>
+<strong>Why C is correct:</strong> Without a filter policy, a subscription gets all messages.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only messages that match no other policy</em> &mdash; SNS does not route leftovers to unfiltered subscribers.<br><em>B) No messages until a policy is added</em> &mdash; A missing policy means no filtering, not blocking.<br><em>D) Only messages with no attributes</em> &mdash; Attributes do not matter when no policy exists.
+</div>
+</div>
+
+<!-- Q43 SNS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SNS" data-level="B">
+<div class="q-tags"><span class="q-tag">SNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>A mobile app needs push notifications on iOS and Android devices through SNS. What must be created?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Firehose stream per device</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A platform application plus device endpoints</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An email-JSON subscription per user</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An SMS subscription per phone number</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A platform application plus device endpoints<br><br>
+<strong>How to think about it:</strong> Mobile push = <b>platform application</b> + <b>platform endpoint</b> per device (APNs, FCM).<br><br>
+<strong>Why B is correct:</strong> SNS registers the push service credentials and each device token, then publishes to the endpoints.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Firehose stream per device</em> &mdash; Firehose loads data into stores, not phones.<br><em>C) An email-JSON subscription per user</em> &mdash; Email-JSON sends to inboxes, not devices.<br><em>D) An SMS subscription per phone number</em> &mdash; SMS sends texts, not native app push notifications.
+</div>
+</div>
+
+<!-- Q44 SNS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SNS" data-level="B">
+<div class="q-tags"><span class="q-tag">SNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>Security requires SNS messages to be encrypted at rest. What should be enabled?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A topic access policy denying public access</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Message filtering on each subscription</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Server-side encryption with an AWS KMS key on the topic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">HTTPS-only subscriptions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Server-side encryption with an AWS KMS key on the topic<br><br>
+<strong>How to think about it:</strong> SNS at rest = <b>server-side encryption with KMS</b>; in flight = HTTPS.<br><br>
+<strong>Why C is correct:</strong> SNS encrypts stored messages using the chosen KMS key.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A topic access policy denying public access</em> &mdash; Access policies control who can act, not encryption.<br><em>B) Message filtering on each subscription</em> &mdash; Filtering selects messages and has nothing to do with encryption.<br><em>D) HTTPS-only subscriptions</em> &mdash; HTTPS protects messages in transit, not at rest.
+</div>
+</div>
+
+<!-- Q45 SNS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SNS" data-level="A">
+<div class="q-tags"><span class="q-tag">SNS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>An application in account A must publish to an SNS topic in account B. What is the cleanest way to allow it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create IAM users in account B for the app</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Peer the two VPCs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Share the topic through AWS RAM</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A topic access policy allowing account A</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A topic access policy allowing account A<br><br>
+<strong>How to think about it:</strong> Cross-account SNS = <b>topic access policy</b> (resource policy, like an S3 bucket policy).<br><br>
+<strong>Why D is correct:</strong> The resource policy grants sns:Publish to the other account's principals.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Create IAM users in account B for the app</em> &mdash; Long-lived users in another account are less secure than a resource policy.<br><em>B) Peer the two VPCs</em> &mdash; SNS is a regional API; VPC peering does not grant permission.<br><em>C) Share the topic through AWS RAM</em> &mdash; SNS topics are not shared through AWS RAM.
+</div>
+</div>
+
+<!-- Q46 SNS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SNS" data-level="A">
+<div class="q-tags"><span class="q-tag">SNS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>An S3 bucket's event notifications fail to publish to an SNS topic. What is the usual missing piece?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A VPC endpoint for SNS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A topic policy allowing S3 to publish</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A filter policy on the topic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An IAM role attached to the bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A topic policy allowing S3 to publish<br><br>
+<strong>How to think about it:</strong> Let a service publish to SNS = allow its <b>service principal</b> in the <b>topic access policy</b>.<br><br>
+<strong>Why B is correct:</strong> S3 needs permission in the topic policy, usually scoped by the bucket ARN.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A VPC endpoint for SNS</em> &mdash; S3 notifications do not travel through your VPC.<br><em>C) A filter policy on the topic</em> &mdash; Filter policies apply to subscriptions, not publishers.<br><em>D) An IAM role attached to the bucket</em> &mdash; Buckets do not assume roles to send notifications.
+</div>
+</div>
+
+<!-- Q47 SNS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SNS" data-level="B">
+<div class="q-tags"><span class="q-tag">SNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>Subscribers to a topic must receive messages in the order they were published, grouped by customer. Which SNS feature fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A standard topic with a custom delivery policy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A standard topic with raw message delivery</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An SNS FIFO topic using a message group ID per customer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A standard topic with message filtering</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An SNS FIFO topic using a message group ID per customer<br><br>
+<strong>How to think about it:</strong> Ordering in pub/sub = <b>SNS FIFO topic</b>, ordered per <b>message group ID</b>.<br><br>
+<strong>Why C is correct:</strong> FIFO topics keep order within each message group for their subscribers.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A standard topic with a custom delivery policy</em> &mdash; Delivery policies control retries, not order.<br><em>B) A standard topic with raw message delivery</em> &mdash; Raw delivery changes the message format, not ordering.<br><em>D) A standard topic with message filtering</em> &mdash; Filtering selects messages but gives no ordering.
+</div>
+</div>
+
+<!-- Q48 SNS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SNS" data-level="A">
+<div class="q-tags"><span class="q-tag">SNS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>A producer may publish the same event to an SNS FIFO topic twice within a few minutes. How can SNS drop the duplicate?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add a filter policy on each subscription</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable raw message delivery</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Set a dead-letter queue on the topic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A deduplication ID or content-based dedup</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A deduplication ID or content-based dedup<br><br>
+<strong>How to think about it:</strong> SNS FIFO dedup = <b>deduplication ID</b> or <b>content-based deduplication</b>.<br><br>
+<strong>Why D is correct:</strong> SNS FIFO treats messages with the same deduplication ID, or same body hash, as duplicates within its window.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Add a filter policy on each subscription</em> &mdash; Filters choose which subscribers get messages, not which are duplicates.<br><em>B) Enable raw message delivery</em> &mdash; Raw delivery only strips the SNS envelope.<br><em>C) Set a dead-letter queue on the topic</em> &mdash; DLQs catch undeliverable messages, not duplicates.
+</div>
+</div>
+
+<!-- Q49 SNS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SNS" data-level="B">
+<div class="q-tags"><span class="q-tag">SNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>A CloudWatch alarm should notify an on-call team by email and SMS. How is this usually done?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Trigger a Step Functions workflow per alarm</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Write the alarm to CloudWatch Logs with a subscription</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Make an SNS topic the alarm action</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Send the alarm to an SQS queue the team reads</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Make an SNS topic the alarm action<br><br>
+<strong>How to think about it:</strong> Many AWS services <b>publish natively to SNS</b>: alarms, Budgets, RDS events, S3 events and more.<br><br>
+<strong>Why C is correct:</strong> CloudWatch alarms publish straight to SNS, which fans out to each channel.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Trigger a Step Functions workflow per alarm</em> &mdash; This adds orchestration that a topic already covers.<br><em>B) Write the alarm to CloudWatch Logs with a subscription</em> &mdash; Alarms do not log themselves to trigger notifications.<br><em>D) Send the alarm to an SQS queue the team reads</em> &mdash; A queue needs someone polling it and sends no texts.
+</div>
+</div>
+
+<!-- Q50 SNS Delivery -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SNS Delivery" data-level="B">
+<div class="q-tags"><span class="q-tag">SNS Delivery</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>SNS has exhausted its delivery policy for a subscriber and the message was never delivered. With no DLQ configured, what happens?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It is returned to the publisher</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It is sent to the other subscribers again</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The message is discarded</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It is stored in the topic for 14 days</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The message is discarded<br><br>
+<strong>How to think about it:</strong> Retries exhausted and <b>no DLQ = message discarded</b>.<br><br>
+<strong>Why C is correct:</strong> Without a dead-letter queue, undeliverable messages are dropped after the last retry.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It is returned to the publisher</em> &mdash; SNS does not send failures back to the publisher.<br><em>B) It is sent to the other subscribers again</em> &mdash; Other subscribers already got their own copy.<br><em>D) It is stored in the topic for 14 days</em> &mdash; SNS topics do not store messages for later.
+</div>
+</div>
+
+<!-- Q51 SNS Delivery -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SNS Delivery" data-level="B">
+<div class="q-tags"><span class="q-tag">SNS Delivery</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>Where is an SNS dead-letter queue attached, and what kind of resource is it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">To the topic, as another SNS topic</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">To a subscription, as an SQS queue</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">To the publisher's IAM role</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">To the topic, as an S3 bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> To a subscription, as an SQS queue<br><br>
+<strong>How to think about it:</strong> SNS DLQ = an <b>SQS queue</b> attached to a <b>subscription</b>, not the topic.<br><br>
+<strong>Why B is correct:</strong> Each subscription can have its own SQS dead-letter queue via a redrive policy.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) To the topic, as another SNS topic</em> &mdash; DLQs are set per subscription and must be SQS queues.<br><em>C) To the publisher's IAM role</em> &mdash; IAM roles have no dead-letter settings.<br><em>D) To the topic, as an S3 bucket</em> &mdash; S3 is not an SNS dead-letter target.
+</div>
+</div>
+
+<!-- Q52 SNS Delivery -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SNS Delivery" data-level="B">
+<div class="q-tags"><span class="q-tag">SNS Delivery</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>Which SNS subscription type lets you define a custom delivery retry policy?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">HTTP and HTTPS endpoints</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Email subscriptions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Lambda functions</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon SQS queues</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> HTTP and HTTPS endpoints<br><br>
+<strong>How to think about it:</strong> <b>Custom delivery policy = HTTP/S only</b>.<br><br>
+<strong>Why A is correct:</strong> Only HTTP/S subscriptions accept custom retry and throttling settings.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Email subscriptions</em> &mdash; Email deliveries cannot be given a custom retry policy.<br><em>C) AWS Lambda functions</em> &mdash; Lambda deliveries use the fixed AWS-managed endpoint policy.<br><em>D) Amazon SQS queues</em> &mdash; SQS deliveries use the fixed policy for AWS-managed endpoints.
+</div>
+</div>
+
+<!-- Q53 SNS Delivery -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SNS Delivery" data-level="A">
+<div class="q-tags"><span class="q-tag">SNS Delivery</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>A partner's HTTPS endpoint subscribed to SNS will be down for about 12 hours of maintenance. With the default delivery policy and no DLQ, what is the risk?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">No risk, since SNS retries HTTPS for about 23 days</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">No risk, since SNS holds messages until the endpoint returns</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Messages may be dropped because default retries end after about six hours</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">SNS stops the subscription after the first failure</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Messages may be dropped because default retries end after about six hours<br><br>
+<strong>How to think about it:</strong> Customer endpoints: <b>default retries cover about 6 hours</b>; AWS endpoints (SQS, Lambda) retry for days.<br><br>
+<strong>Why C is correct:</strong> The default HTTP/S policy stops after roughly 50 attempts over 6 hours, so add a DLQ or longer policy.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) No risk, since SNS retries HTTPS for about 23 days</em> &mdash; The multi-day retry schedule applies to AWS-managed endpoints like SQS and Lambda.<br><em>B) No risk, since SNS holds messages until the endpoint returns</em> &mdash; SNS does not store messages indefinitely for subscribers.<br><em>D) SNS stops the subscription after the first failure</em> &mdash; SNS retries many times before giving up.
+</div>
+</div>
+
+<!-- Q54 SNS Delivery -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SNS Delivery" data-level="A">
+<div class="q-tags"><span class="q-tag">SNS Delivery</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>A subscription on an SNS FIFO topic needs a dead-letter queue. What type must it be?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Another SNS FIFO topic</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An SQS FIFO queue</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An SQS standard queue</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Kinesis data stream</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An SQS FIFO queue<br><br>
+<strong>How to think about it:</strong> SNS FIFO subscription DLQ = <b>SQS FIFO queue</b>.<br><br>
+<strong>Why B is correct:</strong> Dead-letter queues for FIFO topic subscriptions must be FIFO queues to keep order.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Another SNS FIFO topic</em> &mdash; SNS DLQs must be SQS queues.<br><em>C) An SQS standard queue</em> &mdash; Standard DLQs are for standard topic subscriptions.<br><em>D) A Kinesis data stream</em> &mdash; Kinesis streams are not SNS dead-letter targets.
+</div>
+</div>
+
+<!-- Q55 Fan-out -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Fan-out" data-level="B">
+<div class="q-tags"><span class="q-tag">Fan-out</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>Why subscribe SQS queues to an SNS topic instead of having SNS call each service directly?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It makes each message cheaper than a direct call</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Each queue durably buffers its own copy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It guarantees strict ordering across all queues</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It removes the need for any IAM permissions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Each queue durably buffers its own copy<br><br>
+<strong>How to think about it:</strong> <b>SNS + SQS fan-out</b> = push once, each queue adds persistence, delays and retries.<br><br>
+<strong>Why B is correct:</strong> Queues buffer each copy, so a slow or failed service loses nothing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It makes each message cheaper than a direct call</em> &mdash; Cost is not the main reason; durability and decoupling are.<br><em>C) It guarantees strict ordering across all queues</em> &mdash; Standard topics and queues do not guarantee order.<br><em>D) It removes the need for any IAM permissions</em> &mdash; The queue still needs an access policy allowing SNS.
+</div>
+</div>
+
+<!-- Q56 Fan-out -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Fan-out" data-level="B">
+<div class="q-tags"><span class="q-tag">Fan-out</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>An SQS queue subscribed to an SNS topic never receives messages. What should you check first?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The queue's long polling setting</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The queue's visibility timeout</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The queue policy lets the topic send</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The topic's custom HTTP delivery policy</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The queue policy lets the topic send<br><br>
+<strong>How to think about it:</strong> Fan-out pitfall = the <b>SQS queue access policy</b> must allow the topic to send.<br><br>
+<strong>Why C is correct:</strong> Without that policy, SNS is denied when it tries to deliver.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The queue's long polling setting</em> &mdash; Polling mode does not stop messages arriving.<br><em>B) The queue's visibility timeout</em> &mdash; Visibility timeout affects receiving, not delivery from SNS.<br><em>D) The topic's custom HTTP delivery policy</em> &mdash; Custom delivery policies do not apply to SQS.
+</div>
+</div>
+
+<!-- Q57 Fan-out -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Fan-out" data-level="A">
+<div class="q-tags"><span class="q-tag">Fan-out</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>The same S3 object-created events for one prefix must reach three different SQS queues. S3 rejects overlapping notification rules. What should you do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turn on S3 Replication to three buckets</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create three notification rules with the same prefix</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Send the S3 event to one SNS topic and subscribe all three queues</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Have the first queue forward to the other two</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Send the S3 event to one SNS topic and subscribe all three queues<br><br>
+<strong>How to think about it:</strong> One S3 event, many consumers = <b>fan-out via SNS</b> (or EventBridge).<br><br>
+<strong>Why C is correct:</strong> One notification rule targets the topic, which copies each event to every queue.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Turn on S3 Replication to three buckets</em> &mdash; Replication copies objects; it does not send events to queues.<br><em>B) Create three notification rules with the same prefix</em> &mdash; S3 does not allow overlapping rules for the same event type and prefix.<br><em>D) Have the first queue forward to the other two</em> &mdash; SQS cannot forward messages to other queues.
+</div>
+</div>
+
+<!-- Q58 Fan-out -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Fan-out" data-level="B">
+<div class="q-tags"><span class="q-tag">Fan-out</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>Can an SNS topic deliver to an SQS queue in a different Region?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only through a VPC peering connection</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only if both are FIFO</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">No; the queue must be in the same Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Yes; cross-Region delivery to SQS is supported</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Yes; cross-Region delivery to SQS is supported<br><br>
+<strong>How to think about it:</strong> SNS to SQS <b>cross-Region delivery</b> is supported.<br><br>
+<strong>Why D is correct:</strong> A topic can deliver to queues in other Regions if permissions allow it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only through a VPC peering connection</em> &mdash; SNS delivery does not use your VPC networking.<br><em>B) Only if both are FIFO</em> &mdash; Cross-Region delivery does not depend on FIFO.<br><em>C) No; the queue must be in the same Region</em> &mdash; Same-Region is not required for SQS subscribers.
+</div>
+</div>
+
+<!-- Q59 Fan-out -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Fan-out" data-level="A">
+<div class="q-tags"><span class="q-tag">Fan-out</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>Every message published to an SNS topic must also be archived to S3 with minimal custom code. Which design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Subscribe a Firehose stream to the topic, delivering to S3</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable the topic's delivery status logging to S3</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Subscribe a Kinesis data stream to the topic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Subscribe the S3 bucket directly to the topic</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Subscribe a Firehose stream to the topic, delivering to S3<br><br>
+<strong>How to think about it:</strong> SNS to S3 = subscribe <b>Amazon Data Firehose</b>, which delivers to S3.<br><br>
+<strong>Why A is correct:</strong> Firehose batches messages and writes them to S3 or another destination without code.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Enable the topic's delivery status logging to S3</em> &mdash; Delivery status logs go to CloudWatch Logs and are not message archives.<br><em>C) Subscribe a Kinesis data stream to the topic</em> &mdash; SNS cannot deliver to Kinesis Data Streams directly.<br><em>D) Subscribe the S3 bucket directly to the topic</em> &mdash; S3 is not a supported SNS subscription type.
+</div>
+</div>
+
+<!-- Q60 Fan-out -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Fan-out" data-level="A">
+<div class="q-tags"><span class="q-tag">Fan-out</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>An order event must reach several downstream services, each in strict per-order sequence and without duplicates. Which design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">EventBridge rules routing to standard queues</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One SQS FIFO queue read by all services</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An SNS standard topic fanning out to SQS FIFO queues</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An SNS FIFO topic fanning out to SQS FIFO queues</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> An SNS FIFO topic fanning out to SQS FIFO queues<br><br>
+<strong>How to think about it:</strong> Fan-out + ordering + dedup = <b>SNS FIFO topic to SQS FIFO queues</b>.<br><br>
+<strong>Why D is correct:</strong> FIFO topics keep order and deduplicate, and FIFO queues keep that order for each consumer.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) EventBridge rules routing to standard queues</em> &mdash; Standard queues do not keep order or remove duplicates.<br><em>B) One SQS FIFO queue read by all services</em> &mdash; Each message would reach only one service.<br><em>C) An SNS standard topic fanning out to SQS FIFO queues</em> &mdash; A standard topic can reorder or duplicate before the queue sees it.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

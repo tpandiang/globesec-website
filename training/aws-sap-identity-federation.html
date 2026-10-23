@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Identity &amp; Federation - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Identity &amp; Federation</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Identity &amp; Federation</h2>
+        <p>60 refresher questions &mdash; IAM, STS, SAML &amp; web identity federation, Cognito, Directory Service, Organizations &amp; SCPs, IAM Identity Center, Control Tower, RAM</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="IAM Policies" onclick="filterQ(this)">IAM Policies</button><button class="filter-btn" data-f="STS & Roles" onclick="filterQ(this)">STS & Roles</button><button class="filter-btn" data-f="Federation" onclick="filterQ(this)">Federation</button><button class="filter-btn" data-f="Directory Service" onclick="filterQ(this)">Directory Service</button><button class="filter-btn" data-f="Organizations & SCPs" onclick="filterQ(this)">Organizations & SCPs</button><button class="filter-btn" data-f="Identity Center" onclick="filterQ(this)">Identity Center</button><button class="filter-btn" data-f="Control Tower" onclick="filterQ(this)">Control Tower</button><button class="filter-btn" data-f="RAM" onclick="filterQ(this)">RAM</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 IAM Policies -->
+<div class="question" data-type="mc" data-answer="3" data-topic="IAM Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">IAM Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>An identity-based policy allows <code>s3:*</code>, but a second policy attached to the same user denies <code>s3:DeleteObject</code>. What happens when the user tries to delete an object?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The delete succeeds because the broader Allow is evaluated last</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The delete succeeds because Allow and Deny cancel each other out</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The result depends on which policy was attached most recently</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The delete is denied because an explicit Deny overrides any Allow</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The delete is denied because an explicit Deny overrides any Allow<br><br>
+<strong>How to think about it:</strong> <b>Explicit Deny</b> always wins over any Allow.<br><br>
+<strong>Why D is correct:</strong> IAM evaluation checks for an explicit Deny first; if one matches, no Allow anywhere can override it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The delete succeeds because the broader Allow is evaluated last</em> &mdash; Order of attachment or evaluation does not matter; a matching Deny is final.<br><em>B) The delete succeeds because Allow and Deny cancel each other out</em> &mdash; There is no cancelling out; a single explicit Deny blocks the request.<br><em>C) The result depends on which policy was attached most recently</em> &mdash; IAM has no recency rule; every applicable policy is evaluated together.
+</div>
+</div>
+
+<!-- Q2 IAM Policies -->
+<div class="question" data-type="mc" data-answer="2" data-topic="IAM Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">IAM Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>If no policy mentions an action at all, what is the result when a user calls it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It is allowed because nothing denies it</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It is allowed if the user has MFA enabled</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It is implicitly denied</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It is allowed only for read-only actions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> It is implicitly denied<br><br>
+<strong>How to think about it:</strong> Nothing says yes = <b>implicit deny</b>.<br><br>
+<strong>Why C is correct:</strong> IAM denies everything by default; a request needs an explicit Allow and no explicit Deny to succeed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It is allowed because nothing denies it</em> &mdash; IAM is default-deny, so silence never grants access.<br><em>B) It is allowed if the user has MFA enabled</em> &mdash; MFA status alone grants nothing; it can only be checked in a condition.<br><em>D) It is allowed only for read-only actions</em> &mdash; There is no special default for read actions; they also need an Allow.
+</div>
+</div>
+
+<!-- Q3 IAM Policies -->
+<div class="question" data-type="mc" data-answer="0" data-topic="IAM Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">IAM Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>The AWS managed policy PowerUserAccess grants broad access but excludes IAM and Organizations management. Which policy element makes that possible without writing a Deny?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An Allow statement that uses NotAction</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A permissions boundary attached to the policy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Deny statement scoped with a Condition</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An Allow statement that uses NotResource</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An Allow statement that uses NotAction<br><br>
+<strong>How to think about it:</strong> Allow everything except a list = <b>NotAction</b> with Effect Allow.<br><br>
+<strong>Why A is correct:</strong> NotAction with Allow grants every action except those listed, so IAM and Organizations simply are not granted.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A permissions boundary attached to the policy</em> &mdash; Boundaries attach to users or roles, not to another managed policy.<br><em>C) A Deny statement scoped with a Condition</em> &mdash; A Deny would block those actions even if another policy allowed them, which PowerUserAccess avoids.<br><em>D) An Allow statement that uses NotResource</em> &mdash; NotResource excludes resources, not actions such as <code>iam:*</code>.
+</div>
+</div>
+
+<!-- Q4 IAM Policies -->
+<div class="question" data-type="mc" data-answer="3" data-topic="IAM Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">IAM Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>A bucket policy must reject any request that does not use HTTPS. Which condition key should it test?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">aws:SourceIp with the IpAddress operator</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">s3:x-amz-server-side-encryption</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">aws:MultiFactorAuthPresent with Bool</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">aws:SecureTransport with the Bool operator</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> aws:SecureTransport with the Bool operator<br><br>
+<strong>How to think about it:</strong> Encrypted in transit = <b>aws:SecureTransport</b> (Bool).<br><br>
+<strong>Why D is correct:</strong> This key is true only when the request arrived over TLS, so a Deny when it is false blocks plain HTTP.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) aws:SourceIp with the IpAddress operator</em> &mdash; SourceIp checks where the request came from, not whether it was encrypted.<br><em>B) s3:x-amz-server-side-encryption</em> &mdash; That key concerns encryption at rest of the uploaded object, not the transport protocol.<br><em>C) aws:MultiFactorAuthPresent with Bool</em> &mdash; This checks whether the caller used MFA, which is unrelated to HTTPS.
+</div>
+</div>
+
+<!-- Q5 IAM Policies -->
+<div class="question" data-type="mc" data-answer="3" data-topic="IAM Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">IAM Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>One policy should give every IAM user access only to their own folder <code>home/&amp;lt;username&amp;gt;/</code> in a shared bucket. What makes this possible?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An S3 access point per user with no IAM policy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A separate inline policy written for each user</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The aws:SourceIp condition key</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The ${aws:username} variable in the Resource ARN</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The ${aws:username} variable in the Resource ARN<br><br>
+<strong>How to think about it:</strong> One policy, per-user paths = <b>policy variable ${aws:username}</b>.<br><br>
+<strong>Why D is correct:</strong> The variable is replaced with the caller's user name at evaluation time, so one policy serves every user.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An S3 access point per user with no IAM policy</em> &mdash; Access points still need policies; they do not personalise paths on their own.<br><em>B) A separate inline policy written for each user</em> &mdash; That works but defeats the goal of a single maintainable policy.<br><em>C) The aws:SourceIp condition key</em> &mdash; Source IP identifies a network location, not which folder belongs to which user.
+</div>
+</div>
+
+<!-- Q6 IAM Policies -->
+<div class="question" data-type="mc" data-answer="1" data-topic="IAM Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">IAM Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>What does an IAM permissions boundary do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It limits every account in an organizational unit</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It caps the permissions a user or role can ever have</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It grants permissions to every member of an IAM group</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It lists which external accounts may assume a role</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> It caps the permissions a user or role can ever have<br><br>
+<strong>How to think about it:</strong> Boundary = <b>maximum</b> permissions ceiling; it never grants anything by itself.<br><br>
+<strong>Why B is correct:</strong> Effective permissions are the overlap of the boundary and the identity policies; the boundary alone grants nothing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It limits every account in an organizational unit</em> &mdash; Limiting accounts across an OU is the job of a service control policy.<br><em>C) It grants permissions to every member of an IAM group</em> &mdash; Boundaries cannot be attached to groups and they do not grant access.<br><em>D) It lists which external accounts may assume a role</em> &mdash; That is the role's trust policy, not a boundary.
+</div>
+</div>
+
+<!-- Q7 IAM Policies -->
+<div class="question" data-type="mc" data-answer="2" data-topic="IAM Policies" data-level="A">
+<div class="q-tags"><span class="q-tag">IAM Policies</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>Developers must be allowed to create IAM roles for their Lambda functions, but must never be able to create a role more powerful than themselves. What is the standard control?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Give developers read-only IAM access and approve roles manually</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Attach an SCP that denies iam:CreateRole in the account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Allow iam:CreateRole only when a specific permissions boundary is attached</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable IAM Access Analyzer in the account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Allow iam:CreateRole only when a specific permissions boundary is attached<br><br>
+<strong>How to think about it:</strong> Delegated IAM admin without privilege escalation = <b>require a permissions boundary</b> on what they create.<br><br>
+<strong>Why C is correct:</strong> A condition on <code>iam:PermissionsBoundary</code> forces every new role under the same ceiling, so nobody can escalate.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Give developers read-only IAM access and approve roles manually</em> &mdash; This is safe but does not let developers self-serve as required.<br><em>B) Attach an SCP that denies iam:CreateRole in the account</em> &mdash; This stops the developers from creating roles at all, which breaks the requirement.<br><em>D) Enable IAM Access Analyzer in the account</em> &mdash; Access Analyzer reports external sharing; it does not stop escalation in real time.
+</div>
+</div>
+
+<!-- Q8 IAM Policies -->
+<div class="question" data-type="mc" data-answer="1" data-topic="IAM Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">IAM Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>Which IAM Access Analyzer capability reports that an S3 bucket or KMS key is reachable from outside your account or organization?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Policy validation checks</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">External access findings</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Access Advisor last-accessed data</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The IAM credential report</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> External access findings<br><br>
+<strong>How to think about it:</strong> Outside the <b>zone of trust</b> = Access Analyzer <b>external access findings</b>.<br><br>
+<strong>Why B is correct:</strong> You set the account or organization as the zone of trust, and any resource shared outside it becomes a finding.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Policy validation checks</em> &mdash; Validation checks grammar and best practices of a policy you are writing, not live sharing.<br><em>C) Access Advisor last-accessed data</em> &mdash; Access Advisor shows when services were last used by an identity, not external exposure.<br><em>D) The IAM credential report</em> &mdash; The credential report lists users and their credential status, not resource sharing.
+</div>
+</div>
+
+<!-- Q9 IAM Policies -->
+<div class="question" data-type="mc" data-answer="3" data-topic="IAM Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">IAM Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>A team wants a least-privilege policy for a role, built from the API calls the role really made over recent weeks. Which feature helps?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">IAM Access Analyzer policy validation</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Trusted Advisor security checks</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The IAM policy simulator</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">IAM Access Analyzer policy generation</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> IAM Access Analyzer policy generation<br><br>
+<strong>How to think about it:</strong> Write the policy from real activity = Access Analyzer <b>policy generation</b> (reads CloudTrail).<br><br>
+<strong>Why D is correct:</strong> It reviews the role's CloudTrail history and drafts a policy with only the actions and services that were used.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) IAM Access Analyzer policy validation</em> &mdash; Validation checks a policy you already wrote; it does not create one from activity.<br><em>B) AWS Trusted Advisor security checks</em> &mdash; Trusted Advisor flags risky settings but does not write fine-grained IAM policies.<br><em>C) The IAM policy simulator</em> &mdash; The simulator tests what a policy allows; it does not build a policy from history.
+</div>
+</div>
+
+<!-- Q10 IAM Policies -->
+<div class="question" data-type="mc" data-answer="2" data-topic="IAM Policies" data-level="A">
+<div class="q-tags"><span class="q-tag">IAM Policies</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>Engineers may create EBS volumes only if the request includes both the <code>Env</code> and <code>CostCenter</code> tag keys. Which condition approach enforces this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">aws:PrincipalTag on the engineer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">aws:ResourceTag on the volume being created</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">aws:TagKeys with ForAllValues plus aws:RequestTag checks</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">ec2:Region with StringEquals</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> aws:TagKeys with ForAllValues plus aws:RequestTag checks<br><br>
+<strong>How to think about it:</strong> Every listed tag must be present = <b>aws:TagKeys</b> with <b>ForAllValues</b> plus a request-tag check.<br><br>
+<strong>Why C is correct:</strong> ForAllValues limits the request to approved keys, and RequestTag checks make sure both keys are actually supplied.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) aws:PrincipalTag on the engineer</em> &mdash; PrincipalTag checks the caller's own tags, not the tags on the new volume.<br><em>B) aws:ResourceTag on the volume being created</em> &mdash; ResourceTag reads tags that already exist on a resource, not those in the create request.<br><em>D) ec2:Region with StringEquals</em> &mdash; This only controls the Region; it does nothing about tags.
+</div>
+</div>
+
+<!-- Q11 IAM Policies -->
+<div class="question" data-type="mc" data-answer="2" data-topic="IAM Policies" data-level="A">
+<div class="q-tags"><span class="q-tag">IAM Policies</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>A role's sessions were exposed. You must cut off every session already issued for that role without deleting the role. What do you do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Rotate the role's access keys</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Detach all permission policies from the role</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Revoke active sessions, denying tokens issued before now</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Lower the role's maximum session duration to 15 minutes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Revoke active sessions, denying tokens issued before now<br><br>
+<strong>How to think about it:</strong> Kill issued sessions = <b>revoke active sessions</b> (deny on aws:TokenIssueTime).<br><br>
+<strong>Why C is correct:</strong> The AWSRevokeOlderSessions inline policy denies all requests whose token was issued before the revoke time.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Rotate the role's access keys</em> &mdash; Roles have no long-term access keys; their credentials are temporary.<br><em>B) Detach all permission policies from the role</em> &mdash; This blocks old and new sessions alike, and the role becomes unusable.<br><em>D) Lower the role's maximum session duration to 15 minutes</em> &mdash; This affects future sessions only; existing tokens stay valid until they expire.
+</div>
+</div>
+
+<!-- Q12 STS & Roles -->
+<div class="question" data-type="mc" data-answer="1" data-topic="STS & Roles" data-level="B">
+<div class="q-tags"><span class="q-tag">STS & Roles</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>What is the key difference between assuming a cross-account role and using a resource-based policy to grant access?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Assuming a role keeps your permissions and adds the role's</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A role swaps your permissions for the role's; a resource policy keeps yours</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Resource policies require the caller to have MFA</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Resource policies work only within one account; roles work across accounts</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A role swaps your permissions for the role's; a resource policy keeps yours<br><br>
+<strong>How to think about it:</strong> Assume a role = <b>give up your own permissions</b>. Resource policy = keep them.<br><br>
+<strong>Why B is correct:</strong> With a resource policy you act as yourself, so you can read in one account and write in the other in the same session.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Assuming a role keeps your permissions and adds the role's</em> &mdash; Assuming a role replaces your permissions for that session; they are not merged.<br><em>C) Resource policies require the caller to have MFA</em> &mdash; MFA is optional and can be required by condition in either approach.<br><em>D) Resource policies work only within one account; roles work across accounts</em> &mdash; Resource policies such as bucket policies are commonly used to grant other accounts access.
+</div>
+</div>
+
+<!-- Q13 STS & Roles -->
+<div class="question" data-type="mc" data-answer="1" data-topic="STS & Roles" data-level="A">
+<div class="q-tags"><span class="q-tag">STS & Roles</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>A user in Account A must scan a DynamoDB table in Account A and write the output into an S3 bucket in Account B in one process. What is the simplest design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create a duplicate IAM user in Account B</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add an S3 bucket policy in Account B that allows the Account A user to write</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use AWS RAM to share the S3 bucket with Account A</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Have the user assume a role in Account B and then read DynamoDB</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Add an S3 bucket policy in Account B that allows the Account A user to write<br><br>
+<strong>How to think about it:</strong> Need both accounts at once = <b>resource-based policy</b> on the target (bucket policy).<br><br>
+<strong>Why B is correct:</strong> The user keeps Account A permissions to read DynamoDB and the bucket policy allows the write, so no role switch is needed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Create a duplicate IAM user in Account B</em> &mdash; Two sets of long-term credentials add risk and still need a copy step.<br><em>C) Use AWS RAM to share the S3 bucket with Account A</em> &mdash; S3 buckets are not shared through RAM; bucket policies do this.<br><em>D) Have the user assume a role in Account B and then read DynamoDB</em> &mdash; Once in the Account B role, the user loses Account A permissions and cannot read the table.
+</div>
+</div>
+
+<!-- Q14 STS & Roles -->
+<div class="question" data-type="mc" data-answer="1" data-topic="STS & Roles" data-level="B">
+<div class="q-tags"><span class="q-tag">STS & Roles</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>Which STS API does an IAM user or application call to get temporary credentials for a role in the same or another account?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">GetSessionToken</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AssumeRole</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AssumeRoleWithSAML</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AssumeRoleWithWebIdentity</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AssumeRole<br><br>
+<strong>How to think about it:</strong> Plain role switch = <b>AssumeRole</b>.<br><br>
+<strong>Why B is correct:</strong> AssumeRole returns temporary credentials for the role, provided the trust policy names the caller.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) GetSessionToken</em> &mdash; GetSessionToken gives MFA-backed temporary credentials for your own user, not for a role.<br><em>C) AssumeRoleWithSAML</em> &mdash; This is used after a SAML identity provider has authenticated the user.<br><em>D) AssumeRoleWithWebIdentity</em> &mdash; This exchanges a token from an OIDC web identity provider, not an IAM user's credentials.
+</div>
+</div>
+
+<!-- Q15 STS & Roles -->
+<div class="question" data-type="mc" data-answer="3" data-topic="STS & Roles" data-level="B">
+<div class="q-tags"><span class="q-tag">STS & Roles</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>A user must use MFA before calling sensitive APIs from the CLI with their own IAM user permissions. Which STS call gives MFA-backed temporary credentials?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AssumeRole</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">GetCallerIdentity</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">GetFederationToken</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">GetSessionToken</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> GetSessionToken<br><br>
+<strong>How to think about it:</strong> MFA for your own user = <b>GetSessionToken</b>.<br><br>
+<strong>Why D is correct:</strong> It takes the MFA code and returns temporary credentials for the same user, so MFA conditions are satisfied.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AssumeRole</em> &mdash; AssumeRole can include MFA, but it switches to a role rather than keeping the user's own permissions.<br><em>B) GetCallerIdentity</em> &mdash; This only reports who you are; it returns no credentials.<br><em>C) GetFederationToken</em> &mdash; This is meant for a broker issuing credentials to federated users.
+</div>
+</div>
+
+<!-- Q16 STS & Roles -->
+<div class="question" data-type="mc" data-answer="0" data-topic="STS & Roles" data-level="B">
+<div class="q-tags"><span class="q-tag">STS & Roles</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>A SaaS vendor needs a cross-account role in your account. What protects against the confused deputy problem?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Require an External ID in the role's trust policy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Give the vendor an IAM user with access keys</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Restrict the role with aws:SourceIp</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Require MFA in the role's trust policy</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Require an External ID in the role's trust policy<br><br>
+<strong>How to think about it:</strong> Third-party role = <b>External ID</b> in the trust policy.<br><br>
+<strong>Why A is correct:</strong> The vendor supplies a unique External ID per customer, so another customer cannot trick the vendor into using your role.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Give the vendor an IAM user with access keys</em> &mdash; Long-term keys for an outsider are the pattern roles are meant to replace.<br><em>C) Restrict the role with aws:SourceIp</em> &mdash; IP limits help a little but do not tell one customer's request from another's.<br><em>D) Require MFA in the role's trust policy</em> &mdash; The vendor's automation cannot provide MFA, and MFA does not stop the vendor being misused.
+</div>
+</div>
+
+<!-- Q17 STS & Roles -->
+<div class="question" data-type="mc" data-answer="0" data-topic="STS & Roles" data-level="B">
+<div class="q-tags"><span class="q-tag">STS & Roles</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>An EC2 instance needs to call S3 without storing access keys. How does the application get credentials?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Attach a role via an instance profile; the SDK reads it from metadata</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Attach several roles to the instance, one per service</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Put access keys in EC2 user data</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Bake an IAM user's access keys into the AMI at build time</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Attach a role via an instance profile; the SDK reads it from metadata<br><br>
+<strong>How to think about it:</strong> EC2 credentials = <b>instance profile role</b> via the instance metadata service.<br><br>
+<strong>Why A is correct:</strong> The SDK fetches and refreshes temporary role credentials from the metadata service automatically.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Attach several roles to the instance, one per service</em> &mdash; An instance profile holds a single role at a time.<br><em>C) Put access keys in EC2 user data</em> &mdash; User data is readable from the instance and is not a secret store.<br><em>D) Bake an IAM user's access keys into the AMI at build time</em> &mdash; Baked-in keys are long-lived, hard to rotate and easy to leak.
+</div>
+</div>
+
+<!-- Q18 STS & Roles -->
+<div class="question" data-type="mc" data-answer="1" data-topic="STS & Roles" data-level="A">
+<div class="q-tags"><span class="q-tag">STS & Roles</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>In an S3 bucket policy you want to allow only principals whose session carries the tag <code>Department=HR</code>, passed when they assumed the role. Which feature and key fit?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Cost allocation tags in the Billing console</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">STS session tags, checked with the aws:PrincipalTag condition key</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An External ID set to HR on the role</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Resource tags on the bucket, checked with aws:ResourceTag</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> STS session tags, checked with the aws:PrincipalTag condition key<br><br>
+<strong>How to think about it:</strong> Tags passed at AssumeRole = <b>session tags</b>, checked with <b>aws:PrincipalTag</b>.<br><br>
+<strong>Why B is correct:</strong> Session tags become principal tags for that session, so policies can match on them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Cost allocation tags in the Billing console</em> &mdash; Cost allocation tags affect billing reports, not access decisions.<br><em>C) An External ID set to HR on the role</em> &mdash; External ID guards third-party trust; it does not carry user attributes.<br><em>D) Resource tags on the bucket, checked with aws:ResourceTag</em> &mdash; ResourceTag checks the bucket's own tags, not the caller's department.
+</div>
+</div>
+
+<!-- Q19 STS & Roles -->
+<div class="question" data-type="mc" data-answer="2" data-topic="STS & Roles" data-level="B">
+<div class="q-tags"><span class="q-tag">STS & Roles</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>What is the allowed range for the maximum session duration you can set on an IAM role?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Credentials never expire until revoked</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">From 5 minutes up to 1 hour</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">From 1 hour up to 12 hours</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">From 1 hour up to 7 days</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> From 1 hour up to 12 hours<br><br>
+<strong>How to think about it:</strong> Role sessions: <b>1 hour default, up to 12 hours</b> max (15 minutes minimum per request).<br><br>
+<strong>Why C is correct:</strong> You can raise a role's maximum session duration to 12 hours; callers may request as little as 15 minutes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Credentials never expire until revoked</em> &mdash; STS credentials are always temporary and expire on their own.<br><em>B) From 5 minutes up to 1 hour</em> &mdash; Role sessions can be much longer than one hour if configured.<br><em>D) From 1 hour up to 7 days</em> &mdash; Seven days exceeds what AssumeRole can issue.
+</div>
+</div>
+
+<!-- Q20 STS & Roles -->
+<div class="question" data-type="mc" data-answer="0" data-topic="STS & Roles" data-level="A">
+<div class="q-tags"><span class="q-tag">STS & Roles</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>An application assumes Role A, then uses those credentials to assume Role B and asks for a 4-hour session. What happens?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The call fails, because chained role sessions are limited to 1 hour</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It succeeds if Role B's maximum session duration is 12 hours</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It succeeds and inherits Role A's remaining session time</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It succeeds only if both roles are in the same account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> The call fails, because chained role sessions are limited to 1 hour<br><br>
+<strong>How to think about it:</strong> <b>Role chaining</b> = sessions capped at <b>1 hour</b>, whatever the role's maximum.<br><br>
+<strong>Why A is correct:</strong> When a role assumes another role, STS allows at most one hour, so a longer request is rejected.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) It succeeds if Role B's maximum session duration is 12 hours</em> &mdash; Role B's own maximum does not apply to chained sessions.<br><em>C) It succeeds and inherits Role A's remaining session time</em> &mdash; Sessions are not inherited; the chained session has its own one-hour limit.<br><em>D) It succeeds only if both roles are in the same account</em> &mdash; The one-hour limit applies to role chaining in the same or another account.
+</div>
+</div>
+
+<!-- Q21 Federation -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Federation" data-level="B">
+<div class="q-tags"><span class="q-tag">Federation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>Employees authenticate against on-premises ADFS. They should reach the AWS console without IAM users. Which STS API works under the hood?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">GetFederationToken</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AssumeRoleWithWebIdentity</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">GetSessionToken</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AssumeRoleWithSAML</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AssumeRoleWithSAML<br><br>
+<strong>How to think about it:</strong> SAML 2.0 IdP such as ADFS = <b>AssumeRoleWithSAML</b>.<br><br>
+<strong>Why D is correct:</strong> The IdP issues a SAML assertion, and STS exchanges it for temporary credentials of a mapped role.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) GetFederationToken</em> &mdash; This is used by a custom broker when the IdP does not speak SAML.<br><em>B) AssumeRoleWithWebIdentity</em> &mdash; This is for OIDC tokens from web or social providers, not SAML assertions.<br><em>C) GetSessionToken</em> &mdash; This issues temporary credentials for an existing IAM user, which these employees do not have.
+</div>
+</div>
+
+<!-- Q22 Federation -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Federation" data-level="B">
+<div class="q-tags"><span class="q-tag">Federation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>When setting up SAML 2.0 federation with AWS IAM, what trust must be configured?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A forest trust between Active Directory and IAM</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One way only: the IdP trusts AWS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A VPC peering connection to the IdP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Both ways: AWS trusts the IdP and the IdP trusts AWS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Both ways: AWS trusts the IdP and the IdP trusts AWS<br><br>
+<strong>How to think about it:</strong> SAML federation = <b>two-way trust</b>: IdP metadata in IAM, AWS as a relying party in the IdP.<br><br>
+<strong>Why D is correct:</strong> IAM gets a SAML provider from the IdP metadata, and the IdP is configured with AWS as the service provider.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A forest trust between Active Directory and IAM</em> &mdash; Forest trusts link AD domains; IAM is not an AD forest.<br><em>B) One way only: the IdP trusts AWS</em> &mdash; AWS must also know and trust the IdP before it accepts assertions.<br><em>C) A VPC peering connection to the IdP</em> &mdash; SAML runs over the browser and HTTPS; no network peering is required.
+</div>
+</div>
+
+<!-- Q23 Federation -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Federation" data-level="A">
+<div class="q-tags"><span class="q-tag">Federation</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>A company's identity store is a legacy LDAP system that cannot issue SAML or OIDC. Users need temporary AWS credentials. What is the pattern?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use Cognito user pools with the LDAP server as an OIDC provider</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Build a custom identity broker that authenticates users and calls STS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create IAM users that mirror each LDAP account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Configure a SAML provider in IAM pointing at the LDAP server</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Build a custom identity broker that authenticates users and calls STS<br><br>
+<strong>How to think about it:</strong> IdP not SAML-compatible = <b>custom identity broker</b> calling AssumeRole or GetFederationToken.<br><br>
+<strong>Why B is correct:</strong> The broker checks LDAP, decides the right permissions, and requests temporary credentials from STS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use Cognito user pools with the LDAP server as an OIDC provider</em> &mdash; The LDAP system cannot issue OIDC tokens, so Cognito cannot federate with it directly.<br><em>C) Create IAM users that mirror each LDAP account</em> &mdash; This duplicates identities and long-term credentials, which federation is meant to avoid.<br><em>D) Configure a SAML provider in IAM pointing at the LDAP server</em> &mdash; IAM SAML providers require a SAML 2.0 IdP, which this system is not.
+</div>
+</div>
+
+<!-- Q24 Federation -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Federation" data-level="B">
+<div class="q-tags"><span class="q-tag">Federation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>For a mobile app whose users sign in with Google or Facebook, what does AWS recommend for getting AWS credentials?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">SAML 2.0 federation with ADFS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Cognito identity pools</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">IAM users created at sign-up</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Calling AssumeRoleWithWebIdentity directly from the app</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon Cognito identity pools<br><br>
+<strong>How to think about it:</strong> Web/mobile federation = <b>Amazon Cognito</b> (identity pools), not raw web identity.<br><br>
+<strong>Why B is correct:</strong> Cognito exchanges the provider token for temporary credentials of least-privilege roles, and supports guest access.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) SAML 2.0 federation with ADFS</em> &mdash; ADFS serves corporate users, not consumer social logins.<br><em>C) IAM users created at sign-up</em> &mdash; Long-term IAM users for app users do not scale and are a security risk.<br><em>D) Calling AssumeRoleWithWebIdentity directly from the app</em> &mdash; It works, but AWS recommends Cognito because it handles providers, guests and token exchange for you.
+</div>
+</div>
+
+<!-- Q25 Federation -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Federation" data-level="B">
+<div class="q-tags"><span class="q-tag">Federation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>Which Cognito capability lets a mobile app give limited AWS access to people who have not signed in yet?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Guest identities in a Cognito identity pool</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A permissions boundary on the app role</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An anonymous IAM user shared by every device</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 pre-signed URLs from IAM Identity Center</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Guest identities in a Cognito identity pool<br><br>
+<strong>How to think about it:</strong> Not signed in = <b>unauthenticated (guest) identities</b> in an identity pool.<br><br>
+<strong>Why A is correct:</strong> The pool maps guests to a separate, tightly scoped IAM role.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A permissions boundary on the app role</em> &mdash; A boundary limits a role but does not create guest identities.<br><em>C) An anonymous IAM user shared by every device</em> &mdash; A shared IAM user means long-term keys embedded in the app.<br><em>D) S3 pre-signed URLs from IAM Identity Center</em> &mdash; Identity Center serves workforce users, not anonymous app visitors.
+</div>
+</div>
+
+<!-- Q26 Federation -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Federation" data-level="A">
+<div class="q-tags"><span class="q-tag">Federation</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>Web identity federation users should each read only their own prefix in an S3 bucket. What goes in the role policy?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The ${aws:username} variable in the Resource ARN</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A separate IAM role created for every app user</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A dedicated S3 access point for each app user</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The ${cognito-identity.amazonaws.com:sub} variable</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The ${cognito-identity.amazonaws.com:sub} variable<br><br>
+<strong>How to think about it:</strong> Per-federated-user paths = policy variable such as <b>${cognito-identity.amazonaws.com:sub}</b>.<br><br>
+<strong>Why D is correct:</strong> The variable resolves to the caller's unique identity ID, so the same role restricts each user to their own prefix.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The ${aws:username} variable in the Resource ARN</em> &mdash; Federated users are not IAM users, so aws:username is not set for them.<br><em>B) A separate IAM role created for every app user</em> &mdash; This does not scale and needs role changes for every sign-up.<br><em>C) A dedicated S3 access point for each app user</em> &mdash; Access points do not know the federated identity unless a policy variable is used anyway.
+</div>
+</div>
+
+<!-- Q27 Federation -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Federation" data-level="B">
+<div class="q-tags"><span class="q-tag">Federation</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>Which federation option is AWS's recommended managed way to give workforce users single sign-on to many AWS accounts?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">IAM Identity Center</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A custom identity broker</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A separate SAML provider in each account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Cognito user pools</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> IAM Identity Center<br><br>
+<strong>How to think about it:</strong> Workforce SSO across accounts = <b>IAM Identity Center</b>; per-account SAML is the older way.<br><br>
+<strong>Why A is correct:</strong> It centralises workforce sign-in, connects to an external IdP or AD, and assigns access to every account in the organization.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A custom identity broker</em> &mdash; A broker is a fallback for IdPs that cannot speak SAML, not the managed default.<br><em>C) A separate SAML provider in each account</em> &mdash; This works but must be configured and maintained account by account.<br><em>D) Amazon Cognito user pools</em> &mdash; Cognito is aimed at customer-facing apps, not workforce access to AWS accounts.
+</div>
+</div>
+
+<!-- Q28 Federation -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Federation" data-level="A">
+<div class="q-tags"><span class="q-tag">Federation</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>A corporate proxy application authenticates users and must hand them temporary AWS credentials whose permissions are the intersection of its own and a policy it passes. Which call fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">GetFederationToken</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AssumeRoleWithWebIdentity</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AssumeRoleWithSAML</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">GetSessionToken</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> GetFederationToken<br><br>
+<strong>How to think about it:</strong> Broker issues federated-user credentials = <b>GetFederationToken</b>.<br><br>
+<strong>Why A is correct:</strong> It returns temporary credentials for a federated user, scoped by the session policy passed in.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AssumeRoleWithWebIdentity</em> &mdash; This requires an OIDC token from a web identity provider.<br><em>C) AssumeRoleWithSAML</em> &mdash; This needs a SAML assertion from a SAML IdP, which a custom proxy may not produce.<br><em>D) GetSessionToken</em> &mdash; This returns credentials for the calling user only and cannot take a session policy.
+</div>
+</div>
+
+<!-- Q29 Directory Service -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Directory Service" data-level="B">
+<div class="q-tags"><span class="q-tag">Directory Service</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>A company wants a fully managed Microsoft AD in AWS that supports MFA and a two-way forest trust with its on-premises AD. Which option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Cognito user pools</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Simple AD</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AD Connector</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Managed Microsoft AD</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Managed Microsoft AD<br><br>
+<strong>How to think about it:</strong> Real AD in AWS + trust with on-prem = <b>AWS Managed Microsoft AD</b>.<br><br>
+<strong>Why D is correct:</strong> It runs actual Microsoft AD domain controllers in two AZs and supports MFA and forest trusts.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Cognito user pools</em> &mdash; Cognito is a customer identity directory, not a Microsoft AD domain.<br><em>B) Simple AD</em> &mdash; Simple AD is a low-cost AD-compatible directory that cannot trust an on-premises domain.<br><em>C) AD Connector</em> &mdash; AD Connector only proxies to on-premises AD; it cannot hold users or form trusts.
+</div>
+</div>
+
+<!-- Q30 Directory Service -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Directory Service" data-level="B">
+<div class="q-tags"><span class="q-tag">Directory Service</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>Users must stay managed only in the on-premises AD, and AWS services should simply send authentication requests there. Which directory option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AD Connector</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">IAM SAML provider</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Simple AD</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Managed Microsoft AD</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AD Connector<br><br>
+<strong>How to think about it:</strong> Proxy to on-prem, no users in AWS = <b>AD Connector</b>.<br><br>
+<strong>Why A is correct:</strong> AD Connector is a gateway that forwards directory requests to on-premises AD over VPN or Direct Connect, with no caching.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) IAM SAML provider</em> &mdash; A SAML provider federates sign-in but does not act as an LDAP gateway for AWS directory-aware services.<br><em>C) Simple AD</em> &mdash; Simple AD is standalone and cannot authenticate against on-premises AD.<br><em>D) AWS Managed Microsoft AD</em> &mdash; This creates a separate AD domain in AWS, which is more than a simple proxy.
+</div>
+</div>
+
+<!-- Q31 Directory Service -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Directory Service" data-level="B">
+<div class="q-tags"><span class="q-tag">Directory Service</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>A small lab needs an inexpensive AD-compatible directory to join a few Linux and Windows instances. No on-premises link or MFA is required. Which option is cheapest?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Simple AD</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Self-managed AD on EC2 in two AZs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Managed Microsoft AD Enterprise edition</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AD Connector</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Simple AD<br><br>
+<strong>How to think about it:</strong> Cheap, basic, standalone = <b>Simple AD</b> (Samba-based).<br><br>
+<strong>Why A is correct:</strong> Simple AD is a low-cost Samba 4 based directory for basic user, group and domain-join needs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Self-managed AD on EC2 in two AZs</em> &mdash; You would run and patch the domain controllers yourself at higher cost.<br><em>C) AWS Managed Microsoft AD Enterprise edition</em> &mdash; Enterprise edition is the largest and most expensive tier.<br><em>D) AD Connector</em> &mdash; AD Connector needs an existing directory to proxy to, which this lab does not have.
+</div>
+</div>
+
+<!-- Q32 Directory Service -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Directory Service" data-level="B">
+<div class="q-tags"><span class="q-tag">Directory Service</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>What network connectivity is needed to set up a forest trust between AWS Managed Microsoft AD and an on-premises AD?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Site-to-Site VPN or Direct Connect to the data centre</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A VPC gateway endpoint for Directory Service</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only internet access from the domain controllers</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudFront in front of the on-premises domain controllers</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Site-to-Site VPN or Direct Connect to the data centre<br><br>
+<strong>How to think about it:</strong> AD trust needs a private path = <b>Site-to-Site VPN or Direct Connect</b>.<br><br>
+<strong>Why A is correct:</strong> Domain controllers must reach each other privately for trust traffic.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A VPC gateway endpoint for Directory Service</em> &mdash; Gateway endpoints exist only for S3 and DynamoDB.<br><em>C) Only internet access from the domain controllers</em> &mdash; Directory trust traffic is not sent over the open internet.<br><em>D) CloudFront in front of the on-premises domain controllers</em> &mdash; CloudFront is a content delivery network, not a directory transport.
+</div>
+</div>
+
+<!-- Q33 Directory Service -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Directory Service" data-level="A">
+<div class="q-tags"><span class="q-tag">Directory Service</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>RDS for SQL Server must use Windows authentication, and the users live in the on-premises AD. Which design works?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AD Connector pointing at the on-premises AD</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">IAM database authentication</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Simple AD synchronised from on-premises</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Managed Microsoft AD with a trust to on-premises AD</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Managed Microsoft AD with a trust to on-premises AD<br><br>
+<strong>How to think about it:</strong> RDS SQL Server Windows auth = <b>Managed Microsoft AD</b> (+ trust to on-prem).<br><br>
+<strong>Why D is correct:</strong> RDS for SQL Server joins the Managed AD domain, and the trust lets on-premises users sign in.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AD Connector pointing at the on-premises AD</em> &mdash; RDS for SQL Server does not support AD Connector as its directory.<br><em>B) IAM database authentication</em> &mdash; IAM database authentication is for MySQL and PostgreSQL engines, not Windows logins on SQL Server.<br><em>C) Simple AD synchronised from on-premises</em> &mdash; Simple AD does not support RDS for SQL Server and cannot sync or trust.
+</div>
+</div>
+
+<!-- Q34 Directory Service -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Directory Service" data-level="A">
+<div class="q-tags"><span class="q-tag">Directory Service</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>A trust exists between on-premises AD and AWS Managed Microsoft AD, but the company worries about authentication if the Direct Connect link fails. What reduces that risk?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A self-managed replica DC of the on-prem domain on EC2</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add more domain controllers to the Managed AD</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Switch the cloud directory to Simple AD</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Replace the trust with AD Connector</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A self-managed replica DC of the on-prem domain on EC2<br><br>
+<strong>How to think about it:</strong> Survive link loss = run a <b>replica DC of the on-prem domain on EC2</b>.<br><br>
+<strong>Why A is correct:</strong> Local replicas keep authenticating cloud workloads and cut latency even when the link is down.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Add more domain controllers to the Managed AD</em> &mdash; Extra Managed AD controllers serve the AWS domain; they do not help reach the on-premises domain.<br><em>C) Switch the cloud directory to Simple AD</em> &mdash; Simple AD cannot connect to on-premises AD at all.<br><em>D) Replace the trust with AD Connector</em> &mdash; AD Connector has no cache, so it fails completely when the link drops.
+</div>
+</div>
+
+<!-- Q35 Directory Service -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Directory Service" data-level="B">
+<div class="q-tags"><span class="q-tag">Directory Service</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>How is AWS Managed Microsoft AD deployed for availability?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A single domain controller with automatic replacement</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Domain controllers in two Availability Zones, with more DCs addable for scale</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">One domain controller per Region, globally replicated by default</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Domain controllers on Lambda functions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Domain controllers in two Availability Zones, with more DCs addable for scale<br><br>
+<strong>How to think about it:</strong> Managed AD = <b>domain controllers in two AZs</b>, more can be added.<br><br>
+<strong>Why B is correct:</strong> AWS deploys at least two DCs in separate AZs and handles patching and backups.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A single domain controller with automatic replacement</em> &mdash; It always starts with two DCs, not one.<br><em>C) One domain controller per Region, globally replicated by default</em> &mdash; Multi-Region replication is optional and only for Enterprise edition.<br><em>D) Domain controllers on Lambda functions</em> &mdash; AD domain controllers run on managed instances, not Lambda.
+</div>
+</div>
+
+<!-- Q36 Directory Service -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Directory Service" data-level="A">
+<div class="q-tags"><span class="q-tag">Directory Service</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Several accounts and VPCs need their EC2 Windows instances to join the same AWS Managed Microsoft AD domain. What is the simplest way?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Share the directory with the other accounts and use seamless domain join</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Share the directory's subnets through AWS RAM only</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use Simple AD in each VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a new Managed AD in every account with trusts between them</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Share the directory with the other accounts and use seamless domain join<br><br>
+<strong>How to think about it:</strong> One Managed AD, many accounts = <b>directory sharing</b> + seamless domain join.<br><br>
+<strong>Why A is correct:</strong> Directory sharing lets other accounts' instances join the same domain without separate directories.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Share the directory's subnets through AWS RAM only</em> &mdash; Sharing subnets does not share the directory itself.<br><em>C) Use Simple AD in each VPC</em> &mdash; Separate Simple AD directories would be separate domains.<br><em>D) Create a new Managed AD in every account with trusts between them</em> &mdash; Many directories and trusts add cost and complexity for no benefit.
+</div>
+</div>
+
+<!-- Q37 Organizations & SCPs -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Organizations & SCPs" data-level="B">
+<div class="q-tags"><span class="q-tag">Organizations & SCPs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>Which statement about service control policies is true?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">SCPs cap member account permissions but grant nothing</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">SCPs do not apply to a member account's root user</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">SCPs grant permissions to every IAM user in an OU</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">SCPs also restrict the management account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> SCPs cap member account permissions but grant nothing<br><br>
+<strong>How to think about it:</strong> SCP = <b>guardrail only</b>; it grants nothing and does not touch the management account.<br><br>
+<strong>Why A is correct:</strong> Identities still need IAM policies; the SCP only caps what those policies can allow.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) SCPs do not apply to a member account's root user</em> &mdash; SCPs do apply to the member account root user.<br><em>C) SCPs grant permissions to every IAM user in an OU</em> &mdash; SCPs never grant permissions on their own.<br><em>D) SCPs also restrict the management account</em> &mdash; The management account is not affected by SCPs.
+</div>
+</div>
+
+<!-- Q38 Organizations & SCPs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Organizations & SCPs" data-level="B">
+<div class="q-tags"><span class="q-tag">Organizations & SCPs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>Which identities inside a member account are NOT restricted by service control policies?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The member account root user</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">IAM users with AdministratorAccess</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Service-linked roles</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">IAM roles assumed from another account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Service-linked roles<br><br>
+<strong>How to think about it:</strong> SCP exceptions = <b>service-linked roles</b> (and the management account).<br><br>
+<strong>Why C is correct:</strong> Service-linked roles let AWS services act for you and are exempt from SCPs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The member account root user</em> &mdash; The member root user is restricted by SCPs like any other principal.<br><em>B) IAM users with AdministratorAccess</em> &mdash; Admin users are still capped by the SCPs above them.<br><em>D) IAM roles assumed from another account</em> &mdash; Cross-account roles in the member account are still bound by its SCPs.
+</div>
+</div>
+
+<!-- Q39 Organizations & SCPs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Organizations & SCPs" data-level="A">
+<div class="q-tags"><span class="q-tag">Organizations & SCPs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>The root has FullAWSAccess. An OU has a policy allowing only EC2 and S3, replacing FullAWSAccess. An account inside that OU has FullAWSAccess. Can a user there with admin IAM rights use DynamoDB?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Yes, because the IAM admin policy allows everything</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">No, because the OU in the path does not allow DynamoDB</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Yes, because the account itself has FullAWSAccess</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only if the root user makes the request</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> No, because the OU in the path does not allow DynamoDB<br><br>
+<strong>How to think about it:</strong> Every level on the path must <b>allow</b> it; one missing allow = denied.<br><br>
+<strong>Why B is correct:</strong> SCP permissions are the intersection along the path, so an OU that omits DynamoDB blocks it below.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Yes, because the IAM admin policy allows everything</em> &mdash; IAM permissions are capped by the SCPs above them.<br><em>C) Yes, because the account itself has FullAWSAccess</em> &mdash; The account's own SCP cannot add back what a parent OU did not allow.<br><em>D) Only if the root user makes the request</em> &mdash; The member root user is also limited by SCPs.
+</div>
+</div>
+
+<!-- Q40 Organizations & SCPs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Organizations & SCPs" data-level="B">
+<div class="q-tags"><span class="q-tag">Organizations & SCPs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>Which condition key does an SCP typically use to stop workloads being created outside approved Regions?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">aws:PrincipalOrgID</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">aws:SourceIp</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">aws:RequestedRegion</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">ec2:AvailabilityZone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> aws:RequestedRegion<br><br>
+<strong>How to think about it:</strong> Region lock = <b>aws:RequestedRegion</b>.<br><br>
+<strong>Why C is correct:</strong> A Deny when RequestedRegion is not in the approved list blocks API calls in other Regions; global services are usually exempted.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) aws:PrincipalOrgID</em> &mdash; This checks which organization the caller belongs to, not the Region.<br><em>B) aws:SourceIp</em> &mdash; Source IP describes the caller's network, not the target Region.<br><em>D) ec2:AvailabilityZone</em> &mdash; This key covers EC2 placement only, not every service's Region.
+</div>
+</div>
+
+<!-- Q41 Organizations & SCPs -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Organizations & SCPs" data-level="B">
+<div class="q-tags"><span class="q-tag">Organizations & SCPs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>What is the effect of switching an organization from consolidated billing only to all features?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only accounts created after the switch can use SCPs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Member accounts lose volume discounts</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Each account gets its own invoice again</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">SCPs and other policies become available; no switching back</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> SCPs and other policies become available; no switching back<br><br>
+<strong>How to think about it:</strong> <b>All features</b> = SCPs and other policies; there is <b>no going back</b>.<br><br>
+<strong>Why D is correct:</strong> All features adds policy management, invited accounts must approve, and it is one-way.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only accounts created after the switch can use SCPs</em> &mdash; Existing accounts can use SCPs once they approve all features.<br><em>B) Member accounts lose volume discounts</em> &mdash; Volume pricing is kept; all features includes consolidated billing.<br><em>C) Each account gets its own invoice again</em> &mdash; Billing stays consolidated in the management account.
+</div>
+</div>
+
+<!-- Q42 Organizations & SCPs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Organizations & SCPs" data-level="B">
+<div class="q-tags"><span class="q-tag">Organizations & SCPs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>Account A in an organization bought EC2 Reserved Instances it does not fully use. Can Account B benefit?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only if the RI is moved to Account B through AWS RAM</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">No, RIs only ever apply to the account that bought them</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Yes, discounts are shared unless sharing is turned off</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only if both accounts are in the same OU</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Yes, discounts are shared unless sharing is turned off<br><br>
+<strong>How to think about it:</strong> Consolidated billing = <b>RI and Savings Plans discounts are shared</b> unless sharing is turned off.<br><br>
+<strong>Why C is correct:</strong> The organization is billed as one account, and the payer can disable sharing for specific accounts.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only if the RI is moved to Account B through AWS RAM</em> &mdash; RAM is not used to share RI discounts.<br><em>B) No, RIs only ever apply to the account that bought them</em> &mdash; Inside an organization the discount is shared by default.<br><em>D) Only if both accounts are in the same OU</em> &mdash; OU placement has no effect on RI sharing.
+</div>
+</div>
+
+<!-- Q43 Organizations & SCPs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Organizations & SCPs" data-level="B">
+<div class="q-tags"><span class="q-tag">Organizations & SCPs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>When a new member account is created through AWS Organizations, which role is created so the management account can administer it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWSReservedSSO_AdministratorAccess</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">OrganizationAccountAccessRole</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWSControlTowerExecution</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWSServiceRoleForOrganizations</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> OrganizationAccountAccessRole<br><br>
+<strong>How to think about it:</strong> Admin into new member accounts = <b>OrganizationAccountAccessRole</b>.<br><br>
+<strong>Why B is correct:</strong> It grants full admin in the member account and is assumable from the management account; invited accounts need it created manually.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWSReservedSSO_AdministratorAccess</em> &mdash; This kind of role is created by IAM Identity Center permission sets.<br><em>C) AWSControlTowerExecution</em> &mdash; This role is created by Control Tower when it enrolls an account.<br><em>D) AWSServiceRoleForOrganizations</em> &mdash; This is the service-linked role used by Organizations itself, not for human admin access.
+</div>
+</div>
+
+<!-- Q44 Organizations & SCPs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Organizations & SCPs" data-level="B">
+<div class="q-tags"><span class="q-tag">Organizations & SCPs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>Which Organizations policy type standardises tag keys and allowed values across accounts and reports non-compliant resources?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Service control policies</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AI services opt-out policies</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Tag policies</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Backup policies</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Tag policies<br><br>
+<strong>How to think about it:</strong> Consistent tags org-wide = <b>tag policies</b>.<br><br>
+<strong>Why C is correct:</strong> Tag policies define allowed keys, case and values, and can report or block non-compliant tagging.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Service control policies</em> &mdash; SCPs can require a tag on create, but they do not define standard values or report compliance.<br><em>B) AI services opt-out policies</em> &mdash; These control whether AWS AI services may store and use your content.<br><em>D) Backup policies</em> &mdash; Backup policies push AWS Backup plans to accounts, not tag rules.
+</div>
+</div>
+
+<!-- Q45 Organizations & SCPs -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Organizations & SCPs" data-level="B">
+<div class="q-tags"><span class="q-tag">Organizations & SCPs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>A company must stop AWS AI services such as Lex and Polly from storing or using its content for service improvement, in every account and Region. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An SCP denying all AI service actions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Encrypting the content with a customer managed KMS key</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A tag policy on AI resources</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An AI services opt-out policy attached at the organization root</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> An AI services opt-out policy attached at the organization root<br><br>
+<strong>How to think about it:</strong> Stop AI services learning from your data = <b>AI services opt-out policy</b>.<br><br>
+<strong>Why D is correct:</strong> It applies the opt-out to all or selected AI services across every member account and Region.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An SCP denying all AI service actions</em> &mdash; This blocks use of the services entirely rather than just opting out of data use.<br><em>B) Encrypting the content with a customer managed KMS key</em> &mdash; Encryption does not change the service's data-use setting.<br><em>C) A tag policy on AI resources</em> &mdash; Tag policies control tags, not content usage.
+</div>
+</div>
+
+<!-- Q46 Organizations & SCPs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Organizations & SCPs" data-level="A">
+<div class="q-tags"><span class="q-tag">Organizations & SCPs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>An auditor wants a single place to receive CloudTrail logs from every account, and no member account should be able to stop or delete that logging. What is the usual design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudWatch Logs subscription filters in each account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An organization trail to a log archive account, guarded by SCPs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Config aggregator in the management account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A separate trail in each account writing to its own bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An organization trail to a log archive account, guarded by SCPs<br><br>
+<strong>How to think about it:</strong> Central logs + tamper-proof = <b>organization trail into a log archive account</b>, protected by SCP.<br><br>
+<strong>Why B is correct:</strong> The org trail covers every account automatically, and the SCP prevents member accounts from disabling it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) CloudWatch Logs subscription filters in each account</em> &mdash; This moves logs but leaves the trails under local control.<br><em>C) AWS Config aggregator in the management account</em> &mdash; Config records resource configuration, not API activity logs.<br><em>D) A separate trail in each account writing to its own bucket</em> &mdash; Logs stay scattered and local admins can delete them.
+</div>
+</div>
+
+<!-- Q47 Identity Center -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Identity Center" data-level="B">
+<div class="q-tags"><span class="q-tag">Identity Center</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>In IAM Identity Center, what is a permission set?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A service control policy attached to an OU</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A SAML signing certificate for a business application</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A policy bundle deployed as a role in each assigned account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A group of users synced in from Active Directory</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A policy bundle deployed as a role in each assigned account<br><br>
+<strong>How to think about it:</strong> Permission set = <b>policy template</b> that becomes a role in each assigned account.<br><br>
+<strong>Why C is correct:</strong> Assigning a user or group plus a permission set to an account creates a matching role there.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A service control policy attached to an OU</em> &mdash; SCPs are an Organizations feature, separate from Identity Center.<br><em>B) A SAML signing certificate for a business application</em> &mdash; Certificates belong to application assignments, not permission sets.<br><em>D) A group of users synced in from Active Directory</em> &mdash; Groups are identities; permission sets describe the access they get.
+</div>
+</div>
+
+<!-- Q48 Identity Center -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Identity Center" data-level="B">
+<div class="q-tags"><span class="q-tag">Identity Center</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>Which identity sources can IAM Identity Center use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only IAM users that exist in the management account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only Amazon Cognito user pools</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only an on-premises AD reached through AD Connector</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Built-in store, Active Directory, or an external IdP like Okta</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Built-in store, Active Directory, or an external IdP like Okta<br><br>
+<strong>How to think about it:</strong> Identity source = <b>built-in store, Active Directory, or an external IdP</b> (Okta, Entra ID).<br><br>
+<strong>Why D is correct:</strong> You choose one source, and users and groups from it get account and app assignments.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only IAM users that exist in the management account</em> &mdash; IAM users are not an Identity Center identity source.<br><em>B) Only Amazon Cognito user pools</em> &mdash; Cognito is for customer apps and is not an Identity Center source.<br><em>C) Only an on-premises AD reached through AD Connector</em> &mdash; AD is one option, but the built-in store and external IdPs work too.
+</div>
+</div>
+
+<!-- Q49 Identity Center -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Identity Center" data-level="A">
+<div class="q-tags"><span class="q-tag">Identity Center</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>Database admins should get Aurora access only in accounts whose cost center matches theirs, without a separate permission set per cost center. What fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Cognito identity pools with role mapping</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An SCP per cost center OU</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">ABAC on identity store attributes in one permission set</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A separate permission set for every cost center</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> ABAC on identity store attributes in one permission set<br><br>
+<strong>How to think about it:</strong> Change access by changing user attributes = <b>ABAC</b> in Identity Center.<br><br>
+<strong>Why C is correct:</strong> Attributes such as cost center flow into the session as tags, and one policy compares them with resource tags.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Cognito identity pools with role mapping</em> &mdash; Cognito is not used for workforce access to AWS accounts.<br><em>B) An SCP per cost center OU</em> &mdash; SCPs restrict accounts, not individual users by attribute.<br><em>D) A separate permission set for every cost center</em> &mdash; This works but is exactly the duplication the requirement wants to avoid.
+</div>
+</div>
+
+<!-- Q50 Identity Center -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Identity Center" data-level="B">
+<div class="q-tags"><span class="q-tag">Identity Center</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>Besides AWS accounts, what else can IAM Identity Center give users single sign-on to?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Customer sign-in for public mobile apps</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon RDS database logins for all engines</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">SAML 2.0 business apps such as Salesforce</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Any on-premises mainframe terminal</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> SAML 2.0 business apps such as Salesforce<br><br>
+<strong>How to think about it:</strong> Identity Center SSO = AWS accounts <b>and SAML 2.0 business apps</b> (Salesforce, Microsoft 365).<br><br>
+<strong>Why C is correct:</strong> Application assignments use SAML metadata so users reach cloud apps from the same portal.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Customer sign-in for public mobile apps</em> &mdash; Customer app sign-in is Cognito's role.<br><em>B) Amazon RDS database logins for all engines</em> &mdash; Database logins are not an Identity Center application assignment.<br><em>D) Any on-premises mainframe terminal</em> &mdash; Identity Center does not provide terminal access to mainframes.
+</div>
+</div>
+
+<!-- Q51 Identity Center -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Identity Center" data-level="A">
+<div class="q-tags"><span class="q-tag">Identity Center</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>Two-way trust exists between on-premises AD and AWS Managed Microsoft AD. Employees should sign in to all accounts in the organization with their AD credentials. What connects the pieces?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create a SAML provider in each account pointing at AWS Managed AD</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Make Managed AD the Identity Center identity source</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use Simple AD as the identity source</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Sync AD users into IAM users in each account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Make Managed AD the Identity Center identity source<br><br>
+<strong>How to think about it:</strong> AD users into many accounts = <b>Identity Center with Managed AD as identity source</b>.<br><br>
+<strong>Why B is correct:</strong> Identity Center reads users and groups through the directory, and the trust lets on-premises users authenticate.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Create a SAML provider in each account pointing at AWS Managed AD</em> &mdash; Managed AD is not a SAML IdP by itself, and per-account setup does not scale.<br><em>C) Use Simple AD as the identity source</em> &mdash; Simple AD cannot trust the on-premises AD.<br><em>D) Sync AD users into IAM users in each account</em> &mdash; This creates long-term IAM users, which federation is meant to avoid.
+</div>
+</div>
+
+<!-- Q52 Control Tower -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Control Tower" data-level="B">
+<div class="q-tags"><span class="q-tag">Control Tower</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>What does AWS Control Tower do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Sets up and governs a multi-account landing zone</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Monitors application performance across accounts</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Provides single sign-on to SaaS applications only</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Replaces AWS Organizations with its own account model</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Sets up and governs a multi-account landing zone<br><br>
+<strong>How to think about it:</strong> Best-practice multi-account landing zone = <b>Control Tower</b> (built on Organizations).<br><br>
+<strong>Why A is correct:</strong> It creates the organization structure, shared log and audit accounts, and ongoing controls.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Monitors application performance across accounts</em> &mdash; Application monitoring is CloudWatch's role.<br><em>C) Provides single sign-on to SaaS applications only</em> &mdash; SSO is IAM Identity Center's job, which Control Tower configures as part of the setup.<br><em>D) Replaces AWS Organizations with its own account model</em> &mdash; Control Tower runs on top of Organizations rather than replacing it.
+</div>
+</div>
+
+<!-- Q53 Control Tower -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Control Tower" data-level="B">
+<div class="q-tags"><span class="q-tag">Control Tower</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>In Control Tower, how are preventive and detective controls (formerly guardrails) implemented?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Preventive controls use AWS Config; detective controls use SCPs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Both use IAM permissions boundaries</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Preventive controls use SCPs; detective controls use AWS Config rules</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Both use GuardDuty findings</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Preventive controls use SCPs; detective controls use AWS Config rules<br><br>
+<strong>How to think about it:</strong> Preventive = <b>SCP</b>. Detective = <b>AWS Config</b> rules.<br><br>
+<strong>Why C is correct:</strong> SCPs stop disallowed actions up front, while Config rules flag non-compliant resources afterwards.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Preventive controls use AWS Config; detective controls use SCPs</em> &mdash; This reverses the two: SCPs cannot detect and Config cannot block API calls.<br><em>B) Both use IAM permissions boundaries</em> &mdash; Boundaries limit individual identities, not whole accounts.<br><em>D) Both use GuardDuty findings</em> &mdash; GuardDuty detects threats; it is not the control mechanism.
+</div>
+</div>
+
+<!-- Q54 Control Tower -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Control Tower" data-level="B">
+<div class="q-tags"><span class="q-tag">Control Tower</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>Which Control Tower feature creates new accounts with a pre-approved baseline such as network and Region settings?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Organizations tag policies</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Account Factory</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Resource Access Manager</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Service Quotas templates</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Account Factory<br><br>
+<strong>How to think about it:</strong> Vending new accounts = <b>Account Factory</b>.<br><br>
+<strong>Why B is correct:</strong> Account Factory provisions accounts from approved templates and enrols them under the landing zone's controls.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Organizations tag policies</em> &mdash; Tag policies govern tags, not account creation.<br><em>C) AWS Resource Access Manager</em> &mdash; RAM shares existing resources between accounts; it does not create accounts.<br><em>D) AWS Service Quotas templates</em> &mdash; Quota templates set limits for new accounts but do not provision them.
+</div>
+</div>
+
+<!-- Q55 Control Tower -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Control Tower" data-level="A">
+<div class="q-tags"><span class="q-tag">Control Tower</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>A Control Tower detective control flags untagged resources. The team wants them fixed automatically and admins notified. What is a typical design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable AWS Shield Advanced in each account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">On NON_COMPLIANT, notify via SNS and fix tags with Lambda</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Attach a permissions boundary to every resource</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Change the detective control into a mandatory control</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> On NON_COMPLIANT, notify via SNS and fix tags with Lambda<br><br>
+<strong>How to think about it:</strong> Detect with Config, then <b>EventBridge/SNS + Lambda</b> to remediate.<br><br>
+<strong>Why B is correct:</strong> Detective controls only report; an event-driven Lambda does the fixing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable AWS Shield Advanced in each account</em> &mdash; Shield is DDoS protection and has nothing to do with tags.<br><em>C) Attach a permissions boundary to every resource</em> &mdash; Boundaries attach to IAM users and roles, not to resources.<br><em>D) Change the detective control into a mandatory control</em> &mdash; Mandatory refers to control level, not to automatic remediation.
+</div>
+</div>
+
+<!-- Q56 RAM -->
+<div class="question" data-type="mc" data-answer="2" data-topic="RAM" data-level="B">
+<div class="q-tags"><span class="q-tag">RAM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>A networking account owns a VPC. Application accounts should launch instances into its subnets. What enables this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Transit Gateway with a route to each account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VPC peering between each account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Share the subnets with AWS Resource Access Manager</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Cross-account IAM roles to the networking account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Share the subnets with AWS Resource Access Manager<br><br>
+<strong>How to think about it:</strong> Share subnets across accounts = <b>RAM VPC sharing</b>.<br><br>
+<strong>Why C is correct:</strong> Participants launch their own resources into the shared subnets while the owner keeps control of the VPC.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Transit Gateway with a route to each account</em> &mdash; Transit Gateway links VPCs but does not share subnets.<br><em>B) VPC peering between each account</em> &mdash; Peering connects separate VPCs; it does not let others launch into your subnets.<br><em>D) Cross-account IAM roles to the networking account</em> &mdash; Workloads would then live in the networking account, not their own.
+</div>
+</div>
+
+<!-- Q57 RAM -->
+<div class="question" data-type="mc" data-answer="2" data-topic="RAM" data-level="B">
+<div class="q-tags"><span class="q-tag">RAM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>In a shared VPC, what can a participant account do with resources another participant launched in the same subnet?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Take ownership of them through RAM</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Stop and terminate them</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Reach them over the network, but not view or modify them</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Nothing; traffic between participants is always blocked</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Reach them over the network, but not view or modify them<br><br>
+<strong>How to think about it:</strong> Shared VPC = shared network, <b>not shared resources</b>.<br><br>
+<strong>Why C is correct:</strong> Each account manages only its own resources, though traffic flows privately inside the VPC.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Take ownership of them through RAM</em> &mdash; RAM does not transfer ownership of resources.<br><em>B) Stop and terminate them</em> &mdash; Participants cannot change resources owned by other accounts.<br><em>D) Nothing; traffic between participants is always blocked</em> &mdash; Resources in a shared VPC talk over private IPs like any VPC.
+</div>
+</div>
+
+<!-- Q58 RAM -->
+<div class="question" data-type="mc" data-answer="3" data-topic="RAM" data-level="B">
+<div class="q-tags"><span class="q-tag">RAM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>Which of these is a limitation of sharing VPC subnets with AWS RAM?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Participants must use the owner's IAM users</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Shared subnets must be public subnets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only one subnet per VPC can be shared</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Sharing works only within the same organization</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Sharing works only within the same organization<br><br>
+<strong>How to think about it:</strong> VPC sharing = <b>same organization</b>, and no default VPC subnets.<br><br>
+<strong>Why D is correct:</strong> Subnet sharing requires accounts in one organization, and default VPC subnets cannot be shared.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Participants must use the owner's IAM users</em> &mdash; Participants use their own identities in their own accounts.<br><em>B) Shared subnets must be public subnets</em> &mdash; Private and public subnets can both be shared.<br><em>C) Only one subnet per VPC can be shared</em> &mdash; You can share many subnets from the same VPC.
+</div>
+</div>
+
+<!-- Q59 RAM -->
+<div class="question" data-type="mc" data-answer="0" data-topic="RAM" data-level="A">
+<div class="q-tags"><span class="q-tag">RAM</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>Dozens of security groups in many accounts allow SSH from the same set of corporate CIDRs, which change several times a year. What reduces the effort?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A customer-managed prefix list shared through RAM</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Lambda function that edits every security group</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Network Firewall rule group in each account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An AWS-managed prefix list for corporate ranges</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A customer-managed prefix list shared through RAM<br><br>
+<strong>How to think about it:</strong> Same CIDRs in many SGs = <b>customer-managed prefix list</b>, shared with RAM.<br><br>
+<strong>Why A is correct:</strong> Update the prefix list once and every security group and route table that references it picks up the change.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A Lambda function that edits every security group</em> &mdash; Custom automation works but is more effort than a shared prefix list.<br><em>C) A Network Firewall rule group in each account</em> &mdash; This adds a firewall layer but does not update the security groups.<br><em>D) An AWS-managed prefix list for corporate ranges</em> &mdash; AWS-managed lists cover AWS service ranges and cannot be edited by you.
+</div>
+</div>
+
+<!-- Q60 RAM -->
+<div class="question" data-type="mc" data-answer="3" data-topic="RAM" data-level="A">
+<div class="q-tags"><span class="q-tag">RAM</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>Many VPCs across accounts must forward queries for <code>corp.example.com</code> to on-premises DNS. Each account should not build its own outbound endpoint. What do you do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Set the DHCP option set in each VPC to the on-premises DNS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Peer every VPC to the networking VPC and use its DNS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a private hosted zone for corp.example.com in each account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Share Resolver forwarding rules from one account via RAM</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Share Resolver forwarding rules from one account via RAM<br><br>
+<strong>How to think about it:</strong> One outbound endpoint, many accounts = <b>share Resolver rules with RAM</b>.<br><br>
+<strong>Why D is correct:</strong> The rules use a central outbound endpoint, and other accounts accept the share and attach the rules to their VPCs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Set the DHCP option set in each VPC to the on-premises DNS</em> &mdash; This bypasses Route 53 Resolver and needs a reachable path from every VPC.<br><em>B) Peer every VPC to the networking VPC and use its DNS</em> &mdash; Peering alone does not apply another VPC's Resolver rules.<br><em>C) Create a private hosted zone for corp.example.com in each account</em> &mdash; A private zone answers locally; it does not forward to on-premises DNS.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

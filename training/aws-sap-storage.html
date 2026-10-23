@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Storage - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Storage</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Storage</h2>
+        <p>60 refresher questions &mdash; EBS, instance store, EFS, S3, S3 Storage Lens, FSx, DataSync, Transfer Family &amp; Data Exchange</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="EBS" onclick="filterQ(this)">EBS</button><button class="filter-btn" data-f="EFS" onclick="filterQ(this)">EFS</button><button class="filter-btn" data-f="S3" onclick="filterQ(this)">S3</button><button class="filter-btn" data-f="S3 Insights" onclick="filterQ(this)">S3 Insights</button><button class="filter-btn" data-f="FSx" onclick="filterQ(this)">FSx</button><button class="filter-btn" data-f="DataSync" onclick="filterQ(this)">DataSync</button><button class="filter-btn" data-f="Transfer & Exchange" onclick="filterQ(this)">Transfer & Exchange</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 EBS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EBS" data-level="B">
+<div class="q-tags"><span class="q-tag">EBS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>An EBS volume lives in us-east-1a and must be attached to an instance in us-east-1b. What is the standard way to move it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Detach it and attach it directly to the instance in us-east-1b</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable Multi-Attach so the us-east-1b instance can mount it</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Change the volume's Availability Zone with ModifyVolume</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Snapshot the volume and create a new volume from it in us-east-1b</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Snapshot the volume and create a new volume from it in us-east-1b<br><br>
+<strong>How to think about it:</strong> EBS is <b>locked to one AZ</b>: to move it, <b>snapshot then restore</b> in the other AZ.<br><br>
+<strong>Why D is correct:</strong> Snapshots are regional, so a volume restored from one can be created in any AZ of the Region.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Detach it and attach it directly to the instance in us-east-1b</em> &mdash; A volume can only attach to instances in its own AZ, so a direct cross-AZ attach fails.<br><em>B) Enable Multi-Attach so the us-east-1b instance can mount it</em> &mdash; Multi-Attach shares a volume among instances in the same AZ only.<br><em>C) Change the volume's Availability Zone with ModifyVolume</em> &mdash; ModifyVolume changes size, type and performance, not the AZ.
+</div>
+</div>
+
+<!-- Q2 EBS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EBS" data-level="B">
+<div class="q-tags"><span class="q-tag">EBS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>Which EBS volume types can be used as a boot volume for an EC2 instance?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">st1 and sc1 HDD volumes only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only io2 Block Express volumes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">gp2/gp3 and io1/io2 SSD volumes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Any EBS type, including st1 and sc1</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> gp2/gp3 and io1/io2 SSD volumes<br><br>
+<strong>How to think about it:</strong> Boot = <b>SSD only</b>: gp2/gp3 and io1/io2. The HDD types <b>st1/sc1 cannot boot</b>.<br><br>
+<strong>Why C is correct:</strong> The general purpose and provisioned IOPS SSD families can all serve as root volumes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) st1 and sc1 HDD volumes only</em> &mdash; Throughput optimized and cold HDD volumes are data volumes and cannot be boot volumes.<br><em>B) Only io2 Block Express volumes</em> &mdash; io2 can boot, but so can gp2, gp3 and io1.<br><em>D) Any EBS type, including st1 and sc1</em> &mdash; The HDD types are excluded from boot use, so not every type qualifies.
+</div>
+</div>
+
+<!-- Q3 EBS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EBS" data-level="B">
+<div class="q-tags"><span class="q-tag">EBS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>A log-processing cluster reads large files sequentially and needs high throughput at low cost per GB. Which EBS type fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">st1 Throughput Optimized HDD</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">gp3 General Purpose SSD</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">io2 Block Express SSD</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">sc1 Cold HDD</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> st1 Throughput Optimized HDD<br><br>
+<strong>How to think about it:</strong> Big sequential reads, frequently accessed, cheap = <b>st1</b>. Rarely accessed and cheapest = <b>sc1</b>.<br><br>
+<strong>Why A is correct:</strong> st1 is a low-cost HDD built for frequently accessed, throughput-heavy sequential work such as logs and big data.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) gp3 General Purpose SSD</em> &mdash; gp3 is a balanced SSD; an HDD type is cheaper per GB for large sequential scans.<br><em>C) io2 Block Express SSD</em> &mdash; io2 delivers very high IOPS for databases, but its cost per GB is far higher than needed here.<br><em>D) sc1 Cold HDD</em> &mdash; sc1 is the cheapest HDD but is aimed at infrequently accessed data, so throughput is lower.
+</div>
+</div>
+
+<!-- Q4 EBS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EBS" data-level="B">
+<div class="q-tags"><span class="q-tag">EBS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>A database needs sustained, very high IOPS with sub-millisecond latency and the highest EBS durability. Which volume type is designed for this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">gp2 General Purpose SSD</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">st1 Throughput Optimized HDD</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">EC2 instance store NVMe</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">io2 Block Express</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> io2 Block Express<br><br>
+<strong>How to think about it:</strong> Mission-critical, highest IOPS = <b>io2 Block Express</b>.<br><br>
+<strong>Why D is correct:</strong> io2 Block Express is the top-performance provisioned IOPS SSD, aimed at mission-critical, low-latency databases.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) gp2 General Purpose SSD</em> &mdash; gp2 ties IOPS to volume size and tops out far below provisioned IOPS volumes.<br><em>B) st1 Throughput Optimized HDD</em> &mdash; st1 is tuned for sequential throughput, not random IOPS with low latency.<br><em>C) EC2 instance store NVMe</em> &mdash; Instance store is fast but ephemeral, so it fails the durability requirement.
+</div>
+</div>
+
+<!-- Q5 EBS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EBS" data-level="B">
+<div class="q-tags"><span class="q-tag">EBS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>How do EBS snapshots store data after the first full snapshot?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">As objects you can browse in your own S3 bucket</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">As a full copy of the volume every time</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">As a differential against the very first snapshot only</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Incrementally, saving only changed blocks</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Incrementally, saving only changed blocks<br><br>
+<strong>How to think about it:</strong> Snapshots are <b>incremental</b>: only changed blocks are saved after the first one.<br><br>
+<strong>Why D is correct:</strong> Each new snapshot stores only changed blocks, which keeps snapshot storage costs down.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) As objects you can browse in your own S3 bucket</em> &mdash; Snapshots are kept in AWS-managed S3 storage that you do not see as a bucket.<br><em>B) As a full copy of the volume every time</em> &mdash; Full copies would be wasteful; EBS references unchanged blocks from earlier snapshots.<br><em>C) As a differential against the very first snapshot only</em> &mdash; EBS tracks changes since the previous snapshot, not a growing differential from the first.
+</div>
+</div>
+
+<!-- Q6 EBS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EBS" data-level="B">
+<div class="q-tags"><span class="q-tag">EBS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>Volumes restored from snapshots show high first-read latency until every block is read. Which feature removes this warm-up delay?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Recycle Bin for EBS snapshots</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Fast Snapshot Restore on the snapshot</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">EBS-optimized instances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">EBS Multi-Attach on the restored volume</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Fast Snapshot Restore on the snapshot<br><br>
+<strong>How to think about it:</strong> Restored volume slow on first read = enable <b>Fast Snapshot Restore (FSR)</b> (or read every block with fio/dd).<br><br>
+<strong>Why B is correct:</strong> FSR makes restored volumes fully initialized at creation, so they deliver full performance immediately.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Recycle Bin for EBS snapshots</em> &mdash; Recycle Bin protects deleted snapshots from loss; it does not speed up restores.<br><em>C) EBS-optimized instances</em> &mdash; EBS optimization gives dedicated bandwidth to EBS but does not pre-load snapshot blocks.<br><em>D) EBS Multi-Attach on the restored volume</em> &mdash; Multi-Attach shares one volume among instances and has nothing to do with initialization.
+</div>
+</div>
+
+<!-- Q7 EBS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EBS" data-level="B">
+<div class="q-tags"><span class="q-tag">EBS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>A team wants EBS snapshots and EBS-backed AMIs created, retained and deleted automatically for volumes tagged Environment=Prod. What is the simplest tool?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">EC2 Image Builder pipelines</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Lifecycle rules</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Data Lifecycle Manager policies</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Config managed rules</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon Data Lifecycle Manager policies<br><br>
+<strong>How to think about it:</strong> Tag-driven EBS snapshot and AMI schedules = <b>Data Lifecycle Manager</b>.<br><br>
+<strong>Why C is correct:</strong> DLM uses resource tags to find volumes or instances, then creates, copies and expires snapshots and AMIs on a schedule.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) EC2 Image Builder pipelines</em> &mdash; Image Builder builds and tests golden images; it is not a snapshot retention tool.<br><em>B) S3 Lifecycle rules</em> &mdash; S3 Lifecycle manages objects in buckets, not EBS snapshots or AMIs.<br><em>D) AWS Config managed rules</em> &mdash; Config evaluates resource compliance but does not create or delete backups.
+</div>
+</div>
+
+<!-- Q8 EBS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EBS" data-level="A">
+<div class="q-tags"><span class="q-tag">EBS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>A company must back up EBS, RDS, DynamoDB and EFS with one policy, monitor backup jobs centrally, and copy backups to another account. What fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS DataSync scheduled tasks</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Backup with backup plans and cross-account copy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Data Lifecycle Manager</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">EventBridge Scheduler invoking a Lambda per service</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS Backup with backup plans and cross-account copy<br><br>
+<strong>How to think about it:</strong> One place for backups across many services = <b>AWS Backup</b>. EBS-only snapshot schedules = DLM.<br><br>
+<strong>Why B is correct:</strong> AWS Backup centralizes scheduling, retention, monitoring and cross-account or cross-Region copies for many services.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS DataSync scheduled tasks</em> &mdash; DataSync copies files and objects between storage systems; it does not manage backup plans.<br><em>C) Amazon Data Lifecycle Manager</em> &mdash; DLM automates EBS snapshots and AMIs only, so it cannot cover RDS, DynamoDB or EFS.<br><em>D) EventBridge Scheduler invoking a Lambda per service</em> &mdash; This is custom code that recreates what a managed backup service already does.
+</div>
+</div>
+
+<!-- Q9 EBS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EBS" data-level="B">
+<div class="q-tags"><span class="q-tag">EBS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>Security requires every new EBS volume and snapshot in an account to be encrypted. How is this enforced most simply?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable it once in the account's home Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Turn on S3 default encryption for the snapshot bucket</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable encryption on the instance's AMI only</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable EBS encryption by default in each Region used</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Enable EBS encryption by default in each Region used<br><br>
+<strong>How to think about it:</strong> <b>EBS encryption by default</b> is an account setting, and it is enabled <b>per Region</b>.<br><br>
+<strong>Why D is correct:</strong> This account-level setting encrypts all new volumes and snapshots, but it must be turned on in every Region.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable it once in the account's home Region</em> &mdash; The setting is regional, so enabling it in one Region leaves the others unencrypted.<br><em>B) Turn on S3 default encryption for the snapshot bucket</em> &mdash; Snapshots are not stored in a bucket you control, so S3 settings do not apply.<br><em>C) Enable encryption on the instance's AMI only</em> &mdash; That covers volumes launched from that AMI, not every new volume in the account.
+</div>
+</div>
+
+<!-- Q10 EBS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EBS" data-level="A">
+<div class="q-tags"><span class="q-tag">EBS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>A clustered Linux application needs several instances in one AZ to read and write the same block volume at the same time. What is required?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An io2 volume with Multi-Attach formatted with EXT4</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A gp3 volume with Multi-Attach formatted with XFS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An io2 volume with Multi-Attach and a cluster-aware file system</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An st1 volume shared through a placement group</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An io2 volume with Multi-Attach and a cluster-aware file system<br><br>
+<strong>How to think about it:</strong> Shared block volume = <b>io1/io2 Multi-Attach</b>, same AZ, plus a <b>cluster-aware file system</b>.<br><br>
+<strong>Why C is correct:</strong> Multi-Attach lets instances in one AZ share an io1/io2 volume, and the file system must coordinate concurrent writes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An io2 volume with Multi-Attach formatted with EXT4</em> &mdash; EXT4 assumes a single writer, so concurrent writes from several hosts would corrupt it.<br><em>B) A gp3 volume with Multi-Attach formatted with XFS</em> &mdash; Multi-Attach is not offered on gp3, and XFS is not cluster-aware, so data would be corrupted.<br><em>D) An st1 volume shared through a placement group</em> &mdash; Placement groups control instance placement and do not let volumes be shared.
+</div>
+</div>
+
+<!-- Q11 EBS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EBS" data-level="B">
+<div class="q-tags"><span class="q-tag">EBS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>An application needs a very fast scratch area for temporary buffers, and the data can be lost. What gives the highest IOPS at no extra storage charge?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An EFS file system in Max I/O mode</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An io2 Block Express volume</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">EC2 instance store volumes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A gp3 volume with maximum provisioned IOPS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> EC2 instance store volumes<br><br>
+<strong>How to think about it:</strong> Scratch, cache, temp data, highest IOPS = <b>instance store</b> (lost on stop or terminate).<br><br>
+<strong>Why C is correct:</strong> Instance store is physically attached to the host, giving very high IOPS, and its cost is included in the instance price.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An EFS file system in Max I/O mode</em> &mdash; EFS is network file storage with higher latency than local disks.<br><em>B) An io2 Block Express volume</em> &mdash; io2 is durable network storage billed per GB and per IOPS, which is more than temporary data needs.<br><em>D) A gp3 volume with maximum provisioned IOPS</em> &mdash; gp3 is network-attached and cannot match the IOPS of local NVMe disks.
+</div>
+</div>
+
+<!-- Q12 EBS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EBS" data-level="B">
+<div class="q-tags"><span class="q-tag">EBS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>What happens to data on an EC2 instance store volume when the instance is stopped?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The data is saved to an automatic EBS snapshot</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The data is lost</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The data is moved to S3 and restored on start</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The data is kept until the instance is terminated</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The data is lost<br><br>
+<strong>How to think about it:</strong> Instance store survives a <b>reboot</b>, but is lost on <b>stop, hibernate or terminate</b>.<br><br>
+<strong>Why B is correct:</strong> Stopping moves the instance to new hardware, so the local disks and their data are released.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The data is saved to an automatic EBS snapshot</em> &mdash; AWS takes no automatic backup of instance store; the user must handle backups.<br><em>C) The data is moved to S3 and restored on start</em> &mdash; There is no automatic copy to S3 for instance store volumes.<br><em>D) The data is kept until the instance is terminated</em> &mdash; Only a reboot keeps instance store data; a stop already wipes it.
+</div>
+</div>
+
+<!-- Q13 EFS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EFS" data-level="B">
+<div class="q-tags"><span class="q-tag">EFS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>Many Linux instances across three AZs must share the same POSIX file system with no capacity planning. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon FSx for Windows File Server</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon EFS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon S3 mounted as a bucket</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An EBS io2 volume with Multi-Attach</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon EFS<br><br>
+<strong>How to think about it:</strong> Shared Linux file system across AZs, grows automatically = <b>EFS</b> (NFSv4.1).<br><br>
+<strong>Why B is correct:</strong> EFS is a managed NFS file system mounted by many instances in several AZs, and it grows and shrinks automatically.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon FSx for Windows File Server</em> &mdash; FSx for Windows is an SMB share for Windows workloads, not the natural fit for POSIX Linux clients.<br><em>C) Amazon S3 mounted as a bucket</em> &mdash; S3 is object storage and is not a POSIX file system with locking.<br><em>D) An EBS io2 volume with Multi-Attach</em> &mdash; Multi-Attach is limited to one AZ and needs a cluster-aware file system.
+</div>
+</div>
+
+<!-- Q14 EFS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EFS" data-level="B">
+<div class="q-tags"><span class="q-tag">EFS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>Which statement about Amazon EFS client support is correct?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It exposes iSCSI block devices to clients</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It is POSIX-compliant and supports Linux clients, not Windows</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It supports both NFS and SMB clients</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It is reached only through an S3-compatible API</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> It is POSIX-compliant and supports Linux clients, not Windows<br><br>
+<strong>How to think about it:</strong> EFS = <b>NFS for Linux</b>. Windows file shares = FSx for Windows.<br><br>
+<strong>Why B is correct:</strong> EFS uses the NFS protocol and is not supported on Windows instances.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It exposes iSCSI block devices to clients</em> &mdash; iSCSI is a block protocol offered by FSx for ONTAP, not EFS.<br><em>C) It supports both NFS and SMB clients</em> &mdash; EFS speaks NFS only; SMB is offered by FSx for Windows and FSx for ONTAP.<br><em>D) It is reached only through an S3-compatible API</em> &mdash; EFS is mounted as a file system over NFS, not accessed as objects.
+</div>
+</div>
+
+<!-- Q15 EFS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EFS" data-level="B">
+<div class="q-tags"><span class="q-tag">EFS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>How is network access to an EFS mount target controlled?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Route tables in the client's subnet only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A VPC gateway endpoint for EFS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An S3 bucket policy attached to the file system</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A security group on the mount target allowing NFS traffic</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A security group on the mount target allowing NFS traffic<br><br>
+<strong>How to think about it:</strong> EFS mount targets are ENIs, so access is controlled by <b>security groups</b> (allow NFS port 2049).<br><br>
+<strong>Why D is correct:</strong> Each mount target is an ENI in a subnet, and its security group decides which clients can connect.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Route tables in the client's subnet only</em> &mdash; Routing alone does not filter which clients may reach the NFS port.<br><em>B) A VPC gateway endpoint for EFS</em> &mdash; EFS does not use gateway endpoints; clients connect to mount targets in the VPC.<br><em>C) An S3 bucket policy attached to the file system</em> &mdash; Bucket policies apply to S3; EFS uses its own file system policy for IAM rules.
+</div>
+</div>
+
+<!-- Q16 EFS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EFS" data-level="B">
+<div class="q-tags"><span class="q-tag">EFS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>Which EFS setting must be chosen when the file system is created and cannot be changed later?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Performance mode</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Lifecycle policy for moving files to IA</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The file system policy</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Throughput mode</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Performance mode<br><br>
+<strong>How to think about it:</strong> <b>Performance mode</b> (General Purpose vs Max I/O) is set at creation. Throughput mode can be changed.<br><br>
+<strong>Why A is correct:</strong> General Purpose or Max I/O is fixed at creation, so changing it requires a new file system.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Lifecycle policy for moving files to IA</em> &mdash; Lifecycle policies can be added or changed at any time.<br><em>C) The file system policy</em> &mdash; The resource policy can be edited whenever needed.<br><em>D) Throughput mode</em> &mdash; You can switch between bursting, provisioned and elastic throughput after creation.
+</div>
+</div>
+
+<!-- Q17 EFS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EFS" data-level="A">
+<div class="q-tags"><span class="q-tag">EFS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>A workload on EFS has spiky, unpredictable throughput and the team does not want to provision or manage throughput. Which throughput mode should they pick?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Elastic throughput</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Max I/O performance mode</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Bursting throughput</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Provisioned throughput</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Elastic throughput<br><br>
+<strong>How to think about it:</strong> Unpredictable throughput, pay for what you use = <b>Elastic</b> throughput.<br><br>
+<strong>Why A is correct:</strong> Elastic scales throughput up and down automatically with the workload and bills for what is used.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Max I/O performance mode</em> &mdash; Max I/O is a performance mode for parallelism, not a throughput mode.<br><em>C) Bursting throughput</em> &mdash; Bursting ties throughput to stored size and credits, which can run out on small file systems.<br><em>D) Provisioned throughput</em> &mdash; Provisioned sets a fixed throughput level you pay for even when it is idle.
+</div>
+</div>
+
+<!-- Q18 EFS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EFS" data-level="B">
+<div class="q-tags"><span class="q-tag">EFS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>Files on EFS are rarely read after 60 days. How can storage cost be cut automatically without changing the application?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Switch the file system to Max I/O mode</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add an EFS lifecycle policy to Infrequent Access</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Move the files to an EBS sc1 volume</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use an S3 Lifecycle rule on the file system</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Add an EFS lifecycle policy to Infrequent Access<br><br>
+<strong>How to think about it:</strong> EFS cost cutting = <b>lifecycle policy</b> moving files to <b>IA</b> or <b>Archive</b>.<br><br>
+<strong>Why B is correct:</strong> Lifecycle management moves files that are not accessed for N days to a cheaper class while keeping the same path.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Switch the file system to Max I/O mode</em> &mdash; Performance mode affects latency and parallelism, not storage price.<br><em>C) Move the files to an EBS sc1 volume</em> &mdash; That would break shared access and require application changes.<br><em>D) Use an S3 Lifecycle rule on the file system</em> &mdash; S3 Lifecycle rules only apply to S3 buckets.
+</div>
+</div>
+
+<!-- Q19 EFS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EFS" data-level="B">
+<div class="q-tags"><span class="q-tag">EFS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>A development team wants the cheapest EFS option and can accept data living in a single AZ. What should they choose?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">FSx for Lustre persistent deployment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">EFS Standard with provisioned throughput</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">EFS One Zone storage with lifecycle to One Zone-IA</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">EFS Standard in Max I/O mode</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> EFS One Zone storage with lifecycle to One Zone-IA<br><br>
+<strong>How to think about it:</strong> Dev or easily recreated data, cheapest = <b>EFS One Zone</b> (plus One Zone-IA).<br><br>
+<strong>Why C is correct:</strong> One Zone keeps data in one AZ at a much lower price, and pairs with One Zone-IA for colder files.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) FSx for Lustre persistent deployment</em> &mdash; Lustre targets HPC workloads and is not the cheapest general file share.<br><em>B) EFS Standard with provisioned throughput</em> &mdash; Standard stores data across several AZs and provisioned throughput adds cost.<br><em>D) EFS Standard in Max I/O mode</em> &mdash; Max I/O changes performance behaviour, not the storage price.
+</div>
+</div>
+
+<!-- Q20 EFS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EFS" data-level="A">
+<div class="q-tags"><span class="q-tag">EFS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>Two applications share one EFS file system. Each must see only its own directory as root and run as a fixed POSIX user, regardless of the client's user ID. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An EFS access point per application</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Two separate mount targets in different subnets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Security groups with different rules per application</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">EFS One Zone file systems per application</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An EFS access point per application<br><br>
+<strong>How to think about it:</strong> Per-application root directory + enforced UID/GID = <b>EFS Access Points</b>.<br><br>
+<strong>Why A is correct:</strong> Access points enforce a POSIX user and group and can expose a chosen directory as the root for that client.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Two separate mount targets in different subnets</em> &mdash; Mount targets give network access per AZ; they do not change the visible root or user.<br><em>C) Security groups with different rules per application</em> &mdash; Security groups filter network traffic but cannot pin a directory or POSIX identity.<br><em>D) EFS One Zone file systems per application</em> &mdash; Separate file systems would work but do not meet the need to share one file system.
+</div>
+</div>
+
+<!-- Q21 EFS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EFS" data-level="A">
+<div class="q-tags"><span class="q-tag">EFS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>A company needs a disaster recovery copy of an EFS file system in another Region with an RPO measured in minutes and minimal effort. What should it do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Run rsync from an EC2 instance every hour</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Schedule AWS Backup daily backups with cross-Region copy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Turn on S3 Cross-Region Replication for the file system</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable EFS replication to a file system in the second Region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Enable EFS replication to a file system in the second Region<br><br>
+<strong>How to think about it:</strong> EFS DR in another Region = built-in <b>EFS replication</b> (RPO/RTO in minutes).<br><br>
+<strong>Why D is correct:</strong> EFS replication keeps a read-only copy in another Region, typically within minutes, without consuming the source's throughput settings.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Run rsync from an EC2 instance every hour</em> &mdash; Custom rsync is extra work and gives an RPO around an hour.<br><em>B) Schedule AWS Backup daily backups with cross-Region copy</em> &mdash; Daily backups give an RPO of up to a day, not minutes.<br><em>C) Turn on S3 Cross-Region Replication for the file system</em> &mdash; S3 CRR replicates S3 buckets, not EFS file systems.
+</div>
+</div>
+
+<!-- Q22 S3 -->
+<div class="question" data-type="mc" data-answer="3" data-topic="S3" data-level="B">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>Which S3 storage class keeps data in a single Availability Zone?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 Glacier Instant Retrieval</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Standard-IA</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Intelligent-Tiering</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 One Zone-IA</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> S3 One Zone-IA<br><br>
+<strong>How to think about it:</strong> Only <b>One Zone-IA</b> uses 1 AZ. All the others use at least 3 AZs.<br><br>
+<strong>Why D is correct:</strong> One Zone-IA stores objects in one AZ, trading resilience for a lower price.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) S3 Glacier Instant Retrieval</em> &mdash; Glacier Instant Retrieval is also stored across multiple AZs.<br><em>B) S3 Standard-IA</em> &mdash; Standard-IA stores data across at least three AZs.<br><em>C) S3 Intelligent-Tiering</em> &mdash; Intelligent-Tiering tiers use multi-AZ storage.
+</div>
+</div>
+
+<!-- Q23 S3 -->
+<div class="question" data-type="mc" data-answer="1" data-topic="S3" data-level="B">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>A team stores many objects of about 20 KB in S3 Standard-IA to save money, but the bill is higher than expected. Why?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Standard-IA has a 180-day minimum storage charge</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Standard-IA bills each object as at least 128 KB</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Standard-IA replicates small objects to a second Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Standard-IA charges for every PUT twice</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Standard-IA bills each object as at least 128 KB<br><br>
+<strong>How to think about it:</strong> IA and Glacier Instant classes bill a <b>128 KB minimum</b> per object.<br><br>
+<strong>Why B is correct:</strong> Small objects are charged as if they were 128 KB, so tiny files can cost more than in Standard.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Standard-IA has a 180-day minimum storage charge</em> &mdash; Standard-IA has a 30-day minimum; 180 days applies to Deep Archive.<br><em>C) Standard-IA replicates small objects to a second Region</em> &mdash; No storage class copies data to another Region on its own.<br><em>D) Standard-IA charges for every PUT twice</em> &mdash; PUT pricing differs by class, but there is no double charge per request.
+</div>
+</div>
+
+<!-- Q24 S3 -->
+<div class="question" data-type="mc" data-answer="1" data-topic="S3" data-level="B">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>Which S3 storage class has the longest minimum storage duration charge?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 Standard-IA at 90 days</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Glacier Deep Archive at 180 days</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Intelligent-Tiering at 30 days</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Glacier Flexible Retrieval at 180 days</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> S3 Glacier Deep Archive at 180 days<br><br>
+<strong>How to think about it:</strong> Minimums: IA = 30 days, Glacier Instant/Flexible = 90 days, <b>Deep Archive = 180 days</b>.<br><br>
+<strong>Why B is correct:</strong> Deep Archive is the cheapest class and bills a 180-day minimum per object.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) S3 Standard-IA at 90 days</em> &mdash; Standard-IA has a 30-day minimum storage charge.<br><em>C) S3 Intelligent-Tiering at 30 days</em> &mdash; Intelligent-Tiering has no minimum storage duration.<br><em>D) S3 Glacier Flexible Retrieval at 180 days</em> &mdash; Flexible Retrieval has a 90-day minimum, not 180 days.
+</div>
+</div>
+
+<!-- Q25 S3 -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3" data-level="B">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>Access patterns for a large bucket are unknown and change over time. The team wants automatic savings with no retrieval fees. Which class fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 Intelligent-Tiering</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Glacier Instant Retrieval</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Standard-IA</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 One Zone-IA</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> S3 Intelligent-Tiering<br><br>
+<strong>How to think about it:</strong> Unknown or changing access = <b>Intelligent-Tiering</b> (small monitoring fee, no retrieval fee).<br><br>
+<strong>Why A is correct:</strong> It moves objects between access tiers based on use, charges a monitoring fee and has no retrieval charges.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) S3 Glacier Instant Retrieval</em> &mdash; Glacier Instant Retrieval suits data read about once a quarter and charges retrieval fees.<br><em>C) S3 Standard-IA</em> &mdash; Standard-IA charges per GB retrieved, which hurts when access is unpredictable.<br><em>D) S3 One Zone-IA</em> &mdash; One Zone-IA also has retrieval fees and stores data in only one AZ.
+</div>
+</div>
+
+<!-- Q26 S3 -->
+<div class="question" data-type="mc" data-answer="3" data-topic="S3" data-level="B">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>What must be true before S3 Cross-Region Replication can be configured?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Both buckets are in the same AWS account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The source bucket uses SSE-C encryption</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Transfer Acceleration is enabled on the source</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Versioning is on in both buckets</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Versioning is on in both buckets<br><br>
+<strong>How to think about it:</strong> S3 replication (CRR or SRR) needs <b>versioning on both</b> source and destination buckets.<br><br>
+<strong>Why D is correct:</strong> Replication relies on object versions, so both buckets must have versioning turned on.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Both buckets are in the same AWS account</em> &mdash; Replication works across accounts as long as permissions allow it.<br><em>B) The source bucket uses SSE-C encryption</em> &mdash; SSE-C objects are not replicated; encryption type is not a prerequisite.<br><em>C) S3 Transfer Acceleration is enabled on the source</em> &mdash; Transfer Acceleration speeds uploads and is unrelated to replication.
+</div>
+</div>
+
+<!-- Q27 S3 -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3" data-level="A">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>A regulator requires that 99.99% of new objects be copied to a second Region within 15 minutes, with metrics to prove it. What should you enable?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Cross-Region Replication with S3 Replication Time Control</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS DataSync tasks scheduled every hour</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Cross-Region Replication without additional options</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Batch Replication on a daily schedule</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Cross-Region Replication with S3 Replication Time Control<br><br>
+<strong>How to think about it:</strong> Replication with an SLA and metrics = <b>S3 Replication Time Control (RTC)</b>.<br><br>
+<strong>Why A is correct:</strong> RTC is designed to replicate 99.99% of objects within 15 minutes and adds replication metrics and alerts.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS DataSync tasks scheduled every hour</em> &mdash; An hourly task cannot meet a 15-minute target.<br><em>C) Cross-Region Replication without additional options</em> &mdash; Plain CRR is usually fast but gives no time commitment or SLA.<br><em>D) S3 Batch Replication on a daily schedule</em> &mdash; Batch Replication copies existing objects on demand, not new objects within minutes.
+</div>
+</div>
+
+<!-- Q28 S3 -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3" data-level="A">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>Replication was just added to a bucket that already holds millions of objects. The older objects must also reach the destination. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 Batch Replication for the existing objects</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add a lifecycle rule to transition objects</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Nothing, because the rule copies existing objects automatically</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable S3 Replication Time Control</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> S3 Batch Replication for the existing objects<br><br>
+<strong>How to think about it:</strong> Replication rules only cover <b>new</b> objects. Existing objects = <b>S3 Batch Replication</b>.<br><br>
+<strong>Why A is correct:</strong> Batch Replication replicates objects that existed before the rule, or that previously failed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Add a lifecycle rule to transition objects</em> &mdash; Lifecycle rules change class or expire objects; they do not copy them.<br><em>C) Nothing, because the rule copies existing objects automatically</em> &mdash; A new replication rule applies only to objects written after it is enabled.<br><em>D) Enable S3 Replication Time Control</em> &mdash; RTC sets a time target for new objects; it does not backfill old ones.
+</div>
+</div>
+
+<!-- Q29 S3 -->
+<div class="question" data-type="mc" data-answer="3" data-topic="S3" data-level="B">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>Each image uploaded to a bucket must trigger a thumbnail generator within seconds. Which S3 feature sends this trigger?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 server access logs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Storage Lens</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Inventory reports</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Event Notifications on ObjectCreated</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> S3 Event Notifications on ObjectCreated<br><br>
+<strong>How to think about it:</strong> Object uploaded, react = <b>S3 Event Notifications</b> (to Lambda, SQS or SNS).<br><br>
+<strong>Why D is correct:</strong> S3 can notify Lambda, SQS or SNS when objects are created, filtered by prefix or suffix.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) S3 server access logs</em> &mdash; Access logs are delivered in batches and are not an event trigger.<br><em>B) S3 Storage Lens</em> &mdash; Storage Lens reports usage and activity metrics; it does not trigger processing.<br><em>C) S3 Inventory reports</em> &mdash; Inventory produces scheduled listings of objects, not per-upload triggers.
+</div>
+</div>
+
+<!-- Q30 S3 -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3" data-level="A">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>S3 events must be filtered on object size and metadata, sent to Step Functions and Kinesis, and be replayable after an outage. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Send S3 events to Amazon EventBridge and use rules</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudTrail data events read by a nightly job</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Event Notifications directly to Lambda</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Event Notifications directly to SNS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Send S3 events to Amazon EventBridge and use rules<br><br>
+<strong>How to think about it:</strong> Advanced filters, many targets, <b>archive and replay</b> = S3 events via <b>EventBridge</b>.<br><br>
+<strong>Why A is correct:</strong> EventBridge receives all bucket events, supports rich JSON filtering, many targets, and archive and replay.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) CloudTrail data events read by a nightly job</em> &mdash; A nightly job is not event-driven and adds delay.<br><em>C) S3 Event Notifications directly to Lambda</em> &mdash; This supports one target per configuration and cannot replay past events.<br><em>D) S3 Event Notifications directly to SNS</em> &mdash; Native notifications have only prefix and suffix filters and no replay.
+</div>
+</div>
+
+<!-- Q31 S3 -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3" data-level="B">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>What is the baseline S3 request rate per prefix in a bucket?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">3,500 write and 5,500 read requests per second</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">1,000 requests per second across all prefixes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">5,500 write and 3,500 read requests per second</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">100 requests per second for the whole bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> 3,500 write and 5,500 read requests per second<br><br>
+<strong>How to think about it:</strong> Per prefix per second: <b>3,500 writes</b> (PUT/COPY/POST/DELETE) and <b>5,500 reads</b> (GET/HEAD).<br><br>
+<strong>Why A is correct:</strong> S3 supports at least these rates per prefix, and there is no limit on the number of prefixes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) 1,000 requests per second across all prefixes</em> &mdash; Rates are per prefix and much higher, so spreading keys over prefixes scales further.<br><em>C) 5,500 write and 3,500 read requests per second</em> &mdash; The numbers are reversed; reads get the higher rate.<br><em>D) 100 requests per second for the whole bucket</em> &mdash; S3 scales far higher, and limits apply per prefix, not per bucket.
+</div>
+</div>
+
+<!-- Q32 S3 -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3" data-level="B">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>When is multipart upload required rather than just recommended?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">For objects larger than 5 GB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">For every upload to an encrypted bucket</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">For objects larger than 100 MB</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only when S3 Transfer Acceleration is enabled</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> For objects larger than 5 GB<br><br>
+<strong>How to think about it:</strong> Multipart: recommended over <b>100 MB</b>, required over <b>5 GB</b> (single PUT limit).<br><br>
+<strong>Why A is correct:</strong> A single PUT can upload at most 5 GB, so bigger objects must use multipart upload.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) For every upload to an encrypted bucket</em> &mdash; Encryption does not change whether multipart is needed.<br><em>C) For objects larger than 100 MB</em> &mdash; At 100 MB multipart is recommended for speed, but not required.<br><em>D) Only when S3 Transfer Acceleration is enabled</em> &mdash; Transfer Acceleration works with both single and multipart uploads.
+</div>
+</div>
+
+<!-- Q33 S3 -->
+<div class="question" data-type="mc" data-answer="3" data-topic="S3" data-level="A">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>Users in Australia upload large files to a bucket in us-east-1 and transfers are slow over the public internet. What improves upload speed with a simple change?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable Cross-Region Replication to ap-southeast-2</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Switch the bucket to One Zone-IA</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use S3 byte-range fetches</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable S3 Transfer Acceleration on the bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Enable S3 Transfer Acceleration on the bucket<br><br>
+<strong>How to think about it:</strong> Far-away uploads to one bucket = <b>S3 Transfer Acceleration</b> (enter at the nearest edge location).<br><br>
+<strong>Why D is correct:</strong> Uploads go to a nearby edge location and then travel over the AWS backbone to the bucket.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable Cross-Region Replication to ap-southeast-2</em> &mdash; CRR copies objects after upload and does not speed up the original upload.<br><em>B) Switch the bucket to One Zone-IA</em> &mdash; Storage class has no effect on network transfer speed.<br><em>C) Use S3 byte-range fetches</em> &mdash; Byte-range fetches speed up downloads, not uploads.
+</div>
+</div>
+
+<!-- Q34 S3 -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3" data-level="B">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>An application only needs the first few kilobytes of very large S3 objects to read a header. What is the most efficient method?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Issue a GET with a byte-range request for the header</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable Transfer Acceleration for downloads</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Download the whole object and discard the rest</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use S3 Select on every object</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Issue a GET with a byte-range request for the header<br><br>
+<strong>How to think about it:</strong> Read part of an object or parallelize downloads = <b>byte-range fetch</b> (Range header).<br><br>
+<strong>Why A is correct:</strong> Range requests return only the requested bytes, saving time and transfer.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Enable Transfer Acceleration for downloads</em> &mdash; Acceleration speeds transfers over distance but still fetches the whole object.<br><em>C) Download the whole object and discard the rest</em> &mdash; Downloading full objects wastes bandwidth and time.<br><em>D) Use S3 Select on every object</em> &mdash; S3 Select queries structured content; a simple range read is cheaper for a header.
+</div>
+</div>
+
+<!-- Q35 S3 -->
+<div class="question" data-type="mc" data-answer="1" data-topic="S3" data-level="A">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>A bucket stores millions of customer files. The company needs to search by upload date, customer and attributes, and to total each customer's storage. S3 keys alone are not enough. What design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use LIST calls with prefixes for every query</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 events trigger Lambda, which writes object metadata to DynamoDB</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable S3 Inventory and read the daily report for each query</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Store the metadata as object tags and filter on tags</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> S3 events trigger Lambda, which writes object metadata to DynamoDB<br><br>
+<strong>How to think about it:</strong> S3 has no query index: <b>event, then Lambda, writes metadata to DynamoDB</b>.<br><br>
+<strong>Why B is correct:</strong> A DynamoDB index gives fast lookups by date, customer or attribute that S3 listings cannot provide.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use LIST calls with prefixes for every query</em> &mdash; Listing millions of keys is slow and cannot filter on attributes or dates.<br><em>C) Enable S3 Inventory and read the daily report for each query</em> &mdash; Inventory is daily, so it is stale and slow for interactive searches.<br><em>D) Store the metadata as object tags and filter on tags</em> &mdash; S3 cannot query objects by tag value across a bucket.
+</div>
+</div>
+
+<!-- Q36 S3 -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3" data-level="A">
+<div class="q-tags"><span class="q-tag">S3</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Private user files in S3 must be downloadable straight from the bucket by an authorized user for 10 minutes, without proxying through the web servers. What should the application return?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An S3 pre-signed URL that expires after 10 minutes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Temporary IAM user credentials for each customer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The bucket's static website endpoint URL</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A public-read ACL set on the object for 10 minutes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An S3 pre-signed URL that expires after 10 minutes<br><br>
+<strong>How to think about it:</strong> Temporary direct access to one S3 object = <b>S3 pre-signed URL</b>.<br><br>
+<strong>Why A is correct:</strong> The URL carries the signer's permissions for that object until it expires, so the client downloads directly.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Temporary IAM user credentials for each customer</em> &mdash; Creating IAM users per customer does not scale and is poor practice.<br><em>C) The bucket's static website endpoint URL</em> &mdash; Website endpoints serve public content and offer no per-user authorization.<br><em>D) A public-read ACL set on the object for 10 minutes</em> &mdash; ACLs are disabled by default and making objects public exposes them to everyone.
+</div>
+</div>
+
+<!-- Q37 S3 Insights -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3 Insights" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Insights</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>A team wants data-driven advice on when to move objects from S3 Standard to Standard-IA before writing lifecycle rules. Which feature helps?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 Storage Class Analysis</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Macie</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Inventory</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Intelligent-Tiering archive configuration</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> S3 Storage Class Analysis<br><br>
+<strong>How to think about it:</strong> When to transition Standard to Standard-IA = <b>Storage Class Analysis</b> (daily report, 24-48 h to start).<br><br>
+<strong>Why A is correct:</strong> It watches access patterns and recommends when to transition from Standard to Standard-IA.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon Macie</em> &mdash; Macie discovers sensitive data in buckets, not storage class recommendations.<br><em>C) S3 Inventory</em> &mdash; Inventory lists objects and their properties but gives no access-pattern advice.<br><em>D) S3 Intelligent-Tiering archive configuration</em> &mdash; This adds archive tiers to Intelligent-Tiering; it is not an analysis report.
+</div>
+</div>
+
+<!-- Q38 S3 Insights -->
+<div class="question" data-type="mc" data-answer="2" data-topic="S3 Insights" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Insights</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>Which tool gives organization-wide visibility into S3 usage, cost efficiency and data protection across all accounts and Regions?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Trusted Advisor</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Cost Explorer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon S3 Storage Lens</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Storage Class Analysis</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon S3 Storage Lens<br><br>
+<strong>How to think about it:</strong> S3 across the whole Organization = <b>S3 Storage Lens</b>.<br><br>
+<strong>Why C is correct:</strong> Storage Lens aggregates S3 metrics by organization, account, Region, bucket or prefix with dashboards.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Trusted Advisor</em> &mdash; Trusted Advisor checks some S3 settings but does not analyse storage usage and activity in depth.<br><em>B) AWS Cost Explorer</em> &mdash; Cost Explorer shows spend, not bucket-level protection settings or activity.<br><em>D) S3 Storage Class Analysis</em> &mdash; Class Analysis works per bucket and only recommends Standard-IA transitions.
+</div>
+</div>
+
+<!-- Q39 S3 Insights -->
+<div class="question" data-type="mc" data-answer="1" data-topic="S3 Insights" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Insights</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Which features require S3 Storage Lens advanced metrics instead of the free tier?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Basic usage metrics such as StorageBytes and ObjectCount</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Prefix-level aggregation and publishing metrics to CloudWatch</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The default dashboard for the account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Viewing data for buckets in more than one Region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Prefix-level aggregation and publishing metrics to CloudWatch<br><br>
+<strong>How to think about it:</strong> Free = ~14 days of usage metrics. Advanced = <b>prefix aggregation, CloudWatch publishing, activity metrics, 15 months</b>.<br><br>
+<strong>Why B is correct:</strong> These, along with activity and status code metrics and 15 months of history, come with advanced metrics.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Basic usage metrics such as StorageBytes and ObjectCount</em> &mdash; Summary usage metrics are part of the free tier.<br><em>C) The default dashboard for the account</em> &mdash; The default dashboard is included for every customer at no charge.<br><em>D) Viewing data for buckets in more than one Region</em> &mdash; The default dashboard already shows multi-Region data for free.
+</div>
+</div>
+
+<!-- Q40 S3 Insights -->
+<div class="question" data-type="mc" data-answer="2" data-topic="S3 Insights" data-level="A">
+<div class="q-tags"><span class="q-tag">S3 Insights</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>A security team wants to find buckets across the organization that lack versioning or SSE-KMS and buckets that still allow ACLs. What is the quickest way to see this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Check AWS Cost and Usage Reports</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable S3 server access logging on every bucket</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use S3 Storage Lens data-protection and access-management metrics</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Run S3 Storage Class Analysis on every bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Use S3 Storage Lens data-protection and access-management metrics<br><br>
+<strong>How to think about it:</strong> Which buckets break best practices = Storage Lens <b>data-protection</b> and <b>access-management</b> metrics.<br><br>
+<strong>Why C is correct:</strong> These metrics count buckets with versioning, encryption and Object Ownership settings across the organization.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Check AWS Cost and Usage Reports</em> &mdash; Cost reports show spending, not bucket protection settings.<br><em>B) Enable S3 server access logging on every bucket</em> &mdash; Access logs record requests, not bucket configuration settings.<br><em>D) Run S3 Storage Class Analysis on every bucket</em> &mdash; Class Analysis only tracks access age for storage class advice.
+</div>
+</div>
+
+<!-- Q41 FSx -->
+<div class="question" data-type="mc" data-answer="3" data-topic="FSx" data-level="B">
+<div class="q-tags"><span class="q-tag">FSx</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>Windows servers need a managed SMB file share with NTFS permissions and Active Directory integration. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon FSx for OpenZFS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon EFS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon FSx for Lustre</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon FSx for Windows File Server</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Amazon FSx for Windows File Server<br><br>
+<strong>How to think about it:</strong> SMB + NTFS + Active Directory = <b>FSx for Windows File Server</b>.<br><br>
+<strong>Why D is correct:</strong> It provides fully managed SMB shares with NTFS ACLs, AD integration, quotas and DFS Namespaces.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon FSx for OpenZFS</em> &mdash; OpenZFS serves files over NFS, not SMB with Active Directory.<br><em>B) Amazon EFS</em> &mdash; EFS is an NFS file system for Linux clients and does not support Windows.<br><em>C) Amazon FSx for Lustre</em> &mdash; Lustre is a parallel file system for HPC and Linux clients.
+</div>
+</div>
+
+<!-- Q42 FSx -->
+<div class="question" data-type="mc" data-answer="2" data-topic="FSx" data-level="B">
+<div class="q-tags"><span class="q-tag">FSx</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>Which FSx for Windows feature groups file shares from several file systems under one common namespace?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">EFS access points</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Multi-AZ deployment</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Microsoft DFS Namespaces</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Volume shadow copies</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Microsoft DFS Namespaces<br><br>
+<strong>How to think about it:</strong> One folder tree across many file systems = <b>DFS Namespaces</b>.<br><br>
+<strong>Why C is correct:</strong> DFS Namespaces present shares from multiple file systems as one logical tree to users.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) EFS access points</em> &mdash; Access points are an EFS feature for NFS clients.<br><em>B) Multi-AZ deployment</em> &mdash; Multi-AZ adds a standby for availability; it does not merge namespaces.<br><em>D) Volume shadow copies</em> &mdash; Shadow copies let users restore earlier file versions, not join shares together.
+</div>
+</div>
+
+<!-- Q43 FSx -->
+<div class="question" data-type="mc" data-answer="1" data-topic="FSx" data-level="B">
+<div class="q-tags"><span class="q-tag">FSx</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>An ML training job running on many Linux nodes needs a parallel file system with sub-millisecond latency that reads its data from S3. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 with Transfer Acceleration</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon FSx for Lustre linked to the S3 bucket</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon FSx for Windows File Server</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon EFS with Elastic throughput</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon FSx for Lustre linked to the S3 bucket<br><br>
+<strong>How to think about it:</strong> HPC, ML, parallel, <b>S3-linked</b> = <b>FSx for Lustre</b>.<br><br>
+<strong>Why B is correct:</strong> Lustre is built for HPC and ML, scales to very high throughput, and presents S3 data as files.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) S3 with Transfer Acceleration</em> &mdash; Transfer Acceleration speeds long-distance transfers, not compute-side file access.<br><em>C) Amazon FSx for Windows File Server</em> &mdash; FSx for Windows serves SMB shares for Windows workloads.<br><em>D) Amazon EFS with Elastic throughput</em> &mdash; EFS is a general shared file system and is not a parallel HPC file system.
+</div>
+</div>
+
+<!-- Q44 FSx -->
+<div class="question" data-type="mc" data-answer="2" data-topic="FSx" data-level="B">
+<div class="q-tags"><span class="q-tag">FSx</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>A short HPC job needs the cheapest FSx for Lustre option and can tolerate data loss if a server fails. Which deployment type fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Persistent file system with HDD storage</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One Zone-IA storage class</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Scratch file system</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Persistent file system</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Scratch file system<br><br>
+<strong>How to think about it:</strong> Short-term, cheapest, not replicated = <b>Scratch</b>. Long-term, replicated = <b>Persistent</b>.<br><br>
+<strong>Why C is correct:</strong> Scratch is temporary storage with no replication, giving high burst performance at low cost.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Persistent file system with HDD storage</em> &mdash; HDD persistent storage is still replicated and billed for long-term use, so it costs more than needed.<br><em>B) One Zone-IA storage class</em> &mdash; That is an S3 or EFS storage class, not a Lustre deployment type.<br><em>D) Persistent file system</em> &mdash; Persistent replicates data within the AZ for long-term use, which costs more.
+</div>
+</div>
+
+<!-- Q45 FSx -->
+<div class="question" data-type="mc" data-answer="3" data-topic="FSx" data-level="A">
+<div class="q-tags"><span class="q-tag">FSx</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>A job on FSx for Lustre processes only a fraction of a 500 TB dataset in S3. The team worries about waiting for a full copy and paying for S3 requests. How does Lustre behave?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It copies the whole dataset before the job can begin</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It requires DataSync to stage the data first</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It reads from S3 on every access with no local caching</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It lazy-loads only the data the job reads, once, from S3</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> It lazy-loads only the data the job reads, once, from S3<br><br>
+<strong>How to think about it:</strong> Lustre + S3 = <b>lazy loading</b>: only files the job reads are pulled, and only once.<br><br>
+<strong>Why D is correct:</strong> Jobs can start immediately, and only processed data is loaded, cutting time and S3 requests.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It copies the whole dataset before the job can begin</em> &mdash; Lustre does not require a full import; files load on first access.<br><em>B) It requires DataSync to stage the data first</em> &mdash; The S3 data repository link removes the need for a separate copy step.<br><em>C) It reads from S3 on every access with no local caching</em> &mdash; After the first read, the data is held on the file system.
+</div>
+</div>
+
+<!-- Q46 FSx -->
+<div class="question" data-type="mc" data-answer="1" data-topic="FSx" data-level="B">
+<div class="q-tags"><span class="q-tag">FSx</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>A company runs NetApp ONTAP storage on premises and needs NFS, SMB and iSCSI access in AWS with deduplication and instant clones. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon EFS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon FSx for NetApp ONTAP</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon FSx for Lustre</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon FSx for OpenZFS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon FSx for NetApp ONTAP<br><br>
+<strong>How to think about it:</strong> NFS + SMB + <b>iSCSI</b>, NetApp features = <b>FSx for NetApp ONTAP</b>.<br><br>
+<strong>Why B is correct:</strong> It offers NFS, SMB and iSCSI, plus snapshots, replication, compression, deduplication and instant cloning.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon EFS</em> &mdash; EFS provides NFS only and none of the NetApp data features.<br><em>C) Amazon FSx for Lustre</em> &mdash; Lustre is a parallel HPC file system, not a multi-protocol NAS.<br><em>D) Amazon FSx for OpenZFS</em> &mdash; OpenZFS serves NFS only, so it lacks SMB and iSCSI.
+</div>
+</div>
+
+<!-- Q47 FSx -->
+<div class="question" data-type="mc" data-answer="2" data-topic="FSx" data-level="B">
+<div class="q-tags"><span class="q-tag">FSx</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>An on-premises ZFS file server running Linux NFS workloads must move to AWS with as few changes as possible. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon FSx for Lustre</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon S3 with Mountpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon FSx for OpenZFS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon FSx for Windows File Server</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon FSx for OpenZFS<br><br>
+<strong>How to think about it:</strong> ZFS workloads over <b>NFS</b> = <b>FSx for OpenZFS</b>.<br><br>
+<strong>Why C is correct:</strong> It is a managed OpenZFS file system with NFS access, snapshots, compression and instant clones.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon FSx for Lustre</em> &mdash; Lustre is for parallel HPC processing, not a general ZFS replacement.<br><em>B) Amazon S3 with Mountpoint</em> &mdash; Mountpoint gives file-like reads of S3 but not full ZFS or POSIX semantics.<br><em>D) Amazon FSx for Windows File Server</em> &mdash; That service serves SMB shares for Windows workloads.
+</div>
+</div>
+
+<!-- Q48 FSx -->
+<div class="question" data-type="mc" data-answer="3" data-topic="FSx" data-level="A">
+<div class="q-tags"><span class="q-tag">FSx</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>An FSx for Windows file system was provisioned at 2 TB but only needs 1 TB. How can capacity be reduced?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Edit the storage capacity down to 1 TB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Take a backup and restore it into a 1 TB file system</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Switch the file system from SSD to HDD storage</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a smaller file system, copy data with DataSync, then repoint the app</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Create a smaller file system, copy data with DataSync, then repoint the app<br><br>
+<strong>How to think about it:</strong> FSx storage can only <b>grow</b>. To shrink: <b>new smaller file system + DataSync</b>, then switch over.<br><br>
+<strong>Why D is correct:</strong> Capacity cannot be decreased in place, so you migrate to a new, smaller file system.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Edit the storage capacity down to 1 TB</em> &mdash; FSx allows storage capacity increases only.<br><em>B) Take a backup and restore it into a 1 TB file system</em> &mdash; A backup restores to a file system of the same size.<br><em>C) Switch the file system from SSD to HDD storage</em> &mdash; Storage type affects performance and price, not provisioned capacity.
+</div>
+</div>
+
+<!-- Q49 FSx -->
+<div class="question" data-type="mc" data-answer="2" data-topic="FSx" data-level="A">
+<div class="q-tags"><span class="q-tag">FSx</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>A Single-AZ FSx for Windows file system must become highly available across AZs. What is a valid approach?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable Cross-Region Replication on the file system</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add a second mount target in another AZ</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a Multi-AZ file system and migrate data with DataSync</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Change the deployment type setting to Multi-AZ</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Create a Multi-AZ file system and migrate data with DataSync<br><br>
+<strong>How to think about it:</strong> Single-AZ to Multi-AZ = build a <b>new Multi-AZ</b> file system and move data (<b>DataSync</b> or backup and restore).<br><br>
+<strong>Why C is correct:</strong> Deployment type is set at creation, so you create a Multi-AZ system and copy the data over.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable Cross-Region Replication on the file system</em> &mdash; That would protect against Region loss, not convert to Multi-AZ.<br><em>B) Add a second mount target in another AZ</em> &mdash; Mount targets are an EFS concept and do not add a standby file server.<br><em>D) Change the deployment type setting to Multi-AZ</em> &mdash; FSx for Windows does not convert an existing file system between deployment types.
+</div>
+</div>
+
+<!-- Q50 DataSync -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DataSync" data-level="B">
+<div class="q-tags"><span class="q-tag">DataSync</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>A company must copy 200 TB from on-premises NFS and SMB servers to S3 and EFS, keeping file permissions and metadata. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Storage Gateway Volume Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Transfer Acceleration</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS DataSync with an agent on premises</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Transfer Family SFTP</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS DataSync with an agent on premises<br><br>
+<strong>How to think about it:</strong> Online file copy with metadata and scheduling = <b>DataSync</b> (agent on premises).<br><br>
+<strong>Why C is correct:</strong> DataSync copies NFS, SMB and other sources to S3, EFS or FSx and preserves metadata such as POSIX permissions.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Storage Gateway Volume Gateway</em> &mdash; Volume Gateway presents iSCSI volumes, not a file migration engine.<br><em>B) S3 Transfer Acceleration</em> &mdash; Acceleration speeds individual uploads but does not read file servers or keep permissions.<br><em>D) AWS Transfer Family SFTP</em> &mdash; Transfer Family gives users an SFTP endpoint; it does not run bulk sync jobs.
+</div>
+</div>
+
+<!-- Q51 DataSync -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DataSync" data-level="B">
+<div class="q-tags"><span class="q-tag">DataSync</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>When is a DataSync agent NOT required?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">When the source is an on-premises NFS server</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">When copying between AWS storage services</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">When data travels over Direct Connect</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">When the source is an on-premises SMB share</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> When copying between AWS storage services<br><br>
+<strong>How to think about it:</strong> Agent needed for on-prem or other-cloud sources. <b>AWS to AWS storage</b> copies need <b>no agent</b>.<br><br>
+<strong>Why B is correct:</strong> DataSync can move data between AWS storage services without deploying an agent.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) When the source is an on-premises NFS server</em> &mdash; On-premises sources need an agent to read the data locally.<br><em>C) When data travels over Direct Connect</em> &mdash; The network path does not remove the need for an on-premises agent.<br><em>D) When the source is an on-premises SMB share</em> &mdash; SMB sources outside AWS also require an agent.
+</div>
+</div>
+
+<!-- Q52 DataSync -->
+<div class="question" data-type="mc" data-answer="0" data-topic="DataSync" data-level="A">
+<div class="q-tags"><span class="q-tag">DataSync</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>Which DataSync capability helps when a migration must not saturate a shared WAN link during business hours?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Setting a bandwidth limit on the task and scheduling runs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Splitting files with multipart upload</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Using an S3 gateway endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enabling S3 Transfer Acceleration on the target</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Setting a bandwidth limit on the task and scheduling runs<br><br>
+<strong>How to think about it:</strong> Protect the WAN = DataSync <b>bandwidth limit</b> + <b>schedules</b>.<br><br>
+<strong>Why A is correct:</strong> Tasks can be throttled and scheduled hourly, daily or weekly to run off-peak.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Splitting files with multipart upload</em> &mdash; Multipart splits objects for S3; it does not limit bandwidth.<br><em>C) Using an S3 gateway endpoint</em> &mdash; A gateway endpoint keeps traffic private inside a VPC but does not throttle it.<br><em>D) Enabling S3 Transfer Acceleration on the target</em> &mdash; Acceleration may speed uploads but does not cap WAN use.
+</div>
+</div>
+
+<!-- Q53 DataSync -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DataSync" data-level="A">
+<div class="q-tags"><span class="q-tag">DataSync</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>A DataSync agent on premises must send data to AWS only over Direct Connect, never the public internet. How should it be set up?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use a public VIF to the DataSync public endpoint</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use a gateway VPC endpoint for DataSync</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use a private VIF and an interface VPC endpoint for DataSync</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable S3 Transfer Acceleration on the bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Use a private VIF and an interface VPC endpoint for DataSync<br><br>
+<strong>How to think about it:</strong> Private DataSync = <b>Private VIF + interface VPC endpoint</b> for DataSync.<br><br>
+<strong>Why C is correct:</strong> The agent talks to the DataSync service through a PrivateLink endpoint reached over the private VIF.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use a public VIF to the DataSync public endpoint</em> &mdash; A public VIF reaches public AWS endpoints; it is not the private-network path.<br><em>B) Use a gateway VPC endpoint for DataSync</em> &mdash; Gateway endpoints exist only for S3 and DynamoDB.<br><em>D) Enable S3 Transfer Acceleration on the bucket</em> &mdash; Acceleration sends data over the internet to edge locations.
+</div>
+</div>
+
+<!-- Q54 DataSync -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DataSync" data-level="B">
+<div class="q-tags"><span class="q-tag">DataSync</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>Which targets can DataSync write to in AWS?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">EBS volumes attached to running instances</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 (any storage class), EFS and FSx</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon RDS and Amazon DynamoDB tables</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon S3 Standard only</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> S3 (any storage class), EFS and FSx<br><br>
+<strong>How to think about it:</strong> DataSync targets = <b>S3 (any class), EFS and FSx</b>.<br><br>
+<strong>Why B is correct:</strong> DataSync can land data directly in S3 classes including Glacier, in EFS, and in all FSx types.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) EBS volumes attached to running instances</em> &mdash; DataSync does not write directly to EBS block volumes.<br><em>C) Amazon RDS and Amazon DynamoDB tables</em> &mdash; Those are databases; DataSync moves files and objects, not table rows.<br><em>D) Amazon S3 Standard only</em> &mdash; DataSync can write to other S3 classes as well as EFS and FSx.
+</div>
+</div>
+
+<!-- Q55 Transfer & Exchange -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Transfer & Exchange" data-level="B">
+<div class="q-tags"><span class="q-tag">Transfer & Exchange</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>Partners must upload files to S3 using SFTP, and the company does not want to run SFTP servers. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon FSx for Windows File Server</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Transfer Family with an SFTP endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Transfer Acceleration</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS DataSync</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS Transfer Family with an SFTP endpoint<br><br>
+<strong>How to think about it:</strong> Managed SFTP/FTPS/FTP into <b>S3 or EFS</b> = <b>AWS Transfer Family</b>.<br><br>
+<strong>Why B is correct:</strong> Transfer Family runs managed, multi-AZ SFTP, FTPS and FTP endpoints that store files in S3 or EFS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon FSx for Windows File Server</em> &mdash; FSx for Windows serves SMB shares, not SFTP.<br><em>C) S3 Transfer Acceleration</em> &mdash; Acceleration speeds HTTPS uploads; it does not speak SFTP.<br><em>D) AWS DataSync</em> &mdash; DataSync runs bulk copy tasks; partners cannot log in to it with an SFTP client.
+</div>
+</div>
+
+<!-- Q56 Transfer & Exchange -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Transfer & Exchange" data-level="B">
+<div class="q-tags"><span class="q-tag">Transfer & Exchange</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>Which storage services can AWS Transfer Family write files into?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon FSx for Lustre only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon EBS and instance store</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon S3 and Amazon EFS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon DynamoDB and Amazon RDS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon S3 and Amazon EFS<br><br>
+<strong>How to think about it:</strong> Transfer Family back ends = <b>S3 and EFS</b>.<br><br>
+<strong>Why C is correct:</strong> Transfer Family stores uploaded files in an S3 bucket or an EFS file system.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon FSx for Lustre only</em> &mdash; Lustre is not a Transfer Family storage option.<br><em>B) Amazon EBS and instance store</em> &mdash; Transfer Family does not write to block volumes.<br><em>D) Amazon DynamoDB and Amazon RDS</em> &mdash; Databases are not file storage targets for Transfer Family.
+</div>
+</div>
+
+<!-- Q57 Transfer & Exchange -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Transfer & Exchange" data-level="B">
+<div class="q-tags"><span class="q-tag">Transfer & Exchange</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>A company's FTP users authenticate today against Microsoft Active Directory. How can AWS Transfer Family use those same identities?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use Amazon Cognito user pools only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create matching IAM users for every FTP user</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Integrate the server with Active Directory as the identity provider</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use S3 bucket ACLs mapped to AD groups</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Integrate the server with Active Directory as the identity provider<br><br>
+<strong>How to think about it:</strong> Transfer Family auth = service-managed users, <b>AWS Managed Microsoft AD</b>, or a <b>custom identity provider</b>.<br><br>
+<strong>Why C is correct:</strong> Transfer Family supports AD and custom providers such as LDAP or Okta, so existing credentials work.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use Amazon Cognito user pools only</em> &mdash; Cognito can be a custom option, but it is not the way to reuse AD directly.<br><em>B) Create matching IAM users for every FTP user</em> &mdash; FTP clients do not sign in with IAM users, and duplicating accounts is unnecessary.<br><em>D) Use S3 bucket ACLs mapped to AD groups</em> &mdash; ACLs are disabled by default and do not authenticate FTP logins.
+</div>
+</div>
+
+<!-- Q58 Transfer & Exchange -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Transfer & Exchange" data-level="A">
+<div class="q-tags"><span class="q-tag">Transfer & Exchange</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>Partners must reach an SFTP endpoint over the internet from fixed IP addresses, and the company wants to allow-list partner IPs with security groups. Which endpoint type fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A CloudFront distribution in front of a public endpoint</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A VPC-hosted endpoint with internal access only</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A public endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A VPC-hosted endpoint with internet-facing access and Elastic IPs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A VPC-hosted endpoint with internet-facing access and Elastic IPs<br><br>
+<strong>How to think about it:</strong> Static Elastic IPs + security groups = <b>VPC endpoint with internet-facing access</b>. Public endpoint = AWS-managed IPs, no SGs.<br><br>
+<strong>Why D is correct:</strong> This type gives static public IPs and lets security groups restrict which source IPs connect.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A CloudFront distribution in front of a public endpoint</em> &mdash; CloudFront delivers HTTP traffic and does not proxy SFTP.<br><em>B) A VPC-hosted endpoint with internal access only</em> &mdash; Internal endpoints are reachable only from the VPC or over VPN and Direct Connect.<br><em>C) A public endpoint</em> &mdash; Public endpoints use AWS-managed IPs that can change and cannot be filtered with security groups.
+</div>
+</div>
+
+<!-- Q59 Transfer & Exchange -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Transfer & Exchange" data-level="B">
+<div class="q-tags"><span class="q-tag">Transfer & Exchange</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>A data science team wants to subscribe to third-party financial datasets and load them straight into S3 for analysis. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Data Exchange</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Glue Data Catalog</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS DataSync</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Marketplace AMIs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AWS Data Exchange<br><br>
+<strong>How to think about it:</strong> Buy or subscribe to third-party data in AWS = <b>AWS Data Exchange</b>.<br><br>
+<strong>Why A is correct:</strong> Data Exchange lets you find and subscribe to third-party data products and export them into S3.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS Glue Data Catalog</em> &mdash; The Data Catalog stores metadata for your tables but does not sell external datasets.<br><em>C) AWS DataSync</em> &mdash; DataSync moves your own data between storage systems.<br><em>D) AWS Marketplace AMIs</em> &mdash; Marketplace AMIs are software images, not data subscriptions.
+</div>
+</div>
+
+<!-- Q60 Transfer & Exchange -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Transfer & Exchange" data-level="A">
+<div class="q-tags"><span class="q-tag">Transfer & Exchange</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>Analysts want to query a licensed third-party dataset directly in their Redshift warehouse, without building ETL to copy it. What should they use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Data Exchange for APIs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Glue jobs loading CSV exports nightly</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Redshift Spectrum over the provider's public bucket</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Data Exchange for Amazon Redshift</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Data Exchange for Amazon Redshift<br><br>
+<strong>How to think about it:</strong> Licensed data queried in place in Redshift = <b>Data Exchange for Amazon Redshift</b>.<br><br>
+<strong>Why D is correct:</strong> The provider shares data that subscribers can query in Redshift in minutes, without managing copies.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Data Exchange for APIs</em> &mdash; That product is for subscribing to third-party APIs, not warehouse tables.<br><em>B) AWS Glue jobs loading CSV exports nightly</em> &mdash; Nightly ETL is exactly the copy pipeline the analysts want to avoid.<br><em>C) Redshift Spectrum over the provider's public bucket</em> &mdash; Spectrum queries S3 data you can access, but does not handle licensing and subscriptions.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

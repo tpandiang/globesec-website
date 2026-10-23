@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Caching - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Caching</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Caching</h2>
+        <p>60 refresher questions &mdash; CloudFront, origins &amp; OAC, signed URLs, CloudFront Functions, Lambda@Edge, ElastiCache &amp; scaling to extreme rates</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="CloudFront Origins" onclick="filterQ(this)">CloudFront Origins</button><button class="filter-btn" data-f="CloudFront Access" onclick="filterQ(this)">CloudFront Access</button><button class="filter-btn" data-f="CloudFront Ops" onclick="filterQ(this)">CloudFront Ops</button><button class="filter-btn" data-f="Edge Functions" onclick="filterQ(this)">Edge Functions</button><button class="filter-btn" data-f="ElastiCache" onclick="filterQ(this)">ElastiCache</button><button class="filter-btn" data-f="Extreme Rates" onclick="filterQ(this)">Extreme Rates</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 CloudFront Origins -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudFront Origins" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Origins</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>What is the main way Amazon CloudFront improves read performance for global users?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It copies the origin bucket into every AWS Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It routes each user to the closest healthy Region by DNS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It gives users static anycast IPs into the AWS network</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It caches content at edge locations near the viewers</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> It caches content at edge locations near the viewers<br><br>
+<strong>How to think about it:</strong> CloudFront = <b>CDN</b>: content is <b>cached at edge locations</b> close to users.<br><br>
+<strong>Why D is correct:</strong> Requests are served from a nearby edge cache, cutting latency and load on the origin.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It copies the origin bucket into every AWS Region</em> &mdash; That describes replication, not a CDN; CloudFront caches objects for a TTL.<br><em>B) It routes each user to the closest healthy Region by DNS</em> &mdash; That is Route 53 latency or geoproximity routing, not caching.<br><em>C) It gives users static anycast IPs into the AWS network</em> &mdash; Static anycast IPs are a Global Accelerator feature.
+</div>
+</div>
+
+<!-- Q2 CloudFront Origins -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CloudFront Origins" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Origins</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>Which of these can be configured as a CloudFront origin?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only S3 buckets in the us-east-1 Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only services that have a public static IP</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An S3 bucket, a load balancer, or any custom HTTP server</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only resources inside the same AWS account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An S3 bucket, a load balancer, or any custom HTTP server<br><br>
+<strong>How to think about it:</strong> Origins = <b>S3, VPC origins (ALB, NLB, EC2), MediaPackage, any HTTP server</b>.<br><br>
+<strong>Why C is correct:</strong> CloudFront can front S3, ALB, NLB, EC2, media services and any reachable HTTP endpoint.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only S3 buckets in the us-east-1 Region</em> &mdash; Origins can be in any Region and need not be S3.<br><em>B) Only services that have a public static IP</em> &mdash; Origins are addressed by DNS names, and VPC origins can even be private.<br><em>D) Only resources inside the same AWS account</em> &mdash; Custom origins can be any HTTP server, even outside AWS.
+</div>
+</div>
+
+<!-- Q3 CloudFront Origins -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFront Origins" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Origins</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>An ALB and its EC2 targets sit in private subnets and must be served through CloudFront without any internet exposure. What should be used?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A CloudFront VPC origin pointing at the internal ALB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A NAT gateway in the ALB's subnet</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An S3 origin with Origin Access Control</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A public ALB with an allow rule for 0.0.0.0/0</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A CloudFront VPC origin pointing at the internal ALB<br><br>
+<strong>How to think about it:</strong> Private ALB, NLB or EC2 behind CloudFront = <b>CloudFront VPC origins</b>.<br><br>
+<strong>Why A is correct:</strong> VPC origins let CloudFront reach ALBs, NLBs or instances in private subnets with no public endpoint.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A NAT gateway in the ALB's subnet</em> &mdash; A NAT gateway handles outbound traffic and cannot accept CloudFront requests.<br><em>C) An S3 origin with Origin Access Control</em> &mdash; OAC protects S3 buckets, not load balancers in a VPC.<br><em>D) A public ALB with an allow rule for 0.0.0.0/0</em> &mdash; That exposes the application directly to the internet.
+</div>
+</div>
+
+<!-- Q4 CloudFront Origins -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudFront Origins" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Origins</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>Without VPC origins, what must be true when CloudFront uses an ALB in front of EC2 instances as a custom origin?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Both the ALB and the instances must have public IPs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The ALB can be internal if the instances are public</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The instances must be in a placement group</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The ALB must be public; the instances can stay private</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The ALB must be public; the instances can stay private<br><br>
+<strong>How to think about it:</strong> Classic custom origin: <b>ALB public</b>, instances <b>can be private</b> and only allow the ALB's security group.<br><br>
+<strong>Why D is correct:</strong> CloudFront reaches the ALB over the internet, and the instances only need to allow the ALB.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Both the ALB and the instances must have public IPs</em> &mdash; Instances behind the ALB do not need public addresses.<br><em>B) The ALB can be internal if the instances are public</em> &mdash; An internal ALB is unreachable from the edge without VPC origins.<br><em>C) The instances must be in a placement group</em> &mdash; Placement groups affect instance proximity, not CloudFront reachability.
+</div>
+</div>
+
+<!-- Q5 CloudFront Origins -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudFront Origins" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Origins</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>Which origin type is used to deliver video on demand or live streams produced by AWS Elemental services?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An Amazon Kinesis data stream</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A DynamoDB table</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An Amazon EFS file system</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An AWS Elemental MediaPackage endpoint</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> An AWS Elemental MediaPackage endpoint<br><br>
+<strong>How to think about it:</strong> Video packaging origin = <b>MediaPackage</b> endpoint (Elemental Media services).<br><br>
+<strong>Why D is correct:</strong> MediaPackage prepares streaming formats and is a native CloudFront origin for VOD and live video.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An Amazon Kinesis data stream</em> &mdash; Kinesis streams ingest data records and are not a viewer-facing origin.<br><em>B) A DynamoDB table</em> &mdash; DynamoDB is a database and cannot serve as an HTTP origin.<br><em>C) An Amazon EFS file system</em> &mdash; EFS is mounted by compute, not addressed directly by CloudFront.
+</div>
+</div>
+
+<!-- Q6 CloudFront Origins -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFront Origins" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Origins</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>Static content must be fast for users worldwide and can be a few hours stale. Dynamic data must be low-latency in two Regions and updated in near real time. Which pairing fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudFront with a TTL of zero for both content types</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudFront for static content, S3 CRR for the two-Region data</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 CRR to every Region for the static content</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Global Accelerator in front of a single bucket for both</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> CloudFront for static content, S3 CRR for the two-Region data<br><br>
+<strong>How to think about it:</strong> Global, TTL-cached static = <b>CloudFront</b>. Near-real-time copies in a few Regions = <b>S3 CRR</b>.<br><br>
+<strong>Why B is correct:</strong> CloudFront caches globally for a TTL, while CRR keeps fresh read copies in chosen Regions.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) CloudFront with a TTL of zero for both content types</em> &mdash; Zero TTL removes the caching benefit for static content.<br><em>C) S3 CRR to every Region for the static content</em> &mdash; Replicating to every Region is costly and still lacks edge caching.<br><em>D) Global Accelerator in front of a single bucket for both</em> &mdash; Global Accelerator does not cache content or replicate data.
+</div>
+</div>
+
+<!-- Q7 CloudFront Origins -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CloudFront Origins" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFront Origins</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>A static site on S3 must stay up even if its primary Region has a problem. What CloudFront design gives Region-level failover?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A single origin with a long default TTL</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Two distributions with Route 53 weighted records</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An origin group over two CRR-synced buckets</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 Transfer Acceleration on the primary bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An origin group over two CRR-synced buckets<br><br>
+<strong>How to think about it:</strong> CloudFront failover = <b>origin group</b> (primary + secondary), with <b>CRR</b> keeping the second bucket in sync.<br><br>
+<strong>Why C is correct:</strong> If the primary returns errors, CloudFront retries the request on the secondary origin.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A single origin with a long default TTL</em> &mdash; Long TTLs hide short outages but fail once objects expire.<br><em>B) Two distributions with Route 53 weighted records</em> &mdash; Weighted records split traffic but do not fail over on origin errors.<br><em>D) S3 Transfer Acceleration on the primary bucket</em> &mdash; Acceleration speeds uploads and adds no failover.
+</div>
+</div>
+
+<!-- Q8 CloudFront Origins -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFront Origins" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFront Origins</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>An origin group is configured. When does CloudFront send a request to the secondary origin?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">On a round-robin basis for every other request</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">When the primary returns a chosen error code or times out</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">When the primary's CPU utilization passes a threshold</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only when a Route 53 health check fails</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> When the primary returns a chosen error code or times out<br><br>
+<strong>How to think about it:</strong> Origin group failover triggers on <b>chosen HTTP error codes</b> or connection failures from the primary.<br><br>
+<strong>Why B is correct:</strong> You pick the status codes, such as 500 or 503, that trigger the retry on the secondary.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) On a round-robin basis for every other request</em> &mdash; Origin groups are for failover, not load balancing.<br><em>C) When the primary's CPU utilization passes a threshold</em> &mdash; CloudFront does not see origin CPU; it reacts to HTTP responses.<br><em>D) Only when a Route 53 health check fails</em> &mdash; Origin group failover works from CloudFront's own response handling.
+</div>
+</div>
+
+<!-- Q9 CloudFront Origins -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudFront Origins" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Origins</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>Does CloudFront support WebSocket connections to the origin?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">No, WebSocket requires Global Accelerator</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only for S3 origins</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only when Lambda@Edge proxies the connection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Yes, it supports WebSocket connections</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Yes, it supports WebSocket connections<br><br>
+<strong>How to think about it:</strong> CloudFront supports <b>WebSocket</b> as well as HTTP and HTTPS.<br><br>
+<strong>Why D is correct:</strong> CloudFront can carry WebSocket traffic between viewers and the origin.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) No, WebSocket requires Global Accelerator</em> &mdash; Global Accelerator can carry it too, but CloudFront supports WebSocket natively.<br><em>B) Only for S3 origins</em> &mdash; S3 does not serve WebSocket; support is for custom origins.<br><em>C) Only when Lambda@Edge proxies the connection</em> &mdash; No function is needed for WebSocket support.
+</div>
+</div>
+
+<!-- Q10 CloudFront Access -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CloudFront Access" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Access</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>A private S3 bucket must be readable only through CloudFront. What is the current recommended setup?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable S3 static website hosting with a custom header</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Make the bucket public and rely on a hard-to-guess URL</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Origin Access Control plus a bucket policy allowing the distribution</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Attach a security group to the S3 bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Origin Access Control plus a bucket policy allowing the distribution<br><br>
+<strong>How to think about it:</strong> Lock S3 to CloudFront = <b>Origin Access Control (OAC)</b> + bucket policy (OAI is legacy).<br><br>
+<strong>Why C is correct:</strong> OAC signs requests to S3, and the bucket policy only allows that distribution.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable S3 static website hosting with a custom header</em> &mdash; Website endpoints are public and do not support OAC.<br><em>B) Make the bucket public and rely on a hard-to-guess URL</em> &mdash; A public bucket can be read directly, bypassing CloudFront.<br><em>D) Attach a security group to the S3 bucket</em> &mdash; S3 buckets do not use security groups.
+</div>
+</div>
+
+<!-- Q11 CloudFront Access -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CloudFront Access" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Access</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>Why is Origin Access Control preferred over the older Origin Access Identity?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">OAC removes the need for any bucket policy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">OAC lets the bucket stay public while still being protected</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">OAC works with SSE-KMS encrypted objects and all Regions</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">OAC caches objects for longer than OAI</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> OAC works with SSE-KMS encrypted objects and all Regions<br><br>
+<strong>How to think about it:</strong> <b>OAC</b> beats OAI: supports <b>SSE-KMS</b>, all Regions and more request types.<br><br>
+<strong>Why C is correct:</strong> OAC supports KMS-encrypted objects, newer Regions and methods such as PUT, which OAI does not.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) OAC removes the need for any bucket policy</em> &mdash; OAC still relies on a bucket policy granting the CloudFront service.<br><em>B) OAC lets the bucket stay public while still being protected</em> &mdash; Neither feature needs a public bucket; the goal is a private one.<br><em>D) OAC caches objects for longer than OAI</em> &mdash; Caching TTLs are set by cache policies, not by the access method.
+</div>
+</div>
+
+<!-- Q12 CloudFront Access -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFront Access" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFront Access</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>A custom origin ALB must reject any request that did not come through CloudFront. What is a common approach?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use a geo restriction allow list on the distribution</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add a secret custom header and require it on the ALB</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use a CloudFront signed URL for the ALB</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable OAC on the ALB origin</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Add a secret custom header and require it on the ALB<br><br>
+<strong>How to think about it:</strong> Block direct ALB hits = CloudFront adds a <b>secret custom header</b>, and the ALB only forwards requests with it.<br><br>
+<strong>Why B is correct:</strong> Requests without the header are rejected, so direct access to the ALB fails.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use a geo restriction allow list on the distribution</em> &mdash; Geo restriction controls viewers by country; it does not protect the ALB.<br><em>C) Use a CloudFront signed URL for the ALB</em> &mdash; Signed URLs control viewer access to CloudFront, not who can reach the ALB.<br><em>D) Enable OAC on the ALB origin</em> &mdash; OAC is for S3 and some AWS origins, not for an ALB.
+</div>
+</div>
+
+<!-- Q13 CloudFront Access -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFront Access" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFront Access</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>An origin's security group should accept traffic only from CloudFront. How can this be done without maintaining an IP list by hand?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Allow the distribution's DNS name in the security group</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Allow the AWS-managed CloudFront prefix list</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use a network ACL that allows only port 443</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Allow the IP addresses of the users' ISPs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Allow the AWS-managed CloudFront prefix list<br><br>
+<strong>How to think about it:</strong> Allow only CloudFront IPs = AWS-managed <b>CloudFront origin-facing prefix list</b> in the security group.<br><br>
+<strong>Why B is correct:</strong> AWS keeps this prefix list updated with CloudFront's origin-facing IP ranges.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Allow the distribution's DNS name in the security group</em> &mdash; Security groups match IPs, prefix lists and groups, not DNS names.<br><em>C) Use a network ACL that allows only port 443</em> &mdash; A port rule does not limit traffic to CloudFront's addresses.<br><em>D) Allow the IP addresses of the users' ISPs</em> &mdash; Origin traffic comes from CloudFront, not directly from users.
+</div>
+</div>
+
+<!-- Q14 CloudFront Access -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFront Access" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Access</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>Licensing rules require that a video library not be viewed from certain countries. Which CloudFront feature handles this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudFront signed cookies per region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Geographic restriction with a block list of countries</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Route 53 geolocation routing</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Price Class 100 on the distribution</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Geographic restriction with a block list of countries<br><br>
+<strong>How to think about it:</strong> Country allow or block list = <b>CloudFront geo restriction</b>.<br><br>
+<strong>Why B is correct:</strong> CloudFront uses a Geo-IP database to block or allow viewers by country.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) CloudFront signed cookies per region</em> &mdash; Signed cookies control who can access content, not where they are.<br><em>C) Route 53 geolocation routing</em> &mdash; Geolocation routing picks a record by location but does not block content.<br><em>D) Price Class 100 on the distribution</em> &mdash; Price classes limit edge locations for cost, not viewer countries.
+</div>
+</div>
+
+<!-- Q15 CloudFront Access -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudFront Access" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Access</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>Paying subscribers should get time-limited access to premium files served through CloudFront. What should the application issue?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A geo restriction allow list</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A longer cache TTL on the premium objects</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 bucket ACLs granting each subscriber read access</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudFront signed URLs with an expiry time</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> CloudFront signed URLs with an expiry time<br><br>
+<strong>How to think about it:</strong> Time-limited access via CloudFront = <b>signed URLs</b> (one file) or <b>signed cookies</b> (many files).<br><br>
+<strong>Why D is correct:</strong> The application signs the URL after checking the user, and CloudFront rejects it after it expires.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A geo restriction allow list</em> &mdash; Geo restriction filters by country, not by subscription.<br><em>B) A longer cache TTL on the premium objects</em> &mdash; TTL controls caching, not who may access the content.<br><em>C) S3 bucket ACLs granting each subscriber read access</em> &mdash; ACLs are disabled by default and do not scale per subscriber.
+</div>
+</div>
+
+<!-- Q16 CloudFront Access -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFront Access" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Access</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>Subscribers must access hundreds of files in a members-only area without each URL being signed separately. What fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudFront signed cookies</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 pre-signed URLs for each file</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Origin Access Control</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A separate CloudFront signed URL per file</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> CloudFront signed cookies<br><br>
+<strong>How to think about it:</strong> Many files for one user = <b>signed cookies</b>. One file = signed URL.<br><br>
+<strong>Why A is correct:</strong> One set of signed cookies grants access to many files without changing every URL.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) S3 pre-signed URLs for each file</em> &mdash; These also need one signature per object and skip CloudFront caching.<br><em>C) Origin Access Control</em> &mdash; OAC secures CloudFront-to-S3 access, not viewer access.<br><em>D) A separate CloudFront signed URL per file</em> &mdash; That works but means signing every URL, which is what they want to avoid.
+</div>
+</div>
+
+<!-- Q17 CloudFront Access -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFront Access" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Access</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>What is the recommended way to manage the public keys CloudFront uses to verify signed URLs?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Trusted key groups that IAM users can manage</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">ACM certificates attached to the distribution</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">IAM access keys of the application's role</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudFront key pairs created by the root user</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Trusted key groups that IAM users can manage<br><br>
+<strong>How to think about it:</strong> Signed URL keys = <b>trusted key groups</b> managed through IAM (root key pairs are legacy).<br><br>
+<strong>Why A is correct:</strong> Key groups are managed with IAM permissions and APIs, so the root user is not needed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) ACM certificates attached to the distribution</em> &mdash; ACM certificates provide HTTPS, not URL signing.<br><em>C) IAM access keys of the application's role</em> &mdash; IAM access keys sign S3 pre-signed URLs, not CloudFront signed URLs.<br><em>D) CloudFront key pairs created by the root user</em> &mdash; Root-user key pairs still work but are legacy and not recommended.
+</div>
+</div>
+
+<!-- Q18 CloudFront Access -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFront Access" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFront Access</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>How does a CloudFront signed URL differ from an S3 pre-signed URL?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudFront signed URLs work only for S3 origins</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudFront's covers any origin; S3's acts as the signing principal</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 pre-signed URLs are cached at edge locations</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only S3 pre-signed URLs can have an expiration time</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> CloudFront's covers any origin; S3's acts as the signing principal<br><br>
+<strong>How to think about it:</strong> CloudFront signed URL = <b>any origin, cached, IP and date filters</b>. S3 pre-signed = acts <b>as the signing IAM principal</b>.<br><br>
+<strong>Why B is correct:</strong> CloudFront URLs can filter by path, IP and dates; S3 pre-signed URLs act with the signer's permissions.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) CloudFront signed URLs work only for S3 origins</em> &mdash; They protect content from any origin behind the distribution.<br><em>C) S3 pre-signed URLs are cached at edge locations</em> &mdash; S3 pre-signed URLs go straight to S3 and get no CloudFront caching.<br><em>D) Only S3 pre-signed URLs can have an expiration time</em> &mdash; Both kinds of URL carry an expiry.
+</div>
+</div>
+
+<!-- Q19 CloudFront Access -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CloudFront Access" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Access</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>Which protection does CloudFront provide automatically at no extra cost?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon GuardDuty threat detection</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Shield Advanced with a response team</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Shield Standard against common DDoS attacks</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS WAF rules blocking SQL injection</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS Shield Standard against common DDoS attacks<br><br>
+<strong>How to think about it:</strong> Every distribution gets <b>AWS Shield Standard</b> for network and transport-layer DDoS.<br><br>
+<strong>Why C is correct:</strong> Shield Standard is included for CloudFront and protects against common layer 3 and 4 attacks.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon GuardDuty threat detection</em> &mdash; GuardDuty is a separate service, not a built-in CloudFront feature.<br><em>B) AWS Shield Advanced with a response team</em> &mdash; Shield Advanced is a paid subscription.<br><em>D) AWS WAF rules blocking SQL injection</em> &mdash; WAF can be attached, but its web ACLs and rules are configured and billed separately.
+</div>
+</div>
+
+<!-- Q20 CloudFront Access -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFront Access" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFront Access</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>A public site behind CloudFront is hit by SQL injection attempts and floods of requests from a few IPs. What should be attached to the distribution?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An AWS WAF web ACL with managed rules and a rate-based rule</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A security group on the CloudFront distribution</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A network ACL on the origin subnet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudFront geo restriction block list</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An AWS WAF web ACL with managed rules and a rate-based rule<br><br>
+<strong>How to think about it:</strong> Layer 7 filtering + per-IP rate limits at the edge = <b>AWS WAF web ACL</b> on CloudFront.<br><br>
+<strong>Why A is correct:</strong> WAF inspects requests at the edge, blocking injection patterns and IPs that exceed a rate.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A security group on the CloudFront distribution</em> &mdash; Distributions do not have security groups, and they cannot inspect SQL.<br><em>C) A network ACL on the origin subnet</em> &mdash; NACLs filter by IP and port and cannot recognize SQL injection.<br><em>D) A CloudFront geo restriction block list</em> &mdash; Blocking countries does not stop attacks coming from allowed countries.
+</div>
+</div>
+
+<!-- Q21 CloudFront Ops -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudFront Ops" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Ops</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>A company wants to reduce CloudFront costs and accepts that users in the most expensive regions may see higher latency. What should it change?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable origin shield in every Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Lower the default TTL on all behaviors</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Turn on S3 Transfer Acceleration</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Select a lower price class such as Price Class 100</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Select a lower price class such as Price Class 100<br><br>
+<strong>How to think about it:</strong> Fewer edge locations to save money = lower <b>price class</b> (All &gt; 200 &gt; 100).<br><br>
+<strong>Why D is correct:</strong> Lower price classes use only the cheaper edge regions, reducing data transfer cost.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable origin shield in every Region</em> &mdash; Origin Shield adds a caching layer and its own charges.<br><em>B) Lower the default TTL on all behaviors</em> &mdash; Shorter TTLs cause more origin fetches and can increase cost.<br><em>C) Turn on S3 Transfer Acceleration</em> &mdash; Acceleration is an S3 upload feature with extra fees.
+</div>
+</div>
+
+<!-- Q22 CloudFront Ops -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudFront Ops" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Ops</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>Which CloudFront price class offers the best performance by using every edge location?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Price Class 100</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Price Class 200</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Price Class Regional</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Price Class All</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Price Class All<br><br>
+<strong>How to think about it:</strong> <b>Price Class All</b> = every edge, best latency, highest cost.<br><br>
+<strong>Why D is correct:</strong> It uses all edge locations, giving the best performance at the highest price.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Price Class 100</em> &mdash; Class 100 uses only the least expensive regions.<br><em>B) Price Class 200</em> &mdash; Class 200 drops the most expensive regions.<br><em>C) Price Class Regional</em> &mdash; There is no price class with this name.
+</div>
+</div>
+
+<!-- Q23 CloudFront Ops -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFront Ops" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Ops</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>When an origin returns a 503 error, users should see a branded HTML page and the origin should not be hit repeatedly. What should be configured?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Route 53 failover record for the distribution</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A custom error response with an error caching minimum TTL</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An S3 lifecycle rule for the error page</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Lambda@Edge viewer request function that retries</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A custom error response with an error caching minimum TTL<br><br>
+<strong>How to think about it:</strong> Friendly error page + fewer origin retries = <b>custom error response</b> with <b>Error Caching Minimum TTL</b>.<br><br>
+<strong>Why B is correct:</strong> CloudFront returns your error page and caches the error for the TTL, sparing the origin.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Route 53 failover record for the distribution</em> &mdash; DNS failover works at the record level, not for per-response error pages.<br><em>C) An S3 lifecycle rule for the error page</em> &mdash; Lifecycle rules manage object storage, not HTTP error handling.<br><em>D) A Lambda@Edge viewer request function that retries</em> &mdash; Retrying on every request increases origin load instead of reducing it.
+</div>
+</div>
+
+<!-- Q24 CloudFront Ops -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFront Ops" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Ops</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>Where do CloudFront's regional edge caches sit in the request path?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">In front of the edge locations, closer to viewers</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Between edge locations and the origin</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only in us-east-1 for all traffic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Inside the customer's VPC next to the origin</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Between edge locations and the origin<br><br>
+<strong>How to think about it:</strong> Viewer &gt; <b>edge location</b> &gt; <b>regional edge cache</b> &gt; origin.<br><br>
+<strong>Why B is correct:</strong> Regional edge caches hold objects that dropped out of edge caches, reducing origin fetches.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) In front of the edge locations, closer to viewers</em> &mdash; Edge locations are the closest tier to viewers.<br><em>C) Only in us-east-1 for all traffic</em> &mdash; Regional edge caches are spread across many locations worldwide.<br><em>D) Inside the customer's VPC next to the origin</em> &mdash; Regional edge caches are part of the CloudFront network, not customer VPCs.
+</div>
+</div>
+
+<!-- Q25 CloudFront Ops -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFront Ops" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFront Ops</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>CloudFront cache hit ratio is low because each request carries different tracking query strings and headers that the origin ignores. What is the best fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Remove the unneeded values from the cache key</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Lower the default TTL to one second</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Increase the price class to Price Class All</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Add a second origin in another Region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Remove the unneeded values from the cache key<br><br>
+<strong>How to think about it:</strong> Low hit ratio from noisy headers or query strings = <b>trim the cache key</b> (cache policy or normalize in a CloudFront Function).<br><br>
+<strong>Why A is correct:</strong> A smaller cache key makes requests for the same object match, raising the hit ratio.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Lower the default TTL to one second</em> &mdash; A shorter TTL lowers the hit ratio further.<br><em>C) Increase the price class to Price Class All</em> &mdash; More edge locations do not fix a fragmented cache key.<br><em>D) Add a second origin in another Region</em> &mdash; Extra origins do not change how requests are keyed in the cache.
+</div>
+</div>
+
+<!-- Q26 CloudFront Ops -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudFront Ops" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Ops</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>Can CloudFront serve HTTPS to viewers while also using HTTPS to the origin?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">No, traffic to the origin is always plain HTTP</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only when the origin is an S3 website endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only with Lambda@Edge rewriting the request</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Yes, it can use HTTPS on both the viewer and origin sides</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Yes, it can use HTTPS on both the viewer and origin sides<br><br>
+<strong>How to think about it:</strong> CloudFront terminates viewer HTTPS and can use <b>HTTPS to the origin</b> too (end to end).<br><br>
+<strong>Why D is correct:</strong> You set viewer and origin protocol policies separately, and both can require HTTPS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) No, traffic to the origin is always plain HTTP</em> &mdash; Origin protocol policy can be HTTPS only.<br><em>B) Only when the origin is an S3 website endpoint</em> &mdash; S3 website endpoints support only HTTP to the origin.<br><em>C) Only with Lambda@Edge rewriting the request</em> &mdash; No function is needed; it is a distribution setting.
+</div>
+</div>
+
+<!-- Q27 CloudFront Ops -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFront Ops" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFront Ops</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>A global API on API Gateway needs custom caching behavior, WAF rules and its own CloudFront settings. Which setup gives the most control?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Regional API behind your own CloudFront distribution</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An HTTP API with Global Accelerator for caching</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An edge-optimized API endpoint with default settings</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A private API endpoint exposed through a NAT gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A Regional API behind your own CloudFront distribution<br><br>
+<strong>How to think about it:</strong> Need your own CloudFront settings = <b>Regional API endpoint behind your own distribution</b>.<br><br>
+<strong>Why A is correct:</strong> With your own distribution you control cache behaviors, WAF, origins and other settings.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An HTTP API with Global Accelerator for caching</em> &mdash; Global Accelerator does not cache content.<br><em>C) An edge-optimized API endpoint with default settings</em> &mdash; Edge-optimized uses an AWS-managed distribution you cannot customize.<br><em>D) A private API endpoint exposed through a NAT gateway</em> &mdash; Private APIs are for VPC access, and NAT does not accept inbound traffic.
+</div>
+</div>
+
+<!-- Q28 CloudFront Ops -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFront Ops" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront Ops</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>Users worldwide upload files to an S3 bucket. Besides distributing content, how else can CloudFront help here?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Accept uploads at edge locations and forward them to the S3 origin</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Convert the uploads into EBS snapshots</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Store the uploads permanently in edge caches</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Replicate the bucket to every Region automatically</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Accept uploads at edge locations and forward them to the S3 origin<br><br>
+<strong>How to think about it:</strong> CloudFront also works as an <b>ingress</b>: uploads enter at the nearest edge and ride the AWS network to S3.<br><br>
+<strong>Why A is correct:</strong> CloudFront supports PUT and POST, so uploads enter the AWS network close to the user.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Convert the uploads into EBS snapshots</em> &mdash; CloudFront has no connection to EBS snapshots.<br><em>C) Store the uploads permanently in edge caches</em> &mdash; Edge caches hold copies for a TTL; they are not durable storage.<br><em>D) Replicate the bucket to every Region automatically</em> &mdash; CloudFront does not replicate buckets; S3 replication does.
+</div>
+</div>
+
+<!-- Q29 Edge Functions -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Edge Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>Which statement best describes CloudFront Functions?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Functions that can trigger on origin request and origin response</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Containers that run next to the origin</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Python or Node.js code run at regional edge caches</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Lightweight JavaScript run at edge locations on viewer events</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Lightweight JavaScript run at edge locations on viewer events<br><br>
+<strong>How to think about it:</strong> <b>CloudFront Functions</b> = lightweight <b>JavaScript</b>, sub-ms, <b>viewer events only</b>, millions of requests per second.<br><br>
+<strong>Why D is correct:</strong> They start in under a millisecond and scale to millions of requests per second.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Functions that can trigger on origin request and origin response</em> &mdash; Origin triggers are only available to Lambda@Edge.<br><em>B) Containers that run next to the origin</em> &mdash; Edge functions are not containers and run in CloudFront's network.<br><em>C) Python or Node.js code run at regional edge caches</em> &mdash; That describes Lambda@Edge.
+</div>
+</div>
+
+<!-- Q30 Edge Functions -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Edge Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>Which CloudFront event triggers are available to Lambda@Edge?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">All four viewer and origin events</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only on a cache miss at the edge location</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only origin request and origin response</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only viewer request and viewer response</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> All four viewer and origin events<br><br>
+<strong>How to think about it:</strong> Lambda@Edge = <b>all four</b>: viewer request/response and origin request/response.<br><br>
+<strong>Why A is correct:</strong> Lambda@Edge can run at any of the four points in the request flow.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Only on a cache miss at the edge location</em> &mdash; Viewer triggers run on every request, cached or not.<br><em>C) Only origin request and origin response</em> &mdash; Lambda@Edge supports viewer events as well.<br><em>D) Only viewer request and viewer response</em> &mdash; That is the limit for CloudFront Functions, not Lambda@Edge.
+</div>
+</div>
+
+<!-- Q31 Edge Functions -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Edge Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>In which Region must Lambda@Edge functions be authored before CloudFront replicates them?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">US East (N. Virginia), us-east-1</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The Region closest to most viewers</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The Region of the origin</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Any Region, deployed separately to each</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> US East (N. Virginia), us-east-1<br><br>
+<strong>How to think about it:</strong> Lambda@Edge is authored in <b>us-east-1</b>, then replicated worldwide.<br><br>
+<strong>Why A is correct:</strong> Lambda@Edge functions are created in us-east-1 and CloudFront copies them to its locations.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) The Region closest to most viewers</em> &mdash; Viewer location does not affect where the function is created.<br><em>C) The Region of the origin</em> &mdash; The origin Region does not matter for Lambda@Edge authoring.<br><em>D) Any Region, deployed separately to each</em> &mdash; You author once in us-east-1; CloudFront handles replication.
+</div>
+</div>
+
+<!-- Q32 Edge Functions -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Edge Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>Which languages does Lambda@Edge support?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Node.js and Python</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Any Lambda runtime, including Java and container images</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">JavaScript only</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Go and Rust compiled to WebAssembly</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Node.js and Python<br><br>
+<strong>How to think about it:</strong> Lambda@Edge = <b>Node.js and Python</b>. CloudFront Functions = JavaScript only.<br><br>
+<strong>Why A is correct:</strong> Lambda@Edge supports these runtimes for edge code.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Any Lambda runtime, including Java and container images</em> &mdash; Lambda@Edge supports a limited set of runtimes and no container images.<br><em>C) JavaScript only</em> &mdash; JavaScript-only describes CloudFront Functions.<br><em>D) Go and Rust compiled to WebAssembly</em> &mdash; These are not Lambda@Edge runtimes.
+</div>
+</div>
+
+<!-- Q33 Edge Functions -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Edge Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>Which task is the best fit for CloudFront Functions rather than Lambda@Edge?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Calling DynamoDB to personalize each response</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Changing the response returned by the origin on a cache miss</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Reading and changing the HTTP request body</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Rewriting URLs and normalizing the cache key on viewer requests</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Rewriting URLs and normalizing the cache key on viewer requests<br><br>
+<strong>How to think about it:</strong> Simple, fast header, URL or cache key changes = <b>CloudFront Functions</b>.<br><br>
+<strong>Why D is correct:</strong> This is lightweight logic with no network calls, ideal for CloudFront Functions.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Calling DynamoDB to personalize each response</em> &mdash; Network access to other services needs Lambda@Edge.<br><em>B) Changing the response returned by the origin on a cache miss</em> &mdash; Origin response triggers are only available to Lambda@Edge.<br><em>C) Reading and changing the HTTP request body</em> &mdash; CloudFront Functions cannot access the request body.
+</div>
+</div>
+
+<!-- Q34 Edge Functions -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Edge Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>An edge function must call a third-party service over the network and use the AWS SDK. Which option is required?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Lambda@Edge</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A CloudFront origin request policy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudFront cache policy</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudFront Functions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Lambda@Edge<br><br>
+<strong>How to think about it:</strong> Network access, AWS SDK, third-party libraries = <b>Lambda@Edge</b>.<br><br>
+<strong>Why A is correct:</strong> Lambda@Edge has network access and can include libraries such as the AWS SDK.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A CloudFront origin request policy</em> &mdash; Origin request policies choose what is forwarded, but run no code.<br><em>C) A CloudFront cache policy</em> &mdash; Cache policies control caching, not code execution.<br><em>D) CloudFront Functions</em> &mdash; CloudFront Functions have no network access and tiny package limits.
+</div>
+</div>
+
+<!-- Q35 Edge Functions -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Edge Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>What is a key isolation and limits difference between CloudFront Functions and Lambda@Edge?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Lambda@Edge has the smaller memory and time limits</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudFront Functions use process isolation</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Both run with identical memory limits</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudFront Functions can run for up to 30 seconds</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> CloudFront Functions use process isolation<br><br>
+<strong>How to think about it:</strong> CF Functions = <b>process-based</b>, tiny memory, sub-ms. Lambda@Edge = <b>VM-based</b>, more memory and seconds of runtime.<br><br>
+<strong>Why B is correct:</strong> They allow about 2 MB of memory and sub-millisecond runs, while Lambda@Edge runs in VMs with far more.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Lambda@Edge has the smaller memory and time limits</em> &mdash; Lambda@Edge allows more memory and seconds of runtime.<br><em>C) Both run with identical memory limits</em> &mdash; CloudFront Functions have much tighter limits.<br><em>D) CloudFront Functions can run for up to 30 seconds</em> &mdash; Long runs like that are only possible with Lambda@Edge origin triggers.
+</div>
+</div>
+
+<!-- Q36 Edge Functions -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Edge Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Which edge option is cheaper per request and has a free tier?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudFront Functions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Fargate tasks at edge locations</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Lambda functions behind API Gateway</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Lambda@Edge</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> CloudFront Functions<br><br>
+<strong>How to think about it:</strong> Cheapest edge code = <b>CloudFront Functions</b> (about 1/6 of Lambda@Edge price).<br><br>
+<strong>Why A is correct:</strong> They are priced far below Lambda@Edge per invocation and include a free tier.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS Fargate tasks at edge locations</em> &mdash; Fargate does not run at CloudFront edge locations.<br><em>C) Lambda functions behind API Gateway</em> &mdash; These are regional backends, not edge code.<br><em>D) Lambda@Edge</em> &mdash; Lambda@Edge is charged per request and duration with no free tier.
+</div>
+</div>
+
+<!-- Q37 Edge Functions -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Edge Functions" data-level="A">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>A team wants a CloudFront Function on viewer requests to validate a JWT, and Lambda@Edge on origin requests to pick content from DynamoDB. Is this allowed?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Yes, because each function is attached to a different event type</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Yes, but only if both are written in Python</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">No, a distribution can use only one kind of edge function</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">No, CloudFront Functions cannot inspect headers or tokens</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Yes, because each function is attached to a different event type<br><br>
+<strong>How to think about it:</strong> You can <b>mix</b> them in one behavior, but <b>not on the same event</b> type.<br><br>
+<strong>Why A is correct:</strong> CloudFront Functions and Lambda@Edge can work together as long as they do not share the same event.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Yes, but only if both are written in Python</em> &mdash; CloudFront Functions use JavaScript only.<br><em>C) No, a distribution can use only one kind of edge function</em> &mdash; Both kinds can be used in the same distribution.<br><em>D) No, CloudFront Functions cannot inspect headers or tokens</em> &mdash; CloudFront Functions can read headers and validate tokens.
+</div>
+</div>
+
+<!-- Q38 Edge Functions -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Edge Functions" data-level="A">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>Requests for a large image should return a smaller version when the User-Agent shows a phone. The logic is a simple header check and path rewrite. What is the most cost-effective option?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Lambda@Edge origin response function</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Separate distributions per device with Route 53</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudFront Function that rewrites the path</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An API Gateway endpoint per device type</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A CloudFront Function that rewrites the path<br><br>
+<strong>How to think about it:</strong> Device-based path rewrite on viewer request = <b>CloudFront Function</b>.<br><br>
+<strong>Why C is correct:</strong> Reading a header and changing the URI is light work that suits the cheapest edge option.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Lambda@Edge origin response function</em> &mdash; This works but costs more and runs after the origin has already been asked.<br><em>B) Separate distributions per device with Route 53</em> &mdash; DNS cannot see the User-Agent header.<br><em>D) An API Gateway endpoint per device type</em> &mdash; A separate API adds latency and cost for a simple rewrite.
+</div>
+</div>
+
+<!-- Q39 Edge Functions -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Edge Functions" data-level="A">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>A global app serves a static site from S3 through CloudFront, and dynamic API calls must query a DynamoDB global table from code near users. What fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An S3 static website with JavaScript calling DynamoDB directly</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Lambda@Edge functions that query the DynamoDB table</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CloudFront Functions that query the DynamoDB table</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudFront caching of every DynamoDB response for a day</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Lambda@Edge functions that query the DynamoDB table<br><br>
+<strong>How to think about it:</strong> Edge code that queries a database = <b>Lambda@Edge</b> (network access).<br><br>
+<strong>Why B is correct:</strong> Lambda@Edge runs near users and can call DynamoDB, keeping dynamic latency low.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An S3 static website with JavaScript calling DynamoDB directly</em> &mdash; Exposing database calls from the browser is insecure and harder to control.<br><em>C) CloudFront Functions that query the DynamoDB table</em> &mdash; CloudFront Functions cannot make network calls.<br><em>D) CloudFront caching of every DynamoDB response for a day</em> &mdash; Dynamic data would be up to a day stale.
+</div>
+</div>
+
+<!-- Q40 Edge Functions -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Edge Functions" data-level="A">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>European users should be served from an S3 bucket in eu-west-2, others from us-east-1, using one distribution with buckets kept in sync. What logic chooses the origin?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A lower price class for European edges</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Geo restriction with a block list</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda@Edge origin request function</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An origin group with both buckets</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A Lambda@Edge origin request function<br><br>
+<strong>How to think about it:</strong> Pick origin per request with code = <b>Lambda@Edge origin request</b> modifying the origin.<br><br>
+<strong>Why C is correct:</strong> On a cache miss the function inspects the request and switches to the nearer bucket.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A lower price class for European edges</em> &mdash; Price classes change edge coverage, not origin choice.<br><em>B) Geo restriction with a block list</em> &mdash; Geo restriction blocks or allows viewers, it does not change the origin.<br><em>D) An origin group with both buckets</em> &mdash; Origin groups only fail over on errors; they do not route by location.
+</div>
+</div>
+
+<!-- Q41 Edge Functions -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Edge Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>What is a common use case for edge functions on CloudFront?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Storing session data permanently at the edge</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Running nightly batch ETL jobs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Hosting a relational database at the edge</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A/B testing by sending users to different content versions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A/B testing by sending users to different content versions<br><br>
+<strong>How to think about it:</strong> Edge functions = request/response changes, <b>auth</b>, A/B tests, bot filtering, redirects.<br><br>
+<strong>Why D is correct:</strong> Edge code can assign users to variants and rewrite requests with low latency.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Storing session data permanently at the edge</em> &mdash; Edge functions have no persistent storage of their own.<br><em>B) Running nightly batch ETL jobs</em> &mdash; Batch jobs belong in regional compute such as Glue or Batch.<br><em>C) Hosting a relational database at the edge</em> &mdash; Edge functions do not host databases.
+</div>
+</div>
+
+<!-- Q42 Edge Functions -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Edge Functions" data-level="A">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>Every request must be checked for a valid token issued by a third-party OIDC provider, which requires calling the provider's endpoint. Where should the check run?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A geo restriction allow list</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A CloudFront Function on viewer request</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda@Edge function on viewer request</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Origin Access Control on the distribution</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A Lambda@Edge function on viewer request<br><br>
+<strong>How to think about it:</strong> Auth that needs a <b>network call</b> to an IdP = <b>Lambda@Edge</b>. Local JWT check only = CloudFront Function.<br><br>
+<strong>Why C is correct:</strong> It can reach the identity provider over the network before CloudFront serves the content.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A geo restriction allow list</em> &mdash; Geo restriction knows the country, not the user's identity.<br><em>B) A CloudFront Function on viewer request</em> &mdash; CloudFront Functions can verify a token locally but cannot call the provider.<br><em>D) Origin Access Control on the distribution</em> &mdash; OAC secures CloudFront-to-S3 traffic, not viewer authentication.
+</div>
+</div>
+
+<!-- Q43 ElastiCache -->
+<div class="question" data-type="mc" data-answer="1" data-topic="ElastiCache" data-level="B">
+<div class="q-tags"><span class="q-tag">ElastiCache</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>What is the main reason to put ElastiCache in front of an RDS database?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">To give RDS cross-Region replicas</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">To offload repeated reads from the database</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">To encrypt RDS data at rest</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">To replace RDS as the system of record</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> To offload repeated reads from the database<br><br>
+<strong>How to think about it:</strong> ElastiCache = in-memory cache that <b>offloads read-heavy</b> database traffic with very low latency.<br><br>
+<strong>Why B is correct:</strong> Cached results reduce read load on RDS and speed up responses.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) To give RDS cross-Region replicas</em> &mdash; Cross-Region replicas are an RDS feature.<br><em>C) To encrypt RDS data at rest</em> &mdash; Encryption at rest is an RDS setting, not a cache feature.<br><em>D) To replace RDS as the system of record</em> &mdash; A cache is not the durable source of truth for relational data.
+</div>
+</div>
+
+<!-- Q44 ElastiCache -->
+<div class="question" data-type="mc" data-answer="2" data-topic="ElastiCache" data-level="B">
+<div class="q-tags"><span class="q-tag">ElastiCache</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>An application checks ElastiCache first, and on a miss reads RDS and writes the result into the cache. What is this pattern called?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Read replicas</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Write-behind with a queue</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Lazy loading, also called cache-aside</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Write-through caching</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Lazy loading, also called cache-aside<br><br>
+<strong>How to think about it:</strong> Check cache, on miss read DB and fill cache = <b>lazy loading</b> (cache-aside).<br><br>
+<strong>Why C is correct:</strong> Only data that is requested gets cached, filled on a cache miss.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Read replicas</em> &mdash; Read replicas copy the database; they are not a cache pattern.<br><em>B) Write-behind with a queue</em> &mdash; Write-behind buffers writes, not reads.<br><em>D) Write-through caching</em> &mdash; Write-through updates the cache whenever the database is written.
+</div>
+</div>
+
+<!-- Q45 ElastiCache -->
+<div class="question" data-type="mc" data-answer="3" data-topic="ElastiCache" data-level="B">
+<div class="q-tags"><span class="q-tag">ElastiCache</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>What is a known drawback of lazy loading?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Every database write also writes to the cache</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It cannot be used with Redis-compatible engines</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The cache must hold the entire dataset</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Cached data can go stale until it expires</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Cached data can go stale until it expires<br><br>
+<strong>How to think about it:</strong> Lazy loading: <b>stale data</b> and a <b>miss penalty</b>. Fix staleness with a <b>TTL</b> or write-through.<br><br>
+<strong>Why D is correct:</strong> Updates to the database are not pushed to the cache, so a TTL or invalidation is needed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Every database write also writes to the cache</em> &mdash; That describes write-through, which avoids staleness.<br><em>B) It cannot be used with Redis-compatible engines</em> &mdash; Lazy loading works with any ElastiCache engine.<br><em>C) The cache must hold the entire dataset</em> &mdash; Lazy loading caches only requested items.
+</div>
+</div>
+
+<!-- Q46 ElastiCache -->
+<div class="question" data-type="mc" data-answer="1" data-topic="ElastiCache" data-level="B">
+<div class="q-tags"><span class="q-tag">ElastiCache</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>Users of a web tier behind a load balancer lose their login when they hit a different instance. How does ElastiCache fix this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Keep sessions on instance store volumes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Store session data in ElastiCache so any instance can read it</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Cache sessions in CloudFront</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable stickiness so ElastiCache pins users to instances</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Store session data in ElastiCache so any instance can read it<br><br>
+<strong>How to think about it:</strong> Stateless web tier = put <b>sessions in ElastiCache</b>, readable by every instance.<br><br>
+<strong>Why B is correct:</strong> A shared session store lets any instance pick up the user's session.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Keep sessions on instance store volumes</em> &mdash; Local storage is not shared and is lost when the instance stops.<br><em>C) Cache sessions in CloudFront</em> &mdash; CloudFront caches content, not per-user server sessions.<br><em>D) Enable stickiness so ElastiCache pins users to instances</em> &mdash; Stickiness is a load balancer feature, not ElastiCache.
+</div>
+</div>
+
+<!-- Q47 ElastiCache -->
+<div class="question" data-type="mc" data-answer="2" data-topic="ElastiCache" data-level="B">
+<div class="q-tags"><span class="q-tag">ElastiCache</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>Which statement about adopting ElastiCache is true?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It transparently caches every SQL query</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It works only with DynamoDB tables</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The application code must be changed to use the cache</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It is enabled with a checkbox on the RDS instance</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The application code must be changed to use the cache<br><br>
+<strong>How to think about it:</strong> Using ElastiCache usually needs <b>application code changes</b> to read and write the cache.<br><br>
+<strong>Why C is correct:</strong> The app has to call the cache and decide what to store and when to invalidate.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It transparently caches every SQL query</em> &mdash; ElastiCache does not intercept SQL traffic.<br><em>B) It works only with DynamoDB tables</em> &mdash; ElastiCache can sit in front of any data source.<br><em>D) It is enabled with a checkbox on the RDS instance</em> &mdash; ElastiCache is a separate service the application talks to.
+</div>
+</div>
+
+<!-- Q48 ElastiCache -->
+<div class="question" data-type="mc" data-answer="3" data-topic="ElastiCache" data-level="B">
+<div class="q-tags"><span class="q-tag">ElastiCache</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>A cache needs Multi-AZ automatic failover, read replicas and backups. Which ElastiCache engine type fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Memcached</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">DynamoDB Accelerator</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon MemoryDB</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Valkey or Redis OSS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Valkey or Redis OSS<br><br>
+<strong>How to think about it:</strong> Replicas, failover, backups, persistence = <b>Redis OSS / Valkey</b>. Simple multi-threaded sharding = Memcached.<br><br>
+<strong>Why D is correct:</strong> These engines support replication, Multi-AZ automatic failover, snapshots and restore.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Memcached</em> &mdash; Memcached nodes have no replication or automatic failover.<br><em>B) DynamoDB Accelerator</em> &mdash; DAX caches DynamoDB only and is not an ElastiCache engine.<br><em>C) Amazon MemoryDB</em> &mdash; MemoryDB is a separate durable in-memory database service, not an ElastiCache engine.
+</div>
+</div>
+
+<!-- Q49 ElastiCache -->
+<div class="question" data-type="mc" data-answer="2" data-topic="ElastiCache" data-level="B">
+<div class="q-tags"><span class="q-tag">ElastiCache</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>Which ElastiCache engine uses a multi-threaded architecture and spreads data across nodes by sharding, with no replication?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Redis OSS with Multi-AZ</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Valkey with read replicas</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Memcached</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Redis OSS with cluster mode disabled</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Memcached<br><br>
+<strong>How to think about it:</strong> <b>Memcached</b> = multi-threaded, sharding, no replicas, not persistent.<br><br>
+<strong>Why C is correct:</strong> Memcached partitions data across nodes and uses multiple threads per node.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Redis OSS with Multi-AZ</em> &mdash; Multi-AZ failover relies on replicas, which is not Memcached.<br><em>B) Valkey with read replicas</em> &mdash; Read replicas are a replication feature Memcached does not offer.<br><em>D) Redis OSS with cluster mode disabled</em> &mdash; Cluster mode disabled has one shard with replicas, not multi-node sharding without replicas.
+</div>
+</div>
+
+<!-- Q50 ElastiCache -->
+<div class="question" data-type="mc" data-answer="2" data-topic="ElastiCache" data-level="A">
+<div class="q-tags"><span class="q-tag">ElastiCache</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>A gaming app needs a real-time leaderboard ranked by score, highly available across AZs. Which choice fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An S3 object updated on each score change</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudFront with a short TTL</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">ElastiCache for Valkey or Redis OSS using sorted sets</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">ElastiCache for Memcached</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> ElastiCache for Valkey or Redis OSS using sorted sets<br><br>
+<strong>How to think about it:</strong> Leaderboard = Redis/Valkey <b>sorted sets</b>, with Multi-AZ replicas.<br><br>
+<strong>Why C is correct:</strong> Sorted sets keep members ranked by score, and replicas give Multi-AZ availability.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An S3 object updated on each score change</em> &mdash; S3 is not built for rapid in-place ranking updates.<br><em>B) CloudFront with a short TTL</em> &mdash; CloudFront caches responses but cannot rank scores.<br><em>D) ElastiCache for Memcached</em> &mdash; Memcached offers simple key-value storage without sorted sets or replicas.
+</div>
+</div>
+
+<!-- Q51 ElastiCache -->
+<div class="question" data-type="mc" data-answer="1" data-topic="ElastiCache" data-level="A">
+<div class="q-tags"><span class="q-tag">ElastiCache</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>A read-heavy app shows stale prices after updates because of lazy loading. Reads must reflect writes quickly without hammering the database. What should be added?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Remove the cache and read RDS directly</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Write-through caching on every update</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Switch the engine to Memcached</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Increase the TTL on cached items</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Write-through caching on every update<br><br>
+<strong>How to think about it:</strong> Fresh cache after writes = <b>write-through</b> (often with lazy loading and a TTL).<br><br>
+<strong>Why B is correct:</strong> Updating the cache on each write keeps reads current while still serving from memory.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Remove the cache and read RDS directly</em> &mdash; That gives fresh data but loses the performance benefit.<br><em>C) Switch the engine to Memcached</em> &mdash; Changing engines does not fix the caching strategy.<br><em>D) Increase the TTL on cached items</em> &mdash; A longer TTL keeps stale data even longer.
+</div>
+</div>
+
+<!-- Q52 ElastiCache -->
+<div class="question" data-type="mc" data-answer="0" data-topic="ElastiCache" data-level="A">
+<div class="q-tags"><span class="q-tag">ElastiCache</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>A DynamoDB table has hot read keys and needs microsecond reads with no change to the DynamoDB API calls. What fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">DynamoDB Accelerator (DAX)</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">DynamoDB global tables</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CloudFront in front of the DynamoDB endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">ElastiCache for Memcached with lazy loading</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> DynamoDB Accelerator (DAX)<br><br>
+<strong>How to think about it:</strong> DynamoDB cache with the <b>same API</b> = <b>DAX</b>. ElastiCache needs app cache logic.<br><br>
+<strong>Why A is correct:</strong> DAX is a DynamoDB-compatible in-memory cache, so existing calls work with a DAX client.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) DynamoDB global tables</em> &mdash; Global tables replicate data across Regions; they are not a cache.<br><em>C) CloudFront in front of the DynamoDB endpoint</em> &mdash; DynamoDB APIs are signed calls not suited to CDN caching.<br><em>D) ElastiCache for Memcached with lazy loading</em> &mdash; This works but needs new cache code in the application.
+</div>
+</div>
+
+<!-- Q53 ElastiCache -->
+<div class="question" data-type="mc" data-answer="2" data-topic="ElastiCache" data-level="B">
+<div class="q-tags"><span class="q-tag">ElastiCache</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>Why does a cache need an invalidation strategy?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">So that the cache can scale out automatically</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">So that data is encrypted in transit</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">So that only current data is served when the source changes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">So that the database can be deleted</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> So that only current data is served when the source changes<br><br>
+<strong>How to think about it:</strong> Cache rule: decide <b>how data expires</b> (TTL, write-through, delete on update) so readers get current data.<br><br>
+<strong>Why C is correct:</strong> Without invalidation, the cache can keep returning outdated values.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) So that the cache can scale out automatically</em> &mdash; Scaling is about nodes and shards, not invalidation.<br><em>B) So that data is encrypted in transit</em> &mdash; Encryption is a separate setting.<br><em>D) So that the database can be deleted</em> &mdash; The database remains the source of truth.
+</div>
+</div>
+
+<!-- Q54 Extreme Rates -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Extreme Rates" data-level="B">
+<div class="q-tags"><span class="q-tag">Extreme Rates</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>Where should caching happen first for a global app facing extreme request rates?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only in the compute layer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">At the edge, with CloudFront</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only in the database layer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">In the client's DNS resolver</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> At the edge, with CloudFront<br><br>
+<strong>How to think about it:</strong> Stop traffic as early as possible: <b>CloudFront at the edge</b>, then app and database caches.<br><br>
+<strong>Why B is correct:</strong> Serving from the edge removes load from every layer behind it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only in the compute layer</em> &mdash; Caching only in compute still sends all traffic through the load balancers.<br><em>C) Only in the database layer</em> &mdash; Database caches help, but traffic still hits every layer in front.<br><em>D) In the client's DNS resolver</em> &mdash; DNS caching speeds name lookups, not application responses.
+</div>
+</div>
+
+<!-- Q55 Extreme Rates -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Extreme Rates" data-level="B">
+<div class="q-tags"><span class="q-tag">Extreme Rates</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>What is the default steady-state request throttle for API Gateway per account per Region?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">There is no throttle by default</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">10,000 requests per second</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">100,000 requests per second</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">1,000 requests per second</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> 10,000 requests per second<br><br>
+<strong>How to think about it:</strong> API Gateway default = <b>10,000 requests per second</b> (soft limit).<br><br>
+<strong>Why B is correct:</strong> This account-level default can be raised through a quota request.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) There is no throttle by default</em> &mdash; API Gateway applies account-level throttling by default.<br><em>C) 100,000 requests per second</em> &mdash; That is far above the default and would need a quota increase.<br><em>D) 1,000 requests per second</em> &mdash; 1,000 is the default Lambda concurrency, not the API Gateway throttle.
+</div>
+</div>
+
+<!-- Q56 Extreme Rates -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Extreme Rates" data-level="B">
+<div class="q-tags"><span class="q-tag">Extreme Rates</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>What is the default concurrent execution quota for AWS Lambda per account per Region?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">10,000 concurrent executions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">100 concurrent executions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">1,000 concurrent executions</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Unlimited concurrency</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> 1,000 concurrent executions<br><br>
+<strong>How to think about it:</strong> Lambda default concurrency = <b>1,000</b> (soft limit, can be raised).<br><br>
+<strong>Why C is correct:</strong> This shared regional pool can be increased with a quota request.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 10,000 concurrent executions</em> &mdash; That figure is the API Gateway throttle, not Lambda concurrency.<br><em>B) 100 concurrent executions</em> &mdash; This is too low for the standard default.<br><em>D) Unlimited concurrency</em> &mdash; Lambda concurrency is capped by a regional quota.
+</div>
+</div>
+
+<!-- Q57 Extreme Rates -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Extreme Rates" data-level="B">
+<div class="q-tags"><span class="q-tag">Extreme Rates</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>What is the write and read capacity of one provisioned Kinesis Data Streams shard?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Unlimited, because shards scale automatically</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">2 MB/s in and 1 MB/s out</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">1 MB/s in and 2 MB/s out</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">10 MB/s in and 10 MB/s out</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> 1 MB/s in and 2 MB/s out<br><br>
+<strong>How to think about it:</strong> Per shard: <b>1 MB/s in</b> (or 1,000 records/s) and <b>2 MB/s out</b>.<br><br>
+<strong>Why C is correct:</strong> Each shard takes up to 1 MB/s or 1,000 records/s of writes and serves 2 MB/s of reads.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Unlimited, because shards scale automatically</em> &mdash; Provisioned shards have fixed limits; you add shards to scale.<br><em>B) 2 MB/s in and 1 MB/s out</em> &mdash; The figures are reversed; reads get the higher limit.<br><em>D) 10 MB/s in and 10 MB/s out</em> &mdash; Per-shard limits are far lower than this.
+</div>
+</div>
+
+<!-- Q58 Extreme Rates -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Extreme Rates" data-level="A">
+<div class="q-tags"><span class="q-tag">Extreme Rates</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>An S3 workload using SSE-KMS hits throttling errors at high request rates even though S3 itself is not limited. What should you do first?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turn on S3 Intelligent-Tiering</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable S3 Transfer Acceleration</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add more prefixes to the bucket</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable S3 Bucket Keys to cut KMS requests</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Enable S3 Bucket Keys to cut KMS requests<br><br>
+<strong>How to think about it:</strong> SSE-KMS at scale hits <b>KMS request quotas</b>. Fix = <b>S3 Bucket Keys</b> (or a KMS quota raise).<br><br>
+<strong>Why D is correct:</strong> Bucket Keys reuse a bucket-level key, greatly reducing calls to KMS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Turn on S3 Intelligent-Tiering</em> &mdash; Storage class has no effect on KMS requests.<br><em>B) Enable S3 Transfer Acceleration</em> &mdash; Acceleration changes the network path, not KMS usage.<br><em>C) Add more prefixes to the bucket</em> &mdash; More prefixes raise S3 limits but not the KMS call rate.
+</div>
+</div>
+
+<!-- Q59 Extreme Rates -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Extreme Rates" data-level="A">
+<div class="q-tags"><span class="q-tag">Extreme Rates</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>A traffic spike arrives in seconds. Which compute choice scales fastest without waiting for instances to boot?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Lambda</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">EC2 Dedicated Hosts</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">ECS on EC2 with capacity providers</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An EC2 Auto Scaling group with a new launch template</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AWS Lambda<br><br>
+<strong>How to think about it:</strong> Scale speed: <b>Lambda</b> fastest, Fargate next, EC2 ASG and ECS on EC2 slowest (boot and bootstrap).<br><br>
+<strong>Why A is correct:</strong> Lambda adds execution environments in moments, with no instances to launch.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) EC2 Dedicated Hosts</em> &mdash; Dedicated Hosts add even more provisioning steps.<br><em>C) ECS on EC2 with capacity providers</em> &mdash; ECS on EC2 may need new instances before tasks can be placed.<br><em>D) An EC2 Auto Scaling group with a new launch template</em> &mdash; New instances must boot and run bootstrap scripts first.
+</div>
+</div>
+
+<!-- Q60 Extreme Rates -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Extreme Rates" data-level="A">
+<div class="q-tags"><span class="q-tag">Extreme Rates</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>A workload needs millions of IOPS for temporary data on its instances. Which storage choice reaches that level?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An S3 bucket with one prefix</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An EFS file system in General Purpose mode</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A single gp2 volume</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">EC2 instance store NVMe volumes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> EC2 instance store NVMe volumes<br><br>
+<strong>How to think about it:</strong> Millions of IOPS = local NVMe <b>instance store</b>. EBS tops out far lower per volume.<br><br>
+<strong>Why D is correct:</strong> Local NVMe disks can deliver millions of IOPS for scratch data.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An S3 bucket with one prefix</em> &mdash; S3 handles thousands of requests per second per prefix, not millions of IOPS.<br><em>B) An EFS file system in General Purpose mode</em> &mdash; EFS is network storage with lower IOPS per client.<br><em>C) A single gp2 volume</em> &mdash; gp2 is limited to 16,000 IOPS per volume.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

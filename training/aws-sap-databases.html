@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Databases - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Databases</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Databases</h2>
+        <p>60 refresher questions &mdash; DynamoDB, DAX, DynamoDB Streams &amp; Global Tables, OpenSearch, RDS, RDS Proxy, Aurora, Aurora Serverless &amp; Global Database</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="DynamoDB" onclick="filterQ(this)">DynamoDB</button><button class="filter-btn" data-f="DynamoDB Features" onclick="filterQ(this)">DynamoDB Features</button><button class="filter-btn" data-f="OpenSearch" onclick="filterQ(this)">OpenSearch</button><button class="filter-btn" data-f="RDS" onclick="filterQ(this)">RDS</button><button class="filter-btn" data-f="RDS Security" onclick="filterQ(this)">RDS Security</button><button class="filter-btn" data-f="RDS Proxy" onclick="filterQ(this)">RDS Proxy</button><button class="filter-btn" data-f="Aurora" onclick="filterQ(this)">Aurora</button><button class="filter-btn" data-f="Aurora Global" onclick="filterQ(this)">Aurora Global</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 DynamoDB -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DynamoDB" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>What is the maximum size of a single item in a DynamoDB table?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">64 KB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">4 MB</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">16 MB</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">400 KB</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> 400 KB<br><br>
+<strong>How to think about it:</strong> DynamoDB item limit = <b>400 KB</b>. Bigger payloads go to S3 with a pointer in the item.<br><br>
+<strong>Why D is correct:</strong> An item, including attribute names and values, can be at most 400 KB; larger data belongs in S3.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 64 KB</em> &mdash; 64 KB is far below the real limit and is not a DynamoDB item boundary.<br><em>B) 4 MB</em> &mdash; 4 MB is ten times the real limit; DynamoDB would reject such an item.<br><em>C) 16 MB</em> &mdash; 16 MB is the MongoDB/DocumentDB document limit, not DynamoDB's.
+</div>
+</div>
+
+<!-- Q2 DynamoDB -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DynamoDB" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>When must you choose the primary key of a DynamoDB table?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Any time, with an UpdateTable call</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">When the first global secondary index is added</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">At table creation, and it cannot be changed later</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">When the first item is written to the table</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> At table creation, and it cannot be changed later<br><br>
+<strong>How to think about it:</strong> Primary key = <b>fixed at table creation</b>. Changing it means a new table and a data copy.<br><br>
+<strong>Why C is correct:</strong> The key schema is part of the table definition; a different key requires creating a new table.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Any time, with an UpdateTable call</em> &mdash; UpdateTable changes capacity, indexes and streams, but never the base table's key schema.<br><em>B) When the first global secondary index is added</em> &mdash; A GSI defines its own key; it does not set the base table's primary key.<br><em>D) When the first item is written to the table</em> &mdash; The key must already exist before any item can be written.
+</div>
+</div>
+
+<!-- Q3 DynamoDB -->
+<div class="question" data-type="mc" data-answer="0" data-topic="DynamoDB" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>A users table uses only a partition key. Which attribute makes the best partition key?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">user_id, unique for every user</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">account_status, such as active or closed</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">signup_date, the day the user joined</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">country, shared by many users</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> user_id, unique for every user<br><br>
+<strong>How to think about it:</strong> Partition key alone = <b>unique and high-cardinality</b> (e.g. user_id), so data spreads evenly.<br><br>
+<strong>Why A is correct:</strong> A unique, diverse value spreads items across partitions and identifies each item on its own.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) account_status, such as active or closed</em> &mdash; Only a handful of values exist, which concentrates traffic on a few partitions.<br><em>C) signup_date, the day the user joined</em> &mdash; Many users share a date, so it is neither unique nor evenly distributed.<br><em>D) country, shared by many users</em> &mdash; Country is low-cardinality and not unique, so items collide and partitions get hot.
+</div>
+</div>
+
+<!-- Q4 DynamoDB -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DynamoDB" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>A game table must store many results per player and return one player's games in order of play time. Which primary key design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Partition key user_id with no sort key</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Partition key game_timestamp with no sort key</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Partition key result with sort key user_id</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Partition key user_id with sort key game_timestamp</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Partition key user_id with sort key game_timestamp<br><br>
+<strong>How to think about it:</strong> One-to-many inside a key = <b>partition key + sort key</b>; the pair must be unique, and a timestamp is a classic sort key.<br><br>
+<strong>Why D is correct:</strong> Items are grouped by player and ordered by time, and the pair is unique for each game.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Partition key user_id with no sort key</em> &mdash; Without a sort key, each player could hold only one item.<br><em>B) Partition key game_timestamp with no sort key</em> &mdash; This scatters a player's games across partitions, so you cannot query one player efficiently.<br><em>C) Partition key result with sort key user_id</em> &mdash; Result has only a few values (win or lose), giving hot partitions and the wrong grouping.
+</div>
+</div>
+
+<!-- Q5 DynamoDB -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DynamoDB" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>You need a second sort order on a DynamoDB table while keeping the same partition key, and the table is still being designed. Which index fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A DynamoDB Streams view</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A global secondary index (GSI)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A sparse attribute with a TTL value</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A local secondary index (LSI)</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A local secondary index (LSI)<br><br>
+<strong>How to think about it:</strong> Same partition key, different sort key, <b>defined at creation</b> = <b>LSI</b>.<br><br>
+<strong>Why D is correct:</strong> An LSI keeps the table's partition key, adds an alternative sort key, and must be declared when the table is created.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A DynamoDB Streams view</em> &mdash; Streams record item changes; they do not provide an alternative query order.<br><em>B) A global secondary index (GSI)</em> &mdash; A GSI can use a whole new partition key; it is not limited to the base partition key.<br><em>C) A sparse attribute with a TTL value</em> &mdash; TTL deletes expired items; it does not add a way to sort or query them.
+</div>
+</div>
+
+<!-- Q6 DynamoDB -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DynamoDB" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>A table is already in production, and the business now wants to query it by email address, which is not part of the key. What should you add?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A larger provisioned read capacity</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A global secondary index keyed on email</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A local secondary index keyed on email</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">DynamoDB Accelerator in front of the table</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A global secondary index keyed on email<br><br>
+<strong>How to think about it:</strong> New access pattern on an existing table = <b>GSI</b> (can be added any time).<br><br>
+<strong>Why B is correct:</strong> GSIs can be created after the table exists and can use any attribute as the new partition key.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A larger provisioned read capacity</em> &mdash; More capacity does not make a non-key attribute queryable.<br><em>C) A local secondary index keyed on email</em> &mdash; LSIs can only be defined at table creation and must keep the base partition key.<br><em>D) DynamoDB Accelerator in front of the table</em> &mdash; DAX caches the same key-based reads; it does not add new query keys.
+</div>
+</div>
+
+<!-- Q7 DynamoDB -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DynamoDB" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>Traffic to a new DynamoDB table is spiky and impossible to forecast, and the team wants no capacity planning at all. Which capacity mode fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Provisioned mode with reserved capacity</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Provisioned mode with fixed RCUs and WCUs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">On-demand capacity mode</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Standard-Infrequent Access table class</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> On-demand capacity mode<br><br>
+<strong>How to think about it:</strong> Unknown or spiky traffic = <b>on-demand</b>; steady, forecastable traffic = provisioned + auto scaling.<br><br>
+<strong>Why C is correct:</strong> On-demand bills per request and absorbs sudden changes with no RCU or WCU planning.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Provisioned mode with reserved capacity</em> &mdash; Reserved capacity is a discount for steady, predictable throughput.<br><em>B) Provisioned mode with fixed RCUs and WCUs</em> &mdash; Fixed capacity must be forecast and will throttle when spikes exceed it.<br><em>D) Standard-Infrequent Access table class</em> &mdash; Table class changes storage pricing; it does not decide how throughput is handled.
+</div>
+</div>
+
+<!-- Q8 DynamoDB -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DynamoDB" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>A table has a steady, well-understood daily load and cost is the main concern. Which capacity setup is usually cheapest?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A DAX cluster with no table capacity set</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Provisioned capacity with auto scaling</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">On-demand capacity mode</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Global tables in two Regions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Provisioned capacity with auto scaling<br><br>
+<strong>How to think about it:</strong> Predictable load + cost focus = <b>provisioned capacity with auto scaling</b>.<br><br>
+<strong>Why B is correct:</strong> Provisioned capacity costs less per request than on-demand when usage is steady and forecastable, and auto scaling follows the daily curve.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A DAX cluster with no table capacity set</em> &mdash; DAX is a cache; the table still needs a capacity mode.<br><em>C) On-demand capacity mode</em> &mdash; On-demand is simple but has a higher unit price for steady traffic.<br><em>D) Global tables in two Regions</em> &mdash; Global tables add replicas and cost; they do not reduce spend on a single-Region load.
+</div>
+</div>
+
+<!-- Q9 DynamoDB -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DynamoDB" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>Right after writing an item, an application must read it back and always see the latest value. What should the read use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An eventually consistent read</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A read from a global table replica in another Region</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A read through DynamoDB Accelerator</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A strongly consistent read</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A strongly consistent read<br><br>
+<strong>How to think about it:</strong> Must see the last write = <b>strongly consistent read</b> (ConsistentRead = true). Default reads are eventually consistent.<br><br>
+<strong>Why D is correct:</strong> Setting ConsistentRead returns the most recent committed value, at twice the read capacity cost.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An eventually consistent read</em> &mdash; This is the default and may briefly return stale data after a write.<br><em>B) A read from a global table replica in another Region</em> &mdash; Cross-Region replication is asynchronous, so the replica can lag.<br><em>C) A read through DynamoDB Accelerator</em> &mdash; DAX serves cached items and is eventually consistent by design.
+</div>
+</div>
+
+<!-- Q10 DynamoDB -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DynamoDB" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>A large DynamoDB table holds years of data that is rarely read, and storage is now most of the bill. Which change helps most?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add a DAX cluster in front of the table</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Switch the table to on-demand capacity mode</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use the Standard-IA table class</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable DynamoDB Streams on the table</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Use the Standard-IA table class<br><br>
+<strong>How to think about it:</strong> Storage-heavy, rarely accessed table = <b>Standard-IA table class</b>.<br><br>
+<strong>Why C is correct:</strong> Standard-IA lowers storage price for tables where storage, not throughput, dominates cost.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Add a DAX cluster in front of the table</em> &mdash; A cache adds cost and does nothing for stored data volume.<br><em>B) Switch the table to on-demand capacity mode</em> &mdash; On-demand changes how requests are billed, not what storage costs.<br><em>D) Enable DynamoDB Streams on the table</em> &mdash; Streams capture changes and do not change storage pricing.
+</div>
+</div>
+
+<!-- Q11 DynamoDB -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DynamoDB" data-level="A">
+<div class="q-tags"><span class="q-tag">DynamoDB</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>An order service must deduct stock in an Inventory table and create a row in an Orders table so that either both writes succeed or neither does. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Two PutItem calls with a conditional expression</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">BatchWriteItem covering both tables</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">TransactWriteItems covering both tables</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A stream-triggered Lambda that writes the second table</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> TransactWriteItems covering both tables<br><br>
+<strong>How to think about it:</strong> All-or-nothing across items or tables = <b>DynamoDB transactions</b> (TransactWriteItems).<br><br>
+<strong>Why C is correct:</strong> DynamoDB transactions give ACID, all-or-nothing writes across multiple items and tables.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Two PutItem calls with a conditional expression</em> &mdash; A condition protects one item, but the two writes can still end up half-done.<br><em>B) BatchWriteItem covering both tables</em> &mdash; Batch writes are not atomic; some items can succeed while others fail.<br><em>D) A stream-triggered Lambda that writes the second table</em> &mdash; This is eventually consistent and leaves a window where only one table changed.
+</div>
+</div>
+
+<!-- Q12 DynamoDB -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DynamoDB" data-level="A">
+<div class="q-tags"><span class="q-tag">DynamoDB</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>Millions of objects land in S3, and customers need an API to find their objects by upload date range and to total their storage. S3 listing is too slow. What is the usual design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turn on S3 Versioning and read the version history</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 events invoke Lambda to index object metadata in DynamoDB</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use S3 Lifecycle rules to group objects by date</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable S3 Transfer Acceleration and keep listing the bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> S3 events invoke Lambda to index object metadata in DynamoDB<br><br>
+<strong>How to think about it:</strong> S3 is not searchable by metadata, so <b>index object metadata in DynamoDB</b> using an S3 event and Lambda.<br><br>
+<strong>Why B is correct:</strong> Each upload's key, size, owner and date go into a table keyed for the access patterns, giving fast queries and totals.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Turn on S3 Versioning and read the version history</em> &mdash; Versioning keeps old copies; it does not give a queryable index by date or owner.<br><em>C) Use S3 Lifecycle rules to group objects by date</em> &mdash; Lifecycle rules move or expire objects; they cannot answer queries.<br><em>D) Enable S3 Transfer Acceleration and keep listing the bucket</em> &mdash; Transfer Acceleration speeds uploads; it does not make listing or filtering faster.
+</div>
+</div>
+
+<!-- Q13 DynamoDB Features -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DynamoDB Features" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>Session records in DynamoDB should disappear automatically a day after they are created, without paying for delete writes. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The Standard-IA table class</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Time to Live (TTL) on an epoch-time attribute</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Point-in-time recovery with a short window</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A nightly Lambda that scans and deletes old items</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Time to Live (TTL) on an epoch-time attribute<br><br>
+<strong>How to think about it:</strong> Auto-expire items = <b>TTL</b> attribute holding an epoch timestamp.<br><br>
+<strong>Why B is correct:</strong> DynamoDB deletes expired items in the background and does not consume write capacity for those deletes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The Standard-IA table class</em> &mdash; The table class lowers storage price; it never removes items.<br><em>C) Point-in-time recovery with a short window</em> &mdash; PITR keeps restore points; it does not delete current data.<br><em>D) A nightly Lambda that scans and deletes old items</em> &mdash; This works but costs read and write capacity and is custom code TTL already replaces.
+</div>
+</div>
+
+<!-- Q14 DynamoDB Features -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DynamoDB Features" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>Each time an item in a table changes, a Lambda function must react within seconds. Which feature supplies the change events?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Time to Live (TTL)</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">DynamoDB Streams</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">DynamoDB Accelerator (DAX)</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudTrail data events for DynamoDB</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> DynamoDB Streams<br><br>
+<strong>How to think about it:</strong> React to item changes = <b>DynamoDB Streams</b> + Lambda trigger.<br><br>
+<strong>Why B is correct:</strong> Streams record item-level inserts, updates and deletes in order, and Lambda can poll them as an event source.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Time to Live (TTL)</em> &mdash; TTL deletes expired items; it is not a general change feed.<br><em>C) DynamoDB Accelerator (DAX)</em> &mdash; DAX is a read cache and emits no change events.<br><em>D) CloudTrail data events for DynamoDB</em> &mdash; CloudTrail logs API calls for auditing; it is not meant to drive low-latency processing.
+</div>
+</div>
+
+<!-- Q15 DynamoDB Features -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DynamoDB Features" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>How long are records kept in a DynamoDB stream?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">14 days</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Until a consumer deletes them</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">7 days</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">24 hours</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> 24 hours<br><br>
+<strong>How to think about it:</strong> DynamoDB Streams = <b>24 hours</b>. Need longer? Use Kinesis Data Streams for DynamoDB.<br><br>
+<strong>Why D is correct:</strong> Stream records are available for 24 hours, after which they are removed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 14 days</em> &mdash; Fourteen days is the maximum SQS message retention, not stream retention.<br><em>B) Until a consumer deletes them</em> &mdash; Stream records expire on a timer whether or not they were read.<br><em>C) 7 days</em> &mdash; Seven days is a configurable Kinesis retention, not the DynamoDB Streams limit.
+</div>
+</div>
+
+<!-- Q16 DynamoDB Features -->
+<div class="question" data-type="mc" data-answer="0" data-topic="DynamoDB Features" data-level="A">
+<div class="q-tags"><span class="q-tag">DynamoDB Features</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>Item changes from a table must be kept for several days and delivered through Firehose to S3 and Redshift for analytics. What should you enable?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Kinesis Data Streams for DynamoDB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A daily export of the table to S3</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Global tables with a replica in an analytics Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">DynamoDB Streams with a 7-day retention setting</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Kinesis Data Streams for DynamoDB<br><br>
+<strong>How to think about it:</strong> Longer retention + Firehose/analytics fan-out = <b>Kinesis Data Streams for DynamoDB</b>.<br><br>
+<strong>Why A is correct:</strong> The table sends item-level changes to a Kinesis stream with longer, configurable retention and native Firehose delivery.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A daily export of the table to S3</em> &mdash; Exports are periodic snapshots, not a continuous change feed.<br><em>C) Global tables with a replica in an analytics Region</em> &mdash; Global tables replicate tables, not change records into Firehose or Redshift.<br><em>D) DynamoDB Streams with a 7-day retention setting</em> &mdash; DynamoDB Streams retention is fixed at 24 hours and cannot be raised.
+</div>
+</div>
+
+<!-- Q17 DynamoDB Features -->
+<div class="question" data-type="mc" data-answer="0" data-topic="DynamoDB Features" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>A mobile game needs active-active writes in three Regions with low local latency and a fast Region failover. Which feature fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">DynamoDB global tables</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Kinesis Data Streams feeding tables in other Regions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A DAX cluster in each Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Point-in-time recovery copied to two other Regions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> DynamoDB global tables<br><br>
+<strong>How to think about it:</strong> Multi-Region, multi-active DynamoDB = <b>Global Tables</b>.<br><br>
+<strong>Why A is correct:</strong> Global tables keep replicas in several Regions, each accepting reads and writes, with automatic replication.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Kinesis Data Streams feeding tables in other Regions</em> &mdash; This is custom replication that global tables already provide natively.<br><em>C) A DAX cluster in each Region</em> &mdash; DAX caches one Region's table; it does not replicate data between Regions.<br><em>D) Point-in-time recovery copied to two other Regions</em> &mdash; Backups help recovery but are not live, writable replicas.
+</div>
+</div>
+
+<!-- Q18 DynamoDB Features -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DynamoDB Features" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>A read-heavy app on DynamoDB needs microsecond read latency without rewriting its data access code. What should you add?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A global secondary index</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">DynamoDB Accelerator (DAX)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">On-demand capacity mode</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon ElastiCache for Redis OSS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> DynamoDB Accelerator (DAX)<br><br>
+<strong>How to think about it:</strong> Microsecond reads, no app rewrite = <b>DAX</b> (DynamoDB-API-compatible cache).<br><br>
+<strong>Why B is correct:</strong> DAX is an in-memory, DynamoDB-compatible cache, so the app only switches to the DAX client to get microsecond reads.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A global secondary index</em> &mdash; A GSI adds an access pattern; it does not make reads microsecond-fast.<br><em>C) On-demand capacity mode</em> &mdash; On-demand handles throughput changes; latency stays in milliseconds.<br><em>D) Amazon ElastiCache for Redis OSS</em> &mdash; ElastiCache works but needs new caching logic in the application.
+</div>
+</div>
+
+<!-- Q19 DynamoDB Features -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DynamoDB Features" data-level="A">
+<div class="q-tags"><span class="q-tag">DynamoDB Features</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>One very popular product item is read thousands of times per second and its partition keeps throttling, while the rest of the table is quiet. What is the simplest fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable DynamoDB Streams on the table</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add a global secondary index on the product ID</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Put DAX in front of the table so repeat reads come from cache</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Switch the table to the Standard-IA table class</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Put DAX in front of the table so repeat reads come from cache<br><br>
+<strong>How to think about it:</strong> <b>Hot key</b> on reads = put <b>DAX</b> in front so repeated reads hit the cache.<br><br>
+<strong>Why C is correct:</strong> Cached reads of the hot item never reach the partition, which removes the throttling.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable DynamoDB Streams on the table</em> &mdash; Streams track writes; they do nothing to absorb read traffic.<br><em>B) Add a global secondary index on the product ID</em> &mdash; The GSI would get the same hot key and throttle in the same way.<br><em>D) Switch the table to the Standard-IA table class</em> &mdash; The table class affects storage cost, not per-partition read limits.
+</div>
+</div>
+
+<!-- Q20 DynamoDB Features -->
+<div class="question" data-type="mc" data-answer="0" data-topic="DynamoDB Features" data-level="A">
+<div class="q-tags"><span class="q-tag">DynamoDB Features</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>A dashboard repeatedly shows a total computed from thousands of DynamoDB items. Where should the computed result be cached?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon ElastiCache, written by the application</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">DAX, which caches the computed total automatically</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A global secondary index holding the total</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">DynamoDB Streams, read by the dashboard</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon ElastiCache, written by the application<br><br>
+<strong>How to think about it:</strong> DAX = cache of <b>items and query/scan results</b>; store your own <b>computed aggregates</b> in <b>ElastiCache</b>.<br><br>
+<strong>Why A is correct:</strong> ElastiCache can hold any value the app computes, such as an aggregation result.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) DAX, which caches the computed total automatically</em> &mdash; DAX caches DynamoDB items and query results, not totals the app calculates.<br><em>C) A global secondary index holding the total</em> &mdash; An index projects item attributes; it does not compute aggregates.<br><em>D) DynamoDB Streams, read by the dashboard</em> &mdash; Streams carry change records, not a stored aggregate to read.
+</div>
+</div>
+
+<!-- Q21 DynamoDB Features -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DynamoDB Features" data-level="B">
+<div class="q-tags"><span class="q-tag">DynamoDB Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>A bad batch job overwrote DynamoDB items an hour ago. Which feature lets you restore the table to the state just before the job?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Time to Live (TTL)</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">DynamoDB Streams</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Global tables</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Point-in-time recovery (PITR)</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Point-in-time recovery (PITR)<br><br>
+<strong>How to think about it:</strong> Restore to a chosen second = <b>point-in-time recovery (PITR)</b>.<br><br>
+<strong>Why D is correct:</strong> PITR keeps continuous backups and restores to any second in its window into a new table.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Time to Live (TTL)</em> &mdash; TTL deletes expired items and cannot undo overwrites.<br><em>B) DynamoDB Streams</em> &mdash; Streams hold changes for 24 hours but do not restore a table for you.<br><em>C) Global tables</em> &mdash; Global tables copy the bad writes to every Region too.
+</div>
+</div>
+
+<!-- Q22 OpenSearch -->
+<div class="question" data-type="mc" data-answer="3" data-topic="OpenSearch" data-level="B">
+<div class="q-tags"><span class="q-tag">OpenSearch</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>An e-commerce site needs fast full-text search with relevance ranking over its product catalog. Which AWS service is designed for this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon RDS for MySQL</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon DynamoDB</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Athena</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon OpenSearch Service</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Amazon OpenSearch Service<br><br>
+<strong>How to think about it:</strong> Full-text search, log analytics, clickstream = <b>Amazon OpenSearch Service</b>.<br><br>
+<strong>Why D is correct:</strong> OpenSearch indexes text for full-text queries, relevance scoring and analytics.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon RDS for MySQL</em> &mdash; MySQL offers basic text matching but is not built for scalable search ranking.<br><em>B) Amazon DynamoDB</em> &mdash; DynamoDB is queried by key; it has no full-text search engine.<br><em>C) Amazon Athena</em> &mdash; Athena runs SQL over S3 files and is not a low-latency search engine.
+</div>
+</div>
+
+<!-- Q23 OpenSearch -->
+<div class="question" data-type="mc" data-answer="1" data-topic="OpenSearch" data-level="B">
+<div class="q-tags"><span class="q-tag">OpenSearch</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>In Amazon OpenSearch Service, what is the visualization tool that replaced Kibana?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Managed Grafana</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">OpenSearch Dashboards</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CloudWatch dashboards</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon QuickSight</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> OpenSearch Dashboards<br><br>
+<strong>How to think about it:</strong> Elasticsearch to <b>OpenSearch</b>; Kibana to <b>OpenSearch Dashboards</b>.<br><br>
+<strong>Why B is correct:</strong> OpenSearch Dashboards is the open-source fork of Kibana used to build real-time views of OpenSearch data.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Managed Grafana</em> &mdash; Grafana is a separate managed service, not the renamed Kibana.<br><em>C) CloudWatch dashboards</em> &mdash; CloudWatch dashboards plot CloudWatch metrics, not OpenSearch indexes.<br><em>D) Amazon QuickSight</em> &mdash; QuickSight is a separate BI service, not the bundled OpenSearch UI.
+</div>
+</div>
+
+<!-- Q24 OpenSearch -->
+<div class="question" data-type="mc" data-answer="1" data-topic="OpenSearch" data-level="B">
+<div class="q-tags"><span class="q-tag">OpenSearch</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>A team wants OpenSearch for occasional log analysis but does not want to size or manage cluster nodes. Which option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Self-managed OpenSearch on EC2</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon OpenSearch Serverless</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Redshift Serverless</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An OpenSearch managed cluster with UltraWarm nodes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Amazon OpenSearch Serverless<br><br>
+<strong>How to think about it:</strong> OpenSearch comes as a <b>managed cluster</b> or <b>Serverless</b>; no node sizing = Serverless.<br><br>
+<strong>Why B is correct:</strong> Serverless collections scale compute automatically, so there are no nodes or shards to size.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Self-managed OpenSearch on EC2</em> &mdash; This adds even more node management, not less.<br><em>C) Amazon Redshift Serverless</em> &mdash; Redshift is a data warehouse, not an OpenSearch search engine.<br><em>D) An OpenSearch managed cluster with UltraWarm nodes</em> &mdash; UltraWarm lowers storage cost but you still size and manage a cluster.
+</div>
+</div>
+
+<!-- Q25 OpenSearch -->
+<div class="question" data-type="mc" data-answer="0" data-topic="OpenSearch" data-level="B">
+<div class="q-tags"><span class="q-tag">OpenSearch</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>In the classic OpenSearch, Logstash and Dashboards stack, what role does Logstash play?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It collects and ships logs into OpenSearch</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It encrypts the cluster's data at rest</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It stores and indexes the documents</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It renders charts and dashboards</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> It collects and ships logs into OpenSearch<br><br>
+<strong>How to think about it:</strong> Logstash = <b>log ingestion</b>; OpenSearch = search and index; Dashboards = visualize.<br><br>
+<strong>Why A is correct:</strong> Logstash is the ingestion agent and pipeline, an alternative to CloudWatch Logs where you choose retention.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) It encrypts the cluster's data at rest</em> &mdash; Encryption at rest is a domain setting using KMS.<br><em>C) It stores and indexes the documents</em> &mdash; Storing and indexing is OpenSearch's job.<br><em>D) It renders charts and dashboards</em> &mdash; Visualization is done by OpenSearch Dashboards.
+</div>
+</div>
+
+<!-- Q26 OpenSearch -->
+<div class="question" data-type="mc" data-answer="3" data-topic="OpenSearch" data-level="A">
+<div class="q-tags"><span class="q-tag">OpenSearch</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>An app stores items in DynamoDB but users must search them by free text. Retrieval by ID stays on DynamoDB. How should search be added with minimal custom ops?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add a global secondary index on the description field</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Run Scan with a contains filter for each search</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Put DAX in front of the table for search queries</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">DynamoDB Streams trigger Lambda, which indexes items into OpenSearch</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> DynamoDB Streams trigger Lambda, which indexes items into OpenSearch<br><br>
+<strong>How to think about it:</strong> Search on DynamoDB data = <b>DynamoDB Streams to Lambda to OpenSearch</b>; get by key from DynamoDB.<br><br>
+<strong>Why D is correct:</strong> Every change is pushed into an OpenSearch index for search, while full items are still read from DynamoDB by key.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Add a global secondary index on the description field</em> &mdash; A GSI supports exact key matches, not free-text search.<br><em>B) Run Scan with a contains filter for each search</em> &mdash; Scan reads the whole table per request, which is slow and costly.<br><em>C) Put DAX in front of the table for search queries</em> &mdash; DAX caches key reads; it adds no text search.
+</div>
+</div>
+
+<!-- Q27 OpenSearch -->
+<div class="question" data-type="mc" data-answer="0" data-topic="OpenSearch" data-level="A">
+<div class="q-tags"><span class="q-tag">OpenSearch</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>CloudWatch Logs must flow into OpenSearch in near real time with buffering and retries, without custom code. Which path fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Subscription filter to Data Firehose, then OpenSearch</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudWatch Contributor Insights rules</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A metric filter that publishes to OpenSearch</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A daily export of the log group to S3</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Subscription filter to Data Firehose, then OpenSearch<br><br>
+<strong>How to think about it:</strong> No-code, near real time = <b>subscription filter to Firehose to OpenSearch</b>; real time = subscription filter to Lambda.<br><br>
+<strong>Why A is correct:</strong> Firehose buffers, retries and loads the records into OpenSearch without code.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) CloudWatch Contributor Insights rules</em> &mdash; Contributor Insights finds top talkers in logs; it does not deliver logs.<br><em>C) A metric filter that publishes to OpenSearch</em> &mdash; Metric filters create CloudWatch metrics; they do not send log events out.<br><em>D) A daily export of the log group to S3</em> &mdash; Exports run in batches, so this is far from near real time.
+</div>
+</div>
+
+<!-- Q28 RDS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="RDS" data-level="B">
+<div class="q-tags"><span class="q-tag">RDS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>What does enabling Multi-AZ on an RDS DB instance mainly provide?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A synchronous standby with automatic failover behind one DNS name</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Automatic sharding of tables across AZs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">More read throughput by sending queries to the standby</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Asynchronous copies in other Regions for reporting</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A synchronous standby with automatic failover behind one DNS name<br><br>
+<strong>How to think about it:</strong> Multi-AZ = <b>HA</b>: synchronous standby, automatic failover, same DNS name. Read replicas = read scaling.<br><br>
+<strong>Why A is correct:</strong> RDS keeps a standby in another AZ and flips the endpoint to it during an outage.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Automatic sharding of tables across AZs</em> &mdash; RDS does not shard data; Multi-AZ keeps a full copy.<br><em>C) More read throughput by sending queries to the standby</em> &mdash; In a single-standby Multi-AZ instance deployment the standby does not serve reads.<br><em>D) Asynchronous copies in other Regions for reporting</em> &mdash; That describes cross-Region read replicas.
+</div>
+</div>
+
+<!-- Q29 RDS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="RDS" data-level="B">
+<div class="q-tags"><span class="q-tag">RDS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>A reporting workload is overloading the primary RDS database with queries. Which feature offloads them?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Automated backups with point-in-time recovery</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A larger storage volume</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Multi-AZ with a single standby</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">RDS read replicas</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> RDS read replicas<br><br>
+<strong>How to think about it:</strong> Scale reads = <b>read replicas</b> (asynchronous, eventually consistent, can be cross-Region).<br><br>
+<strong>Why D is correct:</strong> Replicas receive asynchronous copies of the data and serve read-only queries, with some lag.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Automated backups with point-in-time recovery</em> &mdash; Backups protect data; they do not serve queries.<br><em>B) A larger storage volume</em> &mdash; More storage does not move query load off the primary.<br><em>C) Multi-AZ with a single standby</em> &mdash; The standby is for failover and does not accept queries.
+</div>
+</div>
+
+<!-- Q30 RDS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="RDS" data-level="B">
+<div class="q-tags"><span class="q-tag">RDS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>A compliance rule says a database backup must be kept for seven years and a copy held in another Region. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Manual DB snapshots copied to the second Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Multi-AZ with a standby in a second AZ</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A read replica in the second Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Automated backups with the longest retention</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Manual DB snapshots copied to the second Region<br><br>
+<strong>How to think about it:</strong> Automated backups expire; <b>manual snapshots</b> stay until deleted and can be <b>copied cross-Region</b>.<br><br>
+<strong>Why A is correct:</strong> Manual snapshots are kept until you delete them and can be copied to other Regions.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Multi-AZ with a standby in a second AZ</em> &mdash; Multi-AZ is for availability in one Region, not long-term backup.<br><em>C) A read replica in the second Region</em> &mdash; A replica is a live copy that mirrors deletes too, not a point-in-time archive.<br><em>D) Automated backups with the longest retention</em> &mdash; Automated backups have a limited retention window and expire automatically.
+</div>
+</div>
+
+<!-- Q31 RDS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="RDS" data-level="B">
+<div class="q-tags"><span class="q-tag">RDS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>Operations wants an email whenever an RDS instance fails over, reboots or has a configuration change. What is the native way?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An RDS event subscription that publishes to an SNS topic</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The database slow query log in CloudWatch Logs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CloudTrail data events on the DB instance</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enhanced Monitoring with a one-second interval</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An RDS event subscription that publishes to an SNS topic<br><br>
+<strong>How to think about it:</strong> RDS operational alerts = <b>RDS event subscriptions</b> to SNS.<br><br>
+<strong>Why A is correct:</strong> RDS emits events for failovers, reboots and changes, and a subscription sends them to SNS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) The database slow query log in CloudWatch Logs</em> &mdash; Slow query logs record slow SQL, not instance events.<br><em>C) CloudTrail data events on the DB instance</em> &mdash; CloudTrail records API calls; it does not report failovers to email.<br><em>D) Enhanced Monitoring with a one-second interval</em> &mdash; Enhanced Monitoring collects OS metrics, not event notifications.
+</div>
+</div>
+
+<!-- Q32 RDS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="RDS" data-level="B">
+<div class="q-tags"><span class="q-tag">RDS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>A DBA needs per-second, OS-level metrics for an RDS instance, including the CPU and memory used by each process. What should be enabled?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enhanced Monitoring</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The general query log</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Standard CloudWatch metrics</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">RDS event subscriptions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Enhanced Monitoring<br><br>
+<strong>How to think about it:</strong> Per-process, per-second OS view = <b>Enhanced Monitoring</b>.<br><br>
+<strong>Why A is correct:</strong> An agent on the host reports OS and process metrics at up to one-second intervals.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) The general query log</em> &mdash; The general log records statements, not OS process metrics.<br><em>C) Standard CloudWatch metrics</em> &mdash; Default metrics are instance-level and do not show individual processes.<br><em>D) RDS event subscriptions</em> &mdash; Events report state changes, not resource metrics.
+</div>
+</div>
+
+<!-- Q33 RDS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="RDS" data-level="B">
+<div class="q-tags"><span class="q-tag">RDS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>An RDS database is slow and the team wants to see which SQL statements, hosts and users are causing the most database load, broken down by wait type. Which tool fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">RDS event subscriptions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Trusted Advisor checks</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">VPC Flow Logs on the DB subnet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Performance Insights</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Performance Insights<br><br>
+<strong>How to think about it:</strong> DB load by <b>waits, SQL, hosts, users</b> = <b>Performance Insights</b> (now in CloudWatch Database Insights).<br><br>
+<strong>Why D is correct:</strong> It charts database load and slices it by wait events, SQL, hosts and users.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) RDS event subscriptions</em> &mdash; Events report operational changes, not query load.<br><em>B) AWS Trusted Advisor checks</em> &mdash; Trusted Advisor gives account best-practice checks, not per-query analysis.<br><em>C) VPC Flow Logs on the DB subnet</em> &mdash; Flow Logs show network flows, not SQL or waits.
+</div>
+</div>
+
+<!-- Q34 RDS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="RDS" data-level="A">
+<div class="q-tags"><span class="q-tag">RDS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>An RDS MySQL database has four read replicas. The app should spread reads evenly across them and stop sending reads to a replica that becomes unhealthy. What is a simple design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Route 53 weighted records with health checks per replica</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable Multi-AZ so the standby joins the read pool</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use an Aurora-style reader endpoint on the RDS instance</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Point the app at the primary's endpoint</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Route 53 weighted records with health checks per replica<br><br>
+<strong>How to think about it:</strong> RDS has no reader endpoint, so use <b>Route 53 weighted records + health checks</b>.<br><br>
+<strong>Why A is correct:</strong> Equal weights spread connections, and failed health checks drop that replica from answers.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Enable Multi-AZ so the standby joins the read pool</em> &mdash; A Multi-AZ instance standby never serves reads.<br><em>C) Use an Aurora-style reader endpoint on the RDS instance</em> &mdash; Reader endpoints are an Aurora feature; RDS MySQL replicas each have their own endpoint.<br><em>D) Point the app at the primary's endpoint</em> &mdash; The primary endpoint sends everything to the writer.
+</div>
+</div>
+
+<!-- Q35 RDS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="RDS" data-level="A">
+<div class="q-tags"><span class="q-tag">RDS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>An RDS primary runs in us-east-1 with a read replica in us-west-2. If the primary Region fails, the replica should be promoted and DNS updated automatically. Which design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turn on Multi-AZ so failover moves to us-west-2</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An alarm drives EventBridge and Lambda to promote the replica and update DNS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Rely on the replica promoting itself when replication stops</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Restore the latest automated backup into us-west-2</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An alarm drives EventBridge and Lambda to promote the replica and update DNS<br><br>
+<strong>How to think about it:</strong> Cross-Region RDS DR = <b>health check/alarm, then EventBridge + Lambda to promote replica and update DNS</b>.<br><br>
+<strong>Why B is correct:</strong> Promotion of a cross-Region replica is not automatic, so automation detects failure, promotes and repoints DNS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Turn on Multi-AZ so failover moves to us-west-2</em> &mdash; Multi-AZ failover stays inside one Region.<br><em>C) Rely on the replica promoting itself when replication stops</em> &mdash; RDS never promotes a read replica on its own.<br><em>D) Restore the latest automated backup into us-west-2</em> &mdash; Restoring a backup is slower and loses more data than promoting a live replica.
+</div>
+</div>
+
+<!-- Q36 RDS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="RDS" data-level="A">
+<div class="q-tags"><span class="q-tag">RDS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>A vendor application needs Oracle Real Application Clusters (RAC). Where can it run on AWS with the most control?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Oracle installed and managed on EC2 instances</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon RDS for Oracle with read replicas</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Aurora PostgreSQL with Babelfish</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon RDS for Oracle with Multi-AZ enabled</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Oracle installed and managed on EC2 instances<br><br>
+<strong>How to think about it:</strong> RDS for Oracle = <b>no RAC</b>. Need RAC = self-managed on <b>EC2</b> (or a dedicated Oracle offering).<br><br>
+<strong>Why A is correct:</strong> With full OS and database control, you can configure RAC yourself; RDS does not offer it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Amazon RDS for Oracle with read replicas</em> &mdash; Replicas add read copies; they are not a RAC cluster.<br><em>C) Amazon Aurora PostgreSQL with Babelfish</em> &mdash; Babelfish targets SQL Server compatibility, not Oracle RAC.<br><em>D) Amazon RDS for Oracle with Multi-AZ enabled</em> &mdash; Multi-AZ gives a standby, but RDS for Oracle does not support RAC.
+</div>
+</div>
+
+<!-- Q37 RDS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="RDS" data-level="A">
+<div class="q-tags"><span class="q-tag">RDS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>A company must restore a backup of its RDS for Oracle database into an Oracle server in its own data center. What type of backup is needed?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An Oracle RMAN backup copied out through S3</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An AWS Backup vault copy of the instance</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An RDS manual DB snapshot</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An RDS automated backup</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An Oracle RMAN backup copied out through S3<br><br>
+<strong>How to think about it:</strong> RDS snapshots restore <b>only to RDS</b>; outside RDS = <b>Oracle RMAN</b> backup via S3.<br><br>
+<strong>Why A is correct:</strong> RMAN produces native Oracle backup files that an external Oracle server can restore.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An AWS Backup vault copy of the instance</em> &mdash; AWS Backup copies are still RDS snapshots in a vault.<br><em>C) An RDS manual DB snapshot</em> &mdash; RDS snapshots can only be restored into RDS, not an outside server.<br><em>D) An RDS automated backup</em> &mdash; Automated backups also restore only into RDS.
+</div>
+</div>
+
+<!-- Q38 RDS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="RDS" data-level="A">
+<div class="q-tags"><span class="q-tag">RDS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>An RDS for MySQL database must move to a MySQL server on premises with only a short cutover window. Which approach fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Restore an RDS snapshot on the on-premises server</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable Multi-AZ with the standby in the data center</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Load a mysqldump copy, replicate from RDS until caught up, then cut over</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create an RDS read replica in the data center</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Load a mysqldump copy, replicate from RDS until caught up, then cut over<br><br>
+<strong>How to think about it:</strong> RDS MySQL to non-RDS = <b>mysqldump</b> export/import, then <b>binlog replication</b> until cutover.<br><br>
+<strong>Why C is correct:</strong> The dump seeds the target, and native replication keeps it current until a short final switch.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Restore an RDS snapshot on the on-premises server</em> &mdash; RDS snapshots can only be restored into RDS.<br><em>B) Enable Multi-AZ with the standby in the data center</em> &mdash; The Multi-AZ standby always runs in another AWS AZ.<br><em>D) Create an RDS read replica in the data center</em> &mdash; RDS replicas are RDS instances inside AWS, not on-premises servers.
+</div>
+</div>
+
+<!-- Q39 RDS Security -->
+<div class="question" data-type="mc" data-answer="1" data-topic="RDS Security" data-level="B">
+<div class="q-tags"><span class="q-tag">RDS Security</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Which RDS engines support IAM database authentication?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Every RDS engine, including Db2</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">MySQL, MariaDB and PostgreSQL</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Oracle and SQL Server only</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only Aurora Serverless databases</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> MySQL, MariaDB and PostgreSQL<br><br>
+<strong>How to think about it:</strong> IAM DB auth = <b>MySQL, MariaDB, PostgreSQL</b> (and the Aurora versions of them).<br><br>
+<strong>Why B is correct:</strong> These engines accept short-lived IAM auth tokens instead of a stored password.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Every RDS engine, including Db2</em> &mdash; Not all engines support IAM tokens; the feature is limited to the open-source ones.<br><em>C) Oracle and SQL Server only</em> &mdash; Oracle and SQL Server use their own logins or Kerberos, not IAM tokens.<br><em>D) Only Aurora Serverless databases</em> &mdash; IAM auth is available on standard RDS MySQL, MariaDB and PostgreSQL too.
+</div>
+</div>
+
+<!-- Q40 RDS Security -->
+<div class="question" data-type="mc" data-answer="2" data-topic="RDS Security" data-level="B">
+<div class="q-tags"><span class="q-tag">RDS Security</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>An EC2 app connects to RDS PostgreSQL using IAM database authentication. How long is each generated auth token valid?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Until the IAM role is detached</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">12 hours</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">15 minutes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">1 hour</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> 15 minutes<br><br>
+<strong>How to think about it:</strong> IAM DB auth token = <b>15 minutes</b>, used over an SSL connection.<br><br>
+<strong>Why C is correct:</strong> The token is valid for 15 minutes to open a connection; the app generates a new one as needed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Until the IAM role is detached</em> &mdash; Tokens expire on a timer regardless of the role attachment.<br><em>B) 12 hours</em> &mdash; Tokens are much shorter-lived than twelve hours.<br><em>D) 1 hour</em> &mdash; One hour is a common STS session default, not the RDS auth token lifetime.
+</div>
+</div>
+
+<!-- Q41 RDS Security -->
+<div class="question" data-type="mc" data-answer="3" data-topic="RDS Security" data-level="B">
+<div class="q-tags"><span class="q-tag">RDS Security</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>With IAM database authentication on RDS MySQL, where are the user's table-level permissions decided?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">In an RDS option group</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">In the IAM policy with rds-db:connect conditions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">In the DB instance's security group</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Inside the database, through normal GRANT statements</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Inside the database, through normal GRANT statements<br><br>
+<strong>How to think about it:</strong> IAM does <b>authentication</b>; <b>authorization stays inside the database</b> (GRANTs).<br><br>
+<strong>Why D is correct:</strong> IAM only proves who the user is; what they can do is still set by database privileges.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) In an RDS option group</em> &mdash; Option groups enable engine features, not per-user privileges.<br><em>B) In the IAM policy with rds-db:connect conditions</em> &mdash; rds-db:connect lets a user connect; it does not grant table privileges.<br><em>C) In the DB instance's security group</em> &mdash; Security groups control network access, not table permissions.
+</div>
+</div>
+
+<!-- Q42 RDS Security -->
+<div class="question" data-type="mc" data-answer="2" data-topic="RDS Security" data-level="B">
+<div class="q-tags"><span class="q-tag">RDS Security</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>Which RDS engines support Transparent Data Encryption (TDE)?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">PostgreSQL only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">MySQL and MariaDB</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Oracle and SQL Server</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Every RDS engine</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Oracle and SQL Server<br><br>
+<strong>How to think about it:</strong> <b>TDE = Oracle and SQL Server</b> on RDS; all engines also get KMS storage encryption.<br><br>
+<strong>Why C is correct:</strong> TDE is a native feature of these engines, enabled on RDS through an option group or setting.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) PostgreSQL only</em> &mdash; RDS for PostgreSQL uses KMS storage encryption, not TDE.<br><em>B) MySQL and MariaDB</em> &mdash; These engines rely on KMS storage encryption, not TDE.<br><em>D) Every RDS engine</em> &mdash; TDE is engine-specific, unlike KMS encryption at rest.
+</div>
+</div>
+
+<!-- Q43 RDS Security -->
+<div class="question" data-type="mc" data-answer="1" data-topic="RDS Security" data-level="A">
+<div class="q-tags"><span class="q-tag">RDS Security</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>An existing RDS database was created without encryption, and it must now be encrypted at rest. What is the process?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable SSL connections to the instance</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Snapshot, copy the snapshot encrypted, restore from the copy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create an encrypted read replica and promote it</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Modify the instance and tick the encryption box</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Snapshot, copy the snapshot encrypted, restore from the copy<br><br>
+<strong>How to think about it:</strong> Can't encrypt in place: <b>snapshot, copy snapshot with encryption, restore</b>.<br><br>
+<strong>Why B is correct:</strong> Encryption is set at creation, so you build a new encrypted instance from an encrypted snapshot copy.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable SSL connections to the instance</em> &mdash; SSL encrypts traffic in flight, not stored data.<br><em>C) Create an encrypted read replica and promote it</em> &mdash; An unencrypted primary cannot have an encrypted read replica.<br><em>D) Modify the instance and tick the encryption box</em> &mdash; RDS cannot switch encryption on for an existing unencrypted instance.
+</div>
+</div>
+
+<!-- Q44 RDS Security -->
+<div class="question" data-type="mc" data-answer="2" data-topic="RDS Security" data-level="A">
+<div class="q-tags"><span class="q-tag">RDS Security</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>Auditors want a record of the SQL statements users run inside an RDS database. Can CloudTrail provide it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Yes; CloudTrail management events include queries</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">No; use VPC Flow Logs instead</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">No; use the engine's audit logging, published to CloudWatch Logs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Yes; CloudTrail data events capture each SQL query</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> No; use the engine's audit logging, published to CloudWatch Logs<br><br>
+<strong>How to think about it:</strong> CloudTrail = <b>API calls</b> to RDS, not SQL. Use the <b>engine's audit log</b> (or Database Activity Streams).<br><br>
+<strong>Why C is correct:</strong> CloudTrail sees RDS API calls only, so queries must come from database-level audit logs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Yes; CloudTrail management events include queries</em> &mdash; Management events cover API actions like CreateDBInstance, not SQL.<br><em>B) No; use VPC Flow Logs instead</em> &mdash; Flow Logs record IP traffic, not statement text.<br><em>D) Yes; CloudTrail data events capture each SQL query</em> &mdash; RDS has no CloudTrail data events for SQL statements.
+</div>
+</div>
+
+<!-- Q45 RDS Proxy -->
+<div class="question" data-type="mc" data-answer="3" data-topic="RDS Proxy" data-level="A">
+<div class="q-tags"><span class="q-tag">RDS Proxy</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>During traffic bursts, thousands of Lambda invocations hit an Aurora database and it returns 'too many connections' errors. What is the best fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Raise the Lambda timeout</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Move the Lambda functions out of the VPC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add more Aurora read replicas</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Put RDS Proxy between Lambda and the database</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Put RDS Proxy between Lambda and the database<br><br>
+<strong>How to think about it:</strong> Lambda + relational DB + connection storms = <b>RDS Proxy</b> (pooling).<br><br>
+<strong>Why D is correct:</strong> The proxy pools and reuses connections, so bursts of functions share a small set of DB connections.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Raise the Lambda timeout</em> &mdash; Longer runs hold connections longer and make the problem worse.<br><em>B) Move the Lambda functions out of the VPC</em> &mdash; This does not reduce connections and would lose private access to the database.<br><em>C) Add more Aurora read replicas</em> &mdash; Replicas add read capacity but do not stop the writer being flooded with connections.
+</div>
+</div>
+
+<!-- Q46 RDS Proxy -->
+<div class="question" data-type="mc" data-answer="1" data-topic="RDS Proxy" data-level="B">
+<div class="q-tags"><span class="q-tag">RDS Proxy</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>A team wants to use RDS Proxy from Lambda. What networking requirement applies?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The database must be in a public subnet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The Lambda function must be attached to the VPC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Lambda must call the proxy through API Gateway</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The proxy needs a public IP and an internet gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The Lambda function must be attached to the VPC<br><br>
+<strong>How to think about it:</strong> RDS Proxy is <b>never public</b>, so the Lambda must run <b>in the VPC</b>.<br><br>
+<strong>Why B is correct:</strong> The proxy has no public endpoint and is reachable only from inside the VPC.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The database must be in a public subnet</em> &mdash; The database normally stays private; only the clients need VPC access.<br><em>C) Lambda must call the proxy through API Gateway</em> &mdash; Lambda connects to the proxy directly using database protocols.<br><em>D) The proxy needs a public IP and an internet gateway</em> &mdash; RDS Proxy cannot be made publicly accessible.
+</div>
+</div>
+
+<!-- Q47 RDS Proxy -->
+<div class="question" data-type="mc" data-answer="2" data-topic="RDS Proxy" data-level="A">
+<div class="q-tags"><span class="q-tag">RDS Proxy</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>Lambda functions use RDS Proxy for an Aurora cluster. Read-only functions should go only to Aurora Replicas while writes go to the primary. What should you configure?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Route 53 weighted records across replica endpoints</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An Aurora custom endpoint attached to Lambda directly</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A read-only endpoint on the RDS Proxy for the read functions</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A second proxy pointed at the writer endpoint</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A read-only endpoint on the RDS Proxy for the read functions<br><br>
+<strong>How to think about it:</strong> RDS Proxy can add a <b>read-only endpoint</b> that routes to Aurora Replicas only.<br><br>
+<strong>Why C is correct:</strong> The extra proxy endpoint pools connections to the replicas only, keeping reads off the writer.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Route 53 weighted records across replica endpoints</em> &mdash; This bypasses the proxy and loses connection pooling.<br><em>B) An Aurora custom endpoint attached to Lambda directly</em> &mdash; Custom endpoints group instances but provide no pooling for Lambda.<br><em>D) A second proxy pointed at the writer endpoint</em> &mdash; This still sends every query to the primary.
+</div>
+</div>
+
+<!-- Q48 Aurora -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Aurora" data-level="B">
+<div class="q-tags"><span class="q-tag">Aurora</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>How does Aurora store data for durability?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Two copies in a single Availability Zone</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Three copies, one per Availability Zone</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">One copy on EBS plus nightly snapshots</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Six copies spread across three Availability Zones</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Six copies spread across three Availability Zones<br><br>
+<strong>How to think about it:</strong> Aurora storage = <b>6 copies across 3 AZs</b>, self-healing, auto-growing.<br><br>
+<strong>Why D is correct:</strong> Aurora writes two copies in each of three AZs on a shared, self-healing volume.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Two copies in a single Availability Zone</em> &mdash; That is weaker than Aurora's design and would not survive an AZ outage.<br><em>B) Three copies, one per Availability Zone</em> &mdash; Aurora keeps two copies per AZ, for six in total.<br><em>C) One copy on EBS plus nightly snapshots</em> &mdash; That resembles an RDS instance without Multi-AZ, not Aurora storage.
+</div>
+</div>
+
+<!-- Q49 Aurora -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Aurora" data-level="A">
+<div class="q-tags"><span class="q-tag">Aurora</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>One entire Availability Zone hosting Aurora storage goes offline. What happens to writes and reads?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Writes continue but reads stop</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Both stop until the cluster is restored from backup</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Both continue, because four of six copies still exist</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Reads continue but writes stop until the AZ returns</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Both continue, because four of six copies still exist<br><br>
+<strong>How to think about it:</strong> Aurora quorum: <b>4 of 6 for writes, 3 of 6 for reads</b>. Lose one AZ (2 copies) and both still work.<br><br>
+<strong>Why C is correct:</strong> Writes need four copies and reads need three, so losing two copies in one AZ keeps both working.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Writes continue but reads stop</em> &mdash; Reads need just three copies, so they also continue.<br><em>B) Both stop until the cluster is restored from backup</em> &mdash; Aurora storage is built to survive the loss of an AZ.<br><em>D) Reads continue but writes stop until the AZ returns</em> &mdash; Writes need only four copies, and four remain.
+</div>
+</div>
+
+<!-- Q50 Aurora -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Aurora" data-level="B">
+<div class="q-tags"><span class="q-tag">Aurora</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>How many Aurora Replicas can a single Aurora cluster have in its Region?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only 1, used as the failover standby</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Up to 50</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Up to 15</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Up to 5</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Up to 15<br><br>
+<strong>How to think about it:</strong> Aurora = writer + <b>up to 15 replicas</b> sharing one storage volume.<br><br>
+<strong>Why C is correct:</strong> A cluster can have up to 15 Aurora Replicas, all reading the same shared storage.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only 1, used as the failover standby</em> &mdash; Aurora supports many replicas, any of which can be promoted.<br><em>B) Up to 50</em> &mdash; Aurora does not support that many replicas in one cluster.<br><em>D) Up to 5</em> &mdash; Five is an old RDS MySQL read replica figure, not Aurora's.
+</div>
+</div>
+
+<!-- Q51 Aurora -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Aurora" data-level="B">
+<div class="q-tags"><span class="q-tag">Aurora</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>An app should spread its read-only connections across all Aurora Replicas without tracking each replica. Which endpoint should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The cluster (writer) endpoint</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The reader endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The RDS Data API endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An instance endpoint</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The reader endpoint<br><br>
+<strong>How to think about it:</strong> Writes = <b>cluster (writer) endpoint</b>; spread reads = <b>reader endpoint</b>.<br><br>
+<strong>Why B is correct:</strong> The reader endpoint load-balances connections across the cluster's available replicas.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The cluster (writer) endpoint</em> &mdash; The cluster endpoint always points at the current primary.<br><em>C) The RDS Data API endpoint</em> &mdash; The Data API is an HTTPS interface, not a read load-balancing endpoint.<br><em>D) An instance endpoint</em> &mdash; An instance endpoint reaches one specific instance only.
+</div>
+</div>
+
+<!-- Q52 Aurora -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Aurora" data-level="B">
+<div class="q-tags"><span class="q-tag">Aurora</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>Which Aurora endpoint always connects to the current primary instance, even after a failover?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The cluster endpoint</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A custom endpoint over two replicas</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An instance endpoint for the original primary</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The reader endpoint</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> The cluster endpoint<br><br>
+<strong>How to think about it:</strong> Always the writer, even after failover = <b>cluster endpoint</b>.<br><br>
+<strong>Why A is correct:</strong> It follows the primary, so after failover it points at the newly promoted writer.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A custom endpoint over two replicas</em> &mdash; Custom endpoints target the instances you list, not the writer.<br><em>C) An instance endpoint for the original primary</em> &mdash; It stays tied to that instance, which may now be a replica.<br><em>D) The reader endpoint</em> &mdash; The reader endpoint targets replicas for read-only work.
+</div>
+</div>
+
+<!-- Q53 Aurora -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Aurora" data-level="A">
+<div class="q-tags"><span class="q-tag">Aurora</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>Analysts run heavy queries that must use two large replicas only, keeping the small replicas free for the web app. What should you set up?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The reader endpoint with a lower priority</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A cross-Region read replica for the analysts</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A custom endpoint containing the two large replicas</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The cluster endpoint with read-only credentials</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A custom endpoint containing the two large replicas<br><br>
+<strong>How to think about it:</strong> Subset of instances for a workload = <b>custom endpoint</b>.<br><br>
+<strong>Why C is correct:</strong> A custom endpoint load-balances across the instances you choose, isolating the analytics load.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The reader endpoint with a lower priority</em> &mdash; The reader endpoint spans all replicas, including the small ones.<br><em>B) A cross-Region read replica for the analysts</em> &mdash; A new Region adds lag and cost when local replicas already exist.<br><em>D) The cluster endpoint with read-only credentials</em> &mdash; This would send analytics to the primary writer.
+</div>
+</div>
+
+<!-- Q54 Aurora -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Aurora" data-level="B">
+<div class="q-tags"><span class="q-tag">Aurora</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>A product sees very intermittent, unpredictable database use and the team wants no capacity planning. Which Aurora option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Aurora Global Database</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Aurora Serverless</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Provisioned Aurora with reserved instances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A larger provisioned writer instance</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Aurora Serverless<br><br>
+<strong>How to think about it:</strong> Intermittent or unpredictable load, no sizing = <b>Aurora Serverless</b> (scales with demand).<br><br>
+<strong>Why B is correct:</strong> Capacity scales automatically with demand, billed per second for what is used.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Aurora Global Database</em> &mdash; Global Database is for multi-Region reads and DR, not variable capacity.<br><em>C) Provisioned Aurora with reserved instances</em> &mdash; Reserved instances suit steady usage that you can size in advance.<br><em>D) A larger provisioned writer instance</em> &mdash; A fixed large instance wastes money during idle periods.
+</div>
+</div>
+
+<!-- Q55 Aurora -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Aurora" data-level="B">
+<div class="q-tags"><span class="q-tag">Aurora</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>A Lambda app wants to run SQL against Aurora over HTTPS without opening or managing database connections. What fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Aurora zero-ETL integration with Redshift</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The RDS Data API, with credentials in Secrets Manager</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An API Gateway HTTP proxy to the DB port</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A JDBC driver with connection pooling in Lambda</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The RDS Data API, with credentials in Secrets Manager<br><br>
+<strong>How to think about it:</strong> SQL over HTTPS, no persistent connections = <b>RDS Data API</b>, credentials from Secrets Manager.<br><br>
+<strong>Why B is correct:</strong> The Data API runs SQL through an HTTPS endpoint and checks credentials stored in Secrets Manager.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Aurora zero-ETL integration with Redshift</em> &mdash; Zero-ETL copies data to Redshift; it is not an app SQL interface.<br><em>C) An API Gateway HTTP proxy to the DB port</em> &mdash; API Gateway cannot speak the database wire protocol.<br><em>D) A JDBC driver with connection pooling in Lambda</em> &mdash; JDBC still opens and manages persistent connections.
+</div>
+</div>
+
+<!-- Q56 Aurora -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Aurora" data-level="B">
+<div class="q-tags"><span class="q-tag">Aurora</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>A team wants to review Aurora MySQL slow queries centrally alongside other logs. What should they do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable VPC Flow Logs on the cluster subnets</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Turn on CloudTrail data events for the cluster</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Publish the slow query log to CloudWatch Logs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create an RDS event subscription</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Publish the slow query log to CloudWatch Logs<br><br>
+<strong>How to think about it:</strong> Aurora MySQL logs (error, slow query, general, audit) = <b>publish to CloudWatch Logs</b>.<br><br>
+<strong>Why C is correct:</strong> Aurora MySQL can export its error, slow query, general and audit logs to CloudWatch Logs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable VPC Flow Logs on the cluster subnets</em> &mdash; Flow Logs capture network traffic, not query timing.<br><em>B) Turn on CloudTrail data events for the cluster</em> &mdash; CloudTrail records API calls, not slow SQL.<br><em>D) Create an RDS event subscription</em> &mdash; Events cover failovers and maintenance, not individual slow queries.
+</div>
+</div>
+
+<!-- Q57 Aurora -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Aurora" data-level="A">
+<div class="q-tags"><span class="q-tag">Aurora</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>A production RDS for MySQL database must move to Aurora MySQL with minimal downtime. Which approach fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Change the instance's engine type in place</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Take a snapshot and restore it to Aurora during business hours</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create an Aurora read replica of the RDS instance, then promote it</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable Multi-AZ so the standby becomes Aurora</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Create an Aurora read replica of the RDS instance, then promote it<br><br>
+<strong>How to think about it:</strong> RDS to Aurora, low downtime = create an <b>Aurora read replica</b> of the RDS instance, then <b>promote</b> it.<br><br>
+<strong>Why C is correct:</strong> The replica stays in sync until cutover, so downtime is only the promotion and app switch.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Change the instance's engine type in place</em> &mdash; RDS cannot change an instance's engine in place.<br><em>B) Take a snapshot and restore it to Aurora during business hours</em> &mdash; Snapshot restore works, but writes after the snapshot are lost unless you stop the app.<br><em>D) Enable Multi-AZ so the standby becomes Aurora</em> &mdash; The Multi-AZ standby uses the same engine as the primary.
+</div>
+</div>
+
+<!-- Q58 Aurora Global -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Aurora Global" data-level="B">
+<div class="q-tags"><span class="q-tag">Aurora Global</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>A company needs Aurora reads in several Regions with typically sub-second replication and a Region failover measured in about a minute. Which feature fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">DynamoDB global tables</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Daily snapshot copies to the second Region</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Aurora Multi-AZ replicas in one Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Aurora Global Database</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Aurora Global Database<br><br>
+<strong>How to think about it:</strong> Multi-Region Aurora with low lag and fast promotion = <b>Aurora Global Database</b>.<br><br>
+<strong>Why D is correct:</strong> Storage-level replication keeps secondaries typically under a second behind, and a secondary can be promoted in about a minute.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) DynamoDB global tables</em> &mdash; That is a DynamoDB feature, not an Aurora one.<br><em>B) Daily snapshot copies to the second Region</em> &mdash; Snapshot copies mean hours of data loss and slow restores.<br><em>C) Aurora Multi-AZ replicas in one Region</em> &mdash; These protect against AZ failure, not Region loss.
+</div>
+</div>
+
+<!-- Q59 Aurora Global -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Aurora Global" data-level="B">
+<div class="q-tags"><span class="q-tag">Aurora Global</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>In an Aurora Global Database, what can applications do in a secondary Region by default?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Read only; writes go to the primary Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Write only, with reads sent to the primary</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Nothing until the secondary is promoted</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Read and write, with conflict resolution</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Read only; writes go to the primary Region<br><br>
+<strong>How to think about it:</strong> Global Database: <b>one primary Region writes</b>; secondaries are <b>read-only</b>.<br><br>
+<strong>Why A is correct:</strong> Secondary clusters are read-only copies fed by replication from the primary.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Write only, with reads sent to the primary</em> &mdash; Secondaries are the readers, not the writers.<br><em>C) Nothing until the secondary is promoted</em> &mdash; Secondaries serve reads while they replicate.<br><em>D) Read and write, with conflict resolution</em> &mdash; Aurora Global Database is not multi-writer across Regions.
+</div>
+</div>
+
+<!-- Q60 Aurora Global -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Aurora Global" data-level="A">
+<div class="q-tags"><span class="q-tag">Aurora Global</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>An app in a secondary Region of an Aurora Global Database mostly reads but occasionally writes. The team wants to avoid managing a second set of endpoints for writes. What should they enable?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A custom endpoint in the secondary Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Multi-master replication between the Regions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Promote the secondary to a standalone cluster</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Write forwarding on the secondary cluster</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Write forwarding on the secondary cluster<br><br>
+<strong>How to think about it:</strong> Occasional writes from a secondary = <b>write forwarding</b> to the primary cluster.<br><br>
+<strong>Why D is correct:</strong> The secondary forwards write statements to the primary, which applies them and replicates back.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A custom endpoint in the secondary Region</em> &mdash; Custom endpoints group read-only instances and cannot accept writes.<br><em>B) Multi-master replication between the Regions</em> &mdash; Aurora Global Database has a single writer Region.<br><em>C) Promote the secondary to a standalone cluster</em> &mdash; That breaks replication and creates a split database.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

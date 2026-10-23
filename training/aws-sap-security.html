@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Security - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Security</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Security</h2>
+        <p>60 refresher questions &mdash; CloudTrail, KMS, Parameter Store, Secrets Manager, ACM, CloudHSM, S3 security, Shield, WAF, Firewall Manager, Inspector, Config, GuardDuty, Security Hub &amp; Detective</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="CloudTrail" onclick="filterQ(this)">CloudTrail</button><button class="filter-btn" data-f="KMS" onclick="filterQ(this)">KMS</button><button class="filter-btn" data-f="Secrets" onclick="filterQ(this)">Secrets</button><button class="filter-btn" data-f="TLS and HSM" onclick="filterQ(this)">TLS and HSM</button><button class="filter-btn" data-f="S3 Security" onclick="filterQ(this)">S3 Security</button><button class="filter-btn" data-f="DDoS and WAF" onclick="filterQ(this)">DDoS and WAF</button><button class="filter-btn" data-f="Threat Detection" onclick="filterQ(this)">Threat Detection</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 CloudTrail -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudTrail" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudTrail</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>An S3 bucket was deleted overnight and nobody admits doing it. Where should you look first to find who made the call?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon CloudWatch metrics</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VPC Flow Logs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Inspector findings</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS CloudTrail event history</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS CloudTrail event history<br><br>
+<strong>How to think about it:</strong> Who did what, when, through which API = <b>CloudTrail</b>.<br><br>
+<strong>Why D is correct:</strong> CloudTrail records API calls from the console, CLI, SDKs and services, including the caller identity, so it shows who ran DeleteBucket.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon CloudWatch metrics</em> &mdash; Metrics are numeric time series; they do not record which principal issued an API call.<br><em>B) VPC Flow Logs</em> &mdash; Flow Logs capture IP traffic metadata for network interfaces, not AWS API calls or identities.<br><em>C) Amazon Inspector findings</em> &mdash; Inspector scans workloads for vulnerabilities and does not keep an audit trail of API activity.
+</div>
+</div>
+
+<!-- Q2 CloudTrail -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CloudTrail" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudTrail</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>Without creating any trail, how long can you view management events in the CloudTrail console?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">7 days</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">1 year</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">90 days</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">30 days</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> 90 days<br><br>
+<strong>How to think about it:</strong> Free event history = <b>90 days</b>; longer = trail to S3 (+ Athena).<br><br>
+<strong>Why C is correct:</strong> Event history keeps the last 90 days of management events at no cost; send a trail to S3 to keep them longer.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 7 days</em> &mdash; Seven days is far shorter than the built-in event history window.<br><em>B) 1 year</em> &mdash; There is no free one-year history; long-term retention needs a trail delivering to S3.<br><em>D) 30 days</em> &mdash; Thirty days undercounts it; event history covers a full 90 days.
+</div>
+</div>
+
+<!-- Q3 CloudTrail -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudTrail" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudTrail</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>A trail is created with default settings. Which activity will it NOT record unless you turn it on?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 object-level calls like GetObject</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudTrail CreateTrail calls</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">EC2 CreateSubnet calls</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">IAM AttachRolePolicy calls on roles</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> S3 object-level calls like GetObject<br><br>
+<strong>How to think about it:</strong> High-volume object/function activity = <b>data events</b>, off by default.<br><br>
+<strong>Why A is correct:</strong> Object-level S3 operations are data events, which are high volume and must be enabled explicitly on the trail.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) CloudTrail CreateTrail calls</em> &mdash; Setting up logging is itself a management event and is captured by default.<br><em>C) EC2 CreateSubnet calls</em> &mdash; Creating a subnet changes resource configuration, so it is a management event logged by default.<br><em>D) IAM AttachRolePolicy calls on roles</em> &mdash; Attaching a policy is a management event, which trails log by default.
+</div>
+</div>
+
+<!-- Q4 CloudTrail -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudTrail" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudTrail</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>Security wants to be told automatically when the account suddenly shows a burst of IAM write actions far above its normal pattern. Which feature is built for this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudTrail log file integrity validation</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Config conformance packs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 server access logging</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudTrail Insights</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> CloudTrail Insights<br><br>
+<strong>How to think about it:</strong> Unusual volume vs. a learned baseline of management events = <b>CloudTrail Insights</b>.<br><br>
+<strong>Why D is correct:</strong> Insights learns a baseline from management events and flags unusual write activity, sending findings to the console, S3 and EventBridge.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) CloudTrail log file integrity validation</em> &mdash; Integrity validation proves log files were not altered; it does not detect unusual activity.<br><em>B) AWS Config conformance packs</em> &mdash; Conformance packs evaluate resource configurations against rules, not API call volume anomalies.<br><em>C) S3 server access logging</em> &mdash; Server access logs record requests to one bucket and have no anomaly detection.
+</div>
+</div>
+
+<!-- Q5 CloudTrail -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudTrail" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudTrail</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>An auditor must be able to prove that CloudTrail log files in S3 were not modified or deleted after delivery. What should you enable?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">SSE-S3 default encryption</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">S3 Transfer Acceleration on the bucket</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CloudWatch Logs metric filters</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CloudTrail log file integrity validation</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> CloudTrail log file integrity validation<br><br>
+<strong>How to think about it:</strong> Prove logs untouched = <b>log file integrity validation</b> (hash + signed digest files).<br><br>
+<strong>Why D is correct:</strong> CloudTrail writes signed digest files with SHA-256 hashes so you can verify each log file is unchanged.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) SSE-S3 default encryption</em> &mdash; Encryption protects confidentiality at rest but cannot show whether a file was altered.<br><em>B) S3 Transfer Acceleration on the bucket</em> &mdash; Transfer Acceleration speeds long-distance uploads and provides no tamper evidence.<br><em>C) CloudWatch Logs metric filters</em> &mdash; Metric filters count patterns in log events; they do not validate file integrity.
+</div>
+</div>
+
+<!-- Q6 CloudTrail -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudTrail" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudTrail</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>Every account in an AWS Organization must send CloudTrail logs to one bucket, including accounts created next year. What is the simplest approach?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable AWS Config aggregation in a security account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create an organization trail in the management account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a trail in each account with a StackSet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Turn on S3 Cross-Region Replication for each account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Create an organization trail in the management account<br><br>
+<strong>How to think about it:</strong> One trail for all current and future member accounts = <b>organization trail</b> from the management account.<br><br>
+<strong>Why B is correct:</strong> An organization trail applies automatically to every member account, existing and new, and delivers to one central bucket.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable AWS Config aggregation in a security account</em> &mdash; Config aggregators combine configuration data, not CloudTrail API logs.<br><em>C) Create a trail in each account with a StackSet</em> &mdash; This works but needs ongoing maintenance and members could alter their own trails.<br><em>D) Turn on S3 Cross-Region Replication for each account</em> &mdash; Replication copies objects between buckets; it does not create trails in accounts.
+</div>
+</div>
+
+<!-- Q7 CloudTrail -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CloudTrail" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudTrail</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>A company wants a Lambda function to run within seconds whenever anyone calls DeleteTable on a DynamoDB table. Which design reacts fastest?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Hourly Athena queries over the trail bucket, then Lambda</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Trail delivery to S3 with an S3 event notification to Lambda</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">EventBridge rule on the CloudTrail DeleteTable event, targeting Lambda</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A daily AWS Config rule that checks for missing tables</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> EventBridge rule on the CloudTrail DeleteTable event, targeting Lambda<br><br>
+<strong>How to think about it:</strong> Fastest reaction to an API call = <b>EventBridge rule on the CloudTrail event</b>.<br><br>
+<strong>Why C is correct:</strong> EventBridge receives CloudTrail API events as they occur, so the rule invokes Lambda with the least delay.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Hourly Athena queries over the trail bucket, then Lambda</em> &mdash; Scheduled queries are slow and wasteful for a near real-time reaction.<br><em>B) Trail delivery to S3 with an S3 event notification to Lambda</em> &mdash; S3 delivery is batched every few minutes, so this adds noticeable delay.<br><em>D) A daily AWS Config rule that checks for missing tables</em> &mdash; Periodic Config evaluation is far too slow and would not identify the caller.
+</div>
+</div>
+
+<!-- Q8 CloudTrail -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudTrail" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudTrail</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>Operations wants an alarm when the number of denied API calls in the account exceeds 50 in five minutes. Which pipeline fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use IAM Access Analyzer to count the denied requests</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Trail to CloudWatch Logs, metric filter on AccessDenied, then an alarm</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable GuardDuty and alarm on every finding it raises</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Query CloudTrail event history from a weekly cron script</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Trail to CloudWatch Logs, metric filter on AccessDenied, then an alarm<br><br>
+<strong>How to think about it:</strong> Count a pattern in CloudTrail logs = <b>CloudWatch Logs metric filter + alarm</b>.<br><br>
+<strong>Why B is correct:</strong> Metric filters turn matching log events into a metric that a CloudWatch alarm can watch and notify on.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use IAM Access Analyzer to count the denied requests</em> &mdash; Access Analyzer reviews policies for external access; it does not count runtime denials.<br><em>C) Enable GuardDuty and alarm on every finding it raises</em> &mdash; GuardDuty findings are threat detections, not a simple count of denied calls.<br><em>D) Query CloudTrail event history from a weekly cron script</em> &mdash; A weekly script cannot alert within a five-minute window.
+</div>
+</div>
+
+<!-- Q9 CloudTrail -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudTrail" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudTrail</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>Accounts A and B must deliver their trails into a bucket owned by a central security account. What must be in place for delivery to work?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An IAM user in each source account with S3 full access</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VPC peering between the VPCs of all three accounts</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 Object Lock in compliance mode on the central bucket</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A central bucket policy letting CloudTrail write for A and B</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A central bucket policy letting CloudTrail write for A and B<br><br>
+<strong>How to think about it:</strong> Cross-account trail delivery = <b>bucket policy</b> in the central account allowing CloudTrail to write each account's prefix.<br><br>
+<strong>Why D is correct:</strong> The destination bucket policy must grant the CloudTrail service permission to put objects for each source account.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An IAM user in each source account with S3 full access</em> &mdash; CloudTrail delivers as a service principal, so IAM users are irrelevant to delivery.<br><em>B) VPC peering between the VPCs of all three accounts</em> &mdash; Log delivery goes through the CloudTrail service, not through customer VPC networking.<br><em>C) S3 Object Lock in compliance mode on the central bucket</em> &mdash; Object Lock protects stored logs but does not grant write permission to other accounts.
+</div>
+</div>
+
+<!-- Q10 KMS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="KMS" data-level="B">
+<div class="q-tags"><span class="q-tag">KMS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>Which statement about a KMS key created in us-east-1 is true?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It can be exported in plaintext for use in another Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It is automatically available in every Region of the account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It can be used only in us-east-1 unless it is a multi-Region key</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It can be used in any Region where the account has a VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> It can be used only in us-east-1 unless it is a multi-Region key<br><br>
+<strong>How to think about it:</strong> KMS keys are <b>regional</b>; use multi-Region keys to share key material.<br><br>
+<strong>Why C is correct:</strong> Standard KMS keys are bound to their Region; only multi-Region keys have related replicas elsewhere.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It can be exported in plaintext for use in another Region</em> &mdash; KMS never exposes symmetric key material in plaintext.<br><em>B) It is automatically available in every Region of the account</em> &mdash; Ordinary KMS keys do not replicate; each Region has its own keys.<br><em>D) It can be used in any Region where the account has a VPC</em> &mdash; Having a VPC in a Region does not extend a regional key to it.
+</div>
+</div>
+
+<!-- Q11 KMS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="KMS" data-level="B">
+<div class="q-tags"><span class="q-tag">KMS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>Partners outside AWS must encrypt files that only your application can decrypt, but they cannot call the KMS API. Which key type fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An AWS managed key such as aws/s3</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A symmetric KMS key with a broad key policy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An asymmetric KMS key, sharing its public key</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An AWS owned key used by the service</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An asymmetric KMS key, sharing its public key<br><br>
+<strong>How to think about it:</strong> Encrypt outside AWS with a downloadable public key = <b>asymmetric KMS key</b>.<br><br>
+<strong>Why C is correct:</strong> The public key can be downloaded and used anywhere, while the private key never leaves KMS for decryption.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An AWS managed key such as aws/s3</em> &mdash; AWS managed keys are symmetric and only usable by the owning AWS service.<br><em>B) A symmetric KMS key with a broad key policy</em> &mdash; Symmetric keys require calling KMS to encrypt, which the partners cannot do.<br><em>D) An AWS owned key used by the service</em> &mdash; AWS owned keys are not visible to or usable by customers at all.
+</div>
+</div>
+
+<!-- Q12 KMS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="KMS" data-level="B">
+<div class="q-tags"><span class="q-tag">KMS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>You need to control who can use a key, enable rotation and audit every use in CloudTrail. Which KMS key type gives you all of that?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS owned key</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Customer managed key</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">S3 bucket key</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS managed key</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Customer managed key<br><br>
+<strong>How to think about it:</strong> Full control (policy, rotation, enable/disable) = <b>customer managed key</b>.<br><br>
+<strong>Why B is correct:</strong> You create and own it, write its key policy, set rotation, disable it, and every use is logged in CloudTrail.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS owned key</em> &mdash; These live outside your account, so you cannot view, manage or audit them.<br><em>C) S3 bucket key</em> &mdash; A bucket key is an S3 cost optimisation for SSE-KMS, not a separate key type you manage.<br><em>D) AWS managed key</em> &mdash; You can view and audit it, but AWS controls its policy and rotation.
+</div>
+</div>
+
+<!-- Q13 KMS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="KMS" data-level="B">
+<div class="q-tags"><span class="q-tag">KMS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>How often are AWS managed keys such as aws/ebs rotated?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Every 90 days by default</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Automatically every year</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only when you call RotateKeyOnDemand</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Never; rotation must be done manually</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Automatically every year<br><br>
+<strong>How to think about it:</strong> AWS managed keys = <b>rotated every year</b>, automatically; you cannot change it.<br><br>
+<strong>Why B is correct:</strong> AWS rotates the key material of AWS managed keys yearly and you cannot change that schedule.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Every 90 days by default</em> &mdash; Ninety days is the shortest custom period for customer managed keys, not the AWS managed schedule.<br><em>C) Only when you call RotateKeyOnDemand</em> &mdash; On-demand rotation applies to customer managed keys, not AWS managed keys.<br><em>D) Never; rotation must be done manually</em> &mdash; Manual rotation is for keys whose rotation you control, not AWS managed keys.
+</div>
+</div>
+
+<!-- Q14 KMS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="KMS" data-level="B">
+<div class="q-tags"><span class="q-tag">KMS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>A regulation says your organisation must generate key material on its own HSMs and keep the original outside AWS. Which KMS key origin matches?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS_CLOUDHSM custom key store</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">EXTERNAL (imported key material)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS_KMS (default origin)</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An AWS managed key</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> EXTERNAL (imported key material)<br><br>
+<strong>How to think about it:</strong> Bring Your Own Key = origin <b>EXTERNAL</b> (imported key material).<br><br>
+<strong>Why B is correct:</strong> You import your own key material and remain responsible for its durability and a copy outside AWS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS_CLOUDHSM custom key store</em> &mdash; Here KMS generates the material inside your CloudHSM cluster; you do not import your own.<br><em>C) AWS_KMS (default origin)</em> &mdash; With the default origin, KMS generates the key material itself.<br><em>D) An AWS managed key</em> &mdash; AWS managed keys are created by AWS services and cannot use your material.
+</div>
+</div>
+
+<!-- Q15 KMS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="KMS" data-level="B">
+<div class="q-tags"><span class="q-tag">KMS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>What is the main reason to back a KMS key with a CloudHSM custom key store?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It makes the key available in every Region automatically</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It is the cheapest way to encrypt EBS volumes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It removes the need for any key policy</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Key material must stay in dedicated HSMs that you own and manage</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Key material must stay in dedicated HSMs that you own and manage<br><br>
+<strong>How to think about it:</strong> Need keys in <b>single-tenant HSMs you control</b> but still use KMS integrations = <b>CloudHSM custom key store</b>.<br><br>
+<strong>Why D is correct:</strong> The custom key store keeps material in your CloudHSM cluster while services still use the normal KMS API.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It makes the key available in every Region automatically</em> &mdash; A custom key store is tied to one cluster in one Region.<br><em>B) It is the cheapest way to encrypt EBS volumes</em> &mdash; Running a CloudHSM cluster adds cost; it is chosen for control, not price.<br><em>C) It removes the need for any key policy</em> &mdash; Key policies still control access to keys in a custom key store.
+</div>
+</div>
+
+<!-- Q16 KMS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="KMS" data-level="A">
+<div class="q-tags"><span class="q-tag">KMS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>A DynamoDB global table spans us-east-1 and eu-west-1. Data is encrypted client-side and must be decrypted in either Region without cross-Region KMS calls. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A KMS multi-Region primary key with a replica in the other Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One single-Region key called remotely from both Regions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An AWS managed key for DynamoDB in each Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Two separate customer managed keys, one per Region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A KMS multi-Region primary key with a replica in the other Region<br><br>
+<strong>How to think about it:</strong> Same key ID and material in several Regions = <b>KMS multi-Region keys</b>.<br><br>
+<strong>Why A is correct:</strong> Replicas share the same key ID and material, so ciphertext from one Region decrypts locally in the other.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) One single-Region key called remotely from both Regions</em> &mdash; That requires cross-Region API calls and fails if the key's Region is down.<br><em>C) An AWS managed key for DynamoDB in each Region</em> &mdash; AWS managed keys are separate per Region and cannot be used client-side.<br><em>D) Two separate customer managed keys, one per Region</em> &mdash; Different keys have different material, so data would need re-encryption to cross Regions.
+</div>
+</div>
+
+<!-- Q17 KMS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="KMS" data-level="A">
+<div class="q-tags"><span class="q-tag">KMS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>A company requires that keys be rotated every 180 days, with older versions kept so existing data can still be decrypted. What is the lowest-effort way?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Customer managed key, automatic rotation every 180 days</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use an AWS owned key and request rotation from Support</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use an AWS managed key and change its rotation period</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a new key every 180 days and re-encrypt all data</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Customer managed key, automatic rotation every 180 days<br><br>
+<strong>How to think about it:</strong> Customer managed key rotation period = <b>90 to 2560 days</b>, old material retained.<br><br>
+<strong>Why A is correct:</strong> Customer managed keys accept a custom rotation period, and KMS keeps old key material to decrypt older data.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Use an AWS owned key and request rotation from Support</em> &mdash; You have no control over AWS owned keys or their rotation.<br><em>C) Use an AWS managed key and change its rotation period</em> &mdash; AWS managed key rotation is fixed at one year and cannot be changed.<br><em>D) Create a new key every 180 days and re-encrypt all data</em> &mdash; This works but is heavy manual effort that built-in rotation already avoids.
+</div>
+</div>
+
+<!-- Q18 KMS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="KMS" data-level="A">
+<div class="q-tags"><span class="q-tag">KMS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>An EBS snapshot encrypted with a customer managed key must be shared with another account. Besides sharing the snapshot, what else is required?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Re-encrypt the snapshot with the aws/ebs AWS managed key</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Grant the other account use of the key in its key policy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Export the key material to the other account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Nothing; sharing the snapshot also shares the key</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Grant the other account use of the key in its key policy<br><br>
+<strong>How to think about it:</strong> Sharing encrypted data cross-account = share the resource <b>and</b> grant the <b>KMS key policy</b> to that account.<br><br>
+<strong>Why B is correct:</strong> The target account must be able to call KMS on the key to decrypt the snapshot; the key policy grants this.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Re-encrypt the snapshot with the aws/ebs AWS managed key</em> &mdash; AWS managed keys cannot be shared, so snapshots using them cannot be shared.<br><em>C) Export the key material to the other account</em> &mdash; KMS key material cannot be exported; access is granted through policy instead.<br><em>D) Nothing; sharing the snapshot also shares the key</em> &mdash; Sharing a snapshot does not grant any access to the KMS key.
+</div>
+</div>
+
+<!-- Q19 Secrets -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Secrets" data-level="B">
+<div class="q-tags"><span class="q-tag">Secrets</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>Which service automatically rotates an Amazon RDS database password on a schedule with AWS-provided rotation logic?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">IAM credential report</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">SSM Parameter Store SecureString</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Secrets Manager</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS KMS automatic key rotation</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS Secrets Manager<br><br>
+<strong>How to think about it:</strong> Built-in rotation for RDS/Redshift/DocumentDB = <b>Secrets Manager</b>.<br><br>
+<strong>Why C is correct:</strong> Secrets Manager rotates secrets on a schedule using Lambda-based rotation that AWS supplies for RDS and other databases.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) IAM credential report</em> &mdash; The credential report lists IAM user credential status and changes nothing.<br><em>B) SSM Parameter Store SecureString</em> &mdash; Parameter Store has no built-in rotation; you would need to build it yourself.<br><em>D) AWS KMS automatic key rotation</em> &mdash; KMS rotates encryption keys, not database passwords.
+</div>
+</div>
+
+<!-- Q20 Secrets -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Secrets" data-level="B">
+<div class="q-tags"><span class="q-tag">Secrets</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>Which statement about SSM Parameter Store standard parameters is correct?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">They are free and hold values up to 4 KB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">They support expiration policies</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">They hold values up to 8 KB</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">They must always be encrypted with KMS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> They are free and hold values up to 4 KB<br><br>
+<strong>How to think about it:</strong> Standard tier = <b>free, 4 KB, 10,000</b> per Region; advanced = 8 KB, 100,000, policies, paid.<br><br>
+<strong>Why A is correct:</strong> Standard parameters cost nothing to store and have a 4 KB value limit.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) They support expiration policies</em> &mdash; Parameter policies such as expiration require the advanced tier.<br><em>C) They hold values up to 8 KB</em> &mdash; The 8 KB limit applies to advanced parameters.<br><em>D) They must always be encrypted with KMS</em> &mdash; Encryption is optional in Parameter Store; String parameters are plain text.
+</div>
+</div>
+
+<!-- Q21 Secrets -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Secrets" data-level="B">
+<div class="q-tags"><span class="q-tag">Secrets</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>A parameter holding a temporary token must be deleted automatically after 30 days, with an EventBridge notification beforehand. What is needed?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Secrets Manager rotation schedule of 30 days</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A standard parameter with a lifecycle rule attached</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudFormation DeletionPolicy on the parameter</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Advanced parameter with expiration policies</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Advanced parameter with expiration policies<br><br>
+<strong>How to think about it:</strong> TTL on a parameter = <b>advanced tier + parameter policy</b> (Expiration, ExpirationNotification).<br><br>
+<strong>Why D is correct:</strong> Parameter policies, available only on advanced parameters, can delete a value and emit EventBridge events before it expires.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Secrets Manager rotation schedule of 30 days</em> &mdash; Rotation replaces the value; it does not delete the parameter.<br><em>B) A standard parameter with a lifecycle rule attached</em> &mdash; Standard parameters do not support policies, and lifecycle rules belong to S3.<br><em>C) A CloudFormation DeletionPolicy on the parameter</em> &mdash; DeletionPolicy controls what happens on stack deletion, not time-based expiry.
+</div>
+</div>
+
+<!-- Q22 Secrets -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Secrets" data-level="B">
+<div class="q-tags"><span class="q-tag">Secrets</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>Lambda functions for dev and prod read settings stored under /myapp/dev/ and /myapp/prod/. Which API returns all parameters under one path in a single call?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">DescribeParameters</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">GetSecretValue</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">ListSecrets</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">GetParametersByPath</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> GetParametersByPath<br><br>
+<strong>How to think about it:</strong> Hierarchical parameters = <b>GetParametersByPath</b>.<br><br>
+<strong>Why D is correct:</strong> It returns every parameter below a hierarchy path, optionally recursively, so each environment reads its own branch.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) DescribeParameters</em> &mdash; It lists parameter metadata but does not return the values.<br><em>B) GetSecretValue</em> &mdash; That is a Secrets Manager API for one secret, not a parameter path.<br><em>C) ListSecrets</em> &mdash; That lists Secrets Manager secrets, not Parameter Store paths.
+</div>
+</div>
+
+<!-- Q23 Secrets -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Secrets" data-level="B">
+<div class="q-tags"><span class="q-tag">Secrets</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>Which statement correctly compares Secrets Manager and Parameter Store?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only Parameter Store integrates with AWS CloudFormation</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Secrets Manager always uses KMS; Parameter Store may not</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Secrets Manager is free; Parameter Store charges per value</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Parameter Store has native rotation; Secrets Manager does not</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Secrets Manager always uses KMS; Parameter Store may not<br><br>
+<strong>How to think about it:</strong> Secrets Manager = <b>rotation built in, KMS always</b>; Parameter Store = cheaper, KMS optional.<br><br>
+<strong>Why B is correct:</strong> Every secret is KMS-encrypted, while Parameter Store offers both plain String and SecureString types.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only Parameter Store integrates with AWS CloudFormation</em> &mdash; Both services integrate with CloudFormation.<br><em>C) Secrets Manager is free; Parameter Store charges per value</em> &mdash; Secrets Manager charges per secret, while standard parameters are free.<br><em>D) Parameter Store has native rotation; Secrets Manager does not</em> &mdash; It is the reverse: Secrets Manager has rotation built in.
+</div>
+</div>
+
+<!-- Q24 Secrets -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Secrets" data-level="A">
+<div class="q-tags"><span class="q-tag">Secrets</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>A secret in a security account must be read by a role in a dev account. The secret uses a customer managed key. Which two policies must allow the dev role?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only the secret's own resource policy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Secret resource policy plus the KMS key policy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A VPC endpoint policy and a security group inbound rule</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only an SCP in the dev account allowing secretsmanager:*</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Secret resource policy plus the KMS key policy<br><br>
+<strong>How to think about it:</strong> Cross-account secret = <b>secret resource policy</b> (GetSecretValue) + <b>KMS key policy</b> (Decrypt).<br><br>
+<strong>Why B is correct:</strong> The caller must be allowed to read the secret and to decrypt it with the key, so both resource policies are needed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only the secret's own resource policy</em> &mdash; Without kms:Decrypt on the key, the value cannot be decrypted.<br><em>C) A VPC endpoint policy and a security group inbound rule</em> &mdash; Network controls do not grant cross-account permissions to a secret or key.<br><em>D) Only an SCP in the dev account allowing secretsmanager:*</em> &mdash; SCPs only limit permissions; they never grant access to another account's resources.
+</div>
+</div>
+
+<!-- Q25 Secrets -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Secrets" data-level="A">
+<div class="q-tags"><span class="q-tag">Secrets</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>A team must keep a value in Parameter Store for its simple API but wants the password rotated every 30 days. What design achieves this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">EventBridge schedule running a Lambda that rotates and saves it</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Set an advanced-tier Expiration policy of 30 days on it</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Turn on automatic rotation for the SecureString parameter</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable KMS key rotation on the key encrypting the parameter</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> EventBridge schedule running a Lambda that rotates and saves it<br><br>
+<strong>How to think about it:</strong> Parameter Store rotation = <b>build it yourself</b>: EventBridge schedule + Lambda.<br><br>
+<strong>Why A is correct:</strong> Parameter Store has no rotation, so a scheduled Lambda must change the database password and store the new value.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Set an advanced-tier Expiration policy of 30 days on it</em> &mdash; Expiration deletes the parameter; it does not generate a new password.<br><em>C) Turn on automatic rotation for the SecureString parameter</em> &mdash; Parameter Store parameters have no rotation setting.<br><em>D) Enable KMS key rotation on the key encrypting the parameter</em> &mdash; Rotating the KMS key changes encryption material, not the stored password.
+</div>
+</div>
+
+<!-- Q26 TLS and HSM -->
+<div class="question" data-type="mc" data-answer="3" data-topic="TLS and HSM" data-level="B">
+<div class="q-tags"><span class="q-tag">TLS and HSM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>In a TLS handshake, why is asymmetric encryption used only at the start?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Asymmetric keys expire after the first packet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Symmetric encryption is required by DNSSEC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The server's private key is sent to the client after the handshake</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It is costly, so it only protects the exchange of a symmetric session key</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> It is costly, so it only protects the exchange of a symmetric session key<br><br>
+<strong>How to think about it:</strong> TLS = <b>asymmetric to agree a key</b>, then cheap <b>symmetric</b> for the data.<br><br>
+<strong>Why D is correct:</strong> Public-key operations are expensive, so they secure the key exchange and then fast symmetric encryption carries the data.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Asymmetric keys expire after the first packet</em> &mdash; Keys do not expire per packet; the switch is about performance.<br><em>B) Symmetric encryption is required by DNSSEC</em> &mdash; DNSSEC signs DNS records and has nothing to do with the TLS session cipher.<br><em>C) The server's private key is sent to the client after the handshake</em> &mdash; The private key never leaves the server.
+</div>
+</div>
+
+<!-- Q27 TLS and HSM -->
+<div class="question" data-type="mc" data-answer="0" data-topic="TLS and HSM" data-level="B">
+<div class="q-tags"><span class="q-tag">TLS and HSM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>One ALB must serve HTTPS for several domains, each with its own certificate. What makes this possible?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Server Name Indication (SNI) on the HTTPS listener</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">DNSSEC signing enabled on each Route 53 hosted zone</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A separate Elastic IP per domain on the ALB</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Classic Load Balancer with multiple listeners on port 443</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Server Name Indication (SNI) on the HTTPS listener<br><br>
+<strong>How to think about it:</strong> Many certs on one listener = <b>SNI</b> (ALB, NLB, CloudFront; not CLB).<br><br>
+<strong>Why A is correct:</strong> SNI lets the load balancer pick the matching certificate per hostname from several on one listener.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) DNSSEC signing enabled on each Route 53 hosted zone</em> &mdash; DNSSEC protects DNS answers; it does not choose TLS certificates.<br><em>C) A separate Elastic IP per domain on the ALB</em> &mdash; ALBs do not use Elastic IPs, and SNI removes the need for an address per certificate.<br><em>D) A Classic Load Balancer with multiple listeners on port 443</em> &mdash; CLB does not support SNI, so it cannot serve several certificates on one port.
+</div>
+</div>
+
+<!-- Q28 TLS and HSM -->
+<div class="question" data-type="mc" data-answer="0" data-topic="TLS and HSM" data-level="B">
+<div class="q-tags"><span class="q-tag">TLS and HSM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>What is a key benefit of using public certificates issued by AWS Certificate Manager on an ALB?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">ACM renews them automatically at no certificate cost</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">They need no domain validation</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">They can be installed directly on any EC2 operating system</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">They are valid in every Region once issued</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> ACM renews them automatically at no certificate cost<br><br>
+<strong>How to think about it:</strong> ACM-issued public certs = <b>free and auto-renewed</b>; imported certs = you renew.<br><br>
+<strong>Why A is correct:</strong> Public certificates ACM issues for integrated services are free and renewed by ACM.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) They need no domain validation</em> &mdash; ACM must validate domain ownership by DNS or email before issuing.<br><em>C) They can be installed directly on any EC2 operating system</em> &mdash; ACM-issued certificates are meant for integrated services such as ELB, CloudFront and API Gateway.<br><em>D) They are valid in every Region once issued</em> &mdash; ACM is regional; you need a certificate in each Region you use.
+</div>
+</div>
+
+<!-- Q29 TLS and HSM -->
+<div class="question" data-type="mc" data-answer="3" data-topic="TLS and HSM" data-level="B">
+<div class="q-tags"><span class="q-tag">TLS and HSM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>A certificate bought from a third-party CA was imported into ACM. What happens when it nears expiry?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The ALB keeps serving it after expiry without warnings</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">ACM converts it into an ACM-issued certificate</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">ACM renews it automatically with the original CA</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">You must obtain a new certificate and re-import it</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> You must obtain a new certificate and re-import it<br><br>
+<strong>How to think about it:</strong> Imported cert = <b>you renew and re-import</b>.<br><br>
+<strong>Why D is correct:</strong> ACM cannot renew certificates it did not issue, though it can warn you before expiry.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The ALB keeps serving it after expiry without warnings</em> &mdash; Browsers reject expired certificates, so this would break clients.<br><em>B) ACM converts it into an ACM-issued certificate</em> &mdash; ACM never converts imported certificates into ones it manages.<br><em>C) ACM renews it automatically with the original CA</em> &mdash; ACM has no relationship with the third-party CA, so it cannot renew.
+</div>
+</div>
+
+<!-- Q30 TLS and HSM -->
+<div class="question" data-type="mc" data-answer="0" data-topic="TLS and HSM" data-level="B">
+<div class="q-tags"><span class="q-tag">TLS and HSM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>What is the key difference between AWS KMS and AWS CloudHSM?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudHSM is single-tenant and you manage keys and users</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">KMS access is controlled by crypto users on the HSM</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CloudHSM supports only symmetric keys</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">KMS keys never leave a single AZ, while CloudHSM is global</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> CloudHSM is single-tenant and you manage keys and users<br><br>
+<strong>How to think about it:</strong> KMS = multi-tenant managed service; <b>CloudHSM = single-tenant hardware, you manage keys and users</b>.<br><br>
+<strong>Why A is correct:</strong> AWS runs the hardware, but you control the keys and crypto users, unlike the multi-tenant managed KMS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) KMS access is controlled by crypto users on the HSM</em> &mdash; KMS access is governed by IAM and key policies, not HSM users.<br><em>C) CloudHSM supports only symmetric keys</em> &mdash; CloudHSM supports symmetric and asymmetric keys, including TLS keys.<br><em>D) KMS keys never leave a single AZ, while CloudHSM is global</em> &mdash; KMS is a regional managed service and CloudHSM clusters live in your VPC within a Region.
+</div>
+</div>
+
+<!-- Q31 TLS and HSM -->
+<div class="question" data-type="mc" data-answer="0" data-topic="TLS and HSM" data-level="B">
+<div class="q-tags"><span class="q-tag">TLS and HSM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>How do you make a CloudHSM deployment highly available?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add HSMs to the cluster in more than one Availability Zone</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Take daily snapshots of the HSM to S3</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable Multi-AZ on the CloudHSM service setting</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use KMS multi-Region keys in front of CloudHSM</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Add HSMs to the cluster in more than one Availability Zone<br><br>
+<strong>How to think about it:</strong> CloudHSM HA = <b>multiple HSMs in different AZs</b> in one cluster.<br><br>
+<strong>Why A is correct:</strong> A cluster synchronises keys across its HSMs, so spreading them across AZs survives an AZ failure.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Take daily snapshots of the HSM to S3</em> &mdash; Backups help recovery, but they do not keep the cluster available during a failure.<br><em>C) Enable Multi-AZ on the CloudHSM service setting</em> &mdash; There is no single Multi-AZ switch; you add HSMs in different AZs yourself.<br><em>D) Use KMS multi-Region keys in front of CloudHSM</em> &mdash; Multi-Region keys are a KMS feature and do not add HSMs to a cluster.
+</div>
+</div>
+
+<!-- Q32 TLS and HSM -->
+<div class="question" data-type="mc" data-answer="0" data-topic="TLS and HSM" data-level="A">
+<div class="q-tags"><span class="q-tag">TLS and HSM</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>A company terminates TLS on its own EC2 web servers behind an NLB but wants the private key never to leave tamper-resistant hardware and to reduce CPU load. What fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use CloudHSM for SSL/TLS offload from NGINX, Apache or IIS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Import the certificate into ACM and attach it to the NLB</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Store the private key in Parameter Store and load it at boot</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Encrypt the key file on disk with an AWS managed KMS key</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Use CloudHSM for SSL/TLS offload from NGINX, Apache or IIS<br><br>
+<strong>How to think about it:</strong> Private key stays in hardware + TLS offload on web servers = <b>CloudHSM SSL/TLS offload</b>.<br><br>
+<strong>Why A is correct:</strong> The web server sends key operations to CloudHSM, so the private key stays in the HSM and CPU work is reduced.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Import the certificate into ACM and attach it to the NLB</em> &mdash; That moves termination to the NLB, which the company does not want, and ACM does not expose hardware keys to EC2.<br><em>C) Store the private key in Parameter Store and load it at boot</em> &mdash; The key would sit in instance memory and the instance still does all the crypto work.<br><em>D) Encrypt the key file on disk with an AWS managed KMS key</em> &mdash; Disk encryption does not keep the key out of server memory during use.
+</div>
+</div>
+
+<!-- Q33 TLS and HSM -->
+<div class="question" data-type="mc" data-answer="3" data-topic="TLS and HSM" data-level="A">
+<div class="q-tags"><span class="q-tag">TLS and HSM</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>A global app runs ALBs in us-east-1 and ap-southeast-2, both serving app.example.com over HTTPS. How should certificates be handled with ACM?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Request once in us-east-1 and copy it to other Regions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create the certificate in IAM so it is global</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use one certificate and let the ALBs share it through peering</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Request an ACM certificate for the domain in each Region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Request an ACM certificate for the domain in each Region<br><br>
+<strong>How to think about it:</strong> ACM is <b>regional</b>: request a cert <b>in each Region</b> with an ALB.<br><br>
+<strong>Why D is correct:</strong> ACM certificates are regional resources, so each Region's ALB needs its own certificate.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Request once in us-east-1 and copy it to other Regions</em> &mdash; ACM certificates cannot be copied across Regions.<br><em>B) Create the certificate in IAM so it is global</em> &mdash; IAM certificate storage exists but is a legacy, manual approach; ACM per Region is the recommended path.<br><em>C) Use one certificate and let the ALBs share it through peering</em> &mdash; Network connectivity does not let a load balancer use another Region's certificate.
+</div>
+</div>
+
+<!-- Q34 TLS and HSM -->
+<div class="question" data-type="mc" data-answer="0" data-topic="TLS and HSM" data-level="A">
+<div class="q-tags"><span class="q-tag">TLS and HSM</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>An RDS for MySQL database must accept logins with short-lived IAM tokens instead of stored passwords, and traffic must be encrypted. What should you configure?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">IAM database authentication plus required TLS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Store the master password in an AWS managed KMS key</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Track queries with CloudTrail data events</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable Transparent Data Encryption on the instance</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> IAM database authentication plus required TLS<br><br>
+<strong>How to think about it:</strong> RDS MySQL/PostgreSQL/MariaDB token logins = <b>IAM database authentication</b> (+ TLS).<br><br>
+<strong>Why A is correct:</strong> IAM auth issues short-lived tokens for supported engines, and TLS encrypts the session in transit.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Store the master password in an AWS managed KMS key</em> &mdash; KMS keys encrypt data; they do not store or replace database passwords.<br><em>C) Track queries with CloudTrail data events</em> &mdash; CloudTrail does not log SQL queries inside RDS.<br><em>D) Enable Transparent Data Encryption on the instance</em> &mdash; TDE is for Oracle and SQL Server at-rest encryption, not IAM logins.
+</div>
+</div>
+
+<!-- Q35 S3 Security -->
+<div class="question" data-type="mc" data-answer="1" data-topic="S3 Security" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Security</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>A bucket policy must reject any request that is not sent over HTTPS. Which condition key does this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">aws:SourceVpce</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">aws:SecureTransport</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">s3:x-amz-server-side-encryption</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">aws:MultiFactorAuthPresent</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> aws:SecureTransport<br><br>
+<strong>How to think about it:</strong> Force HTTPS on S3 = deny when <b>aws:SecureTransport</b> is false.<br><br>
+<strong>Why B is correct:</strong> Denying requests where this key is false blocks plain HTTP access to the bucket.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) aws:SourceVpce</em> &mdash; This restricts access to particular VPC endpoints, not the protocol.<br><em>C) s3:x-amz-server-side-encryption</em> &mdash; This checks the requested encryption at rest, not TLS in transit.<br><em>D) aws:MultiFactorAuthPresent</em> &mdash; This checks whether MFA was used, not whether HTTPS was used.
+</div>
+</div>
+
+<!-- Q36 S3 Security -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3 Security" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Security</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Uploads with SSE-KMS fail for a role that has s3:PutObject. What permission is most likely missing?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">kms:GenerateDataKey on the KMS key</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">kms:CreateKey in the account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">iam:PassRole for the S3 service</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">s3:GetBucketPolicy on the bucket</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> kms:GenerateDataKey on the KMS key<br><br>
+<strong>How to think about it:</strong> SSE-KMS upload needs <b>kms:GenerateDataKey</b> on the key.<br><br>
+<strong>Why A is correct:</strong> S3 asks KMS for a data key on each upload, so the caller needs this permission on the key.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) kms:CreateKey in the account</em> &mdash; The key already exists; uploads only need to use it.<br><em>C) iam:PassRole for the S3 service</em> &mdash; Uploading objects does not pass an IAM role to S3.<br><em>D) s3:GetBucketPolicy on the bucket</em> &mdash; Reading the bucket policy is not part of uploading an object.
+</div>
+</div>
+
+<!-- Q37 S3 Security -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S3 Security" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Security</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>A web app lets a signed-in user download one private S3 object for the next 10 minutes without AWS credentials. What should it generate?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A pre-signed URL that expires in 10 minutes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An S3 Access Point for each download</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A public bucket policy for that object prefix</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An IAM user per customer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A pre-signed URL that expires in 10 minutes<br><br>
+<strong>How to think about it:</strong> Temporary access to one object = <b>pre-signed URL</b> (signer's permissions, set expiry).<br><br>
+<strong>Why A is correct:</strong> The URL carries the signer's permission for that object and stops working after the expiry time.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An S3 Access Point for each download</em> &mdash; Access points manage shared access policies; they do not give anonymous time-limited links.<br><em>C) A public bucket policy for that object prefix</em> &mdash; That would expose the object to everyone with no time limit.<br><em>D) An IAM user per customer</em> &mdash; Creating IAM users for app customers does not scale and is not temporary.
+</div>
+</div>
+
+<!-- Q38 S3 Security -->
+<div class="question" data-type="mc" data-answer="2" data-topic="S3 Security" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Security</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>Finance, sales and analytics teams share one bucket, and the bucket policy has become huge. What simplifies permissions per team?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Split the bucket policy into several bucket policies</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use Multi-Region Access Points per team</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create an S3 Access Point per team, each with its own policy</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable S3 Object Lock on each prefix</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Create an S3 Access Point per team, each with its own policy<br><br>
+<strong>How to think about it:</strong> Per-team policy + own DNS name on one bucket = <b>S3 Access Points</b>.<br><br>
+<strong>Why C is correct:</strong> Each access point has its own name and policy scoped to a prefix, keeping the bucket policy small.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Split the bucket policy into several bucket policies</em> &mdash; A bucket can have only one bucket policy.<br><em>B) Use Multi-Region Access Points per team</em> &mdash; Multi-Region Access Points route across Regions; they are not for per-team delegation.<br><em>D) Enable S3 Object Lock on each prefix</em> &mdash; Object Lock enforces retention; it does not delegate access per team.
+</div>
+</div>
+
+<!-- Q39 S3 Security -->
+<div class="question" data-type="mc" data-answer="1" data-topic="S3 Security" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Security</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Compliance requires that log objects cannot be deleted or overwritten by anyone, including root, for seven years. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">MFA Delete enabled on a versioned bucket</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Object Lock, compliance mode, 7-year retention</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Object Lock in governance mode</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A bucket policy denying s3:DeleteObject</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Object Lock, compliance mode, 7-year retention<br><br>
+<strong>How to think about it:</strong> WORM that even root cannot bypass = <b>Object Lock compliance mode</b>.<br><br>
+<strong>Why B is correct:</strong> Compliance mode prevents any user, including root, from deleting or shortening retention until it expires.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) MFA Delete enabled on a versioned bucket</em> &mdash; MFA Delete adds a step for deletes but the root user can still remove versions.<br><em>C) Object Lock in governance mode</em> &mdash; Users with special permission can bypass governance mode, so it does not meet the requirement.<br><em>D) A bucket policy denying s3:DeleteObject</em> &mdash; Policies can be edited by administrators, so this is not tamper-proof.
+</div>
+</div>
+
+<!-- Q40 S3 Security -->
+<div class="question" data-type="mc" data-answer="2" data-topic="S3 Security" data-level="B">
+<div class="q-tags"><span class="q-tag">S3 Security</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>A bucket must only be readable by accounts that belong to your AWS Organization, now and in future. Which condition is simplest?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">aws:RequestedRegion set to the home Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A list of every account ID in the Principal element</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">aws:PrincipalOrgID in the bucket policy</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">aws:SourceIp with each office's IP range</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> aws:PrincipalOrgID in the bucket policy<br><br>
+<strong>How to think about it:</strong> Limit a resource policy to org members = <b>aws:PrincipalOrgID</b>.<br><br>
+<strong>Why C is correct:</strong> This key matches any principal from accounts in the organization, so new accounts are covered automatically.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) aws:RequestedRegion set to the home Region</em> &mdash; This limits which Region API calls target, not who the caller is.<br><em>B) A list of every account ID in the Principal element</em> &mdash; This works but needs editing whenever accounts are added.<br><em>D) aws:SourceIp with each office's IP range</em> &mdash; IP ranges do not identify accounts and break for users working elsewhere.
+</div>
+</div>
+
+<!-- Q41 S3 Security -->
+<div class="question" data-type="mc" data-answer="3" data-topic="S3 Security" data-level="A">
+<div class="q-tags"><span class="q-tag">S3 Security</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>Private EC2 instances reach S3 through a gateway endpoint. The bucket must refuse any access that does not come through that endpoint. What should the bucket policy check?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Require s3:x-amz-acl to be private</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Allow aws:SourceIp equal to the instances' private IPs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Require aws:SecureTransport</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Deny requests unless aws:SourceVpce equals the endpoint ID</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Deny requests unless aws:SourceVpce equals the endpoint ID<br><br>
+<strong>How to think about it:</strong> Only via my endpoint = <b>aws:SourceVpce</b> (or aws:SourceVpc for the whole VPC).<br><br>
+<strong>Why D is correct:</strong> Requests through a VPC endpoint carry its ID, so this denies anything arriving another way.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Require s3:x-amz-acl to be private</em> &mdash; This checks object ACL headers, not where the request came from.<br><em>B) Allow aws:SourceIp equal to the instances' private IPs</em> &mdash; aws:SourceIp sees public IPs; private addresses through an endpoint do not match it.<br><em>C) Require aws:SecureTransport</em> &mdash; This forces HTTPS but does not restrict the network path.
+</div>
+</div>
+
+<!-- Q42 S3 Security -->
+<div class="question" data-type="mc" data-answer="2" data-topic="S3 Security" data-level="A">
+<div class="q-tags"><span class="q-tag">S3 Security</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>Applications in three Regions need one S3 endpoint that routes to the nearest bucket copy and can shift traffic away from a Region within minutes. What fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">S3 Transfer Acceleration on one bucket</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Route 53 latency records pointing to each bucket endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An S3 Multi-Region Access Point with replication between the buckets</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A VPC-origin S3 Access Point in each Region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An S3 Multi-Region Access Point with replication between the buckets<br><br>
+<strong>How to think about it:</strong> One global S3 endpoint + latency routing + failover controls = <b>Multi-Region Access Point</b>.<br><br>
+<strong>Why C is correct:</strong> It gives one global endpoint, routes to the lowest-latency bucket, and failover controls move traffic between Regions.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) S3 Transfer Acceleration on one bucket</em> &mdash; Acceleration speeds uploads to a single bucket; it does not route across Regions.<br><em>B) Route 53 latency records pointing to each bucket endpoint</em> &mdash; S3 requests are signed for a specific bucket and Region, so DNS alone cannot transparently switch buckets.<br><em>D) A VPC-origin S3 Access Point in each Region</em> &mdash; Regional access points do not provide one global routed endpoint.
+</div>
+</div>
+
+<!-- Q43 S3 Security -->
+<div class="question" data-type="mc" data-answer="1" data-topic="S3 Security" data-level="A">
+<div class="q-tags"><span class="q-tag">S3 Security</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>An S3 bucket is accessed through an access point restricted to VPC origin. Requests from an instance in that VPC are denied. Which item is most likely misconfigured?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Versioning is not enabled on the bucket</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The VPC endpoint policy omits the bucket or access point</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The access point needs an Elastic IP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The bucket does not have S3 Transfer Acceleration on</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The VPC endpoint policy omits the bucket or access point<br><br>
+<strong>How to think about it:</strong> VPC-origin access point = <b>endpoint policy + access point policy + bucket policy</b> must all allow.<br><br>
+<strong>Why B is correct:</strong> Traffic passes through the VPC endpoint, whose policy must permit both the access point and the target bucket.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Versioning is not enabled on the bucket</em> &mdash; Versioning keeps object history but does not affect access point authorisation.<br><em>C) The access point needs an Elastic IP</em> &mdash; Access points are reached by DNS name and do not use Elastic IPs.<br><em>D) The bucket does not have S3 Transfer Acceleration on</em> &mdash; Acceleration is a performance option and has no effect on permissions.
+</div>
+</div>
+
+<!-- Q44 DDoS and WAF -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DDoS and WAF" data-level="B">
+<div class="q-tags"><span class="q-tag">DDoS and WAF</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>Which protection does every AWS customer get automatically at no extra cost?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS WAF managed rules</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Firewall Manager</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Shield Standard</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Shield Advanced</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS Shield Standard<br><br>
+<strong>How to think about it:</strong> Free, always on, layer 3/4 = <b>Shield Standard</b>.<br><br>
+<strong>Why C is correct:</strong> It is automatically enabled for all customers and defends against common layer 3 and 4 attacks such as SYN floods.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS WAF managed rules</em> &mdash; WAF and its managed rules are configured and billed separately.<br><em>B) AWS Firewall Manager</em> &mdash; Firewall Manager is a paid policy service that needs AWS Organizations.<br><em>D) AWS Shield Advanced</em> &mdash; Advanced is a paid subscription with extra protection and response team access.
+</div>
+</div>
+
+<!-- Q45 DDoS and WAF -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DDoS and WAF" data-level="B">
+<div class="q-tags"><span class="q-tag">DDoS and WAF</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>What do you get with AWS Shield Advanced that Shield Standard does not provide?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Basic SYN flood protection for CloudFront edges</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Vulnerability scanning of container images</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Automatic patching of EC2 operating systems</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Shield Response Team access and DDoS cost protection</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Shield Response Team access and DDoS cost protection<br><br>
+<strong>How to think about it:</strong> Shield Advanced = <b>24/7 Shield Response Team</b> + DDoS cost protection.<br><br>
+<strong>Why D is correct:</strong> Advanced adds expert response help, detailed reporting and credits for usage spikes caused by attacks.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Basic SYN flood protection for CloudFront edges</em> &mdash; That baseline protection is already part of Shield Standard.<br><em>B) Vulnerability scanning of container images</em> &mdash; Image scanning is done by Amazon Inspector.<br><em>C) Automatic patching of EC2 operating systems</em> &mdash; Patching is a Systems Manager task, not a Shield feature.
+</div>
+</div>
+
+<!-- Q46 DDoS and WAF -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DDoS and WAF" data-level="B">
+<div class="q-tags"><span class="q-tag">DDoS and WAF</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>An application suffers SQL injection and cross-site scripting attempts. Which service filters these at layer 7?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Network ACLs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS WAF</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon GuardDuty</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Shield Standard</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS WAF<br><br>
+<strong>How to think about it:</strong> Layer 7 exploits (SQLi, XSS) = <b>AWS WAF</b>.<br><br>
+<strong>Why B is correct:</strong> WAF inspects HTTP requests with web ACL rules that block SQL injection, XSS and similar exploits.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Network ACLs</em> &mdash; NACLs filter by IP, port and protocol and cannot read HTTP content.<br><em>C) Amazon GuardDuty</em> &mdash; GuardDuty detects threats from logs; it does not block web requests inline.<br><em>D) AWS Shield Standard</em> &mdash; Shield Standard focuses on network and transport layer floods, not application exploits.
+</div>
+</div>
+
+<!-- Q47 DDoS and WAF -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DDoS and WAF" data-level="B">
+<div class="q-tags"><span class="q-tag">DDoS and WAF</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>On which of these can you attach an AWS WAF web ACL directly?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An EC2 instance's elastic network interface</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A NAT gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An Application Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Network Load Balancer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An Application Load Balancer<br><br>
+<strong>How to think about it:</strong> WAF attaches to <b>CloudFront, ALB, API Gateway, AppSync</b> and similar; not NLB.<br><br>
+<strong>Why C is correct:</strong> ALB is a supported WAF resource, so rules run on its HTTP requests.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An EC2 instance's elastic network interface</em> &mdash; WAF cannot attach to individual instances or ENIs.<br><em>B) A NAT gateway</em> &mdash; NAT gateways handle outbound traffic and cannot host a web ACL.<br><em>D) A Network Load Balancer</em> &mdash; NLB works at layer 4 and is not a WAF-supported resource.
+</div>
+</div>
+
+<!-- Q48 DDoS and WAF -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DDoS and WAF" data-level="B">
+<div class="q-tags"><span class="q-tag">DDoS and WAF</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>A login API is being hammered by a few IP addresses sending thousands of requests per minute. Which WAF feature limits this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A geo match rule</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A size constraint rule</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A managed SQL injection rule group</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A rate-based rule</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A rate-based rule<br><br>
+<strong>How to think about it:</strong> Too many requests from one source = <b>rate-based rule</b>.<br><br>
+<strong>Why D is correct:</strong> Rate-based rules count requests per source over a time window and block sources that exceed the limit.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A geo match rule</em> &mdash; Geo match filters by country, not by request volume.<br><em>B) A size constraint rule</em> &mdash; Size constraints check request component lengths, not how often requests arrive.<br><em>C) A managed SQL injection rule group</em> &mdash; SQLi rules look for injection patterns, not request rates.
+</div>
+</div>
+
+<!-- Q49 DDoS and WAF -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DDoS and WAF" data-level="B">
+<div class="q-tags"><span class="q-tag">DDoS and WAF</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>A security team must apply the same WAF rules and Shield Advanced protection across 40 accounts, including new resources created later. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Config conformance packs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Security Hub</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Firewall Manager</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS WAF alone in each account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS Firewall Manager<br><br>
+<strong>How to think about it:</strong> Org-wide WAF/Shield/SG/Network Firewall policies, auto-applied to new resources = <b>Firewall Manager</b>.<br><br>
+<strong>Why C is correct:</strong> Firewall Manager applies security policies across an organization and protects new matching resources automatically.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Config conformance packs</em> &mdash; Conformance packs evaluate compliance but do not push WAF or Shield protections.<br><em>B) AWS Security Hub</em> &mdash; Security Hub aggregates findings; it does not deploy WAF rules.<br><em>D) AWS WAF alone in each account</em> &mdash; Standalone WAF has to be configured per account and resource, with no central enforcement.
+</div>
+</div>
+
+<!-- Q50 DDoS and WAF -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DDoS and WAF" data-level="A">
+<div class="q-tags"><span class="q-tag">DDoS and WAF</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>A site runs behind CloudFront with an ALB origin. Attackers bypass CloudFront and hit the ALB directly. How can the ALB accept only CloudFront traffic, with the secret rotated automatically?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use a geo restriction on the CloudFront distribution</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable Shield Standard protection on the ALB itself</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Secret origin header checked by ALB WAF, rotated by Secrets Manager</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Put the ALB in a private subnet with no route at all</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Secret origin header checked by ALB WAF, rotated by Secrets Manager<br><br>
+<strong>How to think about it:</strong> Origin protection = CloudFront adds a <b>secret custom header</b>, ALB WAF checks it, <b>Secrets Manager</b> rotates it.<br><br>
+<strong>Why C is correct:</strong> Requests without the current header value are blocked at the ALB, and a rotation Lambda updates both sides.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Use a geo restriction on the CloudFront distribution</em> &mdash; Geo restriction affects requests through CloudFront, not those sent straight to the ALB.<br><em>B) Enable Shield Standard protection on the ALB itself</em> &mdash; Shield Standard is already on and does not distinguish CloudFront from direct requests.<br><em>D) Put the ALB in a private subnet with no route at all</em> &mdash; CloudFront could then not reach a standard internet-facing origin either.
+</div>
+</div>
+
+<!-- Q51 DDoS and WAF -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DDoS and WAF" data-level="A">
+<div class="q-tags"><span class="q-tag">DDoS and WAF</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>An app sits behind CloudFront and then an ALB. You want to block one attacker IP. Why is a network ACL on the ALB subnet not effective?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Network ACLs cannot contain any explicit deny rules</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The ALB only sees CloudFront IPs; use WAF on CloudFront instead</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The ALB security group overrides any NACL</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Network ACLs only evaluate IPv6 traffic, not IPv4</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The ALB only sees CloudFront IPs; use WAF on CloudFront instead<br><br>
+<strong>How to think about it:</strong> Behind CloudFront, the ALB sees <b>CloudFront IPs</b>, so block clients with <b>WAF on CloudFront</b>.<br><br>
+<strong>Why B is correct:</strong> The client's address is not the source seen by the VPC, so filtering must happen at the edge with WAF.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Network ACLs cannot contain any explicit deny rules</em> &mdash; NACLs support both allow and deny rules; the problem is which source IP they see.<br><em>C) The ALB security group overrides any NACL</em> &mdash; Security groups and NACLs are evaluated independently; neither overrides the other.<br><em>D) Network ACLs only evaluate IPv6 traffic, not IPv4</em> &mdash; NACLs filter IPv4 and IPv6 traffic.
+</div>
+</div>
+
+<!-- Q52 DDoS and WAF -->
+<div class="question" data-type="mc" data-answer="0" data-topic="DDoS and WAF" data-level="A">
+<div class="q-tags"><span class="q-tag">DDoS and WAF</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>WAF logs for a high-traffic web ACL must be streamed for analysis in OpenSearch and also kept in S3. Which log destination fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Data Firehose as the WAF logging destination</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VPC Flow Logs on the ALB subnets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS CloudTrail data events for WAF</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon SQS as the WAF logging destination</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Amazon Data Firehose as the WAF logging destination<br><br>
+<strong>How to think about it:</strong> WAF log destinations = <b>CloudWatch Logs, S3, Firehose</b>; Firehose fans out to OpenSearch/S3.<br><br>
+<strong>Why A is correct:</strong> Firehose can deliver WAF logs to OpenSearch and back up records to S3 in one stream.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) VPC Flow Logs on the ALB subnets</em> &mdash; Flow Logs show IP flows, not WAF rule matches or HTTP details.<br><em>C) AWS CloudTrail data events for WAF</em> &mdash; CloudTrail records WAF API calls, not the inspected web requests.<br><em>D) Amazon SQS as the WAF logging destination</em> &mdash; SQS is not a supported WAF logging destination.
+</div>
+</div>
+
+<!-- Q53 Threat Detection -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Threat Detection" data-level="B">
+<div class="q-tags"><span class="q-tag">Threat Detection</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>Which service continuously scans EC2 instances, ECR container images and Lambda functions for known software vulnerabilities?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon GuardDuty</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Macie</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Inspector</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Trusted Advisor</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon Inspector<br><br>
+<strong>How to think about it:</strong> CVE scanning for EC2, ECR images, Lambda = <b>Amazon Inspector</b>.<br><br>
+<strong>Why C is correct:</strong> Inspector continuously checks workloads against CVE data and network reachability and gives each finding a risk score.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon GuardDuty</em> &mdash; GuardDuty analyses activity logs for threats, not package vulnerabilities.<br><em>B) Amazon Macie</em> &mdash; Macie discovers sensitive data in S3 buckets.<br><em>D) AWS Trusted Advisor</em> &mdash; Trusted Advisor gives best-practice checks, not CVE scanning of software.
+</div>
+</div>
+
+<!-- Q54 Threat Detection -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Threat Detection" data-level="B">
+<div class="q-tags"><span class="q-tag">Threat Detection</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>Which data sources does Amazon GuardDuty analyse by default once enabled?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">ALB access logs stored in S3</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudTrail management events, Flow Logs, DNS logs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Application logs written to CloudWatch Logs groups</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Config configuration history</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> CloudTrail management events, Flow Logs, DNS logs<br><br>
+<strong>How to think about it:</strong> GuardDuty foundation = <b>CloudTrail management events, VPC Flow Logs, DNS logs</b>.<br><br>
+<strong>Why B is correct:</strong> These foundational sources are analysed with threat intelligence and ML without you configuring the logs yourself.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) ALB access logs stored in S3</em> &mdash; Load balancer access logs are not a GuardDuty source.<br><em>C) Application logs written to CloudWatch Logs groups</em> &mdash; GuardDuty does not read arbitrary application log groups.<br><em>D) AWS Config configuration history</em> &mdash; Config history is used by Config and Security Hub, not GuardDuty.
+</div>
+</div>
+
+<!-- Q55 Threat Detection -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Threat Detection" data-level="B">
+<div class="q-tags"><span class="q-tag">Threat Detection</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>Which statement about AWS Config rules is correct?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">They evaluate only once a day</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">They flag non-compliant resources but do not block the change</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">They can only be AWS managed rules</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">They deny API calls that would create non-compliant resources</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> They flag non-compliant resources but do not block the change<br><br>
+<strong>How to think about it:</strong> Config = <b>record and evaluate</b>, never deny; fix with <b>SSM Automation remediation</b>.<br><br>
+<strong>Why B is correct:</strong> Config evaluates configurations after the fact; prevention needs SCPs or IAM, and fixes come from remediation.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) They evaluate only once a day</em> &mdash; Rules can run on configuration changes, on a schedule, or both.<br><em>C) They can only be AWS managed rules</em> &mdash; You can also write custom rules, for example backed by Lambda.<br><em>D) They deny API calls that would create non-compliant resources</em> &mdash; Config cannot stop an API call from succeeding.
+</div>
+</div>
+
+<!-- Q56 Threat Detection -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Threat Detection" data-level="B">
+<div class="q-tags"><span class="q-tag">Threat Detection</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>Which service gives one dashboard that aggregates findings from GuardDuty, Inspector, Macie and IAM Access Analyzer across accounts?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon CloudWatch dashboards</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Detective</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Security Hub</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Health Dashboard</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS Security Hub<br><br>
+<strong>How to think about it:</strong> Central findings dashboard across accounts = <b>AWS Security Hub</b>.<br><br>
+<strong>Why C is correct:</strong> Security Hub collects findings from many AWS and partner tools in a common format and runs automated checks.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon CloudWatch dashboards</em> &mdash; Dashboards chart metrics and alarms; they do not normalise security findings from other services.<br><em>B) Amazon Detective</em> &mdash; Detective investigates the root cause of findings rather than aggregating them all.<br><em>D) AWS Health Dashboard</em> &mdash; Health shows AWS service events affecting your resources, not security findings.
+</div>
+</div>
+
+<!-- Q57 Threat Detection -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Threat Detection" data-level="B">
+<div class="q-tags"><span class="q-tag">Threat Detection</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>A GuardDuty finding needs deeper investigation to see related IPs, users and activity over time and find the root cause. Which service helps?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Firewall Manager</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon Inspector</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Detective</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Config</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon Detective<br><br>
+<strong>How to think about it:</strong> Investigate root cause with graphs from logs and findings = <b>Amazon Detective</b>.<br><br>
+<strong>Why C is correct:</strong> Detective builds linked visualisations from VPC Flow Logs, CloudTrail and GuardDuty data to trace root causes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Firewall Manager</em> &mdash; Firewall Manager deploys protections and does not analyse findings.<br><em>B) Amazon Inspector</em> &mdash; Inspector finds vulnerabilities; it does not investigate incidents.<br><em>D) AWS Config</em> &mdash; Config tracks configuration changes, not behavioural links between entities.
+</div>
+</div>
+
+<!-- Q58 Threat Detection -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Threat Detection" data-level="A">
+<div class="q-tags"><span class="q-tag">Threat Detection</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>Security groups that allow SSH from 0.0.0.0/0 must be detected and fixed automatically, with a record of compliance over time. What should you implement?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon Inspector network reachability scans only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An SCP denying AuthorizeSecurityGroupIngress</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A GuardDuty finding filter with suppression</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Config rule with SSM Automation auto-remediation</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A Config rule with SSM Automation auto-remediation<br><br>
+<strong>How to think about it:</strong> Detect + auto-fix + history = <b>Config rule + SSM Automation remediation</b>.<br><br>
+<strong>Why D is correct:</strong> The rule marks offending groups non-compliant, remediation removes the rule, and Config keeps the compliance timeline.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon Inspector network reachability scans only</em> &mdash; Inspector reports reachability but has no remediation workflow or compliance history.<br><em>B) An SCP denying AuthorizeSecurityGroupIngress</em> &mdash; This blocks all rule changes but does not fix existing groups or record compliance.<br><em>C) A GuardDuty finding filter with suppression</em> &mdash; GuardDuty detects threats from activity, not security group configuration, and it does not remediate.
+</div>
+</div>
+
+<!-- Q59 Threat Detection -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Threat Detection" data-level="A">
+<div class="q-tags"><span class="q-tag">Threat Detection</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>GuardDuty must be managed centrally for all accounts in an organization from a security account, not the management account. How?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Make the security account the GuardDuty delegated admin</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Replicate GuardDuty findings with S3 Cross-Region Replication</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable GuardDuty in every account with an SCP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Invite each account by email from the security account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Make the security account the GuardDuty delegated admin<br><br>
+<strong>How to think about it:</strong> Org-wide GuardDuty from a security account = <b>delegated administrator</b> set from the management account.<br><br>
+<strong>Why A is correct:</strong> The delegated administrator can enable and manage GuardDuty for all member accounts.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Replicate GuardDuty findings with S3 Cross-Region Replication</em> &mdash; Copying exported findings does not give central management.<br><em>C) Enable GuardDuty in every account with an SCP</em> &mdash; SCPs restrict permissions; they cannot turn services on.<br><em>D) Invite each account by email from the security account</em> &mdash; Invitations work but are manual and do not cover new accounts automatically.
+</div>
+</div>
+
+<!-- Q60 Threat Detection -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Threat Detection" data-level="A">
+<div class="q-tags"><span class="q-tag">Threat Detection</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>When GuardDuty reports an EC2 instance communicating with a known cryptocurrency mining pool, the instance must be isolated automatically. Which design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An Amazon Inspector scan triggered every hour</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An AWS Config periodic rule checking instance tags</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch alarm on the instance's CPUUtilization</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">EventBridge rule on the finding invoking a quarantine Lambda</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> EventBridge rule on the finding invoking a quarantine Lambda<br><br>
+<strong>How to think about it:</strong> Automate on findings = <b>GuardDuty to EventBridge to Lambda</b>.<br><br>
+<strong>Why D is correct:</strong> GuardDuty publishes findings to EventBridge, and Lambda can quarantine the instance automatically.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An Amazon Inspector scan triggered every hour</em> &mdash; Inspector looks for vulnerabilities, not live malicious connections.<br><em>B) An AWS Config periodic rule checking instance tags</em> &mdash; Tags do not reveal malicious network activity.<br><em>C) A CloudWatch alarm on the instance's CPUUtilization</em> &mdash; High CPU may hint at mining but is not tied to the finding and does not isolate the instance.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

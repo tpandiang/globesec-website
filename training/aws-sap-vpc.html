@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS SA Pro Amazon VPC - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">SAP-C02</span>
+            <span>Amazon VPC</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Solutions Architect Professional &mdash; Amazon VPC</h2>
+        <p>60 refresher questions &mdash; Subnets &amp; routing, NAT, IPv6, security groups &amp; NACLs, Flow Logs, Network Firewall, peering, Transit Gateway, VPC endpoints &amp; PrivateLink, Site-to-Site &amp; Client VPN, Direct Connect</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/60</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 60 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 60</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="VPC Basics" onclick="filterQ(this)">VPC Basics</button><button class="filter-btn" data-f="NAT & IPv6" onclick="filterQ(this)">NAT & IPv6</button><button class="filter-btn" data-f="SG, NACL & Flow Logs" onclick="filterQ(this)">SG, NACL & Flow Logs</button><button class="filter-btn" data-f="Network Firewall" onclick="filterQ(this)">Network Firewall</button><button class="filter-btn" data-f="VPC Peering" onclick="filterQ(this)">VPC Peering</button><button class="filter-btn" data-f="Transit Gateway" onclick="filterQ(this)">Transit Gateway</button><button class="filter-btn" data-f="Endpoints & PrivateLink" onclick="filterQ(this)">Endpoints & PrivateLink</button><button class="filter-btn" data-f="VPN" onclick="filterQ(this)">VPN</button><button class="filter-btn" data-f="Direct Connect" onclick="filterQ(this)">Direct Connect</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short SAP-style scenarios.</p>
+
+<!-- Q1 VPC Basics -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPC Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>You create a subnet with the CIDR 10.0.1.0/24. How many IP addresses can you actually assign to resources in it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">256</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">254</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">252</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">251</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> 251<br><br>
+<strong>How to think about it:</strong> A /24 has 256 addresses, and AWS keeps <b>5 per subnet</b>, so <b>251</b> are usable.<br><br>
+<strong>Why D is correct:</strong> AWS reserves five addresses in every subnet (the first four and the last one), leaving 251 of the 256.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 256</em> &mdash; 256 is the raw size of a /24; it ignores the addresses AWS keeps for itself.<br><em>B) 254</em> &mdash; 254 is the classic on-premises answer (network and broadcast removed), but AWS reserves three more.<br><em>C) 252</em> &mdash; 252 assumes only four reserved addresses; AWS also reserves the last address of the range.
+</div>
+</div>
+
+<!-- Q2 VPC Basics -->
+<div class="question" data-type="mc" data-answer="2" data-topic="VPC Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>Which addresses in each subnet does AWS reserve and never hand out to your instances?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only the first and last addresses</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The last four addresses and the first address</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The first four addresses and the last address</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The first ten addresses of the range</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The first four addresses and the last address<br><br>
+<strong>How to think about it:</strong> Reserved = <b>first four + last one</b> (network, router, DNS, future use, broadcast).<br><br>
+<strong>Why C is correct:</strong> AWS uses these for the network address, VPC router, DNS, future use, and the (unsupported) broadcast address.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only the first and last addresses</em> &mdash; That is the traditional network/broadcast pair; AWS reserves three additional addresses at the start.<br><em>B) The last four addresses and the first address</em> &mdash; The reservation is at the start of the range (four) plus one at the end, not the other way round.<br><em>D) The first ten addresses of the range</em> &mdash; AWS does not reserve a block of ten; it reserves exactly five per subnet.
+</div>
+</div>
+
+<!-- Q3 VPC Basics -->
+<div class="question" data-type="mc" data-answer="0" data-topic="VPC Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>What are the smallest and largest IPv4 CIDR block sizes you can assign to a VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Between /28 and /16</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Between /30 and /20</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Between /24 and /12</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Between /32 and /8</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Between /28 and /16<br><br>
+<strong>How to think about it:</strong> VPC CIDR size = <b>/28 (16 IPs) to /16 (65,536 IPs)</b>.<br><br>
+<strong>Why A is correct:</strong> Each VPC IPv4 CIDR block can be as small as a /28 or as large as a /16.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Between /30 and /20</em> &mdash; /30 is below the /28 minimum, and /20 is not the upper limit.<br><em>C) Between /24 and /12</em> &mdash; A /24 is allowed, but /12 is larger than the /16 maximum and smaller blocks are allowed too.<br><em>D) Between /32 and /8</em> &mdash; A /8 is far larger than AWS allows for a VPC block, and a /32 is a single host.
+</div>
+</div>
+
+<!-- Q4 VPC Basics -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPC Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>Which of these is an RFC 1918 private range that you would normally use for a VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">172.32.0.0/12</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">192.169.0.0/16</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">11.0.0.0/8</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">172.16.0.0/12</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> 172.16.0.0/12<br><br>
+<strong>How to think about it:</strong> Private IPv4 = <b>10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16</b>.<br><br>
+<strong>Why D is correct:</strong> 172.16.0.0 to 172.31.255.255 is one of the three RFC 1918 private blocks.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 172.32.0.0/12</em> &mdash; 172.32.x.x sits just outside the private 172.16-172.31 block, so it is public address space.<br><em>B) 192.169.0.0/16</em> &mdash; The private block is 192.168.0.0/16; 192.169.x.x is publicly routable.<br><em>C) 11.0.0.0/8</em> &mdash; Only 10.0.0.0/8 is private in that area; 11.0.0.0/8 is public address space.
+</div>
+</div>
+
+<!-- Q5 VPC Basics -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPC Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>A route table has 0.0.0.0/0 pointing to an internet gateway and 172.16.0.0/16 pointing to a virtual private gateway. Where does traffic to 172.16.4.10 go?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It is dropped because two routes match</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">To the internet gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It is split across both targets</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">To the virtual private gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> To the virtual private gateway<br><br>
+<strong>How to think about it:</strong> VPC routing = <b>longest prefix (most specific) match</b> wins.<br><br>
+<strong>Why D is correct:</strong> The /16 route is more specific than the /0 default route, so it wins for that destination.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It is dropped because two routes match</em> &mdash; Overlapping routes are normal; the router simply picks the most specific one.<br><em>B) To the internet gateway</em> &mdash; The default route is used only when no more specific route matches.<br><em>C) It is split across both targets</em> &mdash; VPC route tables do not load-balance between a default route and a specific route.
+</div>
+</div>
+
+<!-- Q6 VPC Basics -->
+<div class="question" data-type="mc" data-answer="1" data-topic="VPC Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>What actually makes a subnet a public subnet in a VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Its network ACL allows all inbound traffic</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Its route table sends 0.0.0.0/0 to an internet gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It was created from a public IPv4 CIDR block range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It contains a NAT gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Its route table sends 0.0.0.0/0 to an internet gateway<br><br>
+<strong>How to think about it:</strong> Public subnet = route table sends <b>0.0.0.0/0 to an internet gateway</b>.<br><br>
+<strong>Why B is correct:</strong> A subnet is public when its associated route table sends internet-bound traffic to an IGW; instances also need a public IP.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Its network ACL allows all inbound traffic</em> &mdash; An open NACL does not give a subnet a path to the internet.<br><em>C) It was created from a public IPv4 CIDR block range</em> &mdash; VPC subnets use private ranges; being public depends on routing, not the CIDR.<br><em>D) It contains a NAT gateway</em> &mdash; A NAT gateway is placed in a public subnet, but its presence does not make the subnet public.
+</div>
+</div>
+
+<!-- Q7 VPC Basics -->
+<div class="question" data-type="mc" data-answer="2" data-topic="VPC Basics" data-level="A">
+<div class="q-tags"><span class="q-tag">VPC Basics</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>A VPC created with 10.0.0.0/20 has run out of free addresses for new subnets. The team wants to keep the VPC and its existing workloads. What should they do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Peer with a new VPC and move half of the subnets there</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Edit the primary CIDR block to a larger /16</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add a secondary IPv4 CIDR block and build new subnets in it</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable IPv6 and remove IPv4 from the existing subnets</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Add a secondary IPv4 CIDR block and build new subnets in it<br><br>
+<strong>How to think about it:</strong> Out of IPs = add a <b>secondary CIDR block</b> to the VPC.<br><br>
+<strong>Why C is correct:</strong> VPCs accept additional CIDR blocks, so new subnets can be carved out without rebuilding anything.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Peer with a new VPC and move half of the subnets there</em> &mdash; Peering works, but it adds a second network to manage when a secondary CIDR solves it in place.<br><em>B) Edit the primary CIDR block to a larger /16</em> &mdash; The primary CIDR block cannot be resized; you add blocks instead.<br><em>D) Enable IPv6 and remove IPv4 from the existing subnets</em> &mdash; Existing IPv4 subnets cannot simply drop IPv4, and many workloads still need it.
+</div>
+</div>
+
+<!-- Q8 NAT & IPv6 -->
+<div class="question" data-type="mc" data-answer="1" data-topic="NAT & IPv6" data-level="B">
+<div class="q-tags"><span class="q-tag">NAT & IPv6</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>Instances in a private subnet need outbound internet access for patches, using a managed service that scales bandwidth automatically. What should you set up?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An egress-only internet gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A NAT gateway in a public subnet as the private default route</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An internet gateway route in the private subnet's route table</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A NAT instance launched in the private subnet</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A NAT gateway in a public subnet as the private default route<br><br>
+<strong>How to think about it:</strong> Managed outbound-only IPv4 = <b>NAT gateway</b> in a public subnet + private route 0.0.0.0/0 to it.<br><br>
+<strong>Why B is correct:</strong> The NAT gateway is managed, scales automatically and lets private instances start outbound connections only.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An egress-only internet gateway</em> &mdash; Egress-only gateways handle IPv6 traffic only, not IPv4.<br><em>C) An internet gateway route in the private subnet's route table</em> &mdash; Routing a private subnet straight to the IGW would make it public and still need public IPs on the instances.<br><em>D) A NAT instance launched in the private subnet</em> &mdash; A NAT instance must sit in a public subnet, and it is self-managed rather than managed.
+</div>
+</div>
+
+<!-- Q9 NAT & IPv6 -->
+<div class="question" data-type="mc" data-answer="3" data-topic="NAT & IPv6" data-level="B">
+<div class="q-tags"><span class="q-tag">NAT & IPv6</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>You launch a NAT instance on EC2 but private instances still cannot reach the internet through it. Which EC2 setting must be changed on the NAT instance?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable enhanced networking</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Turn on termination protection</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Attach an IAM instance profile</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Disable the source/destination check</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Disable the source/destination check<br><br>
+<strong>How to think about it:</strong> NAT instance forwards others' packets = <b>disable source/destination check</b>.<br><br>
+<strong>Why D is correct:</strong> By default EC2 drops traffic not addressed to or from the instance itself, which breaks forwarding for NAT.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable enhanced networking</em> &mdash; Enhanced networking raises performance but does not allow packet forwarding.<br><em>B) Turn on termination protection</em> &mdash; Termination protection only prevents accidental deletion of the instance.<br><em>C) Attach an IAM instance profile</em> &mdash; IAM roles grant API permissions; they have nothing to do with forwarding packets.
+</div>
+</div>
+
+<!-- Q10 NAT & IPv6 -->
+<div class="question" data-type="mc" data-answer="2" data-topic="NAT & IPv6" data-level="A">
+<div class="q-tags"><span class="q-tag">NAT & IPv6</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>A three-AZ VPC uses standard zonal NAT gateways. Private workloads must keep internet egress if one Availability Zone fails. What is the right design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">One NAT gateway plus an Auto Scaling group of NAT instances as backup</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One NAT gateway with two Elastic IP addresses attached</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">One NAT gateway per AZ, each AZ routing to its own</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A NAT gateway in a private subnet of each AZ</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> One NAT gateway per AZ, each AZ routing to its own<br><br>
+<strong>How to think about it:</strong> Zonal NAT GW is redundant only <b>inside its AZ</b> = one per AZ, each AZ's route table to its own NAT.<br><br>
+<strong>Why C is correct:</strong> A zonal NAT gateway survives failures only within its own AZ, so one per AZ removes the cross-AZ single point of failure.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) One NAT gateway plus an Auto Scaling group of NAT instances as backup</em> &mdash; This mixes managed and self-managed NAT and needs custom failover routing.<br><em>B) One NAT gateway with two Elastic IP addresses attached</em> &mdash; Extra addresses do not move the gateway out of its single AZ.<br><em>D) A NAT gateway in a private subnet of each AZ</em> &mdash; NAT gateways that provide internet access must live in public subnets with an IGW route.
+</div>
+</div>
+
+<!-- Q11 NAT & IPv6 -->
+<div class="question" data-type="mc" data-answer="2" data-topic="NAT & IPv6" data-level="B">
+<div class="q-tags"><span class="q-tag">NAT & IPv6</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>IPv6-enabled instances in a private subnet must reach the internet over IPv6, but nothing on the internet may start a connection to them. What do you add?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An internet gateway with a ::/0 route to it</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A NAT gateway with a ::/0 route to it</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An egress-only internet gateway with a ::/0 route to it</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A virtual private gateway with route propagation</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An egress-only internet gateway with a ::/0 route to it<br><br>
+<strong>How to think about it:</strong> IPv6 outbound only = <b>egress-only internet gateway</b>, route <code>::/0</code> to it.<br><br>
+<strong>Why C is correct:</strong> It is the IPv6 equivalent of NAT for outbound-only access; IPv6 addresses are public, so this blocks inbound starts.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An internet gateway with a ::/0 route to it</em> &mdash; A plain IGW route would allow connections from the internet to the instances' public IPv6 addresses.<br><em>B) A NAT gateway with a ::/0 route to it</em> &mdash; NAT gateways translate IPv4; outbound-only IPv6 is the job of the egress-only gateway.<br><em>D) A virtual private gateway with route propagation</em> &mdash; A VGW connects to on-premises networks, not to the internet.
+</div>
+</div>
+
+<!-- Q12 NAT & IPv6 -->
+<div class="question" data-type="mc" data-answer="1" data-topic="NAT & IPv6" data-level="B">
+<div class="q-tags"><span class="q-tag">NAT & IPv6</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>A cost review flags charges for public IPv4 addresses. Which statement about AWS public IPv4 pricing is true today?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Auto-assigned public IPs are free, only Elastic IPs are billed</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">All public IPv4 addresses are billed hourly, attached or not</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Public IPv4 is free, but data transfer through it is billed</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only unattached Elastic IP addresses incur a charge</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> All public IPv4 addresses are billed hourly, attached or not<br><br>
+<strong>How to think about it:</strong> Since 2024 every <b>public IPv4 address is billed hourly</b>, in use or idle.<br><br>
+<strong>Why B is correct:</strong> AWS bills all public IPv4 addresses hourly, which is a reason to prefer NAT, private endpoints or IPv6.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Auto-assigned public IPs are free, only Elastic IPs are billed</em> &mdash; Auto-assigned public IPv4 addresses are billed the same hourly rate.<br><em>C) Public IPv4 is free, but data transfer through it is billed</em> &mdash; The address itself now has an hourly charge on top of any data transfer.<br><em>D) Only unattached Elastic IP addresses incur a charge</em> &mdash; That was the old model; attached public addresses are now billed too.
+</div>
+</div>
+
+<!-- Q13 NAT & IPv6 -->
+<div class="question" data-type="mc" data-answer="1" data-topic="NAT & IPv6" data-level="A">
+<div class="q-tags"><span class="q-tag">NAT & IPv6</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>A partner's API only accepts calls from IP addresses it has allow-listed. Your calls come from dozens of Auto Scaling instances in private subnets. How do you give the partner a small, stable list of source IPs?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Allow-list the private subnet CIDR ranges with the partner</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Route egress via NAT gateways and allow-list their EIPs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use an interface VPC endpoint to reach the partner API</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Attach an Elastic IP to every instance at launch</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Route egress via NAT gateways and allow-list their EIPs<br><br>
+<strong>How to think about it:</strong> Stable outbound source IP = <b>NAT gateway with an Elastic IP</b>; give the partner the EIPs.<br><br>
+<strong>Why B is correct:</strong> Every private instance's traffic leaves with the NAT gateway's Elastic IP, so the list stays short and fixed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Allow-list the private subnet CIDR ranges with the partner</em> &mdash; Private addresses are not visible on the internet, so the partner never sees them.<br><em>C) Use an interface VPC endpoint to reach the partner API</em> &mdash; Interface endpoints reach AWS or PrivateLink services, not an arbitrary internet API.<br><em>D) Attach an Elastic IP to every instance at launch</em> &mdash; This needs automation, uses many addresses and grows as the group scales.
+</div>
+</div>
+
+<!-- Q14 SG, NACL & Flow Logs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SG, NACL & Flow Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">SG, NACL & Flow Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>You need to block a single malicious IP address from reaching every instance in a subnet. Which control supports an explicit deny rule?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A route table blackhole entry for the address</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A network ACL rule that denies the address</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A security group rule that denies the address</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An IAM policy with a Deny on aws:SourceIp</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A network ACL rule that denies the address<br><br>
+<strong>How to think about it:</strong> Explicit <b>DENY</b> = <b>NACL</b>; security groups are allow-only.<br><br>
+<strong>Why B is correct:</strong> NACLs apply at the subnet level and support both allow and deny rules, evaluated in number order.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A route table blackhole entry for the address</em> &mdash; Route tables send traffic somewhere; they are not used as an inbound deny list.<br><em>C) A security group rule that denies the address</em> &mdash; Security groups have only allow rules; you cannot write a deny.<br><em>D) An IAM policy with a Deny on aws:SourceIp</em> &mdash; IAM controls API calls, not network packets reaching instances.
+</div>
+</div>
+
+<!-- Q15 SG, NACL & Flow Logs -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SG, NACL & Flow Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">SG, NACL & Flow Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>A security group allows inbound HTTPS from anywhere but has no outbound rules for client ports. Do the responses reach the clients?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only if the subnet's NACL is also stateful</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only for IPv4 clients, not IPv6 clients</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">No, because an outbound rule for ephemeral ports is required</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Yes, security groups are stateful, so replies are allowed</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Yes, security groups are stateful, so replies are allowed<br><br>
+<strong>How to think about it:</strong> Security group = <b>stateful</b>: return traffic is allowed automatically.<br><br>
+<strong>Why D is correct:</strong> Once a connection is allowed in one direction, the responses for that connection are permitted regardless of rules.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only if the subnet's NACL is also stateful</em> &mdash; NACLs are always stateless; this is not a setting you can change.<br><em>B) Only for IPv4 clients, not IPv6 clients</em> &mdash; Security group state tracking applies to both IPv4 and IPv6.<br><em>C) No, because an outbound rule for ephemeral ports is required</em> &mdash; That is true of stateless NACLs, not of security groups.
+</div>
+</div>
+
+<!-- Q16 SG, NACL & Flow Logs -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SG, NACL & Flow Logs" data-level="A">
+<div class="q-tags"><span class="q-tag">SG, NACL & Flow Logs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>A custom NACL allows inbound TCP 443 from 0.0.0.0/0 and outbound TCP 443 to 0.0.0.0/0. The security group is open on 443, yet clients time out. What fixes it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add an outbound NACL rule allowing TCP 1024-65535 to the clients</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add an outbound security group rule for TCP 443</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Associate the default NACL instead of the custom NACL to the subnet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Add an inbound security group rule for TCP 1024-65535</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Add an outbound NACL rule allowing TCP 1024-65535 to the clients<br><br>
+<strong>How to think about it:</strong> NACL is <b>stateless</b> = also allow the <b>outbound ephemeral ports</b> (1024-65535) for replies.<br><br>
+<strong>Why A is correct:</strong> Replies go back to the client's ephemeral port, and a stateless NACL must allow that return path explicitly.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Add an outbound security group rule for TCP 443</em> &mdash; The response is not sent to port 443 on the client, and the stateful SG already allows it.<br><em>C) Associate the default NACL instead of the custom NACL to the subnet</em> &mdash; That would work by opening everything, but it removes the subnet controls rather than fixing the rule.<br><em>D) Add an inbound security group rule for TCP 1024-65535</em> &mdash; The security group is stateful, so return traffic is already allowed by it.
+</div>
+</div>
+
+<!-- Q17 SG, NACL & Flow Logs -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SG, NACL & Flow Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">SG, NACL & Flow Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>An app tier should accept traffic only from the web tier, whose instances scale in and out constantly. How do you write the app tier's security group rule?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Allow the port with the web tier's security group as the source</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use a NACL allow rule naming the web tier instances</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Update the rule with each new instance IP from a Lambda function</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Allow the port from the web subnet CIDR block</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Allow the port with the web tier's security group as the source<br><br>
+<strong>How to think about it:</strong> Changing IPs = <b>reference the web tier's security group</b> as the source.<br><br>
+<strong>Why A is correct:</strong> Referencing a security group covers every instance using it, whatever its current IP address.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Use a NACL allow rule naming the web tier instances</em> &mdash; NACLs work on CIDR ranges and cannot name instances or security groups.<br><em>C) Update the rule with each new instance IP from a Lambda function</em> &mdash; Custom automation is unnecessary when a security group can be referenced directly.<br><em>D) Allow the port from the web subnet CIDR block</em> &mdash; This works but also admits anything else in that subnet; it is broader than the requirement.
+</div>
+</div>
+
+<!-- Q18 SG, NACL & Flow Logs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="SG, NACL & Flow Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">SG, NACL & Flow Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>Where can VPC Flow Logs be delivered directly?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only Amazon CloudWatch Logs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudWatch Logs, S3 or Amazon Data Firehose</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS CloudTrail or Amazon CloudWatch Logs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon RDS, Amazon S3 or Amazon SQS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> CloudWatch Logs, S3 or Amazon Data Firehose<br><br>
+<strong>How to think about it:</strong> Flow Logs go to <b>CloudWatch Logs, S3 or Data Firehose</b>.<br><br>
+<strong>Why B is correct:</strong> These are the supported destinations, captured at VPC, subnet or ENI level.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only Amazon CloudWatch Logs</em> &mdash; S3 and Firehose are also supported destinations.<br><em>C) AWS CloudTrail or Amazon CloudWatch Logs</em> &mdash; CloudTrail records API calls; it is not a destination for packet flow records.<br><em>D) Amazon RDS, Amazon S3 or Amazon SQS</em> &mdash; Flow Logs cannot write to a database or a queue directly.
+</div>
+</div>
+
+<!-- Q19 SG, NACL & Flow Logs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SG, NACL & Flow Logs" data-level="A">
+<div class="q-tags"><span class="q-tag">SG, NACL & Flow Logs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>Flow Logs for an instance show an inbound request with ACTION=ACCEPT, followed by the response with ACTION=REJECT on the outbound side. What is the most likely cause?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The NAT gateway is dropping the response</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The security group is missing an outbound rule</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The network ACL is blocking the outbound response</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The instance's route table has no internet route</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The network ACL is blocking the outbound response<br><br>
+<strong>How to think about it:</strong> Inbound ACCEPT then outbound REJECT = stateless <b>NACL</b> (an SG would let the reply out).<br><br>
+<strong>Why C is correct:</strong> A stateful security group would have allowed the reply, so the rejection points to the stateless NACL.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The NAT gateway is dropping the response</em> &mdash; Responses to inbound requests do not pass through a NAT gateway.<br><em>B) The security group is missing an outbound rule</em> &mdash; Security groups automatically allow responses to allowed inbound traffic.<br><em>D) The instance's route table has no internet route</em> &mdash; A missing route does not appear as a REJECT action in Flow Logs.
+</div>
+</div>
+
+<!-- Q20 SG, NACL & Flow Logs -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SG, NACL & Flow Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">SG, NACL & Flow Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>Security wants to run ad-hoc SQL queries over months of VPC Flow Logs at low cost. Which setup fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Deliver the logs to Amazon S3 and query them with Amazon Athena</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Deliver the logs to CloudWatch Logs and query them with Athena</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Load the logs into an RDS database every hour</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Send the logs to CloudTrail Lake</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Deliver the logs to Amazon S3 and query them with Amazon Athena<br><br>
+<strong>How to think about it:</strong> Flow Logs in S3 + SQL = <b>Amazon Athena</b>.<br><br>
+<strong>Why A is correct:</strong> Athena runs serverless SQL directly on the files in S3, paying only per query.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Deliver the logs to CloudWatch Logs and query them with Athena</em> &mdash; Athena queries data in S3; CloudWatch Logs has its own Logs Insights query language.<br><em>C) Load the logs into an RDS database every hour</em> &mdash; A database load pipeline costs more and adds work for occasional queries.<br><em>D) Send the logs to CloudTrail Lake</em> &mdash; CloudTrail Lake stores API activity events, not VPC flow records.
+</div>
+</div>
+
+<!-- Q21 SG, NACL & Flow Logs -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SG, NACL & Flow Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">SG, NACL & Flow Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>Administrators need shell access to private instances without opening port 22 or running a bastion host. What should they use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">EC2 Instance Connect with a public IP on each instance</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A bastion host in a public subnet</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Client VPN with SSH to each instance</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Systems Manager Session Manager</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Systems Manager Session Manager<br><br>
+<strong>How to think about it:</strong> No SSH port, no bastion = <b>Systems Manager Session Manager</b>.<br><br>
+<strong>Why D is correct:</strong> Session Manager opens audited shell sessions through the SSM agent, with no inbound ports or bastion to manage.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) EC2 Instance Connect with a public IP on each instance</em> &mdash; Giving private instances public IPs defeats the point of keeping them private.<br><em>B) A bastion host in a public subnet</em> &mdash; A bastion needs inbound SSH and is a server you must patch and keep available.<br><em>C) AWS Client VPN with SSH to each instance</em> &mdash; Client VPN still uses SSH and port 22 and adds an endpoint to run.
+</div>
+</div>
+
+<!-- Q22 Network Firewall -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Network Firewall" data-level="B">
+<div class="q-tags"><span class="q-tag">Network Firewall</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>A company wants managed Layer 3 to Layer 7 inspection for all traffic entering and leaving its VPCs, including intrusion prevention and domain allow-lists. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Shield Advanced</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS WAF</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Security groups with deny rules</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Network Firewall</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Network Firewall<br><br>
+<strong>How to think about it:</strong> VPC-wide L3-L7 inspection + IPS = <b>AWS Network Firewall</b>.<br><br>
+<strong>Why D is correct:</strong> It is a managed, stateful firewall for whole VPCs, with domain lists, IPS-style rules and logging.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Shield Advanced</em> &mdash; Shield Advanced protects against DDoS attacks; it does not filter all VPC flows.<br><em>B) AWS WAF</em> &mdash; WAF inspects HTTP requests to CloudFront, ALB, API Gateway and similar, not all VPC traffic.<br><em>C) Security groups with deny rules</em> &mdash; Security groups support allow rules only and work at the instance level.
+</div>
+</div>
+
+<!-- Q23 Network Firewall -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Network Firewall" data-level="A">
+<div class="q-tags"><span class="q-tag">Network Firewall</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>Dozens of VPCs share a Transit Gateway. All VPC-to-VPC and internet-bound traffic must be inspected in one place. What is the standard design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Peer every VPC to a security VPC that inspects the traffic</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An inspection VPC with Network Firewall, attached to the TGW</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use VPC Flow Logs with alarms on rejected traffic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Deploy a separate AWS Network Firewall in each of the dozens of VPCs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An inspection VPC with Network Firewall, attached to the TGW<br><br>
+<strong>How to think about it:</strong> Central inspection = <b>inspection VPC with Network Firewall</b> behind the Transit Gateway.<br><br>
+<strong>Why B is correct:</strong> TGW route tables send east-west and north-south flows to the inspection VPC before they reach their destination.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Peer every VPC to a security VPC that inspects the traffic</em> &mdash; Peering is not transitive, so a security VPC cannot sit in the path between other VPCs.<br><em>C) Use VPC Flow Logs with alarms on rejected traffic</em> &mdash; Flow Logs only record traffic after the fact; they do not inspect or block it.<br><em>D) Deploy a separate AWS Network Firewall in each of the dozens of VPCs</em> &mdash; This works but multiplies cost and rule management compared with a central inspection point.
+</div>
+</div>
+
+<!-- Q24 Network Firewall -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Network Firewall" data-level="B">
+<div class="q-tags"><span class="q-tag">Network Firewall</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>Which service lets you push Network Firewall policies to VPCs across many accounts in an AWS Organization?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Config conformance packs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Firewall Manager</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon GuardDuty</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Resource Access Manager</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS Firewall Manager<br><br>
+<strong>How to think about it:</strong> Cross-account firewall rules = <b>AWS Firewall Manager</b>.<br><br>
+<strong>Why B is correct:</strong> Firewall Manager centrally applies Network Firewall, WAF, Shield and security group policies across an organization.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Config conformance packs</em> &mdash; Config evaluates compliance; it does not deploy firewall rules.<br><em>C) Amazon GuardDuty</em> &mdash; GuardDuty detects threats from logs; it does not deploy firewall rules.<br><em>D) AWS Resource Access Manager</em> &mdash; RAM shares resources such as subnets and Transit Gateways; it does not manage firewall policy.
+</div>
+</div>
+
+<!-- Q25 VPC Peering -->
+<div class="question" data-type="mc" data-answer="0" data-topic="VPC Peering" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC Peering</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>VPC A is peered with VPC B, and VPC B is peered with VPC C. Can instances in VPC A reach VPC C?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">No, a separate peering connection between A and C is needed</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Yes, if all three VPCs are in the same account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Yes, through VPC B automatically</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Yes, if VPC B has a NAT gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> No, a separate peering connection between A and C is needed<br><br>
+<strong>How to think about it:</strong> Peering is <b>not transitive</b>: A-C needs its own peering.<br><br>
+<strong>Why A is correct:</strong> Peering connections do not pass traffic on to a third VPC.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Yes, if all three VPCs are in the same account</em> &mdash; Account ownership does not change the non-transitive rule.<br><em>C) Yes, through VPC B automatically</em> &mdash; VPC B will not forward traffic between its two peers.<br><em>D) Yes, if VPC B has a NAT gateway</em> &mdash; Edge-to-edge routing through a peer's gateways is not supported.
+</div>
+</div>
+
+<!-- Q26 VPC Peering -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPC Peering" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC Peering</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>Which condition prevents two VPCs from being peered?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">They are in different AWS Regions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">They are owned by different AWS accounts</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">They use different instance tenancy</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Their IPv4 CIDR blocks overlap</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Their IPv4 CIDR blocks overlap<br><br>
+<strong>How to think about it:</strong> Peering requirement = <b>no overlapping CIDRs</b>.<br><br>
+<strong>Why D is correct:</strong> Peered networks must have distinct address ranges so routes are unambiguous.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) They are in different AWS Regions</em> &mdash; Inter-Region peering is supported.<br><em>B) They are owned by different AWS accounts</em> &mdash; Cross-account peering is supported once the other side accepts.<br><em>C) They use different instance tenancy</em> &mdash; Tenancy has no effect on peering.
+</div>
+</div>
+
+<!-- Q27 VPC Peering -->
+<div class="question" data-type="mc" data-answer="0" data-topic="VPC Peering" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC Peering</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>A peering connection between two VPCs is active, but instances still cannot talk to each other. What step is commonly missed?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Routes to the peer CIDR in both VPCs' route tables</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enabling Transit Gateway route propagation</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Attaching an internet gateway to both VPCs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Creating a customer gateway in each VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Routes to the peer CIDR in both VPCs' route tables<br><br>
+<strong>How to think about it:</strong> After peering = <b>add routes in both VPCs</b> (and allow it in SGs/NACLs).<br><br>
+<strong>Why A is correct:</strong> Peering only creates the link; each side needs routes pointing at the peering connection.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Enabling Transit Gateway route propagation</em> &mdash; No Transit Gateway is involved in a plain peering connection.<br><em>C) Attaching an internet gateway to both VPCs</em> &mdash; Peered traffic stays on the AWS network and never uses an IGW.<br><em>D) Creating a customer gateway in each VPC</em> &mdash; Customer gateways are for Site-to-Site VPN, not peering.
+</div>
+</div>
+
+<!-- Q28 VPC Peering -->
+<div class="question" data-type="mc" data-answer="0" data-topic="VPC Peering" data-level="A">
+<div class="q-tags"><span class="q-tag">VPC Peering</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>VPC A is peered with a shared VPC that has a NAT gateway and an internet gateway. Teams in VPC A want to send internet traffic out through the shared VPC. Will it work?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">No; peering has no edge-to-edge routing, so use TGW central egress</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Yes, if the NAT gateway gets a second Elastic IP</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Yes, if VPC A adds a 0.0.0.0/0 route to the peering connection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Yes, if both VPCs are in the same Region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> No; peering has no edge-to-edge routing, so use TGW central egress<br><br>
+<strong>How to think about it:</strong> Peering has <b>no edge-to-edge routing</b> (IGW, NAT, VPN, DX, gateway endpoints).<br><br>
+<strong>Why A is correct:</strong> Edge-to-edge routing over peering is not supported, while a TGW-based egress VPC is the supported pattern.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Yes, if the NAT gateway gets a second Elastic IP</em> &mdash; Address count has nothing to do with the peering restriction.<br><em>C) Yes, if VPC A adds a 0.0.0.0/0 route to the peering connection</em> &mdash; The route can be created, but the peer VPC will not forward the traffic out of its gateways.<br><em>D) Yes, if both VPCs are in the same Region</em> &mdash; Edge-to-edge routing is blocked within a Region as well.
+</div>
+</div>
+
+<!-- Q29 VPC Peering -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPC Peering" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC Peering</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>Can a security group rule reference a security group from a peered VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only if both VPCs belong to the same account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Yes, but only for inter-Region peering</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">No, only CIDR ranges can be used across a peering</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Yes, for a same-Region peer, even in another account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Yes, for a same-Region peer, even in another account<br><br>
+<strong>How to think about it:</strong> Peered VPC SG reference = allowed in the <b>same Region</b> (even cross-account).<br><br>
+<strong>Why D is correct:</strong> Same-Region peering lets rules use the peer's security group ID as a source.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only if both VPCs belong to the same account</em> &mdash; Cross-account references work by using the account ID with the group ID.<br><em>B) Yes, but only for inter-Region peering</em> &mdash; It is the reverse: inter-Region peering does not support security group references.<br><em>C) No, only CIDR ranges can be used across a peering</em> &mdash; Same-Region peers can reference each other's security groups.
+</div>
+</div>
+
+<!-- Q30 VPC Peering -->
+<div class="question" data-type="mc" data-answer="0" data-topic="VPC Peering" data-level="A">
+<div class="q-tags"><span class="q-tag">VPC Peering</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>VPC A (172.16.0.0/16) is peered with VPC B and VPC C, which both use 10.0.0.0/16. Instance 10.0.0.77 lives in VPC B. How can A reach that specific instance?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Route 10.0.0.77/32 to the B peering and the /16 to C</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable route propagation from both peering connections</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It cannot be done, because VPC B and VPC C overlap</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Add two 10.0.0.0/16 routes, one to each peering connection</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Route 10.0.0.77/32 to the B peering and the /16 to C<br><br>
+<strong>How to think about it:</strong> Overlapping peers = <b>more specific routes</b>; longest prefix (e.g. /32) wins.<br><br>
+<strong>Why A is correct:</strong> The /32 is the longest prefix match, so traffic for that host goes to VPC B while the rest goes to C.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Enable route propagation from both peering connections</em> &mdash; Peering connections do not propagate routes; routes are static.<br><em>C) It cannot be done, because VPC B and VPC C overlap</em> &mdash; Peering two overlapping VPCs to a third is allowed with specific routes.<br><em>D) Add two 10.0.0.0/16 routes, one to each peering connection</em> &mdash; A route table cannot hold two identical destinations pointing at different targets.
+</div>
+</div>
+
+<!-- Q31 Transit Gateway -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Transit Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">Transit Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>A company has 300 VPCs and several data centers that all need to reach each other without a mesh of peering connections. What should it use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Transit Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VPN CloudHub</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Full-mesh VPC peering</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS PrivateLink</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AWS Transit Gateway<br><br>
+<strong>How to think about it:</strong> Hub-and-spoke, transitive, thousands of VPCs = <b>Transit Gateway</b>.<br><br>
+<strong>Why A is correct:</strong> A Transit Gateway is a regional hub with transitive routing for VPCs, VPNs and Direct Connect.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) VPN CloudHub</em> &mdash; CloudHub links on-premises sites through a VGW; it does not route between hundreds of VPCs.<br><em>C) Full-mesh VPC peering</em> &mdash; 300 VPCs would need tens of thousands of peering connections, all managed separately.<br><em>D) AWS PrivateLink</em> &mdash; PrivateLink exposes individual services, not full network-to-network routing.
+</div>
+</div>
+
+<!-- Q32 Transit Gateway -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Transit Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">Transit Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>How do you let VPCs in other accounts of your AWS Organization attach to a Transit Gateway owned by the network account?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Share it with AWS Resource Access Manager</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add the other accounts to the Transit Gateway's IAM trust policy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a Transit Gateway peering attachment for each account</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use an S3 bucket policy to grant access</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Share it with AWS Resource Access Manager<br><br>
+<strong>How to think about it:</strong> Share TGW across accounts = <b>AWS Resource Access Manager (RAM)</b>.<br><br>
+<strong>Why A is correct:</strong> RAM shares the Transit Gateway so other accounts can create attachments to it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Add the other accounts to the Transit Gateway's IAM trust policy</em> &mdash; A Transit Gateway has no trust policy; cross-account use goes through RAM.<br><em>C) Create a Transit Gateway peering attachment for each account</em> &mdash; Peering attachments link Transit Gateways to each other, not accounts to one TGW.<br><em>D) Use an S3 bucket policy to grant access</em> &mdash; Bucket policies govern S3 objects, not network resources.
+</div>
+</div>
+
+<!-- Q33 Transit Gateway -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Transit Gateway" data-level="A">
+<div class="q-tags"><span class="q-tag">Transit Gateway</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>Production and development VPCs are all attached to one Transit Gateway. Both need the shared-services VPC, but must never reach each other. How do you enforce this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Put NACLs on the Transit Gateway attachments</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Rely on security groups in each VPC to block the traffic</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create two Transit Gateways and peer them</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Separate TGW route tables that each reach only shared services</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Separate TGW route tables that each reach only shared services<br><br>
+<strong>How to think about it:</strong> Segment traffic on a TGW = separate <b>TGW route tables</b> per environment.<br><br>
+<strong>Why D is correct:</strong> Associations and propagations decide which attachments can reach which, giving isolation on one TGW.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Put NACLs on the Transit Gateway attachments</em> &mdash; NACLs are applied to subnets, not configured on the Transit Gateway.<br><em>B) Rely on security groups in each VPC to block the traffic</em> &mdash; SGs help, but the routing still exposes the networks; route table segmentation is the clean control.<br><em>C) Create two Transit Gateways and peer them</em> &mdash; This adds another hub when route tables on one TGW already provide segmentation.
+</div>
+</div>
+
+<!-- Q34 Transit Gateway -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Transit Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">Transit Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>An application needs IP multicast between instances in several VPCs. Which AWS service supports this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Transit Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Global Accelerator</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Network Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">VPC peering</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AWS Transit Gateway<br><br>
+<strong>How to think about it:</strong> <b>Multicast</b> on AWS = <b>Transit Gateway</b>.<br><br>
+<strong>Why A is correct:</strong> Transit Gateway supports multicast domains for sending one stream to many receivers.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS Global Accelerator</em> &mdash; Global Accelerator speeds up unicast traffic over the AWS backbone.<br><em>C) Network Load Balancer</em> &mdash; NLB distributes unicast TCP, UDP and TLS connections.<br><em>D) VPC peering</em> &mdash; Peering carries unicast traffic only.
+</div>
+</div>
+
+<!-- Q35 Transit Gateway -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Transit Gateway" data-level="A">
+<div class="q-tags"><span class="q-tag">Transit Gateway</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>VPCs in us-east-1 and eu-west-1 each attach to a local Transit Gateway. They must now communicate privately over the AWS network. What is the simplest step?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Attach every eu-west-1 VPC to the us-east-1 Transit Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create an inter-Region TGW peering attachment with static routes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Build Site-to-Site VPNs between VPCs in the two Regions</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use a Direct Connect gateway to join the two Transit Gateways</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Create an inter-Region TGW peering attachment with static routes<br><br>
+<strong>How to think about it:</strong> Cross-Region TGW = <b>inter-Region TGW peering</b> (static routes).<br><br>
+<strong>Why B is correct:</strong> TGW peering links the two hubs over the AWS backbone, and routes for it are added statically.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Attach every eu-west-1 VPC to the us-east-1 Transit Gateway</em> &mdash; VPC attachments must be in the Transit Gateway's own Region.<br><em>C) Build Site-to-Site VPNs between VPCs in the two Regions</em> &mdash; VPN tunnels over the internet are more work and less direct than TGW peering.<br><em>D) Use a Direct Connect gateway to join the two Transit Gateways</em> &mdash; A Direct Connect gateway connects on-premises networks; it does not route between Transit Gateways.
+</div>
+</div>
+
+<!-- Q36 Transit Gateway -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Transit Gateway" data-level="A">
+<div class="q-tags"><span class="q-tag">Transit Gateway</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Many private VPCs each run their own NAT gateways. To cut cost and centralize control, all internet egress should leave from one place. What is the usual design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An egress VPC with NAT gateways, reached through the TGW</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An egress-only internet gateway shared through RAM</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A gateway VPC endpoint shared to all spokes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">VPC peering from every spoke to one VPC with a NAT gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An egress VPC with NAT gateways, reached through the TGW<br><br>
+<strong>How to think about it:</strong> Central egress = <b>egress VPC with NAT gateways</b>, reached through the <b>Transit Gateway</b>.<br><br>
+<strong>Why A is correct:</strong> Spokes route default traffic to the TGW, which sends it to the egress VPC's NAT gateways and IGW.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An egress-only internet gateway shared through RAM</em> &mdash; Egress-only gateways are IPv6-only and belong to one VPC.<br><em>C) A gateway VPC endpoint shared to all spokes</em> &mdash; Gateway endpoints only reach S3 and DynamoDB and cannot be shared across VPCs.<br><em>D) VPC peering from every spoke to one VPC with a NAT gateway</em> &mdash; Peering cannot use a peer's NAT gateway for internet access.
+</div>
+</div>
+
+<!-- Q37 Transit Gateway -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Transit Gateway" data-level="B">
+<div class="q-tags"><span class="q-tag">Transit Gateway</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>What is the scope of a Transit Gateway?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Regional; other Regions are reached through TGW peering</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It is scoped to a single VPC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It is global: one Transit Gateway serves every Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It is zonal: one is needed per Availability Zone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Regional; other Regions are reached through TGW peering<br><br>
+<strong>How to think about it:</strong> TGW = <b>regional</b> resource; go cross-Region with peering.<br><br>
+<strong>Why A is correct:</strong> Each Transit Gateway lives in one Region and connects to other Regions through peering attachments.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) It is scoped to a single VPC</em> &mdash; Its purpose is to connect many VPCs and networks.<br><em>C) It is global: one Transit Gateway serves every Region</em> &mdash; There is no global Transit Gateway; that would be AWS Cloud WAN territory.<br><em>D) It is zonal: one is needed per Availability Zone</em> &mdash; A Transit Gateway is highly available across the AZs of its Region.
+</div>
+</div>
+
+<!-- Q38 Endpoints & PrivateLink -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Endpoints & PrivateLink" data-level="B">
+<div class="q-tags"><span class="q-tag">Endpoints & PrivateLink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>Which AWS services can be reached through a gateway VPC endpoint?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Any AWS service in the Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only Amazon S3</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon S3 and Amazon DynamoDB</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon S3, Amazon SQS and Amazon SNS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Amazon S3 and Amazon DynamoDB<br><br>
+<strong>How to think about it:</strong> Gateway endpoint = <b>S3 and DynamoDB only</b>; everything else = interface endpoint.<br><br>
+<strong>Why C is correct:</strong> Gateway endpoints exist only for these two services and are added as route table targets.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Any AWS service in the Region</em> &mdash; Most services use interface endpoints; gateway endpoints cover only two.<br><em>B) Only Amazon S3</em> &mdash; DynamoDB also supports a gateway endpoint.<br><em>D) Amazon S3, Amazon SQS and Amazon SNS</em> &mdash; SQS and SNS are reached through interface endpoints.
+</div>
+</div>
+
+<!-- Q39 Endpoints & PrivateLink -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Endpoints & PrivateLink" data-level="B">
+<div class="q-tags"><span class="q-tag">Endpoints & PrivateLink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>You create an interface endpoint with private DNS enabled, but calls to the service's normal hostname still go to public IPs. Which VPC settings must be on?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Route 53 public hosted zone for the service</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Both DNS resolution and DNS hostnames enabled on the VPC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A route table entry pointing to the endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An internet gateway attached to the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Both DNS resolution and DNS hostnames enabled on the VPC<br><br>
+<strong>How to think about it:</strong> Interface endpoint private DNS needs <b>enableDnsSupport + enableDnsHostnames</b>.<br><br>
+<strong>Why B is correct:</strong> Private DNS for an interface endpoint only works when both VPC DNS attributes are true.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Route 53 public hosted zone for the service</em> &mdash; The private DNS override is handled by AWS; no public zone is needed.<br><em>C) A route table entry pointing to the endpoint</em> &mdash; Interface endpoints are ENIs in subnets; they do not use route table entries.<br><em>D) An internet gateway attached to the VPC</em> &mdash; Endpoints are used precisely to avoid needing an internet gateway.
+</div>
+</div>
+
+<!-- Q40 Endpoints & PrivateLink -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Endpoints & PrivateLink" data-level="A">
+<div class="q-tags"><span class="q-tag">Endpoints & PrivateLink</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>Servers in a data center connected over Direct Connect must reach Amazon S3 privately through the VPC. A gateway endpoint for S3 already exists but does not work for them. What should you add?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A NAT gateway in the VPC for the on-premises traffic</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A VPC peering connection to a VPC with its own S3 gateway endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An interface VPC endpoint for S3, reached from on premises over Direct Connect</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A route for the S3 prefix list on the on-premises router</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An interface VPC endpoint for S3, reached from on premises over Direct Connect<br><br>
+<strong>How to think about it:</strong> Gateway endpoints <b>can't be reached from outside the VPC</b> = use an <b>S3 interface endpoint</b>.<br><br>
+<strong>Why C is correct:</strong> Interface endpoints are ENIs with private IPs, so traffic arriving over DX or VPN can use them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A NAT gateway in the VPC for the on-premises traffic</em> &mdash; NAT sends traffic to public S3 endpoints over the internet path, not privately.<br><em>B) A VPC peering connection to a VPC with its own S3 gateway endpoint</em> &mdash; Gateway endpoints also cannot be used across peering connections.<br><em>D) A route for the S3 prefix list on the on-premises router</em> &mdash; Gateway endpoints only serve traffic that starts inside the VPC; on-premises routes cannot use them.
+</div>
+</div>
+
+<!-- Q41 Endpoints & PrivateLink -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Endpoints & PrivateLink" data-level="A">
+<div class="q-tags"><span class="q-tag">Endpoints & PrivateLink</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q41.</span><span>A bucket holding sensitive data must accept requests only when they arrive through one particular VPC endpoint. What do you add to the bucket policy?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An endpoint policy on the endpoint alone</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Deny for requests where aws:SourceIp is not the VPC CIDR</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An Allow for the VPC's NAT gateway Elastic IP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Deny for requests where aws:SourceVpce does not equal that endpoint ID</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A Deny for requests where aws:SourceVpce does not equal that endpoint ID<br><br>
+<strong>How to think about it:</strong> Lock a bucket to one endpoint = <b>aws:SourceVpce</b> (whole VPC = aws:SourceVpc).<br><br>
+<strong>Why D is correct:</strong> This condition key matches the endpoint the request came through and rejects every other path.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An endpoint policy on the endpoint alone</em> &mdash; An endpoint policy limits what the endpoint can reach, but other paths to the bucket stay open.<br><em>B) A Deny for requests where aws:SourceIp is not the VPC CIDR</em> &mdash; Requests through an endpoint carry private addresses, which aws:SourceIp cannot match.<br><em>C) An Allow for the VPC's NAT gateway Elastic IP</em> &mdash; Traffic through NAT is the public path, the opposite of what is required.
+</div>
+</div>
+
+<!-- Q42 Endpoints & PrivateLink -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Endpoints & PrivateLink" data-level="B">
+<div class="q-tags"><span class="q-tag">Endpoints & PrivateLink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q42.</span><span>A bucket policy allows only aws:SourceIp 10.0.0.0/16, but requests from instances in that VPC through an S3 endpoint are denied. Why?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The bucket must be in a different Region from the VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The endpoint must be an interface endpoint for IP conditions to work</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">aws:SourceIp cannot match private IPs on endpoint traffic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Bucket policies cannot contain conditions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> aws:SourceIp cannot match private IPs on endpoint traffic<br><br>
+<strong>How to think about it:</strong> <b>aws:SourceIp</b> = public IPs only; for endpoints use <b>aws:SourceVpce / aws:SourceVpc</b>.<br><br>
+<strong>Why C is correct:</strong> Bucket policies can filter on public source IPs only; endpoint traffic needs the VPC or endpoint condition keys.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The bucket must be in a different Region from the VPC</em> &mdash; Gateway endpoints only reach buckets in the same Region, so this would break access further.<br><em>B) The endpoint must be an interface endpoint for IP conditions to work</em> &mdash; Neither endpoint type makes aws:SourceIp match private addresses.<br><em>D) Bucket policies cannot contain conditions</em> &mdash; Bucket policies support many condition keys, including the VPC endpoint keys.
+</div>
+</div>
+
+<!-- Q43 Endpoints & PrivateLink -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Endpoints & PrivateLink" data-level="B">
+<div class="q-tags"><span class="q-tag">Endpoints & PrivateLink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q43.</span><span>An endpoint policy on an SQS interface endpoint allows only one queue. Can the same IAM user still call other queues?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Yes, because endpoint policies are only advisory</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Yes, outside the endpoint, unless a queue policy blocks that</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">No, because endpoint policies deny all other SQS actions account-wide</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">No, the endpoint policy overrides the user's IAM policy everywhere</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Yes, outside the endpoint, unless a queue policy blocks that<br><br>
+<strong>How to think about it:</strong> Endpoint policy <b>limits the endpoint</b>; it does not replace IAM or resource policies.<br><br>
+<strong>Why B is correct:</strong> Endpoint policies only filter traffic through that endpoint and work alongside IAM and resource policies.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Yes, because endpoint policies are only advisory</em> &mdash; They are enforced for traffic that uses the endpoint.<br><em>C) No, because endpoint policies deny all other SQS actions account-wide</em> &mdash; Their scope is the single endpoint, not the account.<br><em>D) No, the endpoint policy overrides the user's IAM policy everywhere</em> &mdash; An endpoint policy has no effect on requests that do not pass through the endpoint.
+</div>
+</div>
+
+<!-- Q44 Endpoints & PrivateLink -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Endpoints & PrivateLink" data-level="B">
+<div class="q-tags"><span class="q-tag">Endpoints & PrivateLink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q44.</span><span>A SaaS provider wants to offer its service privately to thousands of customer VPCs without peering, internet gateways or route changes. What does it build?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Transit Gateway shared with every customer account through RAM</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An internet-facing Application Load Balancer with AWS WAF</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A PrivateLink endpoint service backed by a Network Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A VPC peering connection with every customer VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A PrivateLink endpoint service backed by a Network Load Balancer<br><br>
+<strong>How to think about it:</strong> Expose a service to many VPCs = <b>PrivateLink</b>: <b>NLB</b> on the provider side, <b>interface endpoint</b> on the consumer side.<br><br>
+<strong>Why C is correct:</strong> Each customer creates an interface endpoint (ENI) to the provider's NLB-backed service, with no routing between networks.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Transit Gateway shared with every customer account through RAM</em> &mdash; That would connect customer networks to each other and to the provider broadly.<br><em>B) An internet-facing Application Load Balancer with AWS WAF</em> &mdash; That puts the service on the internet, which the provider wants to avoid.<br><em>D) A VPC peering connection with every customer VPC</em> &mdash; Peering thousands of VPCs is unmanageable and exposes whole networks.
+</div>
+</div>
+
+<!-- Q45 Endpoints & PrivateLink -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Endpoints & PrivateLink" data-level="A">
+<div class="q-tags"><span class="q-tag">Endpoints & PrivateLink</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q45.</span><span>A provider's service VPC and several consumer VPCs all use 10.0.0.0/16. Which connectivity option still works without renumbering?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">VPC peering between the VPCs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Site-to-Site VPN between the VPCs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Transit Gateway attachments</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS PrivateLink interface endpoints</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS PrivateLink interface endpoints<br><br>
+<strong>How to think about it:</strong> Overlapping CIDRs? <b>PrivateLink</b> doesn't care; peering and TGW do.<br><br>
+<strong>Why D is correct:</strong> Consumers reach the service through a local ENI address, so the two networks never need routes to each other.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) VPC peering between the VPCs</em> &mdash; Peering is not allowed between VPCs with overlapping CIDRs.<br><em>B) Site-to-Site VPN between the VPCs</em> &mdash; VPN routing also fails when both ends use the same address range.<br><em>C) Transit Gateway attachments</em> &mdash; Overlapping ranges cannot be routed correctly through a Transit Gateway route table.
+</div>
+</div>
+
+<!-- Q46 VPN -->
+<div class="question" data-type="mc" data-answer="1" data-topic="VPN" data-level="B">
+<div class="q-tags"><span class="q-tag">VPN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q46.</span><span>Which two resources form the AWS side and the on-premises representation of a Site-to-Site VPN?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Direct Connect gateway and a private VIF</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A virtual private gateway and a customer gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Client VPN endpoint and a security group</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An internet gateway and a NAT gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A virtual private gateway and a customer gateway<br><br>
+<strong>How to think about it:</strong> S2S VPN = <b>VGW (or TGW) on AWS</b> + <b>Customer Gateway</b> describing your device.<br><br>
+<strong>Why B is correct:</strong> The VGW or TGW terminates the VPN in AWS, and the customer gateway resource records your device's public IP.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Direct Connect gateway and a private VIF</em> &mdash; These are Direct Connect parts, not VPN components.<br><em>C) A Client VPN endpoint and a security group</em> &mdash; Client VPN serves individual users, not site-to-site links.<br><em>D) An internet gateway and a NAT gateway</em> &mdash; These provide internet access, not IPsec VPN termination.
+</div>
+</div>
+
+<!-- Q47 VPN -->
+<div class="question" data-type="mc" data-answer="2" data-topic="VPN" data-level="B">
+<div class="q-tags"><span class="q-tag">VPN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q47.</span><span>How does an AWS Site-to-Site VPN connection provide redundancy by default?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It automatically fails over to Direct Connect</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It uses two customer gateway devices automatically</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It always includes two IPsec tunnels to separate AWS endpoints</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It replicates itself into a second Region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> It always includes two IPsec tunnels to separate AWS endpoints<br><br>
+<strong>How to think about it:</strong> Every S2S VPN = <b>two IPsec tunnels</b> to different AWS endpoints.<br><br>
+<strong>Why C is correct:</strong> If one tunnel goes down, traffic can use the other; configure both on your device.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It automatically fails over to Direct Connect</em> &mdash; No DX link exists unless you build one.<br><em>B) It uses two customer gateway devices automatically</em> &mdash; On-premises redundancy is your job; AWS supplies the two tunnels.<br><em>D) It replicates itself into a second Region</em> &mdash; VPN connections are regional; there is no automatic cross-Region copy.
+</div>
+</div>
+
+<!-- Q48 VPN -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPN" data-level="B">
+<div class="q-tags"><span class="q-tag">VPN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q48.</span><span>You want routes to be exchanged automatically between the on-premises router and AWS over a VPN instead of maintaining static routes. What do you configure?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Static routes with route propagation turned off</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">OSPF between the customer gateway and the VGW</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Route 53 Resolver inbound endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">BGP dynamic routing with an ASN for each side</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> BGP dynamic routing with an ASN for each side<br><br>
+<strong>How to think about it:</strong> Automatic route exchange = <b>BGP dynamic routing</b> with ASNs on both sides.<br><br>
+<strong>Why D is correct:</strong> BGP advertises networks in both directions so route tables update automatically.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Static routes with route propagation turned off</em> &mdash; Static routing is exactly what the team wants to avoid.<br><em>B) OSPF between the customer gateway and the VGW</em> &mdash; AWS VPN supports BGP for dynamic routing, not OSPF.<br><em>C) A Route 53 Resolver inbound endpoint</em> &mdash; Resolver endpoints forward DNS queries; they do not share IP routes.
+</div>
+</div>
+
+<!-- Q49 VPN -->
+<div class="question" data-type="mc" data-answer="2" data-topic="VPN" data-level="A">
+<div class="q-tags"><span class="q-tag">VPN</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q49.</span><span>A retailer has eight branch offices with VPN connections to the same virtual private gateway. It wants the branches to reach each other over those VPNs at low cost. What is this pattern called?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">VPC peering</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Client VPN</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS VPN CloudHub</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Direct Connect SiteLink</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS VPN CloudHub<br><br>
+<strong>How to think about it:</strong> Branches talking to each other through one VGW = <b>VPN CloudHub</b>.<br><br>
+<strong>Why C is correct:</strong> With BGP and unique ASNs, the VGW re-advertises each branch's routes so the sites form a low-cost hub-and-spoke.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) VPC peering</em> &mdash; Peering connects VPCs to VPCs, not on-premises branches.<br><em>B) AWS Client VPN</em> &mdash; Client VPN connects individual users, not branch networks.<br><em>D) AWS Direct Connect SiteLink</em> &mdash; SiteLink connects sites through Direct Connect locations, not over internet VPNs.
+</div>
+</div>
+
+<!-- Q50 VPN -->
+<div class="question" data-type="mc" data-answer="2" data-topic="VPN" data-level="B">
+<div class="q-tags"><span class="q-tag">VPN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q50.</span><span>Remote employees need secure laptop access to private resources in a VPC and, through it, to the on-premises network. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Global Accelerator</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Direct Connect</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Client VPN</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Site-to-Site VPN</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS Client VPN<br><br>
+<strong>How to think about it:</strong> Individual users from laptops = <b>AWS Client VPN</b> (OpenVPN-based).<br><br>
+<strong>Why C is correct:</strong> Client VPN is a managed endpoint that users reach with an OpenVPN-based client to get private IP access.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Global Accelerator</em> &mdash; Global Accelerator speeds up public applications; it does not provide private network access.<br><em>B) AWS Direct Connect</em> &mdash; DX is a dedicated circuit from a data center, not a user remote-access tool.<br><em>D) AWS Site-to-Site VPN</em> &mdash; Site-to-Site VPN connects whole networks through a gateway device, not individual laptops.
+</div>
+</div>
+
+<!-- Q51 VPN -->
+<div class="question" data-type="mc" data-answer="1" data-topic="VPN" data-level="A">
+<div class="q-tags"><span class="q-tag">VPN</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q51.</span><span>On-premises servers reach a VPC over a Site-to-Site VPN. The company wants their internet traffic to leave through AWS. Why does a NAT gateway in the VPC not work, and what does?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">NAT gateways only support IPv6; an egress-only gateway is needed</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">NAT gateways ignore VPN-sourced traffic; a NAT instance works</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The NAT gateway needs a second Elastic IP for on-premises traffic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The VPN must be replaced with Direct Connect before NAT works</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> NAT gateways ignore VPN-sourced traffic; a NAT instance works<br><br>
+<strong>How to think about it:</strong> NAT gateway won't serve traffic from <b>VPN/DX/peering</b> = use a <b>NAT instance</b> (or on-premises NAT).<br><br>
+<strong>Why B is correct:</strong> The edge-to-edge restriction blocks VGW-to-NAT-gateway traffic, while a NAT instance gives full control of forwarding.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) NAT gateways only support IPv6; an egress-only gateway is needed</em> &mdash; NAT gateways handle IPv4; the problem is the traffic's source, not the protocol.<br><em>C) The NAT gateway needs a second Elastic IP for on-premises traffic</em> &mdash; Adding addresses does not change what traffic the NAT gateway accepts.<br><em>D) The VPN must be replaced with Direct Connect before NAT works</em> &mdash; Direct Connect traffic hits the same NAT gateway restriction.
+</div>
+</div>
+
+<!-- Q52 VPN -->
+<div class="question" data-type="mc" data-answer="0" data-topic="VPN" data-level="A">
+<div class="q-tags"><span class="q-tag">VPN</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q52.</span><span>Global offices connect to AWS over Site-to-Site VPN, and performance over long internet paths is poor. How can the VPN be improved without Direct Connect?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Use an accelerated VPN attached to a Transit Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add more customer gateways at each office</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Increase the tunnel MTU on the customer gateway</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Put CloudFront in front of the virtual private gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Use an accelerated VPN attached to a Transit Gateway<br><br>
+<strong>How to think about it:</strong> Faster VPN worldwide = <b>Accelerated Site-to-Site VPN</b> (Global Accelerator, on a <b>Transit Gateway</b>).<br><br>
+<strong>Why A is correct:</strong> Traffic enters the AWS backbone at the nearest edge location instead of crossing the public internet the whole way.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Add more customer gateways at each office</em> &mdash; Extra devices add redundancy but still use the same internet path.<br><em>C) Increase the tunnel MTU on the customer gateway</em> &mdash; A larger MTU does not fix the long, congested internet path.<br><em>D) Put CloudFront in front of the virtual private gateway</em> &mdash; CloudFront caches HTTP content; it does not carry IPsec tunnels.
+</div>
+</div>
+
+<!-- Q53 Direct Connect -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Direct Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Direct Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q53.</span><span>Which Direct Connect virtual interface do you use to reach EC2 instances in a VPC through a virtual private gateway?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A public virtual interface</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A transit virtual interface</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A private virtual interface</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A hosted VPN interface</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A private virtual interface<br><br>
+<strong>How to think about it:</strong> VPC resources = <b>private VIF</b>; public AWS endpoints = public VIF; Transit Gateway = transit VIF.<br><br>
+<strong>Why C is correct:</strong> A private VIF carries traffic to VPC resources through a VGW or a Direct Connect gateway.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A public virtual interface</em> &mdash; A public VIF reaches AWS public endpoints such as S3, not private VPC addresses.<br><em>B) A transit virtual interface</em> &mdash; A transit VIF connects to a Transit Gateway through a Direct Connect gateway, not to a VGW.<br><em>D) A hosted VPN interface</em> &mdash; There is no such Direct Connect interface type.
+</div>
+</div>
+
+<!-- Q54 Direct Connect -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Direct Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Direct Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q54.</span><span>A data center wants to reach Amazon S3 public endpoints over Direct Connect instead of the internet. Which virtual interface is used?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A transit virtual interface</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A public virtual interface</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A private virtual interface</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">No interface; S3 is reached automatically</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A public virtual interface<br><br>
+<strong>How to think about it:</strong> AWS public services over DX = <b>public VIF</b>.<br><br>
+<strong>Why B is correct:</strong> A public VIF advertises AWS public prefixes so services like S3 are reached over the DX link.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A transit virtual interface</em> &mdash; A transit VIF leads to a Transit Gateway, not to public AWS prefixes.<br><em>C) A private virtual interface</em> &mdash; A private VIF reaches VPC addresses, not public service endpoints.<br><em>D) No interface; S3 is reached automatically</em> &mdash; Every Direct Connect use needs a virtual interface.
+</div>
+</div>
+
+<!-- Q55 Direct Connect -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Direct Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Direct Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q55.</span><span>Is traffic over AWS Direct Connect encrypted by default?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">No, and it cannot be encrypted</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">No; add an IPsec VPN over it, or MACsec where supported</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Yes, but only on hosted connections</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Yes, all Direct Connect traffic uses IPsec automatically</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> No; add an IPsec VPN over it, or MACsec where supported<br><br>
+<strong>How to think about it:</strong> DX is <b>private but not encrypted</b>: add <b>IPsec VPN over DX</b> (or MACsec on supported links).<br><br>
+<strong>Why B is correct:</strong> DX is a dedicated path, but encryption in transit must be added on top.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) No, and it cannot be encrypted</em> &mdash; Both IPsec VPN over DX and MACsec are available options.<br><em>C) Yes, but only on hosted connections</em> &mdash; Hosted connections are not automatically encrypted either.<br><em>D) Yes, all Direct Connect traffic uses IPsec automatically</em> &mdash; IPsec only applies if you build a VPN over the connection.
+</div>
+</div>
+
+<!-- Q56 Direct Connect -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Direct Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Direct Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q56.</span><span>One Direct Connect connection must reach VPCs in us-east-1 and us-west-2. What makes this possible?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">VPC peering between the two VPCs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A second Direct Connect connection for the other Region</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Direct Connect gateway associated with both VPCs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A public virtual interface to both VPCs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A Direct Connect gateway associated with both VPCs<br><br>
+<strong>How to think about it:</strong> One DX to many VPCs in many Regions = <b>Direct Connect gateway</b>.<br><br>
+<strong>Why C is correct:</strong> A DX gateway is a global object that lets one connection reach VPCs in any Region.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) VPC peering between the two VPCs</em> &mdash; Peering does not allow on-premises traffic to transit to the peer.<br><em>B) A second Direct Connect connection for the other Region</em> &mdash; Extra circuits are not required to reach another Region.<br><em>D) A public virtual interface to both VPCs</em> &mdash; A public VIF reaches public endpoints, not private VPC addresses.
+</div>
+</div>
+
+<!-- Q57 Direct Connect -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Direct Connect" data-level="A">
+<div class="q-tags"><span class="q-tag">Direct Connect</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q57.</span><span>A bank needs the highest resilience for critical workloads over Direct Connect. Which design meets that bar?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">One connection in a LAG with four links</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Two connections at the same Direct Connect location</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Connections at two or more separate DX locations</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">One connection with a Site-to-Site VPN backup</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Connections at two or more separate DX locations<br><br>
+<strong>How to think about it:</strong> Maximum DX resilience = connections at <b>two or more separate DX locations</b>.<br><br>
+<strong>Why C is correct:</strong> Using multiple locations survives a device, circuit or whole-location failure.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) One connection in a LAG with four links</em> &mdash; A LAG lives at a single location, so a location outage still takes it down.<br><em>B) Two connections at the same Direct Connect location</em> &mdash; This protects against a single circuit failure but not against losing that location.<br><em>D) One connection with a Site-to-Site VPN backup</em> &mdash; VPN backup is cost-effective but has lower bandwidth and internet-dependent performance.
+</div>
+</div>
+
+<!-- Q58 Direct Connect -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Direct Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Direct Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q58.</span><span>A company needs 500 Mbps of Direct Connect bandwidth and does not want a full dedicated port. What connection type fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An AWS Site-to-Site VPN</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A link aggregation group (LAG)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A dedicated 1 Gbps connection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A hosted connection from a DX Partner</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A hosted connection from a DX Partner<br><br>
+<strong>How to think about it:</strong> Sub-1 Gbps or flexible capacity = <b>hosted connection</b> from a DX Partner.<br><br>
+<strong>Why D is correct:</strong> Partners provision hosted connections in sizes from 50 Mbps upward on their own ports.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An AWS Site-to-Site VPN</em> &mdash; A VPN runs over the internet; it is not a Direct Connect connection type.<br><em>B) A link aggregation group (LAG)</em> &mdash; A LAG bundles dedicated connections; it does not offer smaller capacity.<br><em>C) A dedicated 1 Gbps connection</em> &mdash; Dedicated connections start at 1 Gbps and use a physical port for one customer.
+</div>
+</div>
+
+<!-- Q59 Direct Connect -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Direct Connect" data-level="A">
+<div class="q-tags"><span class="q-tag">Direct Connect</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q59.</span><span>A team wants to bundle several Direct Connect connections into one logical link for more bandwidth and failover. Which requirement applies?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Dedicated links of equal speed on the same DX endpoint</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Each connection must have a different bandwidth</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Hosted and dedicated connections can be mixed</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The connections must be in different Direct Connect locations</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Dedicated links of equal speed on the same DX endpoint<br><br>
+<strong>How to think about it:</strong> LAG = <b>dedicated</b> connections, <b>same speed</b>, <b>same DX endpoint</b>.<br><br>
+<strong>Why A is correct:</strong> A LAG treats matching dedicated ports on one AWS device as a single active-active link.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Each connection must have a different bandwidth</em> &mdash; LAG members must all run at the same speed.<br><em>C) Hosted and dedicated connections can be mixed</em> &mdash; Only dedicated connections can join a LAG.<br><em>D) The connections must be in different Direct Connect locations</em> &mdash; A LAG terminates on one AWS endpoint, so its links share a location.
+</div>
+</div>
+
+<!-- Q60 Direct Connect -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Direct Connect" data-level="A">
+<div class="q-tags"><span class="q-tag">Direct Connect</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q60.</span><span>Two corporate data centers each connect to a different Direct Connect location. They want to send traffic to each other over the AWS network without going through an AWS Region. What should be enabled?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A public virtual interface at each location</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Transit Gateway inter-Region peering</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">VPN CloudHub on a virtual private gateway</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Direct Connect SiteLink on the VIFs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Direct Connect SiteLink on the VIFs<br><br>
+<strong>How to think about it:</strong> DC to DC through DX locations, bypassing Regions = <b>SiteLink</b>.<br><br>
+<strong>Why D is correct:</strong> SiteLink sends data between DX locations along the fastest AWS path without entering a Region.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A public virtual interface at each location</em> &mdash; Public VIFs reach AWS public endpoints, not each other's data centers.<br><em>B) Transit Gateway inter-Region peering</em> &mdash; TGW peering joins Transit Gateways in Regions; the traffic would still pass through Regions.<br><em>C) VPN CloudHub on a virtual private gateway</em> &mdash; CloudHub links sites through VPNs over the public internet.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 60;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>
