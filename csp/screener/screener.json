@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-28T18:42:16",
+  "generated_at": "2026-10-28T22:59:26",
   "data_source": "CBOE delayed (~15 min) + Finnhub (earnings/sector)",
   "config": {
     "min_weekly_yield": 0.7,
@@ -22,23 +22,80 @@
   },
   "universe_size": 134,
   "earnings_source_ok": true,
-  "result_count": 0,
-  "results": [],
+  "result_count": 2,
+  "results": [
+    {
+      "symbol": "AMZN",
+      "sector": "Retail",
+      "spot": 251.99,
+      "strike": 227.5,
+      "otm_pct": 9.7,
+      "expiration": "2026-11-06",
+      "dte": 9,
+      "premium": 213.0,
+      "weekly_yield": 0.728,
+      "assign_pct": 14.3,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 225.37,
+      "cc_strike": 250.0,
+      "cc_premium": 1525.0,
+      "cc_expiration": "2026-11-27",
+      "cc_dte": 30,
+      "cc_weekly_yield": 1.579,
+      "open_interest": 691,
+      "volume": 64,
+      "spread_pct": 5.0,
+      "iv": 71.2,
+      "collateral": 22750.0,
+      "score": 0.051,
+      "tier": "yellow"
+    },
+    {
+      "symbol": "SMCI",
+      "sector": "Technology",
+      "spot": 34.79,
+      "strike": 30.0,
+      "otm_pct": 13.8,
+      "expiration": "2026-11-20",
+      "dte": 23,
+      "premium": 82.0,
+      "weekly_yield": 0.832,
+      "assign_pct": 17.8,
+      "earnings_clear": true,
+      "next_earnings": null,
+      "wheel_ok": true,
+      "cost_basis": 29.18,
+      "cc_strike": 34.0,
+      "cc_premium": 410.0,
+      "cc_expiration": "2026-11-27",
+      "cc_dte": 30,
+      "cc_weekly_yield": 3.279,
+      "open_interest": 4666,
+      "volume": 692,
+      "spread_pct": 4.8,
+      "iv": 87.8,
+      "collateral": 3000.0,
+      "score": 0.047,
+      "tier": "yellow"
+    }
+  ],
   "indices": [
     {
       "label": "S&P 500",
-      "value": 7730.58,
-      "change_pct": 0.1
+      "value": 7743.98,
+      "change_pct": 0.28
     },
     {
       "label": "Dow Jones",
-      "value": 52447.0,
-      "change_pct": 0.13
+      "value": 52475.0,
+      "change_pct": 0.19
     },
     {
       "label": "Nasdaq 100",
-      "value": 29671.38,
-      "change_pct": 0.07
+      "value": 29813.16,
+      "change_pct": 0.55
     }
   ]
 }
