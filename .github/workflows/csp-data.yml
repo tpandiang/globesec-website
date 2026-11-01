@@ -4,8 +4,9 @@ name: CSP Data Refresh
 # commit -> one Cloudflare Pages build per cycle (stays under the 500 builds/month free tier).
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "*/30 13-20 * * 1-5"   # every 30 min, ~US market hours (data is ~15 min delayed)
+  # Schedule paused 2026-11-01 at the owner's request. To resume, restore:
+  # schedule:
+  #   - cron: "*/30 13-20 * * 1-5"   # every 30 min, ~US market hours (data is ~15 min delayed)
 
 permissions:
   contents: write
