@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS ANS Direct Connect - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">ANS-C01</span>
+            <span>Direct Connect</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Advanced Networking Specialty &mdash; Direct Connect</h2>
+        <p>40 refresher questions &mdash; DX locations, dedicated vs hosted connections, public/private/transit VIFs, DX Gateway, SiteLink, BGP communities, LAG, BFD, MACsec, MTU, monitoring &amp; billing</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/40</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 40 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 40</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="DX Basics" onclick="filterQ(this)">DX Basics</button><button class="filter-btn" data-f="Connections" onclick="filterQ(this)">Connections</button><button class="filter-btn" data-f="Virtual Interfaces" onclick="filterQ(this)">Virtual Interfaces</button><button class="filter-btn" data-f="DX Gateway & SiteLink" onclick="filterQ(this)">DX Gateway & SiteLink</button><button class="filter-btn" data-f="Routing Policies" onclick="filterQ(this)">Routing Policies</button><button class="filter-btn" data-f="Resiliency" onclick="filterQ(this)">Resiliency</button><button class="filter-btn" data-f="Security & Ops" onclick="filterQ(this)">Security & Ops</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short ANS-style scenarios.</p>
+
+<!-- Q1 DX Basics -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DX Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">DX Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>What is AWS Direct Connect?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A service that links two VPCs in the same region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A private, dedicated network link from your site to AWS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A content delivery network for caching websites</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An encrypted IPsec tunnel over the public internet to a VGW</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A private, dedicated network link from your site to AWS<br><br>
+<strong>How to think about it:</strong> <b>Direct Connect</b> = a private, dedicated network link from your network to AWS (no internet).<br><br>
+<strong>Why B is correct:</strong> Traffic runs over dedicated circuits and the AWS backbone instead of the public internet.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A service that links two VPCs in the same region</em> &mdash; That describes VPC peering or Transit Gateway.<br><em>C) A content delivery network for caching websites</em> &mdash; That describes Amazon CloudFront.<br><em>D) An encrypted IPsec tunnel over the public internet to a VGW</em> &mdash; That describes Site-to-Site VPN.
+</div>
+</div>
+
+<!-- Q2 DX Basics -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DX Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">DX Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>What is a Direct Connect <em>location</em>?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A CloudFront edge location that caches HTTP content</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Your own on-premises data center or branch office</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An AWS Availability Zone inside a region's data centers</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A colocation facility that houses AWS DX routers</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A colocation facility that houses AWS DX routers<br><br>
+<strong>How to think about it:</strong> <b>DX location</b> = third-party colocation facility where AWS routers live.<br><br>
+<strong>Why D is correct:</strong> DX locations are run by data-center providers such as Equinix; AWS places its DX devices there.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A CloudFront edge location that caches HTTP content</em> &mdash; Edge locations cache content and don't terminate DX circuits.<br><em>B) Your own on-premises data center or branch office</em> &mdash; Your site connects to the DX location, usually over a last-mile circuit.<br><em>C) An AWS Availability Zone inside a region's data centers</em> &mdash; AZs host compute; DX locations are separate facilities.
+</div>
+</div>
+
+<!-- Q3 DX Basics -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DX Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">DX Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>What is the <em>cross-connect</em> in a Direct Connect setup?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A BGP session between two VPCs in one region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The fiber linking your router to the AWS router</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The 802.1Q VLAN tag used on a virtual interface</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A VPN tunnel kept as a backup path into the VPC subnets</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The fiber linking your router to the AWS router<br><br>
+<strong>How to think about it:</strong> <b>Cross-connect</b> = the physical cable between your (or your partner's) router and the AWS router in the DX location.<br><br>
+<strong>Why B is correct:</strong> The facility provider runs this fiber between the two cages.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A BGP session between two VPCs in one region</em> &mdash; VPCs don't run BGP with each other.<br><em>C) The 802.1Q VLAN tag used on a virtual interface</em> &mdash; The VLAN is a logical layer 2 setting on top of the cable.<br><em>D) A VPN tunnel kept as a backup path into the VPC subnets</em> &mdash; A backup VPN is a separate path, not the cross-connect.
+</div>
+</div>
+
+<!-- Q4 DX Basics -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DX Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">DX Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>Which features must your router support to use Direct Connect?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">IPsec with IKEv2 and pre-shared keys only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">802.1Q VLANs and BGP with MD5 authentication</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Spanning Tree and LACP, without any BGP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">OSPF areas and PIM multicast routing toward AWS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> 802.1Q VLANs and BGP with MD5 authentication<br><br>
+<strong>How to think about it:</strong> DX router needs: <b>single-mode fiber</b> optics, <b>802.1Q VLANs</b>, <b>BGP with MD5</b>.<br><br>
+<strong>Why B is correct:</strong> Each VIF is a VLAN, and routes are exchanged over an MD5-authenticated BGP session.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) IPsec with IKEv2 and pre-shared keys only</em> &mdash; IPsec is needed only if you add a VPN on top of DX.<br><em>C) Spanning Tree and LACP, without any BGP</em> &mdash; LACP is used for LAGs, but VLANs and BGP are the core requirements.<br><em>D) OSPF areas and PIM multicast routing toward AWS</em> &mdash; DX uses BGP only; multicast is not carried.
+</div>
+</div>
+
+<!-- Q5 DX Basics -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DX Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">DX Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>For a 10 Gbps dedicated connection, which port setting does AWS require on your router?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Spanning Tree enabled on the port facing AWS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Auto-negotiation on, with half duplex as the fallback</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Auto-negotiation off, speed and duplex set manually</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Jumbo frames of 9001 bytes required on the port</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Auto-negotiation off, speed and duplex set manually<br><br>
+<strong>How to think about it:</strong> DX above 1 Gbps: <b>auto-negotiation OFF</b>, speed and duplex set manually.<br><br>
+<strong>Why C is correct:</strong> AWS requires auto-negotiation off for ports faster than 1 Gbps.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Spanning Tree enabled on the port facing AWS</em> &mdash; STP is not part of the DX port requirements.<br><em>B) Auto-negotiation on, with half duplex as the fallback</em> &mdash; Half duplex is never used on DX ports.<br><em>D) Jumbo frames of 9001 bytes required on the port</em> &mdash; Jumbo frames are optional, per VIF.
+</div>
+</div>
+
+<!-- Q6 DX Basics -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DX Basics" data-level="A">
+<div class="q-tags"><span class="q-tag">DX Basics</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>A team needs a private link to AWS in two weeks, but a new dedicated DX connection is expected to take far longer. What is the best interim plan?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Order a LAG instead, because LAGs are provisioned instantly</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable SiteLink on the requested connection to speed it up</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Run a Site-to-Site VPN until the DX circuit is ready</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use VPC peering from the data center to the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Run a Site-to-Site VPN until the DX circuit is ready<br><br>
+<strong>How to think about it:</strong> DX takes weeks to months to provision, so bridge the gap with a <b>Site-to-Site VPN</b>.<br><br>
+<strong>Why C is correct:</strong> A VPN can be live in hours and later stay on as a DX backup.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Order a LAG instead, because LAGs are provisioned instantly</em> &mdash; A LAG is built from DX connections, which take the same lead time.<br><em>B) Enable SiteLink on the requested connection to speed it up</em> &mdash; SiteLink links customer sites over DX; it doesn't speed up provisioning.<br><em>D) Use VPC peering from the data center to the VPC</em> &mdash; Peering connects VPCs, not on-premises networks.
+</div>
+</div>
+
+<!-- Q7 Connections -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Connections" data-level="B">
+<div class="q-tags"><span class="q-tag">Connections</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>What is a <em>dedicated</em> Direct Connect connection?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A virtual interface created for you by another account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A slice of a partner's port shared with other customers</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A physical port for one customer, ordered from AWS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A VPN tunnel that comes with a guaranteed bandwidth SLA</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A physical port for one customer, ordered from AWS<br><br>
+<strong>How to think about it:</strong> <b>Dedicated</b> = a physical port owned by you, ordered from AWS (1, 10, 100 or 400 Gbps).<br><br>
+<strong>Why C is correct:</strong> You order the port in the console and get the full port speed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A virtual interface created for you by another account</em> &mdash; That is a hosted VIF.<br><em>B) A slice of a partner's port shared with other customers</em> &mdash; That is a hosted connection.<br><em>D) A VPN tunnel that comes with a guaranteed bandwidth SLA</em> &mdash; VPNs run over the internet and have no bandwidth guarantee.
+</div>
+</div>
+
+<!-- Q8 Connections -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Connections" data-level="B">
+<div class="q-tags"><span class="q-tag">Connections</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>What is a <em>hosted</em> Direct Connect connection?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A DX connection that AWS hosts in your own data center</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A partner-provisioned slice of a port, often sub-1G</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A second VIF added to an existing dedicated connection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A full 100 Gbps port that you order directly from AWS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A partner-provisioned slice of a port, often sub-1G<br><br>
+<strong>How to think about it:</strong> <b>Hosted</b> = a Direct Connect Partner gives you a sub-rate slice of their port (from 50 Mbps).<br><br>
+<strong>Why B is correct:</strong> Partners offer capacities like 50 Mbps to 10 Gbps and more, carved out of their interconnect.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A DX connection that AWS hosts in your own data center</em> &mdash; AWS doesn't put DX routers in customer premises.<br><em>C) A second VIF added to an existing dedicated connection</em> &mdash; Extra VIFs are not a separate connection type.<br><em>D) A full 100 Gbps port that you order directly from AWS</em> &mdash; Ordering a full port from AWS is a dedicated connection.
+</div>
+</div>
+
+<!-- Q9 Connections -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Connections" data-level="B">
+<div class="q-tags"><span class="q-tag">Connections</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>What is the LOA-CFA you download after requesting a dedicated connection?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An authorization letter so the facility builds the cross-connect</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An SSL certificate used to encrypt traffic on the DX link end to end</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The BGP configuration file to load on your router</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A monthly invoice listing the port-hour charges</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An authorization letter so the facility builds the cross-connect<br><br>
+<strong>How to think about it:</strong> <b>LOA-CFA</b> = the authorization letter you hand to the facility to build the cross-connect.<br><br>
+<strong>Why A is correct:</strong> It names the AWS port; give it to the DX location provider to run the cable.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An SSL certificate used to encrypt traffic on the DX link end to end</em> &mdash; Encryption options are MACsec or VPN; the LOA is not a certificate.<br><em>C) The BGP configuration file to load on your router</em> &mdash; Router configuration is downloaded for each VIF, not the connection.<br><em>D) A monthly invoice listing the port-hour charges</em> &mdash; Bills come through AWS billing, not as an LOA.
+</div>
+</div>
+
+<!-- Q10 Connections -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Connections" data-level="B">
+<div class="q-tags"><span class="q-tag">Connections</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>How many virtual interfaces can you create on a hosted connection?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">One</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Unlimited</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Four, one for each VIF type</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Fifty</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> One<br><br>
+<strong>How to think about it:</strong> Hosted connection = <b>one VIF</b>; need more VIFs → dedicated connection.<br><br>
+<strong>Why A is correct:</strong> A hosted connection supports one VIF; use a dedicated connection if you need several.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Unlimited</em> &mdash; Every DX connection type has a VIF quota.<br><em>C) Four, one for each VIF type</em> &mdash; There are only three VIF types, and hosted allows only one VIF.<br><em>D) Fifty</em> &mdash; Up to 50 public/private VIFs is the limit for a dedicated connection, not a hosted one.
+</div>
+</div>
+
+<!-- Q11 Connections -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Connections" data-level="B">
+<div class="q-tags"><span class="q-tag">Connections</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>What is the difference between a <em>hosted connection</em> and a <em>hosted VIF</em>?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A hosted connection can only carry public VIFs, while a hosted VIF is private</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">They are two names for the same thing, used in different AWS console pages</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A hosted VIF always gets more bandwidth than a hosted connection does</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Hosted VIF: on another account's connection; hosted connection: a partner circuit</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Hosted VIF: on another account's connection; hosted connection: a partner circuit<br><br>
+<strong>How to think about it:</strong> <b>Hosted VIF</b> = a VIF on someone else's connection; <b>hosted connection</b> = a partner's sub-rate circuit.<br><br>
+<strong>Why D is correct:</strong> With a hosted VIF, the connection owner creates the VIF for your account to accept.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A hosted connection can only carry public VIFs, while a hosted VIF is private</em> &mdash; A hosted connection can carry any one VIF type.<br><em>B) They are two names for the same thing, used in different AWS console pages</em> &mdash; They are different: one is a connection, the other is a virtual interface.<br><em>C) A hosted VIF always gets more bandwidth than a hosted connection does</em> &mdash; Speed depends on the underlying connection, not the name.
+</div>
+</div>
+
+<!-- Q12 Connections -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Connections" data-level="A">
+<div class="q-tags"><span class="q-tag">Connections</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>A partner limits a 500 Mbps hosted connection exactly at its rate, and bursts above it are dropped. What explains this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The VLAN ID is shared with another customer's VIF</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Jumbo frames are turned on for the VIF's BGP peering session</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">BFD is disabled on the hosted connection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Hosted connections are policed at the purchased speed</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Hosted connections are policed at the purchased speed<br><br>
+<strong>How to think about it:</strong> Hosted connections are <b>policed</b> to the purchased speed.<br><br>
+<strong>Why D is correct:</strong> Traffic above the rate is dropped, so size the connection for peak load or shape traffic on your side.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The VLAN ID is shared with another customer's VIF</em> &mdash; VLANs are unique per connection; this would not cause rate drops.<br><em>B) Jumbo frames are turned on for the VIF's BGP peering session</em> &mdash; MTU setting doesn't create a rate cap.<br><em>C) BFD is disabled on the hosted connection</em> &mdash; BFD affects failure detection, not bandwidth limits.
+</div>
+</div>
+
+<!-- Q13 Virtual Interfaces -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Virtual Interfaces" data-level="B">
+<div class="q-tags"><span class="q-tag">Virtual Interfaces</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>What does a <em>private</em> VIF give you access to?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">VPC resources on their private IPs, via a VGW or DXGW</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">All AWS public service endpoints, such as S3 public IPs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The general internet, routed through the AWS backbone</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Transit Gateway with many VPCs attached to it</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> VPC resources on their private IPs, via a VGW or DXGW<br><br>
+<strong>How to think about it:</strong> <b>Private VIF</b> = private IPs inside a VPC (via a VGW or DX Gateway).<br><br>
+<strong>Why A is correct:</strong> EC2, RDS and other VPC resources are reached on their private IPs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) All AWS public service endpoints, such as S3 public IPs</em> &mdash; That is a public VIF.<br><em>C) The general internet, routed through the AWS backbone</em> &mdash; No VIF type provides internet access.<br><em>D) A Transit Gateway with many VPCs attached to it</em> &mdash; TGW is reached with a transit VIF through a DX Gateway.
+</div>
+</div>
+
+<!-- Q14 Virtual Interfaces -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Virtual Interfaces" data-level="B">
+<div class="q-tags"><span class="q-tag">Virtual Interfaces</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>What does a <em>public</em> VIF give you access to?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Transit Gateway in your home region only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Private IP addresses inside a single VPC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS public endpoints like S3, in all regions</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Any website on the internet, through AWS's edge</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> AWS public endpoints like S3, in all regions<br><br>
+<strong>How to think about it:</strong> <b>Public VIF</b> = AWS public IP ranges in all regions (not the internet).<br><br>
+<strong>Why C is correct:</strong> AWS advertises its public prefixes to you over the public VIF's BGP session.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Transit Gateway in your home region only</em> &mdash; That needs a transit VIF.<br><em>B) Private IP addresses inside a single VPC</em> &mdash; That is a private VIF.<br><em>D) Any website on the internet, through AWS's edge</em> &mdash; A public VIF reaches only AWS-owned prefixes.
+</div>
+</div>
+
+<!-- Q15 Virtual Interfaces -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Virtual Interfaces" data-level="B">
+<div class="q-tags"><span class="q-tag">Virtual Interfaces</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>What does a <em>transit</em> VIF connect to?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A DX Gateway associated with Transit Gateways</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS public service endpoints such as S3</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Virtual Private Gateway in the same region directly</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An internet gateway in the attached VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A DX Gateway associated with Transit Gateways<br><br>
+<strong>How to think about it:</strong> <b>Transit VIF</b> → <b>DX Gateway</b> → <b>Transit Gateway</b>.<br><br>
+<strong>Why A is correct:</strong> Transit VIFs carry traffic to TGWs, reaching many VPCs in one go.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS public service endpoints such as S3</em> &mdash; Public endpoints are reached with a public VIF.<br><em>C) A Virtual Private Gateway in the same region directly</em> &mdash; A VGW connects with a private VIF.<br><em>D) An internet gateway in the attached VPC</em> &mdash; No VIF type terminates on an IGW.
+</div>
+</div>
+
+<!-- Q16 Virtual Interfaces -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Virtual Interfaces" data-level="B">
+<div class="q-tags"><span class="q-tag">Virtual Interfaces</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>Which parameters do you choose when creating a VIF?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An IKE version, a pre-shared key and a DPD timeout</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A security group and a network ACL for the VIF</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">VLAN ID, BGP ASN, peer IPs and an optional MD5 key</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A placement group, an instance type and a subnet</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> VLAN ID, BGP ASN, peer IPs and an optional MD5 key<br><br>
+<strong>How to think about it:</strong> VIF = <b>VLAN ID</b> + <b>BGP ASN</b> + peer IPs + optional <b>MD5 key</b>.<br><br>
+<strong>Why C is correct:</strong> These define the 802.1Q sub-interface and the BGP session on it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An IKE version, a pre-shared key and a DPD timeout</em> &mdash; These are VPN tunnel settings.<br><em>B) A security group and a network ACL for the VIF</em> &mdash; These filter traffic in the VPC, not on the VIF.<br><em>D) A placement group, an instance type and a subnet</em> &mdash; These are EC2 settings.
+</div>
+</div>
+
+<!-- Q17 Virtual Interfaces -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Virtual Interfaces" data-level="B">
+<div class="q-tags"><span class="q-tag">Virtual Interfaces</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>To use a public VIF, what does AWS check about the public prefixes you advertise?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">That you own them or may advertise them</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">That they were registered through Amazon Route 53</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">That they fall within the private 10.0.0.0/8 range</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">That they match the CIDR of an attached VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> That you own them or may advertise them<br><br>
+<strong>How to think about it:</strong> Public VIF prefixes must be <b>verified as yours</b> with an internet registry.<br><br>
+<strong>Why A is correct:</strong> AWS checks registry records so you can't announce someone else's addresses.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) That they were registered through Amazon Route 53</em> &mdash; Route 53 registers domains, not IP prefixes.<br><em>C) That they fall within the private 10.0.0.0/8 range</em> &mdash; Public VIFs use public IPs, not RFC 1918 ranges.<br><em>D) That they match the CIDR of an attached VPC</em> &mdash; Public VIFs are not tied to any VPC.
+</div>
+</div>
+
+<!-- Q18 Virtual Interfaces -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Virtual Interfaces" data-level="B">
+<div class="q-tags"><span class="q-tag">Virtual Interfaces</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>Which MTU values does a <em>transit</em> VIF support?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only 1500 bytes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Up to 65535 bytes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">1500 or 9001 bytes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">1500 or 8500</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> 1500 or 8500<br><br>
+<strong>How to think about it:</strong> MTU: <b>private VIF 1500/9001</b>, <b>transit VIF 1500/8500</b>, <b>public VIF 1500</b>.<br><br>
+<strong>Why D is correct:</strong> Transit VIFs support jumbo frames up to 8500 bytes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only 1500 bytes</em> &mdash; That is the public VIF limit.<br><em>B) Up to 65535 bytes</em> &mdash; No Ethernet link in AWS supports frames that large.<br><em>C) 1500 or 9001 bytes</em> &mdash; 9001 is the jumbo limit for a private VIF.
+</div>
+</div>
+
+<!-- Q19 Virtual Interfaces -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Virtual Interfaces" data-level="A">
+<div class="q-tags"><span class="q-tag">Virtual Interfaces</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>You enabled jumbo frames on a private VIF, but some traffic still uses a 1500-byte MTU. Which explanation fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Jumbo frames apply only to propagated, not static, routes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">BFD must be disabled before jumbo frames can be used</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Jumbo frames require a hosted connection from a partner</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Jumbo frames only work on public VIFs, not private ones</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Jumbo frames apply only to propagated, not static, routes<br><br>
+<strong>How to think about it:</strong> Jumbo over DX applies only to <b>propagated</b> routes; static routes use 1500.<br><br>
+<strong>Why A is correct:</strong> Make sure routes are learned by BGP and propagated if you want jumbo frames end to end.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) BFD must be disabled before jumbo frames can be used</em> &mdash; BFD and MTU are unrelated.<br><em>C) Jumbo frames require a hosted connection from a partner</em> &mdash; Jumbo frames need a capable connection, whatever its type.<br><em>D) Jumbo frames only work on public VIFs, not private ones</em> &mdash; Public VIFs are limited to 1500 bytes.
+</div>
+</div>
+
+<!-- Q20 Virtual Interfaces -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Virtual Interfaces" data-level="A">
+<div class="q-tags"><span class="q-tag">Virtual Interfaces</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>A company wants on-premises servers to reach S3 privately over its DX link, with no internet path. It has only a private VIF today. What should it add?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A second private VIF to the same VGW, just for S3 traffic</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An S3 interface endpoint, reached over the private VIF</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An S3 gateway endpoint reached over the private VIF</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A NAT gateway in a public subnet of the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An S3 interface endpoint, reached over the private VIF<br><br>
+<strong>How to think about it:</strong> S3 over DX: <b>public VIF</b>, or a private/transit VIF + <b>S3 interface endpoint</b>.<br><br>
+<strong>Why B is correct:</strong> Interface endpoints have private IPs in the VPC; a public VIF is the other valid option.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A second private VIF to the same VGW, just for S3 traffic</em> &mdash; Another private VIF still can't reach S3's public IPs.<br><em>C) An S3 gateway endpoint reached over the private VIF</em> &mdash; Gateway endpoints can't be used by traffic coming from DX or VPN.<br><em>D) A NAT gateway in a public subnet of the VPC</em> &mdash; On-premises traffic can't use a NAT gateway for egress.
+</div>
+</div>
+
+<!-- Q21 DX Gateway & SiteLink -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DX Gateway & SiteLink" data-level="B">
+<div class="q-tags"><span class="q-tag">DX Gateway & SiteLink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>What is a Direct Connect Gateway?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A physical router that AWS installs in the DX location</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A VPN endpoint that encrypts all DX traffic by default</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A global resource linking a VIF to VPCs in any region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A regional gateway that gives VPCs internet access</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A global resource linking a VIF to VPCs in any region<br><br>
+<strong>How to think about it:</strong> <b>DX Gateway</b> = global object linking a VIF to VGWs/TGWs in <b>any region</b>.<br><br>
+<strong>Why C is correct:</strong> It lets one DX connection reach VGWs or TGWs in many regions and accounts.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A physical router that AWS installs in the DX location</em> &mdash; The DX Gateway is a logical resource, not hardware.<br><em>B) A VPN endpoint that encrypts all DX traffic by default</em> &mdash; Encryption needs MACsec or a VPN over DX.<br><em>D) A regional gateway that gives VPCs internet access</em> &mdash; That is an internet gateway.
+</div>
+</div>
+
+<!-- Q22 DX Gateway & SiteLink -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DX Gateway & SiteLink" data-level="B">
+<div class="q-tags"><span class="q-tag">DX Gateway & SiteLink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>Which statement about a Direct Connect Gateway is true?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It routes traffic between all attached VPCs automatically</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It only works with VPCs in the same region as the VIF</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It gives no VPC-to-VPC transit, and CIDRs can't overlap</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It can be used with a public VIF to reach Amazon S3</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> It gives no VPC-to-VPC transit, and CIDRs can't overlap<br><br>
+<strong>How to think about it:</strong> DX Gateway: <b>no transit</b> between attached VPCs, <b>no overlapping CIDRs</b>.<br><br>
+<strong>Why C is correct:</strong> The DX Gateway passes traffic only between on-premises and the VPCs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It routes traffic between all attached VPCs automatically</em> &mdash; VPC-to-VPC traffic needs peering or a Transit Gateway.<br><em>B) It only works with VPCs in the same region as the VIF</em> &mdash; Its key benefit is reaching VPCs in other regions.<br><em>D) It can be used with a public VIF to reach Amazon S3</em> &mdash; DX Gateways are for private and transit VIFs only.
+</div>
+</div>
+
+<!-- Q23 DX Gateway & SiteLink -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DX Gateway & SiteLink" data-level="B">
+<div class="q-tags"><span class="q-tag">DX Gateway & SiteLink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>What does Direct Connect SiteLink do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Adds an IPsec VPN on top of each VIF automatically</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Combines several DX connections into one logical LAG</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Connects two VPCs in different AWS regions over private IPs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Links your sites through DX locations on the AWS backbone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Links your sites through DX locations on the AWS backbone<br><br>
+<strong>How to think about it:</strong> <b>SiteLink</b> = site-to-site traffic between DX locations over the AWS backbone.<br><br>
+<strong>Why D is correct:</strong> Enabled per VIF, it lets your offices use AWS's network as a private WAN.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Adds an IPsec VPN on top of each VIF automatically</em> &mdash; SiteLink does not encrypt traffic.<br><em>B) Combines several DX connections into one logical LAG</em> &mdash; That is a Link Aggregation Group.<br><em>C) Connects two VPCs in different AWS regions over private IPs</em> &mdash; That is inter-region peering or TGW peering.
+</div>
+</div>
+
+<!-- Q24 DX Gateway & SiteLink -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DX Gateway & SiteLink" data-level="B">
+<div class="q-tags"><span class="q-tag">DX Gateway & SiteLink</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>Without SiteLink, can two customer sites on the same DX Gateway reach each other through it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only if both sites use the same VLAN ID on their VIFs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Yes, always, because BGP shares all routes with every peer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Yes, but only when both sites use public VIFs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">No, a DX Gateway doesn't route site to site</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> No, a DX Gateway doesn't route site to site<br><br>
+<strong>How to think about it:</strong> DX Gateway alone has <b>no site-to-site transit</b>; turn on <b>SiteLink</b>.<br><br>
+<strong>Why D is correct:</strong> Traffic only flows between sites and VPCs, unless SiteLink is enabled on the VIFs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only if both sites use the same VLAN ID on their VIFs</em> &mdash; VLAN IDs are local to each connection.<br><em>B) Yes, always, because BGP shares all routes with every peer</em> &mdash; The DX Gateway does not re-advertise one site's prefixes to another site by default.<br><em>C) Yes, but only when both sites use public VIFs</em> &mdash; Public VIFs don't use a DX Gateway at all.
+</div>
+</div>
+
+<!-- Q25 DX Gateway & SiteLink -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DX Gateway & SiteLink" data-level="A">
+<div class="q-tags"><span class="q-tag">DX Gateway & SiteLink</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>A company has one DX connection in Virginia and VPCs in us-east-1, eu-west-1 and ap-south-1. What is the simplest way to give all VPCs private access over that link?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Peer the remote VPCs with the us-east-1 VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use a public VIF to reach each VPC's private IPs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Associate each VPC's VGW with one DX Gateway</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a separate DX connection in each region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Associate each VPC's VGW with one DX Gateway<br><br>
+<strong>How to think about it:</strong> One DX, many regions = <b>private VIF → DX Gateway → VGWs</b> (or transit VIF → TGWs).<br><br>
+<strong>Why C is correct:</strong> A single private VIF to the DX Gateway reaches VGWs in every region.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Peer the remote VPCs with the us-east-1 VPC</em> &mdash; Peering is not transitive, so DX traffic can't continue across it.<br><em>B) Use a public VIF to reach each VPC's private IPs</em> &mdash; A public VIF reaches only AWS public endpoints.<br><em>D) Create a separate DX connection in each region</em> &mdash; That works but costs far more and isn't needed.
+</div>
+</div>
+
+<!-- Q26 DX Gateway & SiteLink -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DX Gateway & SiteLink" data-level="A">
+<div class="q-tags"><span class="q-tag">DX Gateway & SiteLink</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>Many VPCs across accounts must reach on-premises over DX and also reach each other. Which design is most scalable?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A private VIF per VPC on the same DX connection</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A transit VIF, a DX Gateway and a Transit Gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A DX Gateway with every VGW associated, and no TGW</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A public VIF plus a full mesh of VPC peering</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A transit VIF, a DX Gateway and a Transit Gateway<br><br>
+<strong>How to think about it:</strong> Many VPCs + inter-VPC + DX = <b>Transit VIF → DX Gateway → Transit Gateway</b>.<br><br>
+<strong>Why B is correct:</strong> The TGW routes between VPCs and to on-premises, and the DX Gateway connects it to DX.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A private VIF per VPC on the same DX connection</em> &mdash; VIF quotas run out, and VPCs still can't talk to each other.<br><em>C) A DX Gateway with every VGW associated, and no TGW</em> &mdash; VPCs on a DX Gateway can't reach each other.<br><em>D) A public VIF plus a full mesh of VPC peering</em> &mdash; A public VIF doesn't reach VPC private IPs.
+</div>
+</div>
+
+<!-- Q27 Routing Policies -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Routing Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>When AWS receives the same prefix over both Direct Connect and Site-to-Site VPN, which does it prefer by default?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Direct Connect</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Site-to-Site VPN</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It splits traffic equally between them</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Whichever path has the higher MED</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Direct Connect<br><br>
+<strong>How to think about it:</strong> Same prefix, DX vs VPN → AWS prefers <b>DX</b>.<br><br>
+<strong>Why A is correct:</strong> AWS prefers DX-learned routes over VPN routes for the same prefix, so VPN works as a backup.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Site-to-Site VPN</em> &mdash; VPN is ranked below DX for identical prefixes.<br><em>C) It splits traffic equally between them</em> &mdash; AWS does not load balance between DX and VPN.<br><em>D) Whichever path has the higher MED</em> &mdash; Higher MED is less preferred, and DX already wins first.
+</div>
+</div>
+
+<!-- Q28 Routing Policies -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Routing Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>On a private VIF, which BGP community makes AWS treat a route as the <em>most</em> preferred?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">7224:7100</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">7224:8100</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">7224:7300</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">7224:9100</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> 7224:7300<br><br>
+<strong>How to think about it:</strong> Local preference communities: <b>7224:7100</b> low, <b>7224:7200</b> medium, <b>7224:7300</b> high.<br><br>
+<strong>Why C is correct:</strong> 7300 is the high local preference community, so AWS prefers that path to reach you.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 7224:7100</em> &mdash; 7100 is the low preference value.<br><em>B) 7224:8100</em> &mdash; 8100 is a tag AWS adds to routes from the same region on a public VIF.<br><em>D) 7224:9100</em> &mdash; 9100 is a public VIF scope community for the local region.
+</div>
+</div>
+
+<!-- Q29 Routing Policies -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Routing Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>On a public VIF, which BGP community limits your prefixes to the local AWS region only?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">7224:9300</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">7224:9100</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">NO_EXPORT only</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">7224:7300</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> 7224:9100<br><br>
+<strong>How to think about it:</strong> Public VIF scope tags you send: <b>9100</b> region, <b>9200</b> continent, <b>9300</b> global.<br><br>
+<strong>Why B is correct:</strong> This keeps your advertised prefixes within the region of the DX location.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 7224:9300</em> &mdash; 9300 means global, which is also the default.<br><em>C) NO_EXPORT only</em> &mdash; NO_EXPORT is a well-known community, but region scope uses 7224:9xxx.<br><em>D) 7224:7300</em> &mdash; 7300 sets local preference on private and transit VIFs.
+</div>
+</div>
+
+<!-- Q30 Routing Policies -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Routing Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>What do the communities 7224:8100 and 7224:8200 tell you on routes AWS sends over a public VIF?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">How much traffic on the route costs per GB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Whether the prefix is in the same region or continent</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Whether the route is an IPv4 or an IPv6 prefix</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Which VLAN and which VIF the route was first learned on</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Whether the prefix is in the same region or continent<br><br>
+<strong>How to think about it:</strong> Tags from AWS: <b>8100</b> = same region, <b>8200</b> = same continent, none = global.<br><br>
+<strong>Why B is correct:</strong> You can filter on these tags to accept only nearby AWS prefixes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) How much traffic on the route costs per GB</em> &mdash; Pricing isn't signalled through BGP.<br><em>C) Whether the route is an IPv4 or an IPv6 prefix</em> &mdash; Address family is part of the BGP session, not a community.<br><em>D) Which VLAN and which VIF the route was first learned on</em> &mdash; VLANs are not shown in BGP communities.
+</div>
+</div>
+
+<!-- Q31 Routing Policies -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Routing Policies" data-level="A">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>Two DX connections serve the same on-premises prefix. You want AWS to use connection 1 and keep connection 2 as standby, with no change to prefix length. What do you do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Tag connection 1 with 7224:7300 and connection 2 with 7224:7100</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use a different VLAN ID on connection 2 than on connection 1</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Disable BFD on connection 2 so it fails over slower</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Advertise the prefix with a higher MED value on connection 1 only</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Tag connection 1 with 7224:7300 and connection 2 with 7224:7100<br><br>
+<strong>How to think about it:</strong> Active/passive DX toward you: <b>local pref community</b> (7224:7300 vs 7100) or <b>AS_PATH prepend</b>.<br><br>
+<strong>Why A is correct:</strong> AWS sends traffic over the path with the higher local preference community.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Use a different VLAN ID on connection 2 than on connection 1</em> &mdash; VLAN IDs don't affect path choice.<br><em>C) Disable BFD on connection 2 so it fails over slower</em> &mdash; BFD only speeds up failure detection.<br><em>D) Advertise the prefix with a higher MED value on connection 1 only</em> &mdash; A higher MED makes a path less preferred.
+</div>
+</div>
+
+<!-- Q32 Resiliency -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Resiliency" data-level="B">
+<div class="q-tags"><span class="q-tag">Resiliency</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>What is a Link Aggregation Group (LAG)?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A group of VPN tunnels using ECMP on a Transit Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Same-speed dedicated connections bundled as one link</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A pair of connections in two different DX locations</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A set of VIFs sharing one VLAN ID and one BGP session</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Same-speed dedicated connections bundled as one link<br><br>
+<strong>How to think about it:</strong> <b>LAG</b> = bundle of same-speed dedicated connections at one DX location (LACP, active/active).<br><br>
+<strong>Why B is correct:</strong> They must terminate on the same AWS device and work as one active/active interface.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A group of VPN tunnels using ECMP on a Transit Gateway</em> &mdash; That is ECMP over VPN.<br><em>C) A pair of connections in two different DX locations</em> &mdash; A LAG can't span DX locations.<br><em>D) A set of VIFs sharing one VLAN ID and one BGP session</em> &mdash; Each VIF has its own VLAN.
+</div>
+</div>
+
+<!-- Q33 Resiliency -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Resiliency" data-level="B">
+<div class="q-tags"><span class="q-tag">Resiliency</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>What does the <em>minimum links</em> setting on a LAG control?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The minimum number of VIFs that must exist on the LAG</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The minimum BGP hold time for sessions on the LAG</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The minimum speed allowed for each connection in the LAG</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">How many members must be up for the LAG to stay up</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> How many members must be up for the LAG to stay up<br><br>
+<strong>How to think about it:</strong> LAG <b>minimum links</b> = how many members must be up for the LAG to stay up.<br><br>
+<strong>Why D is correct:</strong> If fewer members are up, the whole LAG goes down so traffic can fail over elsewhere.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The minimum number of VIFs that must exist on the LAG</em> &mdash; VIF count is unrelated to this setting.<br><em>B) The minimum BGP hold time for sessions on the LAG</em> &mdash; BGP timers are set per session.<br><em>C) The minimum speed allowed for each connection in the LAG</em> &mdash; All members must already have the same speed.
+</div>
+</div>
+
+<!-- Q34 Resiliency -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Resiliency" data-level="B">
+<div class="q-tags"><span class="q-tag">Resiliency</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>Which DX resiliency model gives the highest availability?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A single connection configured as a LAG of one member</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Maximum resiliency: separate devices in 2+ DX locations</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">One connection plus SiteLink between your sites</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Development and test: two connections in one location</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Maximum resiliency: separate devices in 2+ DX locations<br><br>
+<strong>How to think about it:</strong> <b>Maximum resiliency</b> = separate connections on separate devices in <b>two or more locations</b>.<br><br>
+<strong>Why B is correct:</strong> This protects against both a device failure and a whole location failure.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A single connection configured as a LAG of one member</em> &mdash; A single path has no redundancy.<br><em>C) One connection plus SiteLink between your sites</em> &mdash; SiteLink is for site-to-site traffic, not resilience.<br><em>D) Development and test: two connections in one location</em> &mdash; This survives a device failure, but not the loss of the location.
+</div>
+</div>
+
+<!-- Q35 Resiliency -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Resiliency" data-level="B">
+<div class="q-tags"><span class="q-tag">Resiliency</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>What is BFD used for on Direct Connect?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Encrypting traffic on the cross-connect at layer 2</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Filtering advertised prefixes by BGP community tag</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Combining multiple dedicated connections into one link</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Fast link-failure detection for sub-second BGP failover</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Fast link-failure detection for sub-second BGP failover<br><br>
+<strong>How to think about it:</strong> <b>BFD</b> = sub-second failure detection (AWS: 300 ms × 3) instead of the 90 s BGP hold timer.<br><br>
+<strong>Why D is correct:</strong> Without BFD, BGP waits for its hold timer, which is 90 seconds by default.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Encrypting traffic on the cross-connect at layer 2</em> &mdash; That is MACsec.<br><em>B) Filtering advertised prefixes by BGP community tag</em> &mdash; That is a BGP routing policy.<br><em>C) Combining multiple dedicated connections into one link</em> &mdash; That is a LAG.
+</div>
+</div>
+
+<!-- Q36 Resiliency -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Resiliency" data-level="A">
+<div class="q-tags"><span class="q-tag">Resiliency</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Two DX connections and BGP are in place, but failover still takes around 90 seconds. AWS has BFD on. What is missing?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">BFD isn't configured on the customer router</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The BGP ASN must be a public, registered ASN</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The connections must be in the same LAG</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">MACsec must be enabled on both connections</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> BFD isn't configured on the customer router<br><br>
+<strong>How to think about it:</strong> BFD needs <b>both sides</b>; AWS enables it, you must configure it on <b>your router</b>.<br><br>
+<strong>Why A is correct:</strong> AWS turns BFD on by its side, but it only works when your router runs it too.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) The BGP ASN must be a public, registered ASN</em> &mdash; ASN type has no effect on failure detection.<br><em>C) The connections must be in the same LAG</em> &mdash; A LAG isn't needed for fast failover.<br><em>D) MACsec must be enabled on both connections</em> &mdash; Encryption doesn't affect failover time.
+</div>
+</div>
+
+<!-- Q37 Security & Ops -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Security & Ops" data-level="B">
+<div class="q-tags"><span class="q-tag">Security & Ops</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>Is Direct Connect traffic encrypted by default?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only traffic on public VIFs is encrypted, using TLS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Yes, every DX connection uses IPsec automatically</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">No; add MACsec or an IPsec VPN over DX if needed</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Yes, but only on hosted connections from partners</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> No; add MACsec or an IPsec VPN over DX if needed<br><br>
+<strong>How to think about it:</strong> DX = private but <b>not encrypted</b>; add <b>MACsec</b> (L2) or <b>VPN over DX</b> (L3).<br><br>
+<strong>Why C is correct:</strong> DX keeps traffic off the internet, but you must add encryption yourself.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only traffic on public VIFs is encrypted, using TLS</em> &mdash; No VIF type is encrypted by default.<br><em>B) Yes, every DX connection uses IPsec automatically</em> &mdash; No IPsec is applied unless you build a VPN on top.<br><em>D) Yes, but only on hosted connections from partners</em> &mdash; Hosted connections aren't encrypted either.
+</div>
+</div>
+
+<!-- Q38 Security & Ops -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Security & Ops" data-level="B">
+<div class="q-tags"><span class="q-tag">Security & Ops</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>What does MACsec protect on a Direct Connect connection?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only the BGP session itself, not the data frames</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only traffic carried on partner hosted connections</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The whole path from on-premises to the EC2 instance</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The layer 2 hop between your router and AWS's device</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The layer 2 hop between your router and AWS's device<br><br>
+<strong>How to think about it:</strong> <b>MACsec</b> = layer 2 encryption of the hop between your router and the AWS device (dedicated, select speeds).<br><br>
+<strong>Why D is correct:</strong> It encrypts that hop only, not the full path into your VPC.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only the BGP session itself, not the data frames</em> &mdash; MACsec encrypts all frames on the link.<br><em>B) Only traffic carried on partner hosted connections</em> &mdash; MACsec is for dedicated connections at select speeds and locations.<br><em>C) The whole path from on-premises to the EC2 instance</em> &mdash; End-to-end protection needs TLS or IPsec.
+</div>
+</div>
+
+<!-- Q39 Security & Ops -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Security & Ops" data-level="A">
+<div class="q-tags"><span class="q-tag">Security & Ops</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Compliance requires IPsec encryption over DX, but policy forbids public IPs. Which option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Private IP VPN over a transit VIF to a Transit Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">BFD with MD5 authentication on the BGP session</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A standard Site-to-Site VPN over a public VIF</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">MACsec enabled on a 500 Mbps hosted connection</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A Private IP VPN over a transit VIF to a Transit Gateway<br><br>
+<strong>How to think about it:</strong> Encrypt DX with no public IPs = <b>Private IP VPN</b> over a <b>transit VIF</b> to a TGW.<br><br>
+<strong>Why A is correct:</strong> The VPN tunnels use private IPs and ride the DX path, so no public addresses are needed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) BFD with MD5 authentication on the BGP session</em> &mdash; BFD and MD5 don't encrypt data.<br><em>C) A standard Site-to-Site VPN over a public VIF</em> &mdash; This needs public IPs for the tunnel endpoints.<br><em>D) MACsec enabled on a 500 Mbps hosted connection</em> &mdash; MACsec is not IPsec and isn't available on hosted connections.
+</div>
+</div>
+
+<!-- Q40 Security & Ops -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Security & Ops" data-level="B">
+<div class="q-tags"><span class="q-tag">Security & Ops</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>Which charges make up the Direct Connect bill?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A per-GB charge for data coming into AWS only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A one-time setup fee with no hourly charge after it</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Per-VIF hourly charges for each VLAN you create</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Port-hours plus data transfer out (data in is free)</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Port-hours plus data transfer out (data in is free)<br><br>
+<strong>How to think about it:</strong> DX bill = <b>port-hours</b> + <b>data transfer OUT</b>; data transfer IN is free.<br><br>
+<strong>Why D is correct:</strong> You pay for the port capacity by the hour and for data leaving AWS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A per-GB charge for data coming into AWS only</em> &mdash; Data coming into AWS over DX is not charged.<br><em>B) A one-time setup fee with no hourly charge after it</em> &mdash; Ports are billed every hour they are provisioned.<br><em>C) Per-VIF hourly charges for each VLAN you create</em> &mdash; VIFs themselves are not billed separately.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 40;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

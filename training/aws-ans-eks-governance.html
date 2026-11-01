@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS ANS EKS Networking &amp; Governance - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">ANS-C01</span>
+            <span>EKS Networking &amp; Governance</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Advanced Networking Specialty &mdash; EKS Networking &amp; Governance</h2>
+        <p>40 refresher questions &mdash; EKS cluster &amp; pod networking, VPC CNI, prefix delegation, SNAT, pod security groups, load balancing, IPAM, Network Manager, CloudFormation, Service Catalog, Config &amp; CloudTrail</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/40</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 40 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 40</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="EKS Cluster" onclick="filterQ(this)">EKS Cluster</button><button class="filter-btn" data-f="Pod Networking" onclick="filterQ(this)">Pod Networking</button><button class="filter-btn" data-f="Pod Security" onclick="filterQ(this)">Pod Security</button><button class="filter-btn" data-f="Exposing Services" onclick="filterQ(this)">Exposing Services</button><button class="filter-btn" data-f="IPAM" onclick="filterQ(this)">IPAM</button><button class="filter-btn" data-f="Network Manager" onclick="filterQ(this)">Network Manager</button><button class="filter-btn" data-f="IaC & Catalog" onclick="filterQ(this)">IaC & Catalog</button><button class="filter-btn" data-f="Config & CloudTrail" onclick="filterQ(this)">Config & CloudTrail</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short ANS-style scenarios.</p>
+
+<!-- Q1 EKS Cluster -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EKS Cluster" data-level="B">
+<div class="q-tags"><span class="q-tag">EKS Cluster</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>In Amazon EKS, where do the control plane and the worker nodes run?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Both run in an AWS-managed VPC that you then peer with</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Both the control plane and the nodes run in your own VPC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Control plane in an AWS-managed VPC; nodes in your VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Control plane in your VPC; nodes in an AWS-managed VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Control plane in an AWS-managed VPC; nodes in your VPC<br><br>
+<strong>How to think about it:</strong> <b>Control plane = AWS-managed VPC</b>; <b>data plane (nodes) = your VPC</b>.<br><br>
+<strong>Why C is correct:</strong> AWS runs the API server and etcd for you, while nodes and pods live in your subnets.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Both run in an AWS-managed VPC that you then peer with</em> &mdash; Worker nodes run in your VPC, and no peering is required.<br><em>B) Both the control plane and the nodes run in your own VPC</em> &mdash; You never see or manage the control plane instances in your account.<br><em>D) Control plane in your VPC; nodes in an AWS-managed VPC</em> &mdash; This reverses the model: AWS manages the control plane, you own the node subnets.
+</div>
+</div>
+
+<!-- Q2 EKS Cluster -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EKS Cluster" data-level="B">
+<div class="q-tags"><span class="q-tag">EKS Cluster</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>How does the EKS control plane talk to worker nodes in your VPC (for example for <code>kubectl exec</code> or logs)?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Through a VPC peering connection EKS creates for you</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Through the internet gateway using the node public IPs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Through EKS-owned ENIs placed in your cluster subnets</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Through a Transit Gateway attachment in your account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Through EKS-owned ENIs placed in your cluster subnets<br><br>
+<strong>How to think about it:</strong> Control plane → nodes = <b>EKS-owned cross-account ENIs</b> placed in your subnets.<br><br>
+<strong>Why C is correct:</strong> EKS creates 2-4 ENIs in the subnets you choose, giving the control plane a private path into the VPC.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Through a VPC peering connection EKS creates for you</em> &mdash; EKS does not peer VPCs; it uses cross-account ENIs.<br><em>B) Through the internet gateway using the node public IPs</em> &mdash; Nodes can be fully private; the control plane does not need their public IPs.<br><em>D) Through a Transit Gateway attachment in your account</em> &mdash; No TGW is involved in control plane to node communication.
+</div>
+</div>
+
+<!-- Q3 EKS Cluster -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EKS Cluster" data-level="B">
+<div class="q-tags"><span class="q-tag">EKS Cluster</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>What is the default access setting for a new EKS cluster's Kubernetes API server endpoint?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Disabled until you create an interface endpoint</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Reachable only through AWS Systems Manager Session Manager</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Public access enabled and private access disabled</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Private access only, reachable from inside the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Public access enabled and private access disabled<br><br>
+<strong>How to think about it:</strong> EKS API endpoint default = <b>public</b>; you can add private and restrict public by <b>CIDR</b>.<br><br>
+<strong>Why C is correct:</strong> By default the endpoint is reachable from the internet (with IAM auth); you can enable private and restrict CIDRs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Disabled until you create an interface endpoint</em> &mdash; The endpoint works immediately after cluster creation.<br><em>B) Reachable only through AWS Systems Manager Session Manager</em> &mdash; Session Manager is not how the Kubernetes API is exposed.<br><em>D) Private access only, reachable from inside the VPC</em> &mdash; Private-only is a configuration you choose; it is not the default.
+</div>
+</div>
+
+<!-- Q4 EKS Cluster -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EKS Cluster" data-level="A">
+<div class="q-tags"><span class="q-tag">EKS Cluster</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>An EKS cluster has public endpoint access disabled and private access enabled. A developer on-premises over Direct Connect cannot resolve the API endpoint name. What is the usual fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turn on the DNS hostnames attribute for the on-prem network</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create an S3 gateway endpoint for the EKS API in the VPC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add the control plane CIDR to the Direct Connect public VIF</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Forward the name to a Route 53 Resolver inbound endpoint</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Forward the name to a Route 53 Resolver inbound endpoint<br><br>
+<strong>How to think about it:</strong> Private EKS endpoint from on-prem = <b>Route 53 Resolver inbound endpoint</b> (or conditional forwarding) + routing.<br><br>
+<strong>Why D is correct:</strong> The private endpoint name resolves to the EKS ENI IPs only inside the VPC, so on-premises DNS must forward to the VPC resolver.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Turn on the DNS hostnames attribute for the on-prem network</em> &mdash; DNS hostnames is a VPC attribute, not something set on the on-premises network.<br><em>B) Create an S3 gateway endpoint for the EKS API in the VPC</em> &mdash; Gateway endpoints only support S3 and DynamoDB.<br><em>C) Add the control plane CIDR to the Direct Connect public VIF</em> &mdash; A public VIF carries AWS public prefixes; the private endpoint uses private ENI IPs.
+</div>
+</div>
+
+<!-- Q5 EKS Cluster -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EKS Cluster" data-level="B">
+<div class="q-tags"><span class="q-tag">EKS Cluster</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>AWS recommends dedicated small subnets for the EKS control plane ENIs. What is the minimum free IP requirement per subnet?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">At least 6 free IPs, with 16 recommended</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">No free IPs; the ENIs use the VPC's .2 address</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">At least 251 free IPs (a full /24)</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Exactly 2 free IPs, one per ENI</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> At least 6 free IPs, with 16 recommended<br><br>
+<strong>How to think about it:</strong> EKS cluster subnets: <b>at least 6 free IPs</b> (16 recommended).<br><br>
+<strong>Why A is correct:</strong> EKS needs room for its cross-account ENIs, including during upgrades.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) No free IPs; the ENIs use the VPC's .2 address</em> &mdash; The .2 address is the Amazon DNS resolver, not EKS ENIs.<br><em>C) At least 251 free IPs (a full /24)</em> &mdash; A /24 is not required for the control plane ENIs.<br><em>D) Exactly 2 free IPs, one per ENI</em> &mdash; EKS can create up to 4 ENIs and needs spare addresses.
+</div>
+</div>
+
+<!-- Q6 Pod Networking -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Pod Networking" data-level="B">
+<div class="q-tags"><span class="q-tag">Pod Networking</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>With the Amazon VPC CNI plugin, where does each pod's IP address come from?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The node's primary IP, shared by all pods through port mapping</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A secondary private IP on an ENI attached to the node</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An Elastic IP allocated to each pod by the CNI</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An overlay network range that is invisible to the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A secondary private IP on an ENI attached to the node<br><br>
+<strong>How to think about it:</strong> <b>VPC CNI</b> = pods get <b>real VPC IPs</b> (secondary IPs on node ENIs).<br><br>
+<strong>Why B is correct:</strong> The CNI attaches ENIs to the node and hands out their secondary IPs to pods, so pods are first-class VPC addresses.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The node's primary IP, shared by all pods through port mapping</em> &mdash; Each pod gets its own IP; it does not share the node IP.<br><em>C) An Elastic IP allocated to each pod by the CNI</em> &mdash; Pods use private VPC IPs; EIPs are not allocated per pod.<br><em>D) An overlay network range that is invisible to the VPC</em> &mdash; That is how many overlay CNIs work, but the VPC CNI uses native VPC IPs.
+</div>
+</div>
+
+<!-- Q7 Pod Networking -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Pod Networking" data-level="B">
+<div class="q-tags"><span class="q-tag">Pod Networking</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>What mainly limits the maximum number of pods on an EKS EC2 node with default VPC CNI settings?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The number of security groups attached to the node</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The size and type of the node's root EBS volume</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The instance type's ENI count and IPs per ENI</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The size of the cluster's Kubernetes service CIDR</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The instance type's ENI count and IPs per ENI<br><br>
+<strong>How to think about it:</strong> Max pods = <b>ENIs × (IPs per ENI − 1) + 2</b> → set by <b>instance type</b>.<br><br>
+<strong>Why C is correct:</strong> Each ENI's secondary IPs go to pods, so instance type ENI limits cap the pod count.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The number of security groups attached to the node</em> &mdash; Security group count does not decide how many pod IPs a node has.<br><em>B) The size and type of the node's root EBS volume</em> &mdash; Storage size does not limit pod IP allocation.<br><em>D) The size of the cluster's Kubernetes service CIDR</em> &mdash; The service CIDR is used for ClusterIP addresses, not pod IPs.
+</div>
+</div>
+
+<!-- Q8 Pod Networking -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Pod Networking" data-level="B">
+<div class="q-tags"><span class="q-tag">Pod Networking</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>What does VPC CNI prefix delegation do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Lets pods borrow unused IP addresses from a peered VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Delegates the pod CIDR to an on-premises DHCP server</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Moves pod addresses into the node's public IPv4 pool</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Assigns /28 prefixes to ENI slots, raising pod density</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Assigns /28 prefixes to ENI slots, raising pod density<br><br>
+<strong>How to think about it:</strong> <b>Prefix delegation</b> = assign <b>/28 (IPv4) or /80 (IPv6)</b> prefixes to ENI slots → many more pods.<br><br>
+<strong>Why D is correct:</strong> Each slot carries 16 addresses, so Nitro nodes can run far more pods.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Lets pods borrow unused IP addresses from a peered VPC</em> &mdash; Pods cannot use another VPC's address space.<br><em>B) Delegates the pod CIDR to an on-premises DHCP server</em> &mdash; Pod IPs still come from VPC subnets, not on-premises DHCP.<br><em>C) Moves pod addresses into the node's public IPv4 pool</em> &mdash; Prefix delegation works with private VPC address space.
+</div>
+</div>
+
+<!-- Q9 Pod Networking -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Pod Networking" data-level="B">
+<div class="q-tags"><span class="q-tag">Pod Networking</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>Which instance types can use VPC CNI prefix delegation?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only Xen-based previous-generation instances</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Nitro-based instance types</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only bare metal instances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Any instance type, including T2</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AWS Nitro-based instance types<br><br>
+<strong>How to think about it:</strong> Prefix delegation = <b>Nitro-based</b> instances only.<br><br>
+<strong>Why B is correct:</strong> Assigning prefixes to ENIs is a Nitro capability.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only Xen-based previous-generation instances</em> &mdash; Older Xen instances do not support ENI prefixes.<br><em>C) Only bare metal instances</em> &mdash; Prefix delegation works on regular Nitro virtualized instances, not just metal.<br><em>D) Any instance type, including T2</em> &mdash; T2 is Xen-based and does not support prefix assignment.
+</div>
+</div>
+
+<!-- Q10 Pod Networking -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Pod Networking" data-level="B">
+<div class="q-tags"><span class="q-tag">Pod Networking</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>A pod with an IPv4 address in a private subnet calls an internet API. With default SNAT settings, what source IP leaves the node?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The pod's own secondary IP all the way to the internet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The ClusterIP of the service the pod belongs to</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The primary private IP of the node's primary ENI</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The private IP of an EKS control plane ENI</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The primary private IP of the node's primary ENI<br><br>
+<strong>How to think about it:</strong> Default SNAT: traffic leaving the VPC CIDR uses the <b>node's primary ENI IP</b>.<br><br>
+<strong>Why C is correct:</strong> The VPC CNI translates pod IPs to the node's primary IP for destinations outside the VPC CIDR.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The pod's own secondary IP all the way to the internet</em> &mdash; Private IPs are never routable on the internet; a NAT step is always needed.<br><em>B) The ClusterIP of the service the pod belongs to</em> &mdash; ClusterIPs are virtual and only valid inside the cluster.<br><em>D) The private IP of an EKS control plane ENI</em> &mdash; Control plane ENIs are not used for pod egress.
+</div>
+</div>
+
+<!-- Q11 Pod Networking -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Pod Networking" data-level="A">
+<div class="q-tags"><span class="q-tag">Pod Networking</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>Pods in a private subnet must reach the internet through a NAT gateway, and on-premises firewalls must see the real pod IPs. Which CNI setting should you change?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Set <code>externalTrafficPolicy=Local</code> on every service</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Set <code>AWS_VPC_K8S_CNI_EXTERNALSNAT=true</code> on aws-node</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add an IPv6 CIDR to the VPC and keep the cluster IPv4</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Set <code>ENABLE_POD_ENI=true</code> on the aws-node DaemonSet</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Set <code>AWS_VPC_K8S_CNI_EXTERNALSNAT=true</code> on aws-node<br><br>
+<strong>How to think about it:</strong> Use a NAT gateway / keep pod IPs = <b>AWS_VPC_K8S_CNI_EXTERNALSNAT=true</b>.<br><br>
+<strong>Why B is correct:</strong> This turns off node SNAT so pod IPs stay visible and an external NAT gateway does the translation.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Set <code>externalTrafficPolicy=Local</code> on every service</em> &mdash; That affects inbound load balancer traffic, not pod egress.<br><em>C) Add an IPv6 CIDR to the VPC and keep the cluster IPv4</em> &mdash; IPv6 on the VPC does not change IPv4 pod SNAT for an IPv4 cluster.<br><em>D) Set <code>ENABLE_POD_ENI=true</code> on the aws-node DaemonSet</em> &mdash; That enables security groups for pods, not SNAT behaviour.
+</div>
+</div>
+
+<!-- Q12 Pod Networking -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Pod Networking" data-level="A">
+<div class="q-tags"><span class="q-tag">Pod Networking</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>An EKS cluster is running out of IPs in its small /24 node subnets. The team wants more pod IPs without re-IPing the nodes. Which approach fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Resize the existing node subnets from /24 to /20 in place</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Change the Kubernetes service CIDR to a larger range</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add a 100.64.0.0/10 secondary CIDR and CNI custom networking</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Switch pods to the node's public IP to save private IPs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Add a 100.64.0.0/10 secondary CIDR and CNI custom networking<br><br>
+<strong>How to think about it:</strong> Pod IP exhaustion = <b>secondary CIDR (100.64.0.0/10 range) + CNI custom networking</b>.<br><br>
+<strong>Why C is correct:</strong> Custom networking places pod ENIs in subnets from the secondary CIDR, keeping nodes on their original subnets.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Resize the existing node subnets from /24 to /20 in place</em> &mdash; A subnet's CIDR cannot be changed after it is created.<br><em>B) Change the Kubernetes service CIDR to a larger range</em> &mdash; The service CIDR is for ClusterIPs, not pod IPs.<br><em>D) Switch pods to the node's public IP to save private IPs</em> &mdash; Pods cannot share public IPs in this way, and it wouldn't add private addresses.
+</div>
+</div>
+
+<!-- Q13 Pod Networking -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Pod Networking" data-level="B">
+<div class="q-tags"><span class="q-tag">Pod Networking</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>In an IPv6 EKS cluster, how are pod addresses handled when talking to the internet?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Pods use globally unique IPv6 addresses with no NAT</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Pods run dual-stack with both IPv4 and IPv6 pod IPs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Pods share one IPv6 address per node through port mapping</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Pods are translated to the node's IPv4 address by default</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Pods use globally unique IPv6 addresses with no NAT<br><br>
+<strong>How to think about it:</strong> <b>IPv6 pods = no NAT</b>; use an <b>egress-only IGW</b> for outbound-only.<br><br>
+<strong>Why A is correct:</strong> IPv6 addresses are not translated; an egress-only internet gateway can allow outbound-only access.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Pods run dual-stack with both IPv4 and IPv6 pod IPs</em> &mdash; EKS pods are either IPv4 or IPv6, not dual-stack.<br><em>C) Pods share one IPv6 address per node through port mapping</em> &mdash; Each pod gets its own IPv6 address from the node's /80 prefix.<br><em>D) Pods are translated to the node's IPv4 address by default</em> &mdash; SNAT to the node IP is IPv4 behaviour.
+</div>
+</div>
+
+<!-- Q14 Pod Security -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Pod Security" data-level="B">
+<div class="q-tags"><span class="q-tag">Pod Security</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>By default with the VPC CNI, which security group applies to a pod?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">None; pod traffic bypasses security groups entirely</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A unique security group that EKS creates for every pod</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only the EKS cluster security group, on every pod</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The SG of the node ENI that supplies the pod's IP</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The SG of the node ENI that supplies the pod's IP<br><br>
+<strong>How to think about it:</strong> Default: pods inherit the <b>SG of the node ENI</b> their IP comes from.<br><br>
+<strong>Why D is correct:</strong> All pods on the same ENI share that ENI's security groups.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) None; pod traffic bypasses security groups entirely</em> &mdash; Pod traffic is still filtered by the ENI's security groups.<br><em>B) A unique security group that EKS creates for every pod</em> &mdash; Per-pod security groups require the separate security groups for pods feature.<br><em>C) Only the EKS cluster security group, on every pod</em> &mdash; The cluster SG is attached to control plane ENIs and managed nodes; pods use their ENI's SGs.
+</div>
+</div>
+
+<!-- Q15 Pod Security -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Pod Security" data-level="B">
+<div class="q-tags"><span class="q-tag">Pod Security</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>Which EKS feature gives individual pods their own security groups?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Custom networking with a 100.64 secondary CIDR</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Security groups for pods (trunk/branch ENIs)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The Multus CNI meta-plugin for extra interfaces</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Prefix delegation with /28 prefixes per ENI</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Security groups for pods (trunk/branch ENIs)<br><br>
+<strong>How to think about it:</strong> Per-pod SG = <b>security groups for pods</b> via <b>trunk and branch ENIs</b>.<br><br>
+<strong>Why B is correct:</strong> The VPC resource controller attaches a trunk ENI to the node and gives pods branch ENIs with their own SGs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Custom networking with a 100.64 secondary CIDR</em> &mdash; Custom networking chooses pod subnets and SGs per ENIConfig, not per pod.<br><em>C) The Multus CNI meta-plugin for extra interfaces</em> &mdash; Multus adds extra interfaces to pods but is not the native per-pod SG feature.<br><em>D) Prefix delegation with /28 prefixes per ENI</em> &mdash; Prefix delegation raises pod density but does not give pods separate SGs.
+</div>
+</div>
+
+<!-- Q16 Pod Security -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Pod Security" data-level="A">
+<div class="q-tags"><span class="q-tag">Pod Security</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>A team enables security groups for pods, but pods scheduled on t3 nodes never get branch ENIs. Why?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The t instance family does not support trunk ENIs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Branch ENIs need IPv6 enabled on every subnet</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Security groups for pods only work on Windows nodes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The cluster must be using prefix delegation first</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> The t instance family does not support trunk ENIs<br><br>
+<strong>How to think about it:</strong> Trunk ENIs need <b>supported Nitro types</b> — <b>T-family is not supported</b>.<br><br>
+<strong>Why A is correct:</strong> Security groups for pods only work on instance types listed as trunking-compatible.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Branch ENIs need IPv6 enabled on every subnet</em> &mdash; IPv4 clusters can use security groups for pods.<br><em>C) Security groups for pods only work on Windows nodes</em> &mdash; The opposite: the feature is not supported on Windows nodes.<br><em>D) The cluster must be using prefix delegation first</em> &mdash; Prefix delegation is not required for trunk and branch ENIs.
+</div>
+</div>
+
+<!-- Q17 Exposing Services -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Exposing Services" data-level="B">
+<div class="q-tags"><span class="q-tag">Exposing Services</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>Which Kubernetes service type is the default and reachable only from inside the cluster?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">ClusterIP</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">ExternalName</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">NodePort</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">LoadBalancer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> ClusterIP<br><br>
+<strong>How to think about it:</strong> <b>ClusterIP</b> = default, virtual IP, <b>in-cluster only</b>.<br><br>
+<strong>Why A is correct:</strong> ClusterIP gives the service a virtual IP that kube-proxy maps to pods, reachable only inside the cluster.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) ExternalName</em> &mdash; ExternalName maps a service to an external DNS name with a CNAME.<br><em>C) NodePort</em> &mdash; NodePort opens a static port on every node for outside access.<br><em>D) LoadBalancer</em> &mdash; LoadBalancer provisions an external AWS load balancer.
+</div>
+</div>
+
+<!-- Q18 Exposing Services -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Exposing Services" data-level="B">
+<div class="q-tags"><span class="q-tag">Exposing Services</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>Which component is recommended to provision ALBs and NLBs for EKS services and ingresses?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Load Balancer Controller</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Kubernetes Cluster Autoscaler</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The kube-proxy DaemonSet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The Amazon VPC CNI plugin</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AWS Load Balancer Controller<br><br>
+<strong>How to think about it:</strong> EKS load balancers = <b>AWS Load Balancer Controller</b>.<br><br>
+<strong>Why A is correct:</strong> It creates ALBs for Ingress resources and NLBs for LoadBalancer services, with instance or IP targets.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Kubernetes Cluster Autoscaler</em> &mdash; The autoscaler adds and removes nodes; it does not create load balancers.<br><em>C) The kube-proxy DaemonSet</em> &mdash; kube-proxy programs node rules for ClusterIP and NodePort, not AWS load balancers.<br><em>D) The Amazon VPC CNI plugin</em> &mdash; The CNI handles pod IP addressing, not load balancer provisioning.
+</div>
+</div>
+
+<!-- Q19 Exposing Services -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Exposing Services" data-level="B">
+<div class="q-tags"><span class="q-tag">Exposing Services</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>Twenty HTTP microservices need internet exposure with path-based routing, at the lowest cost. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A LoadBalancer service with a dedicated NLB per microservice</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">NodePort services with clients calling node IPs directly</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">ClusterIP services published with public Route 53 records</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">One Ingress, AWS Load Balancer Controller, one shared ALB</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> One Ingress, AWS Load Balancer Controller, one shared ALB<br><br>
+<strong>How to think about it:</strong> Many HTTP services, one entry point = <b>Ingress + one shared ALB</b> (<code>group.name</code>).<br><br>
+<strong>Why D is correct:</strong> One ALB with path rules and target groups per service avoids paying for many load balancers.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A LoadBalancer service with a dedicated NLB per microservice</em> &mdash; Twenty NLBs cost more and NLB cannot route by HTTP path.<br><em>B) NodePort services with clients calling node IPs directly</em> &mdash; Clients would have to track changing node IPs, with no path routing.<br><em>C) ClusterIP services published with public Route 53 records</em> &mdash; ClusterIPs are not reachable from outside the cluster.
+</div>
+</div>
+
+<!-- Q20 Exposing Services -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Exposing Services" data-level="B">
+<div class="q-tags"><span class="q-tag">Exposing Services</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>What is the difference between ALB instance targets and IP targets for an EKS service?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">IP targets are supported only on NLB, never on an ALB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Instance targets use public IPs; IP targets use private IPs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Instance targets support HTTPS; IP targets only support HTTP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Instance → NodePort on nodes; IP → straight to pod IPs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Instance → NodePort on nodes; IP → straight to pod IPs<br><br>
+<strong>How to think about it:</strong> <b>Instance</b> = node + NodePort; <b>IP</b> = straight to the <b>pod IP</b> (needed for Fargate).<br><br>
+<strong>Why D is correct:</strong> IP mode skips the extra kube-proxy hop and is required for Fargate pods.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) IP targets are supported only on NLB, never on an ALB</em> &mdash; ALB supports IP targets as well.<br><em>B) Instance targets use public IPs; IP targets use private IPs</em> &mdash; Both modes use private addresses inside the VPC.<br><em>C) Instance targets support HTTPS; IP targets only support HTTP</em> &mdash; TLS termination works the same in both target types.
+</div>
+</div>
+
+<!-- Q21 Exposing Services -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Exposing Services" data-level="A">
+<div class="q-tags"><span class="q-tag">Exposing Services</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>An NLB in instance mode fronts an EKS service, and the application must see the real client IP. Which setting helps?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Set <code>externalTrafficPolicy: Cluster</code> on the service</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Attach a WAF web ACL to the NLB to add the client IP</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Change the service type to ClusterIP behind the NLB</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Set <code>externalTrafficPolicy: Local</code> on the service</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Set <code>externalTrafficPolicy: Local</code> on the service<br><br>
+<strong>How to think about it:</strong> Preserve client IP with instance targets = <b>externalTrafficPolicy=Local</b>.<br><br>
+<strong>Why D is correct:</strong> Traffic stays on the node that received it, so kube-proxy does not SNAT and the client IP is kept (load may be less even).<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Set <code>externalTrafficPolicy: Cluster</code> on the service</em> &mdash; Cluster mode can forward to other nodes and replaces the source IP with a node IP.<br><em>B) Attach a WAF web ACL to the NLB to add the client IP</em> &mdash; WAF cannot be associated with an NLB.<br><em>C) Change the service type to ClusterIP behind the NLB</em> &mdash; ClusterIP removes external access altogether.
+</div>
+</div>
+
+<!-- Q22 Exposing Services -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Exposing Services" data-level="A">
+<div class="q-tags"><span class="q-tag">Exposing Services</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>An EKS app behind an ALB logs only ALB IP addresses as the client. Where should the app read the original client IP?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">From VPC Flow Logs queried at request time</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">From the TCP source address of each request</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">From the <code>X-Forwarded-For</code> header</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">From the Proxy Protocol v2 header the ALB adds</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> From the <code>X-Forwarded-For</code> header<br><br>
+<strong>How to think about it:</strong> Behind ALB, client IP = <b>X-Forwarded-For</b> header.<br><br>
+<strong>Why C is correct:</strong> ALB terminates the connection and adds the client IP in X-Forwarded-For.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) From VPC Flow Logs queried at request time</em> &mdash; Flow logs are for offline analysis, not per-request data in the app.<br><em>B) From the TCP source address of each request</em> &mdash; The TCP source is the ALB node because the ALB proxies the connection.<br><em>D) From the Proxy Protocol v2 header the ALB adds</em> &mdash; Proxy Protocol is an NLB/CLB option; ALB uses X-Forwarded-For.
+</div>
+</div>
+
+<!-- Q23 Exposing Services -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Exposing Services" data-level="B">
+<div class="q-tags"><span class="q-tag">Exposing Services</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>What DNS name does a ClusterIP service named <code>orders</code> in namespace <code>prod</code> get inside the cluster?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text"><code>orders.cluster.local.prod</code></span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text"><code>prod.orders.compute.internal</code></span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text"><code>orders.prod.svc.cluster.local</code></span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text"><code>orders.prod.eks.amazonaws.com</code></span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> <code>orders.prod.svc.cluster.local</code><br><br>
+<strong>How to think about it:</strong> Kubernetes service DNS = <code>SERVICE.NAMESPACE.svc.cluster.local</code>.<br><br>
+<strong>Why C is correct:</strong> Cluster DNS gives every service a name in the form service.namespace.svc.cluster.local.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) <code>orders.cluster.local.prod</code></em> &mdash; The label order is wrong; namespace comes after the service name, followed by svc.cluster.local.<br><em>B) <code>prod.orders.compute.internal</code></em> &mdash; compute.internal is the EC2 private hostname domain.<br><em>D) <code>orders.prod.eks.amazonaws.com</code></em> &mdash; That domain is used for the cluster API endpoint, not services.
+</div>
+</div>
+
+<!-- Q24 IPAM -->
+<div class="question" data-type="mc" data-answer="0" data-topic="IPAM" data-level="B">
+<div class="q-tags"><span class="q-tag">IPAM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>What is Amazon VPC IP Address Manager (IPAM)?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Plans and tracks IP space across accounts and Regions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A tool that fixes overlapping CIDRs by rewriting them with NAT</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A DNS service that maps names to private IP addresses</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A DHCP server that hands out IPs to EC2 instances</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Plans and tracks IP space across accounts and Regions<br><br>
+<strong>How to think about it:</strong> <b>IPAM</b> = plan, allocate, track and audit IP space across <b>accounts and Regions</b>.<br><br>
+<strong>Why A is correct:</strong> IPAM organises address space into pools, allocates VPC CIDRs and shows usage and history.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A tool that fixes overlapping CIDRs by rewriting them with NAT</em> &mdash; IPAM detects overlap but does not translate addresses.<br><em>C) A DNS service that maps names to private IP addresses</em> &mdash; Name resolution is Route 53's job.<br><em>D) A DHCP server that hands out IPs to EC2 instances</em> &mdash; EC2 private IPs come from the VPC subnet; IPAM manages CIDR planning.
+</div>
+</div>
+
+<!-- Q25 IPAM -->
+<div class="question" data-type="mc" data-answer="3" data-topic="IPAM" data-level="B">
+<div class="q-tags"><span class="q-tag">IPAM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>In IPAM, what is a scope?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A single CIDR block allocated to one specific VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A list of accounts that are allowed to create VPCs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudWatch alarm that watches pool utilization</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A top-level container for private or public IP space</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A top-level container for private or public IP space<br><br>
+<strong>How to think about it:</strong> <b>Scope</b> = top-level container, <b>public or private</b> address space.<br><br>
+<strong>Why D is correct:</strong> Each IPAM has a default private and public scope, and pools live inside scopes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A single CIDR block allocated to one specific VPC</em> &mdash; That is an allocation within a pool.<br><em>B) A list of accounts that are allowed to create VPCs</em> &mdash; Access is shared through RAM on pools, not defined by scopes.<br><em>C) A CloudWatch alarm that watches pool utilization</em> &mdash; Alarms are built from IPAM metrics; they are not scopes.
+</div>
+</div>
+
+<!-- Q26 IPAM -->
+<div class="question" data-type="mc" data-answer="1" data-topic="IPAM" data-level="B">
+<div class="q-tags"><span class="q-tag">IPAM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>What is the role of an IPAM pool?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Region-wide DHCP options set used by every VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A set of CIDRs, often nested by Region, with allocation rules</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A group of EC2 instances that share one Elastic IP address</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A set of managed prefix lists used in security group rules</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A set of CIDRs, often nested by Region, with allocation rules<br><br>
+<strong>How to think about it:</strong> <b>Pool</b> = a collection of CIDRs (hierarchical: global → Region → env) with <b>allocation rules</b>.<br><br>
+<strong>Why B is correct:</strong> Pools let you split address space hierarchically and enforce rules such as allowed netmask lengths.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Region-wide DHCP options set used by every VPC</em> &mdash; DHCP options sets configure DNS and NTP for VPCs, not IP planning.<br><em>C) A group of EC2 instances that share one Elastic IP address</em> &mdash; That is not an IPAM concept.<br><em>D) A set of managed prefix lists used in security group rules</em> &mdash; Managed prefix lists are separate VPC objects.
+</div>
+</div>
+
+<!-- Q27 IPAM -->
+<div class="question" data-type="mc" data-answer="0" data-topic="IPAM" data-level="A">
+<div class="q-tags"><span class="q-tag">IPAM</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>A company wants every VPC created in the Prod OU to get its CIDR from the Prod IPAM pool, never a hand-picked range. How can this be enforced?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Share the pool via RAM; SCP requires it on CreateVpc</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A DHCP options set that restricts the allowed VPC CIDR</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Config rule that deletes VPCs with the wrong CIDR</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Tag each VPC with the pool name after it is created</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Share the pool via RAM; SCP requires it on CreateVpc<br><br>
+<strong>How to think about it:</strong> Force IPAM allocation = <b>share pool via RAM + SCP</b> requiring <code>ec2:Ipv4IpamPoolId</code> on CreateVpc.<br><br>
+<strong>Why A is correct:</strong> The SCP denies VPC creation unless the request uses the approved pool, so manual CIDRs are blocked.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A DHCP options set that restricts the allowed VPC CIDR</em> &mdash; DHCP options do not control which VPC CIDR can be chosen.<br><em>C) A Config rule that deletes VPCs with the wrong CIDR</em> &mdash; Config detects non-compliance after the fact; it does not prevent creation.<br><em>D) Tag each VPC with the pool name after it is created</em> &mdash; Tags do not enforce where the CIDR came from.
+</div>
+</div>
+
+<!-- Q28 IPAM -->
+<div class="question" data-type="mc" data-answer="0" data-topic="IPAM" data-level="B">
+<div class="q-tags"><span class="q-tag">IPAM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>Which feature shows all public IPv4 addresses, including unassociated Elastic IPs, across Regions in your account or organization?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">IPAM Public IP Insights</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Route 53 Resolver query logs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Cost Explorer forecasts</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">VPC Reachability Analyzer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> IPAM Public IP Insights<br><br>
+<strong>How to think about it:</strong> Find chargeable/idle public IPv4 = <b>IPAM Public IP Insights</b>.<br><br>
+<strong>Why A is correct:</strong> It lists public IPv4 addresses by type and highlights unassociated EIPs, which matters because public IPv4 is charged hourly.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Route 53 Resolver query logs</em> &mdash; Query logs record DNS lookups, not IP inventory.<br><em>C) AWS Cost Explorer forecasts</em> &mdash; Cost Explorer shows spend, not a per-address inventory.<br><em>D) VPC Reachability Analyzer</em> &mdash; Reachability Analyzer tests paths between resources; it does not inventory public IPs.
+</div>
+</div>
+
+<!-- Q29 IPAM -->
+<div class="question" data-type="mc" data-answer="1" data-topic="IPAM" data-level="A">
+<div class="q-tags"><span class="q-tag">IPAM</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>A finance team notices a new line item for public IPv4 addresses. What is true about current AWS pricing?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only Elastic IPs not attached to a running instance are charged</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">All public IPv4, attached or idle, is charged per hour</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only IPv6 addresses are charged hourly, IPv4 stays free</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Public IPv4 is free if the VPC also has an IPv6 CIDR</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> All public IPv4, attached or idle, is charged per hour<br><br>
+<strong>How to think about it:</strong> Since <b>Feb 2024</b>, <b>every public IPv4</b> (in use or idle EIP) is charged per hour.<br><br>
+<strong>Why B is correct:</strong> AWS charges for public IPv4 whether attached or not, encouraging IPv6 and removal of unused addresses.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only Elastic IPs not attached to a running instance are charged</em> &mdash; That was the older model; since February 2024 attached public IPv4 is charged too.<br><em>C) Only IPv6 addresses are charged hourly, IPv4 stays free</em> &mdash; IPv6 addresses carry no hourly charge.<br><em>D) Public IPv4 is free if the VPC also has an IPv6 CIDR</em> &mdash; Adding IPv6 does not waive the IPv4 charge.
+</div>
+</div>
+
+<!-- Q30 IPAM -->
+<div class="question" data-type="mc" data-answer="1" data-topic="IPAM" data-level="B">
+<div class="q-tags"><span class="q-tag">IPAM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>How does IPAM let you alarm when an address pool is nearly exhausted?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">VPC Flow Logs enabled on every subnet in the pool</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudWatch alarms on IPAM metrics in AWS/IPAM</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Health events subscribed to for IPAM pools</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Weekly AWS Trusted Advisor IP utilization checks</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> CloudWatch alarms on IPAM metrics in AWS/IPAM<br><br>
+<strong>How to think about it:</strong> IPAM metrics live in the <b>AWS/IPAM CloudWatch namespace</b> → alarm on them.<br><br>
+<strong>Why B is correct:</strong> IPAM publishes pool and resource utilization metrics you can alarm on.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) VPC Flow Logs enabled on every subnet in the pool</em> &mdash; Flow logs record traffic, not address utilization.<br><em>C) AWS Health events subscribed to for IPAM pools</em> &mdash; Health events cover AWS service issues, not your pool usage.<br><em>D) Weekly AWS Trusted Advisor IP utilization checks</em> &mdash; Trusted Advisor does not track IPAM pool usage.
+</div>
+</div>
+
+<!-- Q31 Network Manager -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Network Manager" data-level="B">
+<div class="q-tags"><span class="q-tag">Network Manager</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>What does AWS Network Manager provide?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A tool that converts CloudFormation templates to Terraform</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A managed DNS firewall that filters outbound VPC queries</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A service that issues private TLS certificates to apps</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">One place to view and monitor TGW and Cloud WAN networks</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> One place to view and monitor TGW and Cloud WAN networks<br><br>
+<strong>How to think about it:</strong> <b>Network Manager</b> = one console for <b>global networks</b>: Cloud WAN, TGW topology, monitoring.<br><br>
+<strong>Why D is correct:</strong> It visualises topology, events and metrics and hosts tools such as Cloud WAN and Reachability Analyzer.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A tool that converts CloudFormation templates to Terraform</em> &mdash; Network Manager does not convert IaC templates.<br><em>B) A managed DNS firewall that filters outbound VPC queries</em> &mdash; That is Route 53 Resolver DNS Firewall.<br><em>C) A service that issues private TLS certificates to apps</em> &mdash; That is AWS Private CA.
+</div>
+</div>
+
+<!-- Q32 Network Manager -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Network Manager" data-level="A">
+<div class="q-tags"><span class="q-tag">Network Manager</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>A network team with Transit Gateways in five Regions wants a topology view plus alerts on route changes and VPN tunnel status from one place. What should they use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Deploy a Gateway Load Balancer in each of the Regions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Register the TGWs in a Network Manager global network</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create an AWS Config aggregator for all TGW resources</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Turn on VPC Flow Logs in each VPC and build dashboards</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Register the TGWs in a Network Manager global network<br><br>
+<strong>How to think about it:</strong> Multi-Region TGW visibility = <b>register TGWs in a Network Manager global network</b>.<br><br>
+<strong>Why B is correct:</strong> The global network shows topology, route analysis and events (published to EventBridge) across Regions.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Deploy a Gateway Load Balancer in each of the Regions</em> &mdash; GWLB is for appliance inspection, not network visibility.<br><em>C) Create an AWS Config aggregator for all TGW resources</em> &mdash; Config tracks configuration but does not offer network topology or tunnel monitoring.<br><em>D) Turn on VPC Flow Logs in each VPC and build dashboards</em> &mdash; Flow logs show traffic, not topology or route changes.
+</div>
+</div>
+
+<!-- Q33 IaC & Catalog -->
+<div class="question" data-type="mc" data-answer="0" data-topic="IaC & Catalog" data-level="B">
+<div class="q-tags"><span class="q-tag">IaC & Catalog</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>What is AWS CloudFormation?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Declarative infrastructure as code from templates</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An imperative SDK for scripting AWS API calls</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A configuration audit service with compliance rules</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A self-service catalog of pre-approved products</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Declarative infrastructure as code from templates<br><br>
+<strong>How to think about it:</strong> <b>CloudFormation</b> = declarative <b>infrastructure as code</b>; AWS works out the order.<br><br>
+<strong>Why A is correct:</strong> You describe the desired resources, and CloudFormation creates them in the right order.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An imperative SDK for scripting AWS API calls</em> &mdash; SDK scripts are imperative; CloudFormation is declarative.<br><em>C) A configuration audit service with compliance rules</em> &mdash; That is AWS Config.<br><em>D) A self-service catalog of pre-approved products</em> &mdash; That is AWS Service Catalog, which uses CloudFormation underneath.
+</div>
+</div>
+
+<!-- Q34 IaC & Catalog -->
+<div class="question" data-type="mc" data-answer="2" data-topic="IaC & Catalog" data-level="A">
+<div class="q-tags"><span class="q-tag">IaC & Catalog</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>A template creates a VPN gateway, attaches it to a VPC, and enables route propagation. Stack creation fails because propagation runs before the attachment completes. What fixes it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add a <code>DeletionPolicy: Retain</code> to the VPN gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Move the route propagation into a separate StackSet</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add <code>DependsOn</code> to the propagation for the attachment</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use a stack policy that denies all updates to the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Add <code>DependsOn</code> to the propagation for the attachment<br><br>
+<strong>How to think about it:</strong> Order resources explicitly = <b>DependsOn</b> the VPC gateway attachment.<br><br>
+<strong>Why C is correct:</strong> Propagation needs the VGW attached first, so an explicit dependency forces the right order.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Add a <code>DeletionPolicy: Retain</code> to the VPN gateway</em> &mdash; DeletionPolicy only affects stack deletion, not creation order.<br><em>B) Move the route propagation into a separate StackSet</em> &mdash; StackSets deploy across accounts and Regions; they do not fix ordering inside a stack.<br><em>D) Use a stack policy that denies all updates to the VPC</em> &mdash; Stack policies protect resources from updates; they do not order creation.
+</div>
+</div>
+
+<!-- Q35 IaC & Catalog -->
+<div class="question" data-type="mc" data-answer="1" data-topic="IaC & Catalog" data-level="B">
+<div class="q-tags"><span class="q-tag">IaC & Catalog</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>What is AWS Service Catalog used for?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Recording every API call in an account for audit</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Self-service launch of approved, versioned CFN products</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Listing every AWS service available in each Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Scanning EC2 instances for software vulnerabilities</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Self-service launch of approved, versioned CFN products<br><br>
+<strong>How to think about it:</strong> <b>Service Catalog</b> = self-service launch of <b>approved products</b> (CFN templates) by end users.<br><br>
+<strong>Why B is correct:</strong> Admins publish portfolios with constraints, and users launch only what is approved.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Recording every API call in an account for audit</em> &mdash; That is CloudTrail.<br><em>C) Listing every AWS service available in each Region</em> &mdash; That is a documentation page, not Service Catalog.<br><em>D) Scanning EC2 instances for software vulnerabilities</em> &mdash; That is Amazon Inspector.
+</div>
+</div>
+
+<!-- Q36 IaC & Catalog -->
+<div class="question" data-type="mc" data-answer="0" data-topic="IaC & Catalog" data-level="B">
+<div class="q-tags"><span class="q-tag">IaC & Catalog</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>A network VPC stack must expose its VPC ID for many application stacks to use. What is the standard CloudFormation approach?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Export in Outputs, read with <code>Fn::ImportValue</code></span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Copy the VPC ID into every template as a hard-coded string</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a nested stack inside each application template</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Store the VPC ID inside the network stack's policy</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Export in Outputs, read with <code>Fn::ImportValue</code><br><br>
+<strong>How to think about it:</strong> Share values across stacks = <b>Outputs Export + Fn::ImportValue</b>.<br><br>
+<strong>Why A is correct:</strong> Cross-stack references let many stacks consume shared values such as VPC and subnet IDs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Copy the VPC ID into every template as a hard-coded string</em> &mdash; Hard-coding breaks when the VPC is recreated and is error-prone.<br><em>C) Create a nested stack inside each application template</em> &mdash; Nested stacks are for reusable components; they are not shared across independent stacks.<br><em>D) Store the VPC ID inside the network stack's policy</em> &mdash; Stack policies control updates; they do not pass values.
+</div>
+</div>
+
+<!-- Q37 Config & CloudTrail -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Config & CloudTrail" data-level="B">
+<div class="q-tags"><span class="q-tag">Config & CloudTrail</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>Which service answers "Who deleted this security group rule yesterday, and from which IP?"</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Config</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VPC Flow Logs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Amazon Inspector</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS CloudTrail</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS CloudTrail<br><br>
+<strong>How to think about it:</strong> <b>Who did what API call</b> = <b>CloudTrail</b>.<br><br>
+<strong>Why D is correct:</strong> CloudTrail records API calls with the caller identity, time and source IP.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Config</em> &mdash; Config shows how the configuration changed, but CloudTrail holds the API caller details.<br><em>B) VPC Flow Logs</em> &mdash; Flow logs record network traffic, not API calls.<br><em>C) Amazon Inspector</em> &mdash; Inspector scans for vulnerabilities, not change history.
+</div>
+</div>
+
+<!-- Q38 Config & CloudTrail -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Config & CloudTrail" data-level="B">
+<div class="q-tags"><span class="q-tag">Config & CloudTrail</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>Which statement about AWS Config rules is correct?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">They are global and cannot be scoped per Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">They inspect packets entering a VPC through the IGW</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">They detect and remediate, but do not block API calls</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">They deny API calls that would make a resource non-compliant</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> They detect and remediate, but do not block API calls<br><br>
+<strong>How to think about it:</strong> <b>Config = detect + record</b> (and optional SSM remediation) — it <b>does not prevent</b> actions.<br><br>
+<strong>Why C is correct:</strong> Config flags non-compliant resources after changes; prevention needs IAM or SCPs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) They are global and cannot be scoped per Region</em> &mdash; Config is Regional, with aggregators for multi-account, multi-Region views.<br><em>B) They inspect packets entering a VPC through the IGW</em> &mdash; Packet inspection is Network Firewall's role.<br><em>D) They deny API calls that would make a resource non-compliant</em> &mdash; Config has no deny capability; that is what SCPs and IAM do.
+</div>
+</div>
+
+<!-- Q39 Config & CloudTrail -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Config & CloudTrail" data-level="A">
+<div class="q-tags"><span class="q-tag">Config & CloudTrail</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Security needs a continuous check that no security group allows unrestricted SSH, with automatic fixing when it happens. Which solution fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A CloudTrail trail to S3, reviewed by hand every month</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Config rule for open SSH with SSM Automation remediation</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A WAF web ACL rule that blocks traffic to port 22</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An IPAM pool allocation rule that restricts CIDRs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Config rule for open SSH with SSM Automation remediation<br><br>
+<strong>How to think about it:</strong> Continuous compliance + auto-fix = <b>Config rule + SSM Automation remediation</b>.<br><br>
+<strong>Why B is correct:</strong> Config evaluates on each SG change and the remediation document removes the offending rule.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A CloudTrail trail to S3, reviewed by hand every month</em> &mdash; Monthly log review is neither continuous nor automatic.<br><em>C) A WAF web ACL rule that blocks traffic to port 22</em> &mdash; WAF works on HTTP requests at L7, not SSH on security groups.<br><em>D) An IPAM pool allocation rule that restricts CIDRs</em> &mdash; IPAM rules govern address allocation, not security group ports.
+</div>
+</div>
+
+<!-- Q40 Config & CloudTrail -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Config & CloudTrail" data-level="B">
+<div class="q-tags"><span class="q-tag">Config & CloudTrail</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>How long does the CloudTrail Event history in the console keep management events without creating a trail?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">7 days</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Forever, at no cost</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">1 year</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">90 days</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> 90 days<br><br>
+<strong>How to think about it:</strong> CloudTrail <b>Event history = 90 days</b>; longer = a <b>trail</b> to S3/CloudWatch Logs.<br><br>
+<strong>Why D is correct:</strong> Event history shows the last 90 days of management events; create a trail for longer retention.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 7 days</em> &mdash; Event history keeps events far longer than a week.<br><em>B) Forever, at no cost</em> &mdash; Event history is limited to 90 days.<br><em>C) 1 year</em> &mdash; One-year retention requires a trail or CloudTrail Lake.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 40;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

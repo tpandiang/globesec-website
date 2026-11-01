@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS ANS VPC DNS, Performance &amp; Monitoring - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">ANS-C01</span>
+            <span>VPC DNS, Performance &amp; Monitoring</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Advanced Networking Specialty &mdash; VPC DNS, Performance &amp; Monitoring</h2>
+        <p>40 refresher questions &mdash; Route 53 Resolver, DHCP option sets, DNS attributes, MTU &amp; jumbo frames, ENA/EFA, bandwidth limits, Flow Logs, Traffic Mirroring, Reachability &amp; Network Access Analyzer</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/40</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 40 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 40</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="VPC DNS" onclick="filterQ(this)">VPC DNS</button><button class="filter-btn" data-f="DHCP Options" onclick="filterQ(this)">DHCP Options</button><button class="filter-btn" data-f="Resolver Endpoints" onclick="filterQ(this)">Resolver Endpoints</button><button class="filter-btn" data-f="MTU & Jumbo" onclick="filterQ(this)">MTU & Jumbo</button><button class="filter-btn" data-f="EC2 Performance" onclick="filterQ(this)">EC2 Performance</button><button class="filter-btn" data-f="Flow Logs" onclick="filterQ(this)">Flow Logs</button><button class="filter-btn" data-f="Mirroring & Analyzers" onclick="filterQ(this)">Mirroring & Analyzers</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short ANS-style scenarios.</p>
+
+<!-- Q1 VPC DNS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="VPC DNS" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC DNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>Where does the Amazon-provided DNS server (Route 53 Resolver) listen inside a VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">VPC base +2, and 169.254.169.253</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The last address of each subnet</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">8.8.8.8, the public Google resolver</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">169.254.169.254, the metadata IP</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> VPC base +2, and 169.254.169.253<br><br>
+<strong>How to think about it:</strong> VPC DNS = <b>VPC base + 2</b> (e.g. 10.0.0.2) or <b>169.254.169.253</b>.<br><br>
+<strong>Why A is correct:</strong> Both addresses reach the same Route 53 Resolver from inside the VPC.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) The last address of each subnet</em> &mdash; The last address is reserved and not used for DNS.<br><em>C) 8.8.8.8, the public Google resolver</em> &mdash; That is a public Google resolver, not the AWS VPC resolver.<br><em>D) 169.254.169.254, the metadata IP</em> &mdash; That is the instance metadata service, not DNS.
+</div>
+</div>
+
+<!-- Q2 VPC DNS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="VPC DNS" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC DNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>What can the Amazon-provided DNS resolver answer for instances in a VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only on-premises corporate domain names</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only names registered in the account's default VPC itself</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Private zones, EC2 internal names and public DNS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only public internet domain names, never private</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Private zones, EC2 internal names and public DNS<br><br>
+<strong>How to think about it:</strong> .2 resolver = <b>private hosted zones + VPC internal names + public DNS</b>.<br><br>
+<strong>Why C is correct:</strong> The resolver handles private hosted zones associated with the VPC, internal hostnames and internet names by default.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only on-premises corporate domain names</em> &mdash; On-premises names need an outbound Resolver endpoint with forwarding rules.<br><em>B) Only names registered in the account's default VPC itself</em> &mdash; Every VPC has its own resolver.<br><em>D) Only public internet domain names, never private</em> &mdash; It also answers private hosted zones and internal EC2 names.
+</div>
+</div>
+
+<!-- Q3 VPC DNS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="VPC DNS" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC DNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>What does the VPC attribute <code>enableDnsSupport</code> control?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Whether the Amazon DNS resolver works</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Whether instances get public DNS names</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Whether DHCP is enabled in the VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Whether DNSSEC answers are validated</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Whether the Amazon DNS resolver works<br><br>
+<strong>How to think about it:</strong> <code>enableDnsSupport</code> = <b>is the .2 resolver on</b>. <code>enableDnsHostnames</code> = <b>do instances get public DNS names</b>.<br><br>
+<strong>Why A is correct:</strong> If it is false, instances cannot use the .2 resolver.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Whether instances get public DNS names</em> &mdash; That is enableDnsHostnames.<br><em>C) Whether DHCP is enabled in the VPC</em> &mdash; DHCP is always on in a VPC.<br><em>D) Whether DNSSEC answers are validated</em> &mdash; DNSSEC validation is a separate Resolver setting.
+</div>
+</div>
+
+<!-- Q4 VPC DNS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPC DNS" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC DNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>In a newly created (non-default) VPC, which DNS attribute is off by default?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Both attributes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Neither attribute</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">enableDnsSupport</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">enableDnsHostnames</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> enableDnsHostnames<br><br>
+<strong>How to think about it:</strong> Custom VPC: <b>DnsSupport = true, DnsHostnames = false</b>. Default VPC: both true.<br><br>
+<strong>Why D is correct:</strong> Custom VPCs do not give public DNS hostnames to instances until you turn this on.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Both attributes</em> &mdash; enableDnsSupport is on by default.<br><em>B) Neither attribute</em> &mdash; enableDnsHostnames is off in a custom VPC.<br><em>C) enableDnsSupport</em> &mdash; DNS support is on by default in every VPC.
+</div>
+</div>
+
+<!-- Q5 VPC DNS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="VPC DNS" data-level="A">
+<div class="q-tags"><span class="q-tag">VPC DNS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>A private hosted zone is associated with a VPC, but instances there cannot resolve its records. What should you check first?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An internet gateway is attached to the VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Both VPC DNS attributes are set to true</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The zone is also published as public</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Every instance has an Elastic IP address</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Both VPC DNS attributes are set to true<br><br>
+<strong>How to think about it:</strong> Private hosted zone needs <b>both enableDnsSupport and enableDnsHostnames = true</b>.<br><br>
+<strong>Why B is correct:</strong> Private hosted zones resolve only when enableDnsSupport and enableDnsHostnames are both enabled.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An internet gateway is attached to the VPC</em> &mdash; Private DNS resolution does not need internet access.<br><em>C) The zone is also published as public</em> &mdash; Private zones do not need to be public.<br><em>D) Every instance has an Elastic IP address</em> &mdash; Public IPs have nothing to do with private zone resolution.
+</div>
+</div>
+
+<!-- Q6 VPC DNS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="VPC DNS" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC DNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>In us-east-1, what does an EC2 private IP-based hostname look like?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">ip-10-0-1-15.ec2.internal</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">ec2-10-0-1-15.compute.amazonaws.com</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">ip-10-0-1-15.us-east-1.compute.internal</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">10-0-1-15.vpc.local</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> ip-10-0-1-15.ec2.internal<br><br>
+<strong>How to think about it:</strong> us-east-1 private = <b>ip-a-b-c-d.ec2.internal</b>; other Regions = <b>.region.compute.internal</b>.<br><br>
+<strong>Why A is correct:</strong> us-east-1 uses the ec2.internal suffix for private names.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) ec2-10-0-1-15.compute.amazonaws.com</em> &mdash; Names in amazonaws.com are public DNS names based on the public IP.<br><em>C) ip-10-0-1-15.us-east-1.compute.internal</em> &mdash; That is the pattern for Regions other than us-east-1.<br><em>D) 10-0-1-15.vpc.local</em> &mdash; This is not an AWS naming format.
+</div>
+</div>
+
+<!-- Q7 DHCP Options -->
+<div class="question" data-type="mc" data-answer="0" data-topic="DHCP Options" data-level="B">
+<div class="q-tags"><span class="q-tag">DHCP Options</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>What is a DHCP option set used for in a VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Giving instances domain, DNS and NTP settings</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Filtering traffic between the VPC's subnets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Assigning Elastic IPs to instances at launch time</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Routing private traffic to a NAT gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Giving instances domain, DNS and NTP settings<br><br>
+<strong>How to think about it:</strong> DHCP option set = <b>domain name, DNS servers, NTP, NetBIOS</b> for instances.<br><br>
+<strong>Why A is correct:</strong> Instances receive these values from the VPC's DHCP service.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Filtering traffic between the VPC's subnets</em> &mdash; Filtering is done by security groups and NACLs.<br><em>C) Assigning Elastic IPs to instances at launch time</em> &mdash; DHCP option sets do not handle public IPs.<br><em>D) Routing private traffic to a NAT gateway</em> &mdash; Routing is set in route tables.
+</div>
+</div>
+
+<!-- Q8 DHCP Options -->
+<div class="question" data-type="mc" data-answer="1" data-topic="DHCP Options" data-level="B">
+<div class="q-tags"><span class="q-tag">DHCP Options</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>You need to change the DNS server list in a DHCP option set already in use. What do you do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Override the DNS setting on each subnet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create a new option set and associate it</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Edit the existing option set in place</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Associate a second set beside the first one</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Create a new option set and associate it<br><br>
+<strong>How to think about it:</strong> DHCP option sets are <b>immutable</b>: <b>create a new one and associate it</b>.<br><br>
+<strong>Why B is correct:</strong> Option sets cannot be edited, and a VPC has only one at a time.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Override the DNS setting on each subnet</em> &mdash; DHCP options apply to the whole VPC, not to each subnet.<br><em>C) Edit the existing option set in place</em> &mdash; Option sets cannot be changed after creation.<br><em>D) Associate a second set beside the first one</em> &mdash; A VPC can have only one option set at a time.
+</div>
+</div>
+
+<!-- Q9 DHCP Options -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DHCP Options" data-level="A">
+<div class="q-tags"><span class="q-tag">DHCP Options</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>A team set a custom on-premises DNS server in the DHCP options. Instances can now resolve corporate names but not the Route 53 private hosted zone. Why?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Private hosted zones work only in the default VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The NAT gateway is dropping the DNS packets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">enableDnsHostnames was switched off automatically</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The custom server can't see the private zone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The custom server can't see the private zone<br><br>
+<strong>How to think about it:</strong> Custom DNS in DHCP = <b>bypasses the .2 resolver</b> unless your server forwards to it.<br><br>
+<strong>Why D is correct:</strong> Private hosted zones are answered only by the Amazon resolver, so the custom server must forward those queries to it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Private hosted zones work only in the default VPC</em> &mdash; Any associated VPC can use them.<br><em>B) The NAT gateway is dropping the DNS packets</em> &mdash; NAT gateways do not filter DNS.<br><em>C) enableDnsHostnames was switched off automatically</em> &mdash; Changing DHCP options does not change VPC DNS attributes.
+</div>
+</div>
+
+<!-- Q10 DHCP Options -->
+<div class="question" data-type="mc" data-answer="3" data-topic="DHCP Options" data-level="B">
+<div class="q-tags"><span class="q-tag">DHCP Options</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>You associate a new DHCP option set with a VPC. When do running instances pick up the new settings?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only after each instance is stopped and started</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only after the whole VPC is re-created</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Never; only newly launched instances get it</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">At their next DHCP lease renewal</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> At their next DHCP lease renewal<br><br>
+<strong>How to think about it:</strong> New option set = applied at <b>DHCP lease renewal</b>; no instance restart required.<br><br>
+<strong>Why D is correct:</strong> Running instances pick it up automatically; you can also force a renewal from the OS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only after each instance is stopped and started</em> &mdash; A restart is not required, though it also works.<br><em>B) Only after the whole VPC is re-created</em> &mdash; Associating the new set is enough.<br><em>C) Never; only newly launched instances get it</em> &mdash; Existing instances get the settings on renewal.
+</div>
+</div>
+
+<!-- Q11 DHCP Options -->
+<div class="question" data-type="mc" data-answer="2" data-topic="DHCP Options" data-level="B">
+<div class="q-tags"><span class="q-tag">DHCP Options</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>How many DHCP option sets can be associated with one VPC at the same time?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">One per subnet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Unlimited</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">One</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Up to five</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> One<br><br>
+<strong>How to think about it:</strong> <b>One</b> DHCP option set per VPC at a time.<br><br>
+<strong>Why C is correct:</strong> A VPC has exactly one option set (or none) associated at any moment.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) One per subnet</em> &mdash; Option sets apply to the whole VPC.<br><em>B) Unlimited</em> &mdash; Only one at a time.<br><em>D) Up to five</em> &mdash; Only one is allowed.
+</div>
+</div>
+
+<!-- Q12 Resolver Endpoints -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Resolver Endpoints" data-level="B">
+<div class="q-tags"><span class="q-tag">Resolver Endpoints</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>On-premises servers must resolve names in a Route 53 private hosted zone over Direct Connect. What do you create?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A public hosted zone copy of the records</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Route 53 Resolver outbound endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Route 53 Resolver inbound endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A new DHCP option set for the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A Route 53 Resolver inbound endpoint<br><br>
+<strong>How to think about it:</strong> On-prem → AWS names = <b>inbound</b> Resolver endpoint.<br><br>
+<strong>Why C is correct:</strong> Inbound endpoints give the VPC resolver IP addresses that on-premises DNS can forward to.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A public hosted zone copy of the records</em> &mdash; That would expose private names to the internet.<br><em>B) A Route 53 Resolver outbound endpoint</em> &mdash; Outbound endpoints send AWS queries to on-premises DNS, the other direction.<br><em>D) A new DHCP option set for the VPC</em> &mdash; VPC DHCP options do not affect on-premises resolvers.
+</div>
+</div>
+
+<!-- Q13 Resolver Endpoints -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Resolver Endpoints" data-level="B">
+<div class="q-tags"><span class="q-tag">Resolver Endpoints</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>EC2 instances must resolve <code>corp.example.local</code>, which lives on on-premises DNS servers. What do you set up?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">enableDnsSupport set to false on the VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An outbound endpoint and a forwarding rule</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An empty private zone named corp.example.local</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Resolver inbound endpoint in the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An outbound endpoint and a forwarding rule<br><br>
+<strong>How to think about it:</strong> AWS → on-prem names = <b>outbound endpoint + forwarding rule</b>.<br><br>
+<strong>Why B is correct:</strong> The rule sends corp.example.local queries through the outbound endpoint to the on-premises DNS IPs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) enableDnsSupport set to false on the VPC</em> &mdash; That disables VPC DNS completely.<br><em>C) An empty private zone named corp.example.local</em> &mdash; An empty zone would return no answers.<br><em>D) A Resolver inbound endpoint in the VPC</em> &mdash; Inbound endpoints serve queries coming from on-premises.
+</div>
+</div>
+
+<!-- Q14 Resolver Endpoints -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Resolver Endpoints" data-level="A">
+<div class="q-tags"><span class="q-tag">Resolver Endpoints</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>Twenty VPCs in several accounts need the same on-premises forwarding rules. What is the least-effort design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">One DHCP option set shared across accounts</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Self-managed BIND DNS servers on EC2 in each VPC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A separate outbound endpoint in every VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Central outbound endpoint; share rules via RAM</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Central outbound endpoint; share rules via RAM<br><br>
+<strong>How to think about it:</strong> Many VPCs, same rules = <b>share Resolver rules with AWS RAM</b>, one central outbound endpoint.<br><br>
+<strong>Why D is correct:</strong> Rules are associated with each VPC and use the central endpoint, so no per-VPC endpoint is needed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) One DHCP option set shared across accounts</em> &mdash; DHCP option sets cannot be shared across accounts, and they bypass the Resolver.<br><em>B) Self-managed BIND DNS servers on EC2 in each VPC</em> &mdash; Self-managed DNS adds work and loses the Resolver's managed features.<br><em>C) A separate outbound endpoint in every VPC</em> &mdash; This works but costs more and is harder to manage.
+</div>
+</div>
+
+<!-- Q15 Resolver Endpoints -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Resolver Endpoints" data-level="B">
+<div class="q-tags"><span class="q-tag">Resolver Endpoints</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>Which feature records the DNS queries made by resources in a VPC, including the names asked and the answers returned?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">VPC Flow Logs at the ENI level</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS CloudTrail data event logging</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A custom DHCP option set for DNS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Route 53 Resolver query logging</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Route 53 Resolver query logging<br><br>
+<strong>How to think about it:</strong> Log DNS queries = <b>Route 53 Resolver query logging</b> (Flow Logs skip DNS).<br><br>
+<strong>Why D is correct:</strong> It logs queries from the VPC to CloudWatch Logs, S3 or Data Firehose.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) VPC Flow Logs at the ENI level</em> &mdash; Flow logs leave out traffic to the Amazon DNS resolver.<br><em>B) AWS CloudTrail data event logging</em> &mdash; CloudTrail records API calls, not DNS lookups.<br><em>C) A custom DHCP option set for DNS</em> &mdash; DHCP option sets set DNS servers but do not log queries.
+</div>
+</div>
+
+<!-- Q16 MTU & Jumbo -->
+<div class="question" data-type="mc" data-answer="1" data-topic="MTU & Jumbo" data-level="B">
+<div class="q-tags"><span class="q-tag">MTU & Jumbo</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>What is the largest MTU supported between instances inside the same VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">65,535 bytes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">9001 bytes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">1500 bytes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">8500 bytes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> 9001 bytes<br><br>
+<strong>How to think about it:</strong> Inside VPC = <b>9001 bytes</b> (jumbo frames).<br><br>
+<strong>Why B is correct:</strong> Current-generation instances support jumbo frames within the VPC.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 65,535 bytes</em> &mdash; That is the maximum IP packet size, not the VPC MTU.<br><em>C) 1500 bytes</em> &mdash; 1500 is the limit for traffic leaving through an internet gateway.<br><em>D) 8500 bytes</em> &mdash; 8500 is the limit through a Transit Gateway.
+</div>
+</div>
+
+<!-- Q17 MTU & Jumbo -->
+<div class="question" data-type="mc" data-answer="3" data-topic="MTU & Jumbo" data-level="B">
+<div class="q-tags"><span class="q-tag">MTU & Jumbo</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>Which path limits packets to an MTU of 1500 bytes?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Traffic between two instances in one subnet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Traffic in a cluster placement group</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Traffic over intra-Region VPC peering</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Traffic through an internet gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Traffic through an internet gateway<br><br>
+<strong>How to think about it:</strong> <b>Internet gateway = 1500</b>. VPN is also 1500 or less.<br><br>
+<strong>Why D is correct:</strong> Packets to the internet are limited to 1500 bytes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Traffic between two instances in one subnet</em> &mdash; Instances in the same VPC can use 9001 bytes.<br><em>B) Traffic in a cluster placement group</em> &mdash; Placement groups do not lower the MTU.<br><em>C) Traffic over intra-Region VPC peering</em> &mdash; Intra-Region peering supports jumbo frames.
+</div>
+</div>
+
+<!-- Q18 MTU & Jumbo -->
+<div class="question" data-type="mc" data-answer="1" data-topic="MTU & Jumbo" data-level="B">
+<div class="q-tags"><span class="q-tag">MTU & Jumbo</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>What is the maximum MTU for traffic through an AWS Transit Gateway?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">1500 bytes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">8500 bytes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">9001 bytes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">576 bytes</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> 8500 bytes<br><br>
+<strong>How to think about it:</strong> Transit Gateway MTU = <b>8500</b> (VPN attachments through it = 1500).<br><br>
+<strong>Why B is correct:</strong> TGW passes VPC, DX and peering traffic up to 8500 bytes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 1500 bytes</em> &mdash; 1500 applies to VPN attachments, not to all TGW traffic.<br><em>C) 9001 bytes</em> &mdash; 9001 applies only inside a VPC.<br><em>D) 576 bytes</em> &mdash; 576 is an old minimum IPv4 size, not a TGW limit.
+</div>
+</div>
+
+<!-- Q19 MTU & Jumbo -->
+<div class="question" data-type="mc" data-answer="0" data-topic="MTU & Jumbo" data-level="A">
+<div class="q-tags"><span class="q-tag">MTU & Jumbo</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>Large packets from a VPC to an on-premises host keep getting dropped, while small packets work. Path MTU Discovery seems broken. What rule should you add?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Allow inbound ICMP type 3, code 4</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Disable the source/destination check</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Allow inbound TCP and UDP port 53</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Move the subnet to IPv6-only addressing</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Allow inbound ICMP type 3, code 4<br><br>
+<strong>How to think about it:</strong> PMTUD needs <b>ICMP type 3 code 4</b> ("fragmentation needed") allowed in.<br><br>
+<strong>Why A is correct:</strong> This is Destination Unreachable: Fragmentation Needed; without it the sender never learns to send smaller packets.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Disable the source/destination check</em> &mdash; That is for NAT and routing instances, not PMTUD.<br><em>C) Allow inbound TCP and UDP port 53</em> &mdash; Port 53 is DNS and does not affect packet size.<br><em>D) Move the subnet to IPv6-only addressing</em> &mdash; IPv6 also needs ICMPv6 Packet Too Big messages, so the core problem stays.
+</div>
+</div>
+
+<!-- Q20 MTU & Jumbo -->
+<div class="question" data-type="mc" data-answer="2" data-topic="MTU & Jumbo" data-level="A">
+<div class="q-tags"><span class="q-tag">MTU & Jumbo</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>A data transfer between EC2 instances in the same VPC is limited by packets per second, not bandwidth. What tuning helps?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turn off enhanced networking on both</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Lower the instance MTU down to 1500</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use jumbo frames with an MTU of 9001</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Route the flow through an internet gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Use jumbo frames with an MTU of 9001<br><br>
+<strong>How to think about it:</strong> PPS bottleneck = <b>bigger packets</b> (jumbo frames, MTU 9001).<br><br>
+<strong>Why C is correct:</strong> Fewer, larger packets move more data at the same packet rate.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Turn off enhanced networking on both</em> &mdash; Enhanced networking raises PPS; turning it off hurts.<br><em>B) Lower the instance MTU down to 1500</em> &mdash; Smaller packets need more packets per second, making it worse.<br><em>D) Route the flow through an internet gateway</em> &mdash; This adds a 1500 MTU limit and a longer path.
+</div>
+</div>
+
+<!-- Q21 EC2 Performance -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EC2 Performance" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2 Performance</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>Which EC2 feature uses SR-IOV to give higher bandwidth, more packets per second and lower latency?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Dedicated Host tenancy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enhanced networking with ENA</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">EBS-optimized instance mode</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Elastic IP address mapping</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Enhanced networking with ENA<br><br>
+<strong>How to think about it:</strong> <b>Enhanced networking</b> = SR-IOV via <b>ENA</b> (modern) or Intel 82599 VF (legacy).<br><br>
+<strong>Why B is correct:</strong> SR-IOV gives the instance direct access to the network hardware, which reduces hypervisor overhead.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Dedicated Host tenancy</em> &mdash; Dedicated Hosts are about licensing and tenancy.<br><em>C) EBS-optimized instance mode</em> &mdash; This gives separate bandwidth to EBS, not general networking.<br><em>D) Elastic IP address mapping</em> &mdash; EIPs are addresses with no performance effect.
+</div>
+</div>
+
+<!-- Q22 EC2 Performance -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EC2 Performance" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2 Performance</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>Which interface gives HPC and ML applications OS-bypass networking for MPI or NCCL traffic?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Intel 82599 Virtual Function</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A NAT gateway in each AZ</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Elastic Fabric Adapter (EFA)</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A standard secondary ENI</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Elastic Fabric Adapter (EFA)<br><br>
+<strong>How to think about it:</strong> OS-bypass for HPC/ML = <b>Elastic Fabric Adapter (EFA)</b>.<br><br>
+<strong>Why C is correct:</strong> EFA lets apps talk to the network hardware directly, cutting latency for tightly coupled workloads.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Intel 82599 Virtual Function</em> &mdash; This is legacy enhanced networking with no OS bypass.<br><em>B) A NAT gateway in each AZ</em> &mdash; NAT gateways are for internet egress, not HPC traffic.<br><em>D) A standard secondary ENI</em> &mdash; A regular ENI goes through the normal kernel network stack.
+</div>
+</div>
+
+<!-- Q23 EC2 Performance -->
+<div class="question" data-type="mc" data-answer="1" data-topic="EC2 Performance" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2 Performance</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>What does DPDK (Data Plane Development Kit) improve?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">DNS resolution time in the VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Packet processing speed in the OS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Throughput of attached EBS volumes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Physical latency between AZs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Packet processing speed in the OS<br><br>
+<strong>How to think about it:</strong> <b>DPDK = faster packet processing in the OS/user space</b>; ENA/placement groups help below that.<br><br>
+<strong>Why B is correct:</strong> DPDK handles packets in user space and avoids kernel overhead, which helps network appliances.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) DNS resolution time in the VPC</em> &mdash; DPDK is about packet processing, not DNS.<br><em>C) Throughput of attached EBS volumes</em> &mdash; DPDK is for networking, not block storage.<br><em>D) Physical latency between AZs</em> &mdash; Physical distance between AZs is not changed by software.
+</div>
+</div>
+
+<!-- Q24 EC2 Performance -->
+<div class="question" data-type="mc" data-answer="2" data-topic="EC2 Performance" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2 Performance</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>Which placement group gives the lowest latency and highest per-flow throughput between instances?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Partition placement group</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">None, spread over three AZs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Cluster placement group</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Spread placement group</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Cluster placement group<br><br>
+<strong>How to think about it:</strong> Lowest latency = <b>cluster placement group</b> (single AZ).<br><br>
+<strong>Why C is correct:</strong> Instances are packed close together in one AZ, allowing up to 10 Gbps for one flow.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Partition placement group</em> &mdash; Partition is about isolating failures for big distributed systems.<br><em>B) None, spread over three AZs</em> &mdash; Distance between AZs adds latency.<br><em>D) Spread placement group</em> &mdash; Spread puts instances on separate hardware for resilience, not speed.
+</div>
+</div>
+
+<!-- Q25 EC2 Performance -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EC2 Performance" data-level="A">
+<div class="q-tags"><span class="q-tag">EC2 Performance</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>A single TCP connection between two instances in different AZs tops out near 5 Gbps, even on 25 Gbps instances. Why?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">One flow is capped at 5 Gbps; use many flows</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The security group is throttling the flow</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The VPC MTU is set too high for the path</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">ENA is not supported for cross-AZ instance traffic</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> One flow is capped at 5 Gbps; use many flows<br><br>
+<strong>How to think about it:</strong> One flow (5-tuple) = <b>5 Gbps</b>, or <b>10 Gbps</b> inside a cluster placement group. Use <b>multiple flows</b>.<br><br>
+<strong>Why A is correct:</strong> Outside a cluster placement group a single flow gets 5 Gbps; full bandwidth needs parallel flows.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) The security group is throttling the flow</em> &mdash; Security groups do not limit bandwidth.<br><em>C) The VPC MTU is set too high for the path</em> &mdash; MTU does not create a fixed 5 Gbps ceiling.<br><em>D) ENA is not supported for cross-AZ instance traffic</em> &mdash; ENA works across AZs; the cap is per flow.
+</div>
+</div>
+
+<!-- Q26 EC2 Performance -->
+<div class="question" data-type="mc" data-answer="3" data-topic="EC2 Performance" data-level="A">
+<div class="q-tags"><span class="q-tag">EC2 Performance</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>A 16-vCPU instance rated "up to 25 Gbps" sends data to the internet. Roughly what aggregate bandwidth can it get outside the Region?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The full 25 Gbps</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">About 12.5 Gbps</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">About 1 Gbps</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">About 5 Gbps</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> About 5 Gbps<br><br>
+<strong>How to think about it:</strong> Leaving the Region: <b>≥32 vCPU = 50%</b> of rated bandwidth, <b>under 32 vCPU = 5 Gbps</b>.<br><br>
+<strong>Why D is correct:</strong> Instances with fewer than 32 vCPUs are limited to 5 Gbps for traffic outside the Region.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The full 25 Gbps</em> &mdash; Full bandwidth applies only to traffic inside the Region.<br><em>B) About 12.5 Gbps</em> &mdash; The 50% rule applies only to instances with 32 or more vCPUs.<br><em>C) About 1 Gbps</em> &mdash; The limit is higher than 1 Gbps.
+</div>
+</div>
+
+<!-- Q27 EC2 Performance -->
+<div class="question" data-type="mc" data-answer="0" data-topic="EC2 Performance" data-level="B">
+<div class="q-tags"><span class="q-tag">EC2 Performance</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>What lets smaller instances rated "up to X Gbps" exceed their baseline bandwidth for short periods?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Network I/O credits</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Elastic IP pooling</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">EBS burst balance</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CPU credits</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Network I/O credits<br><br>
+<strong>How to think about it:</strong> "Up to" bandwidth = <b>network I/O credits</b> (burst above baseline).<br><br>
+<strong>Why A is correct:</strong> Smaller instances earn credits while below baseline and spend them to burst.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Elastic IP pooling</em> &mdash; This does not exist, and IPs do not affect bandwidth.<br><em>C) EBS burst balance</em> &mdash; That is for gp2 volume IOPS.<br><em>D) CPU credits</em> &mdash; CPU credits govern burstable CPU on T instances, not network bandwidth.
+</div>
+</div>
+
+<!-- Q28 Flow Logs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Flow Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">Flow Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>At which levels can you create VPC Flow Logs?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Route table only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Security group only</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">VPC, subnet or ENI</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only per Region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> VPC, subnet or ENI<br><br>
+<strong>How to think about it:</strong> Flow Logs = <b>VPC, subnet or ENI</b>.<br><br>
+<strong>Why C is correct:</strong> A VPC- or subnet-level flow log covers every ENI inside it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Route table only</em> &mdash; Route tables are not flow-log sources.<br><em>B) Security group only</em> &mdash; Security groups are not flow-log sources.<br><em>D) Only per Region</em> &mdash; Flow logs attach to VPCs, subnets or ENIs, not to whole Regions.
+</div>
+</div>
+
+<!-- Q29 Flow Logs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Flow Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">Flow Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>Where can VPC Flow Logs be delivered?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An EC2 log collector instance in the VPC only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An Amazon RDS database table only</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CloudWatch Logs, S3 or Data Firehose</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The VPC console dashboard only</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> CloudWatch Logs, S3 or Data Firehose<br><br>
+<strong>How to think about it:</strong> Flow Log destinations = <b>CloudWatch Logs, S3, Data Firehose</b>.<br><br>
+<strong>Why C is correct:</strong> These are the three supported destinations.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An EC2 log collector instance in the VPC only</em> &mdash; Flow logs go to managed log destinations.<br><em>B) An Amazon RDS database table only</em> &mdash; RDS is not a flow-log destination.<br><em>D) The VPC console dashboard only</em> &mdash; The console does not store flow logs.
+</div>
+</div>
+
+<!-- Q30 Flow Logs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Flow Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">Flow Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>What do VPC Flow Logs NOT capture?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Source and destination IPs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The packet payload</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The ACCEPT or REJECT action</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Bytes and packets per flow</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The packet payload<br><br>
+<strong>How to think about it:</strong> Flow Logs = <b>metadata only</b>, no packet payload. For payload use <b>Traffic Mirroring</b>.<br><br>
+<strong>Why B is correct:</strong> Flow logs record connection metadata such as IPs, ports, bytes and accept or reject, but never the data itself.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Source and destination IPs</em> &mdash; These are standard fields.<br><em>C) The ACCEPT or REJECT action</em> &mdash; The action field records this.<br><em>D) Bytes and packets per flow</em> &mdash; Bytes and packets are standard fields.
+</div>
+</div>
+
+<!-- Q31 Flow Logs -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Flow Logs" data-level="A">
+<div class="q-tags"><span class="q-tag">Flow Logs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>A security team notices that flow logs show no records for queries to the Amazon DNS resolver or for instance metadata calls. Is something broken?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Yes; those flows appear only in S3 delivery</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Yes; the IAM role is missing permissions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Yes; it must be re-created at the ENI level</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">No; flow logs skip that AWS-internal traffic</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> No; flow logs skip that AWS-internal traffic<br><br>
+<strong>How to think about it:</strong> Flow Logs <b>skip</b> Amazon DNS, <b>169.254.169.254</b> metadata, Time Sync, DHCP and Windows activation traffic.<br><br>
+<strong>Why D is correct:</strong> DNS to the Amazon resolver, metadata, Time Sync and DHCP are not recorded; use Resolver query logging for DNS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Yes; those flows appear only in S3 delivery</em> &mdash; The destination does not change which traffic is captured.<br><em>B) Yes; the IAM role is missing permissions</em> &mdash; Permission problems would stop all records, not just these.<br><em>C) Yes; it must be re-created at the ENI level</em> &mdash; ENI-level logs skip the same traffic.
+</div>
+</div>
+
+<!-- Q32 Flow Logs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Flow Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">Flow Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>How quickly do VPC Flow Log records appear?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only when you request a manual export</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">After a 1- or 10-minute aggregation interval</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Once a day, delivered in a single daily batch file</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Instantly, recorded packet by packet</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> After a 1- or 10-minute aggregation interval<br><br>
+<strong>How to think about it:</strong> Flow Logs = <b>near real time, not instant</b>: 1- or 10-minute aggregation plus delivery delay.<br><br>
+<strong>Why B is correct:</strong> Records are grouped and then delivered, so there is a short delay; fine for analysis, not live packet work.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only when you request a manual export</em> &mdash; Delivery is continuous once the log is created.<br><em>C) Once a day, delivered in a single daily batch file</em> &mdash; Delivery happens within minutes.<br><em>D) Instantly, recorded packet by packet</em> &mdash; Records are grouped by flow and interval, not per packet.
+</div>
+</div>
+
+<!-- Q33 Flow Logs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Flow Logs" data-level="B">
+<div class="q-tags"><span class="q-tag">Flow Logs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>Inbound traffic is allowed by the security group but rejected by the NACL. How does this show in flow logs?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The record shows ACCEPT</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The record shows NODATA</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The record shows REJECT</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The flow is never logged</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The record shows REJECT<br><br>
+<strong>How to think about it:</strong> Flow log action = <b>ACCEPT / REJECT</b>; a REJECT means a SG or NACL denied it.<br><br>
+<strong>Why C is correct:</strong> Flow logs show the final result after both SGs and NACLs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The record shows ACCEPT</em> &mdash; Both layers must allow the traffic for it to be ACCEPT.<br><em>B) The record shows NODATA</em> &mdash; NODATA means no traffic was seen in the interval.<br><em>D) The flow is never logged</em> &mdash; Rejected flows are logged if the filter includes REJECT or ALL.
+</div>
+</div>
+
+<!-- Q34 Flow Logs -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Flow Logs" data-level="A">
+<div class="q-tags"><span class="q-tag">Flow Logs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>An analyst needs to query months of flow logs stored in S3 with SQL, at low cost. What fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">VPC Reachability Analyzer runs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VPC Traffic Mirroring sessions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Load the logs into Amazon RDS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon Athena over the S3 logs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Amazon Athena over the S3 logs<br><br>
+<strong>How to think about it:</strong> SQL over flow logs in S3 = <b>Amazon Athena</b>.<br><br>
+<strong>Why D is correct:</strong> Athena is serverless and charges per data scanned; Parquet format lowers cost further.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) VPC Reachability Analyzer runs</em> &mdash; It checks configuration paths, not historical logs.<br><em>B) VPC Traffic Mirroring sessions</em> &mdash; Mirroring captures live packets; it does not query stored logs.<br><em>C) Load the logs into Amazon RDS</em> &mdash; This needs ETL, a database and more cost.
+</div>
+</div>
+
+<!-- Q35 Mirroring & Analyzers -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Mirroring & Analyzers" data-level="B">
+<div class="q-tags"><span class="q-tag">Mirroring & Analyzers</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>Which feature copies actual packets from an ENI to a security appliance for deep inspection?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">VPC Traffic Mirroring</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VPC Flow Logs with all fields</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS CloudTrail data events</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Config recorder</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> VPC Traffic Mirroring<br><br>
+<strong>How to think about it:</strong> Need the <b>packet payload</b> = <b>VPC Traffic Mirroring</b>.<br><br>
+<strong>Why A is correct:</strong> It copies full packets from a source ENI to a target such as an NLB or another ENI.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) VPC Flow Logs with all fields</em> &mdash; Flow logs keep only metadata, not packets.<br><em>C) AWS CloudTrail data events</em> &mdash; CloudTrail records API calls, not network packets.<br><em>D) AWS Config recorder</em> &mdash; Config records resource configuration, not traffic.
+</div>
+</div>
+
+<!-- Q36 Mirroring & Analyzers -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Mirroring & Analyzers" data-level="B">
+<div class="q-tags"><span class="q-tag">Mirroring & Analyzers</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Which can be a VPC Traffic Mirroring target?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An S3 bucket with a capture prefix</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The VPC's internet gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An NLB, an ENI or a GWLB endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudWatch Logs log group</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An NLB, an ENI or a GWLB endpoint<br><br>
+<strong>How to think about it:</strong> Mirror targets = <b>ENI, NLB, or GWLB endpoint</b>. Encapsulation = <b>VXLAN UDP 4789</b>.<br><br>
+<strong>Why C is correct:</strong> These targets receive the mirrored traffic wrapped in VXLAN.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An S3 bucket with a capture prefix</em> &mdash; S3 cannot receive live packet streams.<br><em>B) The VPC's internet gateway</em> &mdash; IGWs route traffic; they do not analyse it.<br><em>D) A CloudWatch Logs log group</em> &mdash; Log groups receive flow logs, not mirrored packets.
+</div>
+</div>
+
+<!-- Q37 Mirroring & Analyzers -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Mirroring & Analyzers" data-level="A">
+<div class="q-tags"><span class="q-tag">Mirroring & Analyzers</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>An IDS fleet behind an NLB receives mirrored traffic but sees nothing. The appliances' security group allows only TCP 443. What is wrong?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The target must allow UDP 4789 (VXLAN)</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Each IDS appliance needs a public IP</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The NLB needs an HTTPS (TLS) listener</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Mirroring works only within one subnet</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> The target must allow UDP 4789 (VXLAN)<br><br>
+<strong>How to think about it:</strong> Mirrored traffic arrives as <b>VXLAN on UDP 4789</b>; allow it on the target.<br><br>
+<strong>Why A is correct:</strong> Mirrored traffic is wrapped in VXLAN, so TCP 443 rules do not match it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Each IDS appliance needs a public IP</em> &mdash; Mirroring runs over private networking.<br><em>C) The NLB needs an HTTPS (TLS) listener</em> &mdash; VXLAN is UDP, so an HTTPS listener does not help.<br><em>D) Mirroring works only within one subnet</em> &mdash; Source and target can be in other VPCs or accounts through peering or a TGW.
+</div>
+</div>
+
+<!-- Q38 Mirroring & Analyzers -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Mirroring & Analyzers" data-level="B">
+<div class="q-tags"><span class="q-tag">Mirroring & Analyzers</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>How does VPC Reachability Analyzer test connectivity between two resources?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It analyses configuration; no traffic is sent</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It sends ping packets between the resources</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It installs a probe agent on each instance</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It replays the last seven days of VPC Flow Logs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> It analyses configuration; no traffic is sent<br><br>
+<strong>How to think about it:</strong> Reachability Analyzer = <b>config analysis, no packets sent</b>; names the blocking component.<br><br>
+<strong>Why A is correct:</strong> It reasons over routes, SGs, NACLs and gateways and reports the blocking hop, so it is safe in production.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) It sends ping packets between the resources</em> &mdash; It does not create live traffic.<br><em>C) It installs a probe agent on each instance</em> &mdash; No agent is needed.<br><em>D) It replays the last seven days of VPC Flow Logs</em> &mdash; It does not use flow-log history.
+</div>
+</div>
+
+<!-- Q39 Mirroring & Analyzers -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Mirroring & Analyzers" data-level="A">
+<div class="q-tags"><span class="q-tag">Mirroring & Analyzers</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Reachability Analyzer reports "not reachable" between an EC2 client and an RDS database, and points to the database's security group. What is the fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Recreate the database in a public subnet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add a 0.0.0.0/0 route to an internet gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable VPC Flow Logs on the database's primary ENI</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Allow the client SG on the DB port, then re-run</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Allow the client SG on the DB port, then re-run<br><br>
+<strong>How to think about it:</strong> Analyzer names the <b>blocking component</b>; fix that one, then re-run.<br><br>
+<strong>Why D is correct:</strong> The tool found the exact hop that blocks traffic, so add the inbound rule on the database security group.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Recreate the database in a public subnet</em> &mdash; This increases exposure and does not fix the missing rule.<br><em>B) Add a 0.0.0.0/0 route to an internet gateway</em> &mdash; The problem is the security group, not routing.<br><em>C) Enable VPC Flow Logs on the database's primary ENI</em> &mdash; Logs show the symptom but do not fix the rule.
+</div>
+</div>
+
+<!-- Q40 Mirroring & Analyzers -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Mirroring & Analyzers" data-level="A">
+<div class="q-tags"><span class="q-tag">Mirroring & Analyzers</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>Compliance wants proof that no path exists from the internet to the database subnets except through the inspection firewall. Which tool fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">VPC Flow Logs for the database subnets</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Network Access Analyzer with an access scope</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Traffic Mirroring to the inspection firewall</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Reachability Analyzer from one EC2 to one DB</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Network Access Analyzer with an access scope<br><br>
+<strong>How to think about it:</strong> "Find <b>unintended access</b> across the network" = <b>Network Access Analyzer</b>. One A→B path = Reachability Analyzer.<br><br>
+<strong>Why B is correct:</strong> The scope flags any internet path to the database subnets that skips the firewall, across the whole network.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) VPC Flow Logs for the database subnets</em> &mdash; Logs show traffic that happened, not every path that could exist.<br><em>C) Traffic Mirroring to the inspection firewall</em> &mdash; Mirroring copies packets but does not prove that paths are absent.<br><em>D) Reachability Analyzer from one EC2 to one DB</em> &mdash; That checks a single path, not every possible path.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 40;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

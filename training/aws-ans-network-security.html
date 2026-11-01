@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS ANS Network Security &amp; GWLB - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">ANS-C01</span>
+            <span>Network Security &amp; GWLB</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Advanced Networking Specialty &mdash; Network Security &amp; GWLB</h2>
+        <p>40 refresher questions &mdash; SG/NACL layers, AWS WAF, Shield, Network Firewall, Gateway Load Balancer, ACM, GuardDuty, Inspector &amp; Firewall Manager</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/40</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 40 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 40</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="Layered Defense" onclick="filterQ(this)">Layered Defense</button><button class="filter-btn" data-f="WAF" onclick="filterQ(this)">WAF</button><button class="filter-btn" data-f="Shield & DDoS" onclick="filterQ(this)">Shield & DDoS</button><button class="filter-btn" data-f="Network Firewall" onclick="filterQ(this)">Network Firewall</button><button class="filter-btn" data-f="GWLB" onclick="filterQ(this)">GWLB</button><button class="filter-btn" data-f="ACM" onclick="filterQ(this)">ACM</button><button class="filter-btn" data-f="Detect & Govern" onclick="filterQ(this)">Detect & Govern</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short ANS-style scenarios.</p>
+
+<!-- Q1 Layered Defense -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Layered Defense" data-level="B">
+<div class="q-tags"><span class="q-tag">Layered Defense</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>Which statement correctly compares security groups and network ACLs?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">SGs are stateless at the subnet; NACLs are stateful at the ENI</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Both are stateful, and both support explicit deny rules for CIDRs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Both are stateless and evaluated only at the internet gateway</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">SGs are stateful at the ENI; NACLs are stateless at the subnet</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> SGs are stateful at the ENI; NACLs are stateless at the subnet<br><br>
+<strong>How to think about it:</strong> <b>SG = stateful, ENI-level, allow-only</b>; <b>NACL = stateless, subnet-level, allow + deny</b>.<br><br>
+<strong>Why D is correct:</strong> Return traffic is automatically allowed by an SG, while a NACL needs explicit rules in both directions and applies to the whole subnet.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) SGs are stateless at the subnet; NACLs are stateful at the ENI</em> &mdash; This reverses both properties: SGs are stateful and attach to ENIs, NACLs are stateless and attach to subnets.<br><em>B) Both are stateful, and both support explicit deny rules for CIDRs</em> &mdash; Only NACLs support deny rules, and NACLs are stateless.<br><em>C) Both are stateless and evaluated only at the internet gateway</em> &mdash; Neither is tied to the internet gateway; SGs apply at the ENI and NACLs at the subnet boundary.
+</div>
+</div>
+
+<!-- Q2 Layered Defense -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Layered Defense" data-level="B">
+<div class="q-tags"><span class="q-tag">Layered Defense</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>You must block one specific malicious source IP from reaching instances in a subnet. Which control can do this directly?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A security group deny rule on the instance</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An IAM policy with a <code>aws:SourceIp</code> condition</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A VPC route table blackhole route for the source IP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A network ACL deny rule on the subnet</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A network ACL deny rule on the subnet<br><br>
+<strong>How to think about it:</strong> Need to <b>deny</b> an IP at the VPC layer = <b>NACL</b> (SGs have no deny).<br><br>
+<strong>Why D is correct:</strong> NACLs support explicit deny rules by CIDR, so a /32 deny blocks that address for the whole subnet.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A security group deny rule on the instance</em> &mdash; Security groups only have allow rules; you cannot write a deny in an SG.<br><em>B) An IAM policy with a <code>aws:SourceIp</code> condition</em> &mdash; IAM conditions control API calls to AWS services, not packets reaching an EC2 instance.<br><em>C) A VPC route table blackhole route for the source IP</em> &mdash; Route tables decide where traffic goes; they do not filter inbound sources reaching the subnet.
+</div>
+</div>
+
+<!-- Q3 Layered Defense -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Layered Defense" data-level="A">
+<div class="q-tags"><span class="q-tag">Layered Defense</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>Users reach an ALB through CloudFront. Security wants to block a single abusive client IP. Why won't a NACL on the ALB subnets work, and what should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">NACLs only filter IPv6 here; add a route table drop for the client IP</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">TLS hides the client IP; use Shield Standard to block that client</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">NACLs can't apply to ALB subnets; use a security group deny rule</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The ALB sees CloudFront IPs, not the client; use a WAF IP set rule</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The ALB sees CloudFront IPs, not the client; use a WAF IP set rule<br><br>
+<strong>How to think about it:</strong> Behind CloudFront the packet source is <b>a CloudFront IP</b>, so filter the real client with <b>AWS WAF</b>.<br><br>
+<strong>Why D is correct:</strong> CloudFront opens its own connections to the origin, so the client IP only exists in headers; WAF on CloudFront can match the real viewer IP.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) NACLs only filter IPv6 here; add a route table drop for the client IP</em> &mdash; NACLs handle IPv4 and IPv6, and route tables cannot drop traffic by source address.<br><em>B) TLS hides the client IP; use Shield Standard to block that client</em> &mdash; TLS does not hide IP headers, and Shield Standard is automatic L3/L4 DDoS protection, not a per-IP block list.<br><em>C) NACLs can't apply to ALB subnets; use a security group deny rule</em> &mdash; NACLs do work on ALB subnets, and security groups cannot deny; the real problem is the source IP being CloudFront's.
+</div>
+</div>
+
+<!-- Q4 Layered Defense -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Layered Defense" data-level="B">
+<div class="q-tags"><span class="q-tag">Layered Defense</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>An origin ALB should accept traffic only from CloudFront. What is the simplest way to express that in the ALB security group?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Reference the CloudFront distribution ID as the SG source</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Reference the AWS-managed CloudFront origin-facing prefix list</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Allow 0.0.0.0/0 and rely on CloudFront geo restriction</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Add every CloudFront edge IP from ip-ranges.json as a /32 rule by hand</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Reference the AWS-managed CloudFront origin-facing prefix list<br><br>
+<strong>How to think about it:</strong> Allow only CloudFront to the origin = the <b>com.amazonaws.global.cloudfront.origin-facing</b> managed prefix list.<br><br>
+<strong>Why B is correct:</strong> AWS maintains this prefix list with CloudFront's origin-facing IP ranges, so the SG rule stays current without manual updates.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Reference the CloudFront distribution ID as the SG source</em> &mdash; Security groups accept CIDRs, prefix lists or other SGs, not a CloudFront distribution ID.<br><em>C) Allow 0.0.0.0/0 and rely on CloudFront geo restriction</em> &mdash; Opening the SG to everyone lets clients bypass CloudFront and hit the ALB directly.<br><em>D) Add every CloudFront edge IP from ip-ranges.json as a /32 rule by hand</em> &mdash; This is brittle and quickly exceeds SG rule limits; the managed prefix list does it for you.
+</div>
+</div>
+
+<!-- Q5 WAF -->
+<div class="question" data-type="mc" data-answer="2" data-topic="WAF" data-level="B">
+<div class="q-tags"><span class="q-tag">WAF</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>At which OSI layer does AWS WAF inspect traffic?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Layer 4, inspecting TCP and UDP flows only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Layer 3, inspecting IP packets of any protocol</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Layer 7, inspecting HTTP and HTTPS requests</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Layer 2, inspecting Ethernet frames in the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Layer 7, inspecting HTTP and HTTPS requests<br><br>
+<strong>How to think about it:</strong> <b>WAF = Layer 7</b> (HTTP/HTTPS requests).<br><br>
+<strong>Why C is correct:</strong> WAF evaluates request components such as headers, URI, query string and body.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Layer 4, inspecting TCP and UDP flows only</em> &mdash; WAF does not inspect raw TCP/UDP flows; it understands HTTP requests.<br><em>B) Layer 3, inspecting IP packets of any protocol</em> &mdash; Packet-level filtering of any protocol is the job of NACLs or AWS Network Firewall.<br><em>D) Layer 2, inspecting Ethernet frames in the VPC</em> &mdash; Nothing in AWS exposes customer filtering at the Ethernet frame layer.
+</div>
+</div>
+
+<!-- Q6 WAF -->
+<div class="question" data-type="mc" data-answer="2" data-topic="WAF" data-level="B">
+<div class="q-tags"><span class="q-tag">WAF</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>Which resource can you NOT associate a WAF web ACL with directly?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Amazon CloudFront distribution</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Application Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Network Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Amazon API Gateway REST API stage</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Network Load Balancer<br><br>
+<strong>How to think about it:</strong> WAF attaches to <b>CloudFront, ALB, API Gateway, AppSync</b> (plus Cognito, App Runner, Verified Access) — <b>not NLB</b>.<br><br>
+<strong>Why C is correct:</strong> NLB is a Layer 4 load balancer, so WAF (a Layer 7 service) cannot be associated with it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Amazon CloudFront distribution</em> &mdash; CloudFront supports global web ACLs that run at edge locations.<br><em>B) Application Load Balancer</em> &mdash; ALB is a standard WAF integration for regional web ACLs.<br><em>D) Amazon API Gateway REST API stage</em> &mdash; API Gateway REST stages can be protected with a regional web ACL.
+</div>
+</div>
+
+<!-- Q7 WAF -->
+<div class="question" data-type="mc" data-answer="0" data-topic="WAF" data-level="B">
+<div class="q-tags"><span class="q-tag">WAF</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>When a request matches a WAF rule with a Block action, what does the client receive by default?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An HTTP 403 Forbidden response</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An HTTP 302 redirect to a CAPTCHA page</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An HTTP 503 Service Unavailable response</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A TCP reset with no HTTP response</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An HTTP 403 Forbidden response<br><br>
+<strong>How to think about it:</strong> WAF block = <b>HTTP 403 Forbidden</b> (a custom response is optional).<br><br>
+<strong>Why A is correct:</strong> WAF returns 403 by default for blocked requests; you can configure a custom response code and body.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An HTTP 302 redirect to a CAPTCHA page</em> &mdash; CAPTCHA and Challenge are separate rule actions; the Block action returns 403.<br><em>C) An HTTP 503 Service Unavailable response</em> &mdash; 503 indicates the backend is unavailable, which is not WAF's default block response.<br><em>D) A TCP reset with no HTTP response</em> &mdash; WAF works at the HTTP layer and returns an HTTP response, not a bare TCP reset.
+</div>
+</div>
+
+<!-- Q8 WAF -->
+<div class="question" data-type="mc" data-answer="1" data-topic="WAF" data-level="B">
+<div class="q-tags"><span class="q-tag">WAF</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>A login endpoint is being hammered by a single IP sending thousands of requests per minute. Which WAF rule type throttles this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A size constraint rule on the login request body</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A rate-based rule that blocks IPs above a threshold</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A SQL injection match rule on the login query string</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A geo match rule that blocks the IP's whole country</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A rate-based rule that blocks IPs above a threshold<br><br>
+<strong>How to think about it:</strong> Too many requests from one source = <b>rate-based rule</b>.<br><br>
+<strong>Why B is correct:</strong> Rate-based rules count requests per source over a time window and act when the threshold is exceeded.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A size constraint rule on the login request body</em> &mdash; Size constraints check how big a request part is, not how often a client sends requests.<br><em>C) A SQL injection match rule on the login query string</em> &mdash; SQLi rules detect malicious payloads, not high request volumes.<br><em>D) A geo match rule that blocks the IP's whole country</em> &mdash; Geo blocking would block every user in that country, not just the one abusive client.
+</div>
+</div>
+
+<!-- Q9 WAF -->
+<div class="question" data-type="mc" data-answer="3" data-topic="WAF" data-level="B">
+<div class="q-tags"><span class="q-tag">WAF</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>Which WAF feature lets you start quickly with rules curated by AWS or Marketplace sellers for threats such as the OWASP Top 10?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Config managed rules</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Network Firewall Suricata rules</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Security Hub standards</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Managed rule groups</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Managed rule groups<br><br>
+<strong>How to think about it:</strong> Pre-built rule sets = <b>managed rule groups</b>.<br><br>
+<strong>Why D is correct:</strong> AWS and Marketplace sellers publish managed rule groups (for example the Core rule set) that you add to a web ACL.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Config managed rules</em> &mdash; Config rules check resource configuration compliance; they do not inspect web requests.<br><em>B) Network Firewall Suricata rules</em> &mdash; Suricata rules run in AWS Network Firewall at the VPC perimeter, not in a WAF web ACL.<br><em>C) Security Hub standards</em> &mdash; Security Hub aggregates findings and runs posture checks; it does not filter HTTP traffic.
+</div>
+</div>
+
+<!-- Q10 WAF -->
+<div class="question" data-type="mc" data-answer="0" data-topic="WAF" data-level="A">
+<div class="q-tags"><span class="q-tag">WAF</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>A team wants to see what a new WAF rule would block in production before enforcing it. What should they do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Set the rule action to Count and review the matched requests</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Deploy the rule with Block in a separate web ACL on the same ALB</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable Shield Advanced and ask the SRT to simulate traffic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Set the default action of the web ACL to Block for one hour</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Set the rule action to Count and review the matched requests<br><br>
+<strong>How to think about it:</strong> Test a rule safely = set its action to <b>Count</b> and review metrics/logs.<br><br>
+<strong>Why A is correct:</strong> Count records matches in metrics and logs without blocking, so you can tune the rule before switching to Block.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Deploy the rule with Block in a separate web ACL on the same ALB</em> &mdash; A resource can have only one web ACL associated, and Block would still affect users.<br><em>C) Enable Shield Advanced and ask the SRT to simulate traffic</em> &mdash; The Shield Response Team helps during DDoS events; it is not a rule testing service.<br><em>D) Set the default action of the web ACL to Block for one hour</em> &mdash; Blocking by default would deny all non-matching legitimate traffic.
+</div>
+</div>
+
+<!-- Q11 Shield & DDoS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Shield & DDoS" data-level="B">
+<div class="q-tags"><span class="q-tag">Shield & DDoS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>What is a SYN flood attack?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Many half-open TCP connections exhausting the server's state</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A flood of DNS queries that overwhelms the authoritative name server</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Spoofed UDP queries that make third-party servers reply to the victim</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Many slow HTTP connections held open by sending partial headers</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Many half-open TCP connections exhausting the server's state<br><br>
+<strong>How to think about it:</strong> <b>SYN flood</b> = lots of <b>half-open</b> TCP handshakes exhausting the server.<br><br>
+<strong>Why A is correct:</strong> The attacker sends SYNs and never completes the handshake, tying up server resources.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A flood of DNS queries that overwhelms the authoritative name server</em> &mdash; That is a DNS flood, aimed at stopping name resolution.<br><em>C) Spoofed UDP queries that make third-party servers reply to the victim</em> &mdash; That describes a UDP reflection/amplification attack.<br><em>D) Many slow HTTP connections held open by sending partial headers</em> &mdash; That is a Slowloris application-layer attack.
+</div>
+</div>
+
+<!-- Q12 Shield & DDoS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Shield & DDoS" data-level="B">
+<div class="q-tags"><span class="q-tag">Shield & DDoS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>Which statement about AWS Shield Standard is correct?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It must be enabled per ALB before it protects that load balancer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It costs a monthly subscription and includes the Shield Response Team</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It provides cost protection credits for scaling during an attack</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It is free, automatic, and protects against common Layer 3/4 attacks</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> It is free, automatic, and protects against common Layer 3/4 attacks<br><br>
+<strong>How to think about it:</strong> <b>Shield Standard</b> = free, automatic, L3/L4 protection for every customer.<br><br>
+<strong>Why D is correct:</strong> Every AWS customer gets Shield Standard at no extra cost for attacks such as SYN/UDP floods and reflection.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It must be enabled per ALB before it protects that load balancer</em> &mdash; Shield Standard is always on; no per-resource enablement is required.<br><em>B) It costs a monthly subscription and includes the Shield Response Team</em> &mdash; That describes Shield Advanced, not Standard.<br><em>C) It provides cost protection credits for scaling during an attack</em> &mdash; DDoS cost protection is a Shield Advanced feature.
+</div>
+</div>
+
+<!-- Q13 Shield & DDoS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Shield & DDoS" data-level="B">
+<div class="q-tags"><span class="q-tag">Shield & DDoS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>Which benefit is included with AWS Shield Advanced but not Shield Standard?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Automatic HTTPS certificates for every protected resource</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Encryption of traffic between edge locations and the origin</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">24/7 Shield Response Team access and DDoS cost protection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Basic protection against SYN floods on CloudFront distributions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> 24/7 Shield Response Team access and DDoS cost protection<br><br>
+<strong>How to think about it:</strong> Advanced = <b>SRT access + cost protection + L7 help</b> (and a monthly fee).<br><br>
+<strong>Why C is correct:</strong> Shield Advanced adds expert SRT help and credits for scaling charges caused by a DDoS attack.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Automatic HTTPS certificates for every protected resource</em> &mdash; Certificates come from AWS Certificate Manager, not Shield.<br><em>B) Encryption of traffic between edge locations and the origin</em> &mdash; Origin encryption is configured on CloudFront and the origin, not by Shield.<br><em>D) Basic protection against SYN floods on CloudFront distributions</em> &mdash; Basic L3/L4 protection on CloudFront is already part of Shield Standard.
+</div>
+</div>
+
+<!-- Q14 Shield & DDoS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Shield & DDoS" data-level="B">
+<div class="q-tags"><span class="q-tag">Shield & DDoS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>Which resource type can be protected by Shield Advanced?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An IAM role used by Lambda</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A DynamoDB table in a private subnet</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An S3 bucket accessed through a gateway endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An Elastic IP attached to an EC2 instance</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> An Elastic IP attached to an EC2 instance<br><br>
+<strong>How to think about it:</strong> Shield Advanced covers <b>CloudFront, Route 53, Global Accelerator, ELB and EIPs</b> (EC2, NLB).<br><br>
+<strong>Why D is correct:</strong> Shield Advanced protects EIPs, which covers EC2 and NLB entry points.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An IAM role used by Lambda</em> &mdash; IAM roles are identities, not network-facing resources Shield can protect.<br><em>B) A DynamoDB table in a private subnet</em> &mdash; DynamoDB tables are not Shield Advanced resources and are not exposed via a VPC subnet.<br><em>C) An S3 bucket accessed through a gateway endpoint</em> &mdash; S3 buckets are not a Shield Advanced protected resource type; front them with CloudFront instead.
+</div>
+</div>
+
+<!-- Q15 Shield & DDoS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Shield & DDoS" data-level="A">
+<div class="q-tags"><span class="q-tag">Shield & DDoS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>During a large HTTP flood, a Shield Advanced customer wants AWS experts to write WAF rules on their behalf. What must be in place?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Move the web ACL into the SRT's own AWS account for the event</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable GuardDuty so the SRT can read your findings and act</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Grant the SRT an IAM role; have Business or Enterprise Support</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Open a Developer Support case and share the root credentials</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Grant the SRT an IAM role; have Business or Enterprise Support<br><br>
+<strong>How to think about it:</strong> SRT acting for you = <b>Shield Advanced + Business/Enterprise support + an IAM role for the SRT</b>.<br><br>
+<strong>Why C is correct:</strong> The SRT needs permission to manage your WAF and Shield configuration, and engagement requires an eligible support plan.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Move the web ACL into the SRT's own AWS account for the event</em> &mdash; Web ACLs stay in your account; the SRT uses a role you grant.<br><em>B) Enable GuardDuty so the SRT can read your findings and act</em> &mdash; GuardDuty findings do not give the SRT permission to change WAF rules.<br><em>D) Open a Developer Support case and share the root credentials</em> &mdash; Developer support is not eligible and root credentials should never be shared.
+</div>
+</div>
+
+<!-- Q16 Shield & DDoS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Shield & DDoS" data-level="A">
+<div class="q-tags"><span class="q-tag">Shield & DDoS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>A public web app on EC2 behind an ALB must survive large DDoS attacks at the lowest operational effort. Which architecture follows AWS best practice?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Give every EC2 instance a public IP so load spreads across many addresses</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudFront + WAF in front of the ALB, ALB locked to CloudFront</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Replace the ALB with a NAT gateway to hide the instances from attackers</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Add NACL deny rules for each attacking IP as soon as it appears</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> CloudFront + WAF in front of the ALB, ALB locked to CloudFront<br><br>
+<strong>How to think about it:</strong> DDoS resilience = <b>absorb at the edge</b>: CloudFront + WAF + Shield, small origin attack surface.<br><br>
+<strong>Why B is correct:</strong> Edge locations absorb volumetric attacks, WAF handles L7 floods, and the origin is hidden from direct access.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Give every EC2 instance a public IP so load spreads across many addresses</em> &mdash; More public endpoints increase the attack surface and bypass the load balancer.<br><em>C) Replace the ALB with a NAT gateway to hide the instances from attackers</em> &mdash; A NAT gateway is for outbound traffic and cannot serve inbound web requests.<br><em>D) Add NACL deny rules for each attacking IP as soon as it appears</em> &mdash; Large DDoS attacks use thousands of changing IPs, and NACLs have small rule limits.
+</div>
+</div>
+
+<!-- Q17 Network Firewall -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Network Firewall" data-level="B">
+<div class="q-tags"><span class="q-tag">Network Firewall</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>What is AWS Network Firewall?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A service that centrally manages security groups across accounts</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Layer 7 filter attached to ALBs and CloudFront distributions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A managed stateful firewall and IDS/IPS for traffic routed into a VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A load balancer that sends traffic to third-party appliances via GENEVE</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A managed stateful firewall and IDS/IPS for traffic routed into a VPC<br><br>
+<strong>How to think about it:</strong> <b>Network Firewall</b> = managed stateful firewall + <b>IDS/IPS</b> for the VPC, steered by routes.<br><br>
+<strong>Why C is correct:</strong> You route traffic to firewall endpoints in dedicated subnets, where it is filtered with stateless and stateful rules.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A service that centrally manages security groups across accounts</em> &mdash; That describes AWS Firewall Manager.<br><em>B) A Layer 7 filter attached to ALBs and CloudFront distributions</em> &mdash; That describes AWS WAF.<br><em>D) A load balancer that sends traffic to third-party appliances via GENEVE</em> &mdash; That describes Gateway Load Balancer.
+</div>
+</div>
+
+<!-- Q18 Network Firewall -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Network Firewall" data-level="B">
+<div class="q-tags"><span class="q-tag">Network Firewall</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>Which open-source engine does AWS Network Firewall use for its stateful rules?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Suricata</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Snort</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">iptables</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">ModSecurity</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Suricata<br><br>
+<strong>How to think about it:</strong> Stateful IPS rules in Network Firewall = <b>Suricata</b>.<br><br>
+<strong>Why A is correct:</strong> Network Firewall's stateful engine is Suricata-compatible, so you can write Suricata signatures.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Snort</em> &mdash; Snort is a different open-source IDS; Network Firewall rules use Suricata syntax.<br><em>C) iptables</em> &mdash; iptables is the Linux host firewall, not the engine behind Network Firewall.<br><em>D) ModSecurity</em> &mdash; ModSecurity is a web application firewall engine, closer to WAF than to Network Firewall.
+</div>
+</div>
+
+<!-- Q19 Network Firewall -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Network Firewall" data-level="B">
+<div class="q-tags"><span class="q-tag">Network Firewall</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>How does a stateless rule group in Network Firewall behave?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It decrypts HTTPS sessions and inspects the HTTP request body</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It tracks connection state and allows return traffic automatically</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It filters traffic by domain name using the TLS SNI field</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Each packet is checked alone on 5-tuple fields, in priority order</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Each packet is checked alone on 5-tuple fields, in priority order<br><br>
+<strong>How to think about it:</strong> <b>Stateless</b> = each packet alone, 5-tuple, priority order — like a <b>NACL</b>.<br><br>
+<strong>Why D is correct:</strong> Stateless rules ignore connection state and stop at the first match by priority, much like NACLs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It decrypts HTTPS sessions and inspects the HTTP request body</em> &mdash; Stateless rules only look at packet header fields.<br><em>B) It tracks connection state and allows return traffic automatically</em> &mdash; That is stateful behaviour, like a security group.<br><em>C) It filters traffic by domain name using the TLS SNI field</em> &mdash; Domain list filtering is a stateful rule type.
+</div>
+</div>
+
+<!-- Q20 Network Firewall -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Network Firewall" data-level="B">
+<div class="q-tags"><span class="q-tag">Network Firewall</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>Which actions are available for a Network Firewall stateless rule?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Alert, Reject, or Redirect to GWLB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Allow, Block, Count, or CAPTCHA</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Pass, Drop, or Forward to stateful</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Accept, Reject, or Log and continue</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Pass, Drop, or Forward to stateful<br><br>
+<strong>How to think about it:</strong> Stateless actions = <b>Pass, Drop, Forward to stateful</b>.<br><br>
+<strong>Why C is correct:</strong> Forward to stateful hands the packet to the stateful rule groups for deeper inspection.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Alert, Reject, or Redirect to GWLB</em> &mdash; Alert is a stateful action and there is no redirect-to-GWLB action.<br><em>B) Allow, Block, Count, or CAPTCHA</em> &mdash; Those are AWS WAF rule actions.<br><em>D) Accept, Reject, or Log and continue</em> &mdash; These are not Network Firewall action names; the stateless set is Pass, Drop and Forward.
+</div>
+</div>
+
+<!-- Q21 Network Firewall -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Network Firewall" data-level="B">
+<div class="q-tags"><span class="q-tag">Network Firewall</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>A stateful domain list rule must allow outbound HTTPS only to <code>*.amazonaws.com</code>. How does Network Firewall learn the domain of HTTPS traffic without decryption?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It performs a reverse DNS lookup of the destination IP</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It reads the SNI hostname in the TLS ClientHello</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It reads the HTTP Host header inside the encrypted session</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It queries the Route 53 Resolver logs for each flow</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> It reads the SNI hostname in the TLS ClientHello<br><br>
+<strong>How to think about it:</strong> HTTPS domain without decrypting = <b>TLS SNI</b>; HTTP domain = <b>Host header</b>.<br><br>
+<strong>Why B is correct:</strong> The SNI field carries the requested hostname in clear text during the handshake.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It performs a reverse DNS lookup of the destination IP</em> &mdash; Reverse DNS is unreliable for cloud endpoints and is not how domain list rules work.<br><em>C) It reads the HTTP Host header inside the encrypted session</em> &mdash; The Host header is encrypted inside HTTPS; it is only used for plain HTTP.<br><em>D) It queries the Route 53 Resolver logs for each flow</em> &mdash; Resolver query logs are not used inline by the firewall to match flows.
+</div>
+</div>
+
+<!-- Q22 Network Firewall -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Network Firewall" data-level="B">
+<div class="q-tags"><span class="q-tag">Network Firewall</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>How many firewall policies can be associated with a single Network Firewall firewall?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Unlimited, merged into one rule set at runtime</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One per Availability Zone the firewall spans</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">One, though one policy can serve many firewalls</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Up to five policies, evaluated in priority order</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> One, though one policy can serve many firewalls<br><br>
+<strong>How to think about it:</strong> <b>One firewall = one policy</b>; one policy can be reused by many firewalls.<br><br>
+<strong>Why C is correct:</strong> A firewall points to one policy, and the same policy can drive multiple firewalls.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Unlimited, merged into one rule set at runtime</em> &mdash; Only one policy can be attached; you add rule groups to that policy instead.<br><em>B) One per Availability Zone the firewall spans</em> &mdash; The policy applies to the whole firewall, across all its endpoints.<br><em>D) Up to five policies, evaluated in priority order</em> &mdash; A firewall uses a single policy; rule groups inside it carry the ordering.
+</div>
+</div>
+
+<!-- Q23 Network Firewall -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Network Firewall" data-level="A">
+<div class="q-tags"><span class="q-tag">Network Firewall</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>In a single-VPC inbound inspection design, which route makes return and incoming internet traffic for the protected subnet pass through the firewall endpoint?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Firewall subnet route: protected CIDR pointing to the IGW</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">IGW ingress route: protected subnet CIDR → firewall endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A NACL rule on the protected subnet forwarding to the firewall</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Protected subnet route table: 0.0.0.0/0 straight to the IGW</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> IGW ingress route: protected subnet CIDR → firewall endpoint<br><br>
+<strong>How to think about it:</strong> Inbound inspection = <b>IGW edge (ingress) route table</b> sends the protected subnet CIDR to the <b>firewall endpoint</b>.<br><br>
+<strong>Why B is correct:</strong> Edge association of a route table to the IGW redirects inbound traffic for that subnet to the vpce first.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Firewall subnet route: protected CIDR pointing to the IGW</em> &mdash; The firewall subnet sends 0.0.0.0/0 to the IGW; the protected CIDR is local.<br><em>C) A NACL rule on the protected subnet forwarding to the firewall</em> &mdash; NACLs only allow or deny; they cannot redirect traffic.<br><em>D) Protected subnet route table: 0.0.0.0/0 straight to the IGW</em> &mdash; That would bypass the firewall for outbound traffic and does not affect inbound.
+</div>
+</div>
+
+<!-- Q24 Network Firewall -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Network Firewall" data-level="A">
+<div class="q-tags"><span class="q-tag">Network Firewall</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>A company has 30 VPCs connected by a Transit Gateway and wants one place to inspect both VPC-to-VPC and internet-bound traffic. Which design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Central inspection VPC with Network Firewall, TGW appliance mode</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Security groups in every VPC referencing one shared prefix list</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A separate Network Firewall in every VPC with no TGW route changes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Full-mesh VPC peering between all 30 VPCs with NACLs on each</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Central inspection VPC with Network Firewall, TGW appliance mode<br><br>
+<strong>How to think about it:</strong> Many VPCs + one inspection point = <b>centralized inspection VPC behind TGW</b>.<br><br>
+<strong>Why A is correct:</strong> TGW route tables send east-west and north-south traffic through the inspection VPC; appliance mode keeps flows symmetric.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Security groups in every VPC referencing one shared prefix list</em> &mdash; SGs filter at the ENI but provide no deep inspection or central control point.<br><em>C) A separate Network Firewall in every VPC with no TGW route changes</em> &mdash; That is the distributed model, which works but is not a single inspection point and costs more.<br><em>D) Full-mesh VPC peering between all 30 VPCs with NACLs on each</em> &mdash; Full-mesh peering does not scale and has no central inspection.
+</div>
+</div>
+
+<!-- Q25 Network Firewall -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Network Firewall" data-level="A">
+<div class="q-tags"><span class="q-tag">Network Firewall</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>A stateful rule group uses the classic action order. Which rule wins for a flow that matches both a Pass rule and a Drop rule?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Neither; the policy's default stateful action applies</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The Pass rule, since Pass is evaluated before Drop</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The Drop rule, because a deny always overrides an allow</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Whichever of the two rules has the lower SID number</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The Pass rule, since Pass is evaluated before Drop<br><br>
+<strong>How to think about it:</strong> Action order = <b>Pass, then Drop, then Alert</b>; use <b>strict order</b> if you need priority-based evaluation.<br><br>
+<strong>Why B is correct:</strong> With action ordering the engine processes Pass rules first, so the flow is allowed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Neither; the policy's default stateful action applies</em> &mdash; A matching rule takes effect; the default action only applies when nothing matches.<br><em>C) The Drop rule, because a deny always overrides an allow</em> &mdash; That is true for IAM, not for Network Firewall's action-order evaluation.<br><em>D) Whichever of the two rules has the lower SID number</em> &mdash; SIDs identify rules; they do not set evaluation order.
+</div>
+</div>
+
+<!-- Q26 GWLB -->
+<div class="question" data-type="mc" data-answer="3" data-topic="GWLB" data-level="B">
+<div class="q-tags"><span class="q-tag">GWLB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>What problem is Gateway Load Balancer designed to solve?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Routing HTTP requests by URL path to different microservices</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Providing two static anycast IPs for a global application</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Terminating TLS for TCP services with ultra-low latency</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Deploying and scaling fleets of third-party virtual appliances</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Deploying and scaling fleets of third-party virtual appliances<br><br>
+<strong>How to think about it:</strong> <b>GWLB</b> = deploy and <b>scale third-party appliances</b> (firewalls, IDS/IPS) transparently.<br><br>
+<strong>Why D is correct:</strong> GWLB distributes traffic across appliances such as firewalls and IDS/IPS and scales them with health checks.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Routing HTTP requests by URL path to different microservices</em> &mdash; Path-based routing is an ALB feature.<br><em>B) Providing two static anycast IPs for a global application</em> &mdash; Static anycast IPs come from AWS Global Accelerator.<br><em>C) Terminating TLS for TCP services with ultra-low latency</em> &mdash; TLS termination for TCP services is done by NLB.
+</div>
+</div>
+
+<!-- Q27 GWLB -->
+<div class="question" data-type="mc" data-answer="3" data-topic="GWLB" data-level="B">
+<div class="q-tags"><span class="q-tag">GWLB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>Which protocol and port does Gateway Load Balancer use to exchange traffic with its appliance targets?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">VXLAN on UDP port 4789</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">IPsec on UDP port 4500</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">GRE over IP protocol 47</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">GENEVE on UDP port 6081</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> GENEVE on UDP port 6081<br><br>
+<strong>How to think about it:</strong> <b>GWLB ↔ appliances = GENEVE on UDP 6081</b>.<br><br>
+<strong>Why D is correct:</strong> GWLB encapsulates the original packet in GENEVE so the appliance sees the full original headers.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) VXLAN on UDP port 4789</em> &mdash; VXLAN on 4789 is used by VPC Traffic Mirroring, not by GWLB.<br><em>B) IPsec on UDP port 4500</em> &mdash; UDP 4500 is IPsec NAT traversal for VPNs.<br><em>C) GRE over IP protocol 47</em> &mdash; GRE is used by Transit Gateway Connect attachments, not GWLB.
+</div>
+</div>
+
+<!-- Q28 GWLB -->
+<div class="question" data-type="mc" data-answer="1" data-topic="GWLB" data-level="B">
+<div class="q-tags"><span class="q-tag">GWLB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>At which layer does Gateway Load Balancer operate?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Layer 7, routing on HTTP headers</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Layer 3, handling all IP packets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Layer 4, routing on TCP and UDP ports</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Layer 2, bridging Ethernet frames between VPCs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Layer 3, handling all IP packets<br><br>
+<strong>How to think about it:</strong> <b>ALB = L7, NLB = L4, GWLB = L3</b>.<br><br>
+<strong>Why B is correct:</strong> GWLB listens for all IP packets on all ports and forwards them to appliances.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Layer 7, routing on HTTP headers</em> &mdash; Layer 7 routing is done by ALB.<br><em>C) Layer 4, routing on TCP and UDP ports</em> &mdash; Layer 4 balancing by port is done by NLB.<br><em>D) Layer 2, bridging Ethernet frames between VPCs</em> &mdash; GWLB is not a Layer 2 bridge; it routes IP packets via endpoints.
+</div>
+</div>
+
+<!-- Q29 GWLB -->
+<div class="question" data-type="mc" data-answer="0" data-topic="GWLB" data-level="B">
+<div class="q-tags"><span class="q-tag">GWLB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>How do application VPCs send traffic to a Gateway Load Balancer in a separate security VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Layer 3, handling all IP packets on all ports</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Layer 2, bridging Ethernet frames between VPCs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Layer 4, routing on TCP and UDP ports only</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Layer 7, routing on HTTP host and path headers</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Layer 3, handling all IP packets on all ports<br><br>
+<strong>How to think about it:</strong> Reach GWLB from another VPC = <b>GWLB endpoint</b> (PrivateLink) as a <b>route target</b>.<br><br>
+<strong>Why A is correct:</strong> The GWLB endpoint is a PrivateLink endpoint you point routes at, so traffic is steered to the appliances.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Layer 2, bridging Ethernet frames between VPCs</em> &mdash; Gateway endpoints are only for S3 and DynamoDB.<br><em>C) Layer 4, routing on TCP and UDP ports only</em> &mdash; GWLB is internal only and has no public DNS name.<br><em>D) Layer 7, routing on HTTP host and path headers</em> &mdash; GWLB is reached via its endpoint service; peering routes cannot target the load balancer.
+</div>
+</div>
+
+<!-- Q30 GWLB -->
+<div class="question" data-type="mc" data-answer="2" data-topic="GWLB" data-level="B">
+<div class="q-tags"><span class="q-tag">GWLB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>Which statement about the GWLB listener is correct?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Via the GWLB's public DNS name over the internet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Via VPC peering to the GWLB's private IP addresses</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Via a GWLB endpoint used as a route table target</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Via an S3 gateway endpoint with a custom endpoint policy</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Via a GWLB endpoint used as a route table target<br><br>
+<strong>How to think about it:</strong> GWLB listener = <b>all ports, all protocols</b>; you only choose the <b>target group</b>.<br><br>
+<strong>Why C is correct:</strong> The only listener choice is which target group receives the traffic.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Via the GWLB's public DNS name over the internet</em> &mdash; GWLB is protocol-agnostic and not limited to web ports.<br><em>B) Via VPC peering to the GWLB's private IP addresses</em> &mdash; GWLB does not terminate TLS; it passes packets transparently.<br><em>D) Via an S3 gateway endpoint with a custom endpoint policy</em> &mdash; Path rules require HTTP awareness, which GWLB does not have.
+</div>
+</div>
+
+<!-- Q31 GWLB -->
+<div class="question" data-type="mc" data-answer="1" data-topic="GWLB" data-level="A">
+<div class="q-tags"><span class="q-tag">GWLB</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>Firewall appliances behind a GWLB must see both directions of each TCP flow. How does GWLB ensure a flow keeps going to the same appliance?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">TCP 80 and 443 only, chosen when the listener is created</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">All IP packets on all ports; no port or protocol to set</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">HTTPS only, with an ACM certificate attached to the listener</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Path-based rules that decide which appliance gets a packet</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> All IP packets on all ports; no port or protocol to set<br><br>
+<strong>How to think about it:</strong> GWLB stickiness = <b>5-tuple hash</b> (TCP/UDP) or <b>3-tuple</b> (other protocols).<br><br>
+<strong>Why B is correct:</strong> Flow stickiness keeps forward and return packets on the same appliance, which stateful firewalls need.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) TCP 80 and 443 only, chosen when the listener is created</em> &mdash; Per-packet balancing would break stateful inspection.<br><em>C) HTTPS only, with an ACM certificate attached to the listener</em> &mdash; Cookies are an HTTP concept; GWLB works at Layer 3.<br><em>D) Path-based rules that decide which appliance gets a packet</em> &mdash; GWLB itself provides stickiness; appliances do not have to sync flows.
+</div>
+</div>
+
+<!-- Q32 GWLB -->
+<div class="question" data-type="mc" data-answer="0" data-topic="GWLB" data-level="A">
+<div class="q-tags"><span class="q-tag">GWLB</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>In a GWLB inspection design, a team puts the GWLB endpoint and the application servers in the same subnet. Inspection stops working. Why?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A 5-tuple (or 3-tuple) flow hash pins each flow to one target</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Round robin per packet across all healthy appliances in the group</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It inserts a cookie so the appliance can recognise the session</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It relies on each appliance to forward packets to its peers</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A 5-tuple (or 3-tuple) flow hash pins each flow to one target<br><br>
+<strong>How to think about it:</strong> <b>GWLBe and workloads need different subnets</b> — each needs its own route table to steer traffic.<br><br>
+<strong>Why A is correct:</strong> Separate subnets let the app route table send 0.0.0.0/0 to the GWLBe and the GWLBe route table send it on to the IGW.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Round robin per packet across all healthy appliances in the group</em> &mdash; The endpoint does not need an EIP; the issue is subnet and route table separation.<br><em>C) It inserts a cookie so the appliance can recognise the session</em> &mdash; GWLB endpoints work in IPv4 subnets.<br><em>D) It relies on each appliance to forward packets to its peers</em> &mdash; There is no such AZ restriction; the problem is routing.
+</div>
+</div>
+
+<!-- Q33 ACM -->
+<div class="question" data-type="mc" data-answer="2" data-topic="ACM" data-level="B">
+<div class="q-tags"><span class="q-tag">ACM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>You need a public TLS certificate for a CloudFront distribution. In which Region must you request or import it in ACM?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The Region closest to most viewers</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The Region where the origin ALB runs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">US East (N. Virginia), us-east-1</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Any Region, because ACM certificates are global</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> US East (N. Virginia), us-east-1<br><br>
+<strong>How to think about it:</strong> CloudFront certificates live in <b>us-east-1 (N. Virginia)</b>.<br><br>
+<strong>Why C is correct:</strong> CloudFront only uses ACM certificates from us-east-1, whatever Region the origin is in.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The Region closest to most viewers</em> &mdash; Viewer location does not matter; CloudFront requires us-east-1.<br><em>B) The Region where the origin ALB runs</em> &mdash; That is right for the ALB's own certificate, but not for the CloudFront distribution.<br><em>D) Any Region, because ACM certificates are global</em> &mdash; ACM is a Regional service; certificates are not global.
+</div>
+</div>
+
+<!-- Q34 ACM -->
+<div class="question" data-type="mc" data-answer="0" data-topic="ACM" data-level="B">
+<div class="q-tags"><span class="q-tag">ACM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>Which wildcard certificate name is valid in ACM?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text"><code>*.app.example.com</code></span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text"><code>*.*.example.com</code></span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text"><code>app.*.example.com</code></span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text"><code>app.example.*</code></span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> <code>*.app.example.com</code><br><br>
+<strong>How to think about it:</strong> Wildcard only at the <b>leftmost label</b>: <code>*.app.example.com</code> yes, <code>app.*.example.com</code> no.<br><br>
+<strong>Why A is correct:</strong> The asterisk is the leftmost label, which is the only allowed wildcard position.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) <code>*.*.example.com</code></em> &mdash; Only one wildcard label is allowed, and only in the leftmost position.<br><em>C) <code>app.*.example.com</code></em> &mdash; A wildcard in the middle of a name is not allowed.<br><em>D) <code>app.example.*</code></em> &mdash; A wildcard in the top-level domain position is not allowed.
+</div>
+</div>
+
+<!-- Q35 ACM -->
+<div class="question" data-type="mc" data-answer="0" data-topic="ACM" data-level="B">
+<div class="q-tags"><span class="q-tag">ACM</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>Which ACM certificates are renewed automatically by ACM?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">ACM-issued certificates that stay validated and in use</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Imported certificates issued by a third-party public CA</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Any server certificate stored in IAM for an ELB</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only certificates installed directly on EC2 instances</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> ACM-issued certificates that stay validated and in use<br><br>
+<strong>How to think about it:</strong> Auto-renew = <b>ACM-issued, DNS/email validated</b>; <b>imported = you renew</b>.<br><br>
+<strong>Why A is correct:</strong> ACM renews its own certificates automatically, which is why DNS validation is recommended.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Imported certificates issued by a third-party public CA</em> &mdash; ACM cannot renew imported certificates; you must re-import a new one.<br><em>C) Any server certificate stored in IAM for an ELB</em> &mdash; IAM server certificates are not managed or renewed by ACM.<br><em>D) Only certificates installed directly on EC2 instances</em> &mdash; ACM public certificates cannot be installed on EC2 instances directly.
+</div>
+</div>
+
+<!-- Q36 ACM -->
+<div class="question" data-type="mc" data-answer="3" data-topic="ACM" data-level="A">
+<div class="q-tags"><span class="q-tag">ACM</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>An internal microservice platform needs TLS certificates for hostnames that are not publicly resolvable, issued from a company-controlled CA. Which service fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS Secrets Manager rotation</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS KMS asymmetric keys</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An ACM public certificate with DNS validation</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AWS Private Certificate Authority</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AWS Private Certificate Authority<br><br>
+<strong>How to think about it:</strong> Private hostnames + your own CA = <b>AWS Private CA</b> (issued through ACM).<br><br>
+<strong>Why D is correct:</strong> Private CA issues private certificates for internal names, with validity and hierarchy you control.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS Secrets Manager rotation</em> &mdash; Secrets Manager stores and rotates secrets; it is not a certificate authority.<br><em>B) AWS KMS asymmetric keys</em> &mdash; KMS stores keys but does not issue X.509 certificates.<br><em>C) An ACM public certificate with DNS validation</em> &mdash; Public certificates require a publicly validated domain and come from Amazon's public CA.
+</div>
+</div>
+
+<!-- Q37 Detect & Govern -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Detect & Govern" data-level="B">
+<div class="q-tags"><span class="q-tag">Detect & Govern</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>Which data sources does Amazon GuardDuty analyse at its foundation, without any agents?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudTrail management events, VPC Flow Logs, DNS logs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Application logs shipped by the CloudWatch agent on EC2</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">AWS Config configuration snapshots and timelines</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Packet captures from VPC Traffic Mirroring sessions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> CloudTrail management events, VPC Flow Logs, DNS logs<br><br>
+<strong>How to think about it:</strong> <b>GuardDuty</b> = threat detection from <b>CloudTrail + VPC Flow Logs + DNS logs</b>.<br><br>
+<strong>Why A is correct:</strong> GuardDuty reads these sources directly, with no agents and no impact on workloads.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Application logs shipped by the CloudWatch agent on EC2</em> &mdash; Application logs are not GuardDuty's foundational data sources.<br><em>C) AWS Config configuration snapshots and timelines</em> &mdash; Config records resource configuration and compliance, not threats.<br><em>D) Packet captures from VPC Traffic Mirroring sessions</em> &mdash; GuardDuty does not need traffic mirroring; that is used with your own IDS tools.
+</div>
+</div>
+
+<!-- Q38 Detect & Govern -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Detect & Govern" data-level="B">
+<div class="q-tags"><span class="q-tag">Detect & Govern</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>What does Amazon Inspector do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Detects threats by analysing VPC Flow Logs and DNS query logs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Scans EC2, container images and Lambda for CVEs and exposure</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Records every API call made in the account for auditing</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Blocks malicious web requests at CloudFront edge locations</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Scans EC2, container images and Lambda for CVEs and exposure<br><br>
+<strong>How to think about it:</strong> <b>Inspector</b> = automated <b>vulnerability (CVE) and network reachability</b> scanning.<br><br>
+<strong>Why B is correct:</strong> Inspector continuously checks for CVEs and unintended network reachability.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Detects threats by analysing VPC Flow Logs and DNS query logs</em> &mdash; That is GuardDuty's job.<br><em>C) Records every API call made in the account for auditing</em> &mdash; That is AWS CloudTrail.<br><em>D) Blocks malicious web requests at CloudFront edge locations</em> &mdash; That is AWS WAF on CloudFront.
+</div>
+</div>
+
+<!-- Q39 Detect & Govern -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Detect & Govern" data-level="B">
+<div class="q-tags"><span class="q-tag">Detect & Govern</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>What is AWS Firewall Manager used for?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Inspecting packets with Suricata rules inside each VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Load balancing a fleet of third-party firewall appliances</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Applying WAF, SG, Shield and firewall policies across an org</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Issuing and renewing TLS certificates for load balancers</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Applying WAF, SG, Shield and firewall policies across an org<br><br>
+<strong>How to think about it:</strong> Same firewall rules across <b>many accounts</b> = <b>Firewall Manager</b>.<br><br>
+<strong>Why C is correct:</strong> Firewall Manager pushes and enforces these policies, including on new accounts and resources.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Inspecting packets with Suricata rules inside each VPC</em> &mdash; That is AWS Network Firewall itself.<br><em>B) Load balancing a fleet of third-party firewall appliances</em> &mdash; That is Gateway Load Balancer.<br><em>D) Issuing and renewing TLS certificates for load balancers</em> &mdash; That is AWS Certificate Manager.
+</div>
+</div>
+
+<!-- Q40 Detect & Govern -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Detect & Govern" data-level="A">
+<div class="q-tags"><span class="q-tag">Detect & Govern</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>A security team wants every new account in AWS Organizations to get the same baseline WAF rules on all ALBs automatically. What must they set up first?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A GuardDuty delegated administrator plus Security Hub</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Organizations (all features), AWS Config, and an FMS admin</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Transit Gateway shared to every account through RAM</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Shield Advanced subscription in every member account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Organizations (all features), AWS Config, and an FMS admin<br><br>
+<strong>How to think about it:</strong> Firewall Manager prerequisites = <b>Organizations (all features) + AWS Config + an FMS admin account</b>.<br><br>
+<strong>Why B is correct:</strong> Firewall Manager needs the organization, Config to discover resources, and a delegated admin to own policies.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A GuardDuty delegated administrator plus Security Hub</em> &mdash; These help with findings, but they are not what Firewall Manager needs to deploy WAF policies.<br><em>C) A Transit Gateway shared to every account through RAM</em> &mdash; TGW sharing is unrelated to deploying WAF web ACLs on ALBs.<br><em>D) A Shield Advanced subscription in every member account</em> &mdash; Shield Advanced is only needed for Shield policies, not for WAF policies.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 40;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

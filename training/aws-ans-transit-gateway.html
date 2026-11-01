@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS ANS Transit Gateway &amp; Cloud WAN - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">ANS-C01</span>
+            <span>Transit Gateway &amp; Cloud WAN</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Advanced Networking Specialty &mdash; Transit Gateway &amp; Cloud WAN</h2>
+        <p>40 refresher questions &mdash; TGW attachments, route tables, association &amp; propagation, AZ design, appliance mode, peering, Connect/GRE, VPN ECMP, DX, multicast, central egress &amp; inspection, RAM sharing, Cloud WAN</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/40</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 40 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 40</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="TGW Basics" onclick="filterQ(this)">TGW Basics</button><button class="filter-btn" data-f="TGW Routing" onclick="filterQ(this)">TGW Routing</button><button class="filter-btn" data-f="TGW Design" onclick="filterQ(this)">TGW Design</button><button class="filter-btn" data-f="Peering & Connect" onclick="filterQ(this)">Peering & Connect</button><button class="filter-btn" data-f="Hybrid & Multicast" onclick="filterQ(this)">Hybrid & Multicast</button><button class="filter-btn" data-f="Central Patterns" onclick="filterQ(this)">Central Patterns</button><button class="filter-btn" data-f="Cloud WAN" onclick="filterQ(this)">Cloud WAN</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short ANS-style scenarios.</p>
+
+<!-- Q1 TGW Basics -->
+<div class="question" data-type="mc" data-answer="0" data-topic="TGW Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">TGW Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>What is an AWS Transit Gateway?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A managed regional hub router for many VPCs and on-prem networks</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A global edge network that speeds up TCP and UDP traffic to apps</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A load balancer that sends traffic to firewall appliances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A one-to-one private link between exactly two VPCs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A managed regional hub router for many VPCs and on-prem networks<br><br>
+<strong>How to think about it:</strong> Transit Gateway = <b>a managed regional hub router</b> connecting many VPCs, VPNs and Direct Connect.<br><br>
+<strong>Why A is correct:</strong> Each network attaches once to the TGW instead of building a mesh of point-to-point links.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A global edge network that speeds up TCP and UDP traffic to apps</em> &mdash; That is AWS Global Accelerator.<br><em>C) A load balancer that sends traffic to firewall appliances</em> &mdash; That is Gateway Load Balancer.<br><em>D) A one-to-one private link between exactly two VPCs</em> &mdash; That is VPC peering.
+</div>
+</div>
+
+<!-- Q2 TGW Basics -->
+<div class="question" data-type="mc" data-answer="1" data-topic="TGW Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">TGW Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>What is the scope of a single Transit Gateway?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">One VPC, acting as that VPC's internal router</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Regional; other Regions connect by TGW peering</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Global; one TGW attaches VPCs in every AWS Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">One Availability Zone, so you deploy one per AZ</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Regional; other Regions connect by TGW peering<br><br>
+<strong>How to think about it:</strong> TGW is <b>regional</b>; to cross Regions you <b>peer</b> TGWs (or use Cloud WAN).<br><br>
+<strong>Why B is correct:</strong> A TGW lives in one Region, and inter-Region connectivity comes from peering attachments.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) One VPC, acting as that VPC's internal router</em> &mdash; A TGW is a hub for many VPCs, not part of one VPC.<br><em>C) Global; one TGW attaches VPCs in every AWS Region</em> &mdash; Cloud WAN gives a global core network; a TGW does not.<br><em>D) One Availability Zone, so you deploy one per AZ</em> &mdash; TGW is highly available across the Region's AZs.
+</div>
+</div>
+
+<!-- Q3 TGW Basics -->
+<div class="question" data-type="mc" data-answer="1" data-topic="TGW Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">TGW Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>Which of the following is a valid Transit Gateway attachment type?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A CloudFront distribution</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An AWS Site-to-Site VPN</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An S3 gateway endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An internet gateway (IGW)</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An AWS Site-to-Site VPN<br><br>
+<strong>How to think about it:</strong> TGW attachments: <b>VPC, VPN, Direct Connect gateway, Connect (GRE/SD-WAN), peering</b>.<br><br>
+<strong>Why B is correct:</strong> VPNs can end directly on a TGW, which also enables ECMP across tunnels.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A CloudFront distribution</em> &mdash; CloudFront is an edge service and does not attach to TGW.<br><em>C) An S3 gateway endpoint</em> &mdash; Gateway endpoints are VPC route-table targets and cannot be TGW attachments.<br><em>D) An internet gateway (IGW)</em> &mdash; IGWs attach to VPCs, not to Transit Gateways.
+</div>
+</div>
+
+<!-- Q4 TGW Basics -->
+<div class="question" data-type="mc" data-answer="1" data-topic="TGW Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">TGW Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>What MTU does Transit Gateway support for traffic between attached VPCs?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">1500 bytes for all traffic</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">8500 bytes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">576 bytes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">9001 bytes, the same as inside a VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> 8500 bytes<br><br>
+<strong>How to think about it:</strong> TGW MTU: <b>8500</b> between VPCs, DX, Connect and peering; <b>1500 over VPN</b>.<br><br>
+<strong>Why B is correct:</strong> TGW supports up to 8500 bytes for VPC, DX, Connect and peering traffic; larger packets are dropped.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 1500 bytes for all traffic</em> &mdash; 1500 is the limit for VPN attachments, not for VPC-to-VPC traffic.<br><em>C) 576 bytes</em> &mdash; That is a minimum IPv4 datagram size, not a TGW limit.<br><em>D) 9001 bytes, the same as inside a VPC</em> &mdash; 9001 is the in-VPC jumbo frame size, but TGW caps at 8500.
+</div>
+</div>
+
+<!-- Q5 TGW Basics -->
+<div class="question" data-type="mc" data-answer="2" data-topic="TGW Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">TGW Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>How is Transit Gateway mainly priced?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Free; you pay only standard data transfer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A flat monthly fee for each Transit Gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Per attachment-hour plus per GB processed</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A per-route charge in each TGW route table</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Per attachment-hour plus per GB processed<br><br>
+<strong>How to think about it:</strong> TGW cost = <b>per attachment-hour + per GB processed</b>. Peering has no per-attachment fee.<br><br>
+<strong>Why C is correct:</strong> Every attachment costs per hour, and data sent into the TGW is charged per GB.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Free; you pay only standard data transfer</em> &mdash; TGW has its own attachment and processing charges.<br><em>B) A flat monthly fee for each Transit Gateway</em> &mdash; There is no flat fee; cost scales with attachments and traffic.<br><em>D) A per-route charge in each TGW route table</em> &mdash; Routes are not billed individually.
+</div>
+</div>
+
+<!-- Q6 TGW Basics -->
+<div class="question" data-type="mc" data-answer="3" data-topic="TGW Basics" data-level="A">
+<div class="q-tags"><span class="q-tag">TGW Basics</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>Two VPCs in the same Region exchange 500 TB per month and need the lowest latency and cost. Everything else uses a Transit Gateway. What is the best choice for this pair?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Keep it on the TGW and enable appliance mode on both</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use a Site-to-Site VPN between the two VPCs instead</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add a second Transit Gateway just for these two VPCs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Peer this pair with specific routes; keep TGW</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Peer this pair with specific routes; keep TGW<br><br>
+<strong>How to think about it:</strong> Heavy traffic between just two VPCs = <b>VPC peering</b> (no TGW processing fee, no extra hop). Both can run side by side.<br><br>
+<strong>Why D is correct:</strong> Peering avoids TGW per-GB charges and the extra hop, and specific peering routes win over the broader TGW route.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Keep it on the TGW and enable appliance mode on both</em> &mdash; Appliance mode is for symmetric inspection; it does not cut cost or latency.<br><em>B) Use a Site-to-Site VPN between the two VPCs instead</em> &mdash; VPN adds overhead and is limited to 1.25 Gbps per tunnel.<br><em>C) Add a second Transit Gateway just for these two VPCs</em> &mdash; A second TGW still charges per GB processed.
+</div>
+</div>
+
+<!-- Q7 TGW Routing -->
+<div class="question" data-type="mc" data-answer="1" data-topic="TGW Routing" data-level="B">
+<div class="q-tags"><span class="q-tag">TGW Routing</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>In Transit Gateway, what does <em>associating</em> an attachment with a TGW route table do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It copies the attachment's CIDRs into that route table</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It sets which TGW route table its traffic uses</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It sets the BGP ASN used by the attachment's peers</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It shares the route table with another AWS account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> It sets which TGW route table its traffic uses<br><br>
+<strong>How to think about it:</strong> <b>Association</b> = which route table an attachment <b>looks up</b> for its outgoing traffic (one per attachment). <b>Propagation</b> = where it <b>advertises</b> its routes.<br><br>
+<strong>Why B is correct:</strong> Each attachment is associated with exactly one route table, which handles lookups for its packets.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It copies the attachment's CIDRs into that route table</em> &mdash; That is propagation, not association.<br><em>C) It sets the BGP ASN used by the attachment's peers</em> &mdash; ASNs are set on the TGW and the peers, not through association.<br><em>D) It shares the route table with another AWS account</em> &mdash; Sharing is done with AWS RAM, not association.
+</div>
+</div>
+
+<!-- Q8 TGW Routing -->
+<div class="question" data-type="mc" data-answer="1" data-topic="TGW Routing" data-level="B">
+<div class="q-tags"><span class="q-tag">TGW Routing</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>What does route <em>propagation</em> from a VPC attachment do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It limits the attachment to exactly one route table</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It installs the VPC's CIDRs into chosen TGW route tables</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It sends the VPC routes to on-premises routers over BGP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It adds TGW routes into the VPC's own subnet route tables</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> It installs the VPC's CIDRs into chosen TGW route tables<br><br>
+<strong>How to think about it:</strong> Propagation = <b>the attachment's CIDRs are installed automatically</b> in the chosen TGW route table(s).<br><br>
+<strong>Why B is correct:</strong> Propagated routes save adding static routes and update as CIDRs change.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It limits the attachment to exactly one route table</em> &mdash; Limiting to one table is association; an attachment can propagate to many tables.<br><em>C) It sends the VPC routes to on-premises routers over BGP</em> &mdash; Propagation fills TGW route tables; BGP advertisement to on-premises is a separate step.<br><em>D) It adds TGW routes into the VPC's own subnet route tables</em> &mdash; VPC subnet route tables still need manual routes that point at the TGW.
+</div>
+</div>
+
+<!-- Q9 TGW Routing -->
+<div class="question" data-type="mc" data-answer="3" data-topic="TGW Routing" data-level="B">
+<div class="q-tags"><span class="q-tag">TGW Routing</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>After attaching three VPCs to a TGW with default settings, the VPCs still cannot talk. What is usually missing?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An internet gateway and public subnet in every VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A VPC peering connection between each pair of VPCs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Direct Connect gateway associated with the TGW</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">VPC routes sending other VPCs' CIDRs to the TGW</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> VPC routes sending other VPCs' CIDRs to the TGW<br><br>
+<strong>How to think about it:</strong> TGW does not touch VPC route tables: <b>add routes in each VPC's subnet route tables pointing to tgw-xxxx</b>.<br><br>
+<strong>Why D is correct:</strong> The default TGW route table already propagates VPC routes, but the VPCs themselves must route to the TGW.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An internet gateway and public subnet in every VPC</em> &mdash; IGWs are for internet access, not for TGW routing.<br><em>B) A VPC peering connection between each pair of VPCs</em> &mdash; Peering is not needed; the TGW replaces the mesh.<br><em>C) A Direct Connect gateway associated with the TGW</em> &mdash; DX gateways are for hybrid links, not VPC-to-VPC traffic.
+</div>
+</div>
+
+<!-- Q10 TGW Routing -->
+<div class="question" data-type="mc" data-answer="3" data-topic="TGW Routing" data-level="B">
+<div class="q-tags"><span class="q-tag">TGW Routing</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>What is a blackhole route in a Transit Gateway route table?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A route whose attachment has been deleted and is waiting to be cleaned up</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A route that sends traffic to the internet</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A route only used if all other routes fail</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A static route that drops traffic matching its destination</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A static route that drops traffic matching its destination<br><br>
+<strong>How to think about it:</strong> Blackhole = <b>match and drop</b>; use it to block traffic, e.g. 10.0.0.0/8 in the egress route table.<br><br>
+<strong>Why D is correct:</strong> Blackhole routes are an easy way to stop specific VPCs from reaching each other through a shared TGW.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A route whose attachment has been deleted and is waiting to be cleaned up</em> &mdash; A deleted attachment can leave routes in blackhole state, but the feature is a deliberate drop route.<br><em>B) A route that sends traffic to the internet</em> &mdash; TGW has no internet route; egress goes through a NAT gateway in an egress VPC.<br><em>C) A route only used if all other routes fail</em> &mdash; TGW has no failover-only routes; longest prefix match decides.
+</div>
+</div>
+
+<!-- Q11 TGW Routing -->
+<div class="question" data-type="mc" data-answer="0" data-topic="TGW Routing" data-level="A">
+<div class="q-tags"><span class="q-tag">TGW Routing</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>A company wants Prod VPCs and Dev VPCs on one TGW to reach a Shared Services VPC but never each other. How should TGW route tables be set up?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Prod and Dev tables with only Shared routes; Shared gets both</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A separate Transit Gateway for each environment, peered</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">One default route table for all, with NACLs blocking Prod-Dev</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Appliance mode on the Prod attachments with a firewall VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Prod and Dev tables with only Shared routes; Shared gets both<br><br>
+<strong>How to think about it:</strong> Segmentation on TGW = <b>separate route tables</b>: Prod RT and Dev RT get only Shared routes; the Shared RT gets both.<br><br>
+<strong>Why A is correct:</strong> Each group can only look up routes to Shared Services, so Prod and Dev have no path to each other.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A separate Transit Gateway for each environment, peered</em> &mdash; This is costly and still needs links to Shared Services.<br><em>C) One default route table for all, with NACLs blocking Prod-Dev</em> &mdash; Possible but fragile; route-table segmentation is the designed solution.<br><em>D) Appliance mode on the Prod attachments with a firewall VPC</em> &mdash; Appliance mode is for inspection symmetry, not segmentation.
+</div>
+</div>
+
+<!-- Q12 TGW Routing -->
+<div class="question" data-type="mc" data-answer="2" data-topic="TGW Routing" data-level="A">
+<div class="q-tags"><span class="q-tag">TGW Routing</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>A TGW serves 200 VPCs, and an architect wants new spoke attachments to stop joining the full mesh automatically. Which TGW setting should change?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turn on auto accept shared attachments for the TGW</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Turn on DNS support on the Transit Gateway itself</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Disable default association and propagation</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Lower the TGW's Amazon-side BGP ASN to a private one</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Disable default association and propagation<br><br>
+<strong>How to think about it:</strong> Auto-mesh comes from <b>default route table association and propagation</b>; turn them off for controlled designs.<br><br>
+<strong>Why C is correct:</strong> New attachments then get no table until you choose one, so nothing is opened by accident.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Turn on auto accept shared attachments for the TGW</em> &mdash; This accepts cross-account attachments automatically, which does the opposite of tightening control.<br><em>B) Turn on DNS support on the Transit Gateway itself</em> &mdash; DNS support helps resolve public names across VPCs; it does not control route tables.<br><em>D) Lower the TGW's Amazon-side BGP ASN to a private one</em> &mdash; The ASN has no effect on route table association.
+</div>
+</div>
+
+<!-- Q13 TGW Design -->
+<div class="question" data-type="mc" data-answer="3" data-topic="TGW Design" data-level="B">
+<div class="q-tags"><span class="q-tag">TGW Design</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>When you attach a VPC to a TGW, what do you choose for each Availability Zone?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Every subnet that exists in that AZ</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An Elastic IP for the TGW in that AZ</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A route table to share with the TGW</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">One subnet, for the TGW's ENI</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> One subnet, for the TGW's ENI<br><br>
+<strong>How to think about it:</strong> One <b>subnet per AZ</b> (a small dedicated /28 is best practice); the TGW puts an ENI there.<br><br>
+<strong>Why D is correct:</strong> That subnet's ENI serves the whole AZ, so a small dedicated /28 keeps IPs free for workloads.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Every subnet that exists in that AZ</em> &mdash; Only one subnet per AZ is chosen, though all subnets in that AZ can then use it.<br><em>B) An Elastic IP for the TGW in that AZ</em> &mdash; TGW attachments use private IPs only.<br><em>C) A route table to share with the TGW</em> &mdash; Route tables are configured separately; the attachment asks for subnets.
+</div>
+</div>
+
+<!-- Q14 TGW Design -->
+<div class="question" data-type="mc" data-answer="3" data-topic="TGW Design" data-level="B">
+<div class="q-tags"><span class="q-tag">TGW Design</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>Instances in an AZ where the VPC's TGW attachment has no subnet cannot reach the TGW. Why?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Security groups block cross-AZ TGW traffic by default</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">That AZ's route table points to a different TGW</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">TGW only supports two AZs per VPC attachment</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The attachment has no TGW ENI in that AZ</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The attachment has no TGW ENI in that AZ<br><br>
+<strong>How to think about it:</strong> No attachment subnet in an AZ = <b>no TGW ENI in that AZ</b> = workloads there cannot use the TGW.<br><br>
+<strong>Why D is correct:</strong> Enable every AZ that has workloads by choosing a subnet there in the attachment.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Security groups block cross-AZ TGW traffic by default</em> &mdash; Security groups do not have AZ-aware defaults.<br><em>B) That AZ's route table points to a different TGW</em> &mdash; Route tables are per subnet, not per AZ, and the root cause is the missing ENI.<br><em>C) TGW only supports two AZs per VPC attachment</em> &mdash; You can enable every AZ the VPC uses.
+</div>
+</div>
+
+<!-- Q15 TGW Design -->
+<div class="question" data-type="mc" data-answer="1" data-topic="TGW Design" data-level="B">
+<div class="q-tags"><span class="q-tag">TGW Design</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>What does Transit Gateway <em>appliance mode</em> do on a VPC attachment?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It encrypts traffic between the TGW and the VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It pins both directions of a flow to one appliance AZ</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It lets the attachment use public IP addresses</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It raises the attachment's bandwidth for heavy traffic</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> It pins both directions of a flow to one appliance AZ<br><br>
+<strong>How to think about it:</strong> Appliance mode = <b>flow symmetry</b>: both directions of a flow go to the <b>same AZ's appliance</b>. Needed for stateful firewalls.<br><br>
+<strong>Why B is correct:</strong> Without it, TGW keeps traffic in its source AZ, so return traffic can reach a different firewall that never saw the original packet.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It encrypts traffic between the TGW and the VPC</em> &mdash; TGW attachments are not encrypted by this setting.<br><em>C) It lets the attachment use public IP addresses</em> &mdash; Attachments remain private, whatever the mode.<br><em>D) It raises the attachment's bandwidth for heavy traffic</em> &mdash; Appliance mode is about symmetry, not throughput.
+</div>
+</div>
+
+<!-- Q16 TGW Design -->
+<div class="question" data-type="mc" data-answer="2" data-topic="TGW Design" data-level="A">
+<div class="q-tags"><span class="q-tag">TGW Design</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>A central inspection VPC with stateful firewalls in two AZs randomly drops return traffic between spoke VPCs in different AZs. What is the fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Move all spoke workloads into one Availability Zone</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add a NAT gateway in each spoke VPC's subnets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable appliance mode on the inspection attachment</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Turn on cross-zone load balancing in the spoke VPCs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Enable appliance mode on the inspection attachment<br><br>
+<strong>How to think about it:</strong> Stateful inspection through TGW + asymmetric drops = <b>turn on appliance mode</b> on the inspection VPC attachment.<br><br>
+<strong>Why C is correct:</strong> TGW then hashes each flow to a single AZ in the inspection VPC, so both directions see the same firewall.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Move all spoke workloads into one Availability Zone</em> &mdash; This hurts availability and does not fix the underlying routing.<br><em>B) Add a NAT gateway in each spoke VPC's subnets</em> &mdash; NAT does not make TGW flows symmetric.<br><em>D) Turn on cross-zone load balancing in the spoke VPCs</em> &mdash; Spoke VPCs have no such setting; the problem is at the TGW attachment.
+</div>
+</div>
+
+<!-- Q17 TGW Design -->
+<div class="question" data-type="mc" data-answer="3" data-topic="TGW Design" data-level="A">
+<div class="q-tags"><span class="q-tag">TGW Design</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>A TGW owned by a network account is shared with workload accounts. Engineers worry that "us-east-1a" may not mean the same place in each account. What should they use when planning attachment subnets?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AZ names such as us-east-1a, shown in each console</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The subnet CIDR blocks chosen in each account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The TGW's ASN and the attachment's resource ID</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AZ IDs such as use1-az1, same in every account</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> AZ IDs such as use1-az1, same in every account<br><br>
+<strong>How to think about it:</strong> Across accounts, AZ names are shuffled. Use <b>AZ IDs</b> such as <code>use1-az1</code>.<br><br>
+<strong>Why D is correct:</strong> AZ names are mapped differently per account, while AZ IDs are consistent.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AZ names such as us-east-1a, shown in each console</em> &mdash; These can point to different physical AZs in different accounts.<br><em>B) The subnet CIDR blocks chosen in each account</em> &mdash; CIDRs say nothing about physical AZ location.<br><em>C) The TGW's ASN and the attachment's resource ID</em> &mdash; ASNs are for BGP, not for identifying AZs.
+</div>
+</div>
+
+<!-- Q18 Peering & Connect -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Peering & Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Peering & Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>How are routes exchanged over a Transit Gateway peering attachment?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Routes learned from the VPC route tables on both sides</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Automatic propagation from the peer, as with VPC attachments</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Static routes in each TGW route table to the peering</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">BGP sessions that run automatically across the peering</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Static routes in each TGW route table to the peering<br><br>
+<strong>How to think about it:</strong> TGW peering = <b>static routes only</b> (no BGP); use unique ASNs.<br><br>
+<strong>Why C is correct:</strong> TGW peering does not run BGP, so remote CIDRs must be added by hand.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Routes learned from the VPC route tables on both sides</em> &mdash; TGW never reads VPC route tables.<br><em>B) Automatic propagation from the peer, as with VPC attachments</em> &mdash; Propagation is not supported for peering attachments.<br><em>D) BGP sessions that run automatically across the peering</em> &mdash; That is how Connect and VPN attachments work, not peering.
+</div>
+</div>
+
+<!-- Q19 Peering & Connect -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Peering & Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Peering & Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>What is inter-Region TGW peering traffic like?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Sent over the public internet inside IPsec tunnels</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only allowed between TGWs in the same Region</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Sent as plain text over the AWS backbone network</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Encrypted on the AWS backbone, never the internet</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Encrypted on the AWS backbone, never the internet<br><br>
+<strong>How to think about it:</strong> TGW peering traffic is <b>encrypted on the AWS global backbone</b> and never on the public internet.<br><br>
+<strong>Why D is correct:</strong> This makes TGW peering a secure way to join Regional hubs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Sent over the public internet inside IPsec tunnels</em> &mdash; Peering stays on AWS's backbone.<br><em>B) Only allowed between TGWs in the same Region</em> &mdash; TGW peering works both within and across Regions.<br><em>C) Sent as plain text over the AWS backbone network</em> &mdash; AWS encrypts peering traffic and does not send it over the internet.
+</div>
+</div>
+
+<!-- Q20 Peering & Connect -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Peering & Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Peering & Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>What is a Transit Gateway <em>Connect</em> attachment used for?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Attaching a CloudFront distribution to the TGW</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Connecting two TGWs in different AWS Regions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Linking SD-WAN appliances with GRE and BGP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Sharing the TGW with another AWS account via RAM</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Linking SD-WAN appliances with GRE and BGP<br><br>
+<strong>How to think about it:</strong> TGW Connect = <b>SD-WAN / third-party appliances</b> using <b>GRE + BGP</b> over a VPC or DX transport attachment.<br><br>
+<strong>Why C is correct:</strong> Connect runs over an existing VPC or Direct Connect attachment and exchanges routes dynamically.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Attaching a CloudFront distribution to the TGW</em> &mdash; CloudFront cannot attach to TGW.<br><em>B) Connecting two TGWs in different AWS Regions</em> &mdash; That is a peering attachment.<br><em>D) Sharing the TGW with another AWS account via RAM</em> &mdash; Sharing uses AWS RAM.
+</div>
+</div>
+
+<!-- Q21 Peering & Connect -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Peering & Connect" data-level="B">
+<div class="q-tags"><span class="q-tag">Peering & Connect</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>Which routing method does a TGW Connect attachment require?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Static routes only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">RIP version 2</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">OSPF</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">BGP</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> BGP<br><br>
+<strong>How to think about it:</strong> Connect attachments: <b>BGP is mandatory</b>, static routes are not supported.<br><br>
+<strong>Why D is correct:</strong> Connect peers must form BGP sessions; static routes are not supported on Connect attachments.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Static routes only</em> &mdash; This is the peering model, not Connect.<br><em>B) RIP version 2</em> &mdash; TGW does not support RIP.<br><em>C) OSPF</em> &mdash; TGW does not support OSPF.
+</div>
+</div>
+
+<!-- Q22 Peering & Connect -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Peering & Connect" data-level="A">
+<div class="q-tags"><span class="q-tag">Peering & Connect</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>An SD-WAN appliance in a VPC needs about 15 Gbps to the TGW through a Connect attachment. Each GRE tunnel (Connect peer) carries up to 5 Gbps. How do you get the bandwidth?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add Connect peers advertising the same prefixes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Replace the Connect attachment with a TGW peering</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Raise the MTU of the single GRE tunnel to 9001 bytes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Turn on appliance mode on the transport attachment</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Add Connect peers advertising the same prefixes<br><br>
+<strong>How to think about it:</strong> Connect: <b>5 Gbps per GRE peer, up to 4 peers per attachment</b>; ECMP across peers by advertising the same prefixes.<br><br>
+<strong>Why A is correct:</strong> Multiple Connect peers advertising identical prefixes let the TGW spread flows across tunnels for more bandwidth.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Replace the Connect attachment with a TGW peering</em> &mdash; Peering connects TGWs, not SD-WAN appliances.<br><em>C) Raise the MTU of the single GRE tunnel to 9001 bytes</em> &mdash; A bigger MTU does not raise the per-tunnel bandwidth cap, and TGW tops out at 8500 bytes.<br><em>D) Turn on appliance mode on the transport attachment</em> &mdash; Appliance mode controls flow symmetry, not bandwidth.
+</div>
+</div>
+
+<!-- Q23 Hybrid & Multicast -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Hybrid & Multicast" data-level="B">
+<div class="q-tags"><span class="q-tag">Hybrid & Multicast</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>A Site-to-Site VPN tunnel to a TGW carries up to about 1.25 Gbps. How can more VPN bandwidth be reached?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">End the VPN on a virtual private gateway instead</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Several VPN connections to the TGW with BGP and ECMP</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use static routing on a single VPN connection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Raise the VPN tunnel MTU to 8500 bytes for each tunnel</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Several VPN connections to the TGW with BGP and ECMP<br><br>
+<strong>How to think about it:</strong> VPN to <b>TGW + BGP + ECMP</b> across several tunnels and connections; a <b>VGW does not support ECMP</b>.<br><br>
+<strong>Why B is correct:</strong> TGW spreads flows across equal-cost tunnels, which adds up the bandwidth.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) End the VPN on a virtual private gateway instead</em> &mdash; A VGW does not support ECMP, so it is held to one active tunnel's bandwidth.<br><em>C) Use static routing on a single VPN connection</em> &mdash; Static routing on one connection gives no extra throughput.<br><em>D) Raise the VPN tunnel MTU to 8500 bytes for each tunnel</em> &mdash; VPN traffic is limited to 1500 bytes and MTU does not lift the cap.
+</div>
+</div>
+
+<!-- Q24 Hybrid & Multicast -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Hybrid & Multicast" data-level="B">
+<div class="q-tags"><span class="q-tag">Hybrid & Multicast</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>How does AWS Direct Connect connect to a Transit Gateway?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A transit VIF to a DX gateway linked to the TGW</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A TGW peering attachment to the DX location</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A public VIF attached to the TGW's public endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A private VIF attached directly to the TGW</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A transit VIF to a DX gateway linked to the TGW<br><br>
+<strong>How to think about it:</strong> DX to TGW = <b>Transit VIF -&gt; Direct Connect gateway -&gt; TGW</b>.<br><br>
+<strong>Why A is correct:</strong> The DX gateway sits between the transit VIF and one or more TGWs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A TGW peering attachment to the DX location</em> &mdash; Peering is only between TGWs.<br><em>C) A public VIF attached to the TGW's public endpoint</em> &mdash; Public VIFs reach AWS public endpoints, not TGW.<br><em>D) A private VIF attached directly to the TGW</em> &mdash; Private VIFs go to a VGW or DX gateway with VGWs, not to a TGW.
+</div>
+</div>
+
+<!-- Q25 Hybrid & Multicast -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Hybrid & Multicast" data-level="B">
+<div class="q-tags"><span class="q-tag">Hybrid & Multicast</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>Where can Transit Gateway route multicast traffic?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Between subnets of VPCs attached to the TGW</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Across TGW peering to receivers in other Regions</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Over Direct Connect to on-premises receivers</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Over Site-to-Site VPN to branch office receivers</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Between subnets of VPCs attached to the TGW<br><br>
+<strong>How to think about it:</strong> TGW multicast: <b>only between subnets of attached VPCs</b>, not over DX, VPN, peering or Connect.<br><br>
+<strong>Why A is correct:</strong> Multicast domains are built from VPC attachment subnets.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Across TGW peering to receivers in other Regions</em> &mdash; Peering attachments do not carry multicast.<br><em>C) Over Direct Connect to on-premises receivers</em> &mdash; Multicast is not supported over DX attachments.<br><em>D) Over Site-to-Site VPN to branch office receivers</em> &mdash; VPN attachments do not support multicast.
+</div>
+</div>
+
+<!-- Q26 Hybrid & Multicast -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Hybrid & Multicast" data-level="B">
+<div class="q-tags"><span class="q-tag">Hybrid & Multicast</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>How can hosts join a Transit Gateway multicast group?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Statically via console/CLI/API, or by IGMPv2 joins</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Automatically for every ENI in the attached VPCs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only through PIM-SM routers running in the VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only through Route 53 multivalue answer records</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Statically via console/CLI/API, or by IGMPv2 joins<br><br>
+<strong>How to think about it:</strong> Group membership = <b>static (console/CLI/API)</b> or <b>dynamic with IGMPv2</b>.<br><br>
+<strong>Why A is correct:</strong> When IGMPv2 support is on, hosts join and leave by themselves; otherwise you register them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Automatically for every ENI in the attached VPCs</em> &mdash; Hosts must join a group, either statically or with IGMP.<br><em>C) Only through PIM-SM routers running in the VPC</em> &mdash; TGW does not use PIM with your routers.<br><em>D) Only through Route 53 multivalue answer records</em> &mdash; DNS is not part of multicast group membership.
+</div>
+</div>
+
+<!-- Q27 Hybrid & Multicast -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Hybrid & Multicast" data-level="A">
+<div class="q-tags"><span class="q-tag">Hybrid & Multicast</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>A trading app must send one market-data stream to hundreds of EC2 receivers in several VPCs. Which TGW setup supports this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Route 53 multivalue answers listing every receiver</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">VPC peering between all VPCs with broadcast enabled</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A multicast-enabled TGW with a multicast domain</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An NLB with all the receivers registered as targets</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A multicast-enabled TGW with a multicast domain<br><br>
+<strong>How to think about it:</strong> One stream to many receivers across VPCs = <b>TGW multicast domain</b> (turned on when the TGW is created) with Nitro senders.<br><br>
+<strong>Why C is correct:</strong> Senders on Nitro instances send to the group address, and the TGW copies packets to every member.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Route 53 multivalue answers listing every receiver</em> &mdash; DNS does not copy a data stream to many hosts.<br><em>B) VPC peering between all VPCs with broadcast enabled</em> &mdash; VPCs support neither broadcast nor multicast over peering.<br><em>D) An NLB with all the receivers registered as targets</em> &mdash; An NLB sends each flow to one target, which is not multicast.
+</div>
+</div>
+
+<!-- Q28 Hybrid & Multicast -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Hybrid & Multicast" data-level="B">
+<div class="q-tags"><span class="q-tag">Hybrid & Multicast</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>Accelerated Site-to-Site VPN sends VPN traffic into the nearest AWS edge location using Global Accelerator. Where must such a VPN terminate?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">On a Transit Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">On a Direct Connect gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">On a virtual private gateway</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">On an EC2 instance running VPN software</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> On a Transit Gateway<br><br>
+<strong>How to think about it:</strong> Accelerated VPN = <b>Transit Gateway only</b>; it is not supported on a virtual private gateway.<br><br>
+<strong>Why A is correct:</strong> Acceleration is only available for VPN connections attached to a TGW.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) On a Direct Connect gateway</em> &mdash; DX gateways do not end IPsec VPN connections.<br><em>C) On a virtual private gateway</em> &mdash; VGW-based VPNs cannot be accelerated.<br><em>D) On an EC2 instance running VPN software</em> &mdash; EC2-based VPNs are self-managed and cannot use the accelerated VPN feature.
+</div>
+</div>
+
+<!-- Q29 Central Patterns -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Central Patterns" data-level="B">
+<div class="q-tags"><span class="q-tag">Central Patterns</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>In a TGW centralized egress design, where do NAT gateways live?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">In every spoke VPC, with the TGW only for east-west</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">In a dedicated egress VPC reached through the TGW</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">On-premises, reached through Direct Connect</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Inside the Transit Gateway itself as a NAT feature</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> In a dedicated egress VPC reached through the TGW<br><br>
+<strong>How to think about it:</strong> Central egress = <b>one egress VPC with NAT gateways + IGW</b>; spokes send 0.0.0.0/0 to the TGW.<br><br>
+<strong>Why B is correct:</strong> Spokes have no IGW or NAT; their default route points at the TGW, which forwards to the egress VPC.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) In every spoke VPC, with the TGW only for east-west</em> &mdash; This is the decentralized model that central egress is meant to replace.<br><em>C) On-premises, reached through Direct Connect</em> &mdash; This is possible, but it is not the AWS central egress pattern.<br><em>D) Inside the Transit Gateway itself as a NAT feature</em> &mdash; TGW does not do NAT.
+</div>
+</div>
+
+<!-- Q30 Central Patterns -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Central Patterns" data-level="A">
+<div class="q-tags"><span class="q-tag">Central Patterns</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>In a central egress design, the egress VPC's attachment route table has 0.0.0.0/0 to the egress VPC, and spokes are now reaching each other through it. What prevents this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turn on appliance mode on the egress attachment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Associate the spokes with the egress VPC's route table</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Delete the internet gateway from the egress VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Blackhole 10.0.0.0/8 in the spoke route table</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Blackhole 10.0.0.0/8 in the spoke route table<br><br>
+<strong>How to think about it:</strong> Stop spoke-to-spoke via the default route = <b>blackhole the private ranges</b> (e.g. 10.0.0.0/8) in the spoke route table.<br><br>
+<strong>Why D is correct:</strong> The more-specific blackhole wins over 0.0.0.0/0, so spoke-to-spoke traffic is dropped.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Turn on appliance mode on the egress attachment</em> &mdash; Appliance mode makes flows symmetric; it does not block them.<br><em>B) Associate the spokes with the egress VPC's route table</em> &mdash; Spokes would then learn more routes, not fewer.<br><em>C) Delete the internet gateway from the egress VPC</em> &mdash; That breaks internet access and does nothing about spoke traffic.
+</div>
+</div>
+
+<!-- Q31 Central Patterns -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Central Patterns" data-level="B">
+<div class="q-tags"><span class="q-tag">Central Patterns</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>In a central inspection design with Gateway Load Balancer, how does traffic from the TGW reach the firewall fleet?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Directly from the TGW to the GWLB with no endpoint</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Through an Application Load Balancer before the firewalls</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Through VPC peering between the TGW and the GWLB VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Through a GWLB endpoint in the inspection VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Through a GWLB endpoint in the inspection VPC<br><br>
+<strong>How to think about it:</strong> TGW -&gt; inspection VPC subnet -&gt; <b>GWLB endpoint</b> -&gt; GWLB -&gt; appliances (GENEVE on UDP 6081).<br><br>
+<strong>Why D is correct:</strong> Route tables in the inspection VPC point traffic at the GWLB endpoint, which uses PrivateLink to reach the GWLB.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Directly from the TGW to the GWLB with no endpoint</em> &mdash; The GWLB is reached through a GWLB endpoint used as a route target.<br><em>B) Through an Application Load Balancer before the firewalls</em> &mdash; ALBs work at layer 7 and cannot carry all IP traffic transparently.<br><em>C) Through VPC peering between the TGW and the GWLB VPC</em> &mdash; TGWs do not peer with VPCs; they attach to them.
+</div>
+</div>
+
+<!-- Q32 Central Patterns -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Central Patterns" data-level="B">
+<div class="q-tags"><span class="q-tag">Central Patterns</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>How can one Transit Gateway be used by VPCs in many AWS accounts?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Share it with AWS RAM, then attach the other accounts' VPCs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Export the TGW to each account with CloudFormation StackSets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Peer the TGW with each workload account's VPC directly</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create IAM users in each account with TGW admin rights</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Share it with AWS RAM, then attach the other accounts' VPCs<br><br>
+<strong>How to think about it:</strong> Cross-account TGW = <b>share it with AWS RAM</b>; owners keep control of route tables.<br><br>
+<strong>Why A is correct:</strong> RAM shares the TGW with accounts, OUs or the whole Organization.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Export the TGW to each account with CloudFormation StackSets</em> &mdash; StackSets deploy resources; they do not share an existing TGW.<br><em>C) Peer the TGW with each workload account's VPC directly</em> &mdash; TGW peering is only between TGWs.<br><em>D) Create IAM users in each account with TGW admin rights</em> &mdash; IAM in other accounts cannot make a TGW visible without a RAM share.
+</div>
+</div>
+
+<!-- Q33 Central Patterns -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Central Patterns" data-level="A">
+<div class="q-tags"><span class="q-tag">Central Patterns</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>A workload account uses a TGW shared from the network account. Its engineers try to change a TGW route table and fail. Why?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only the TGW owner can change TGW route tables</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">RAM shares stay read-only for the first 24 hours</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Their IAM role lacks ec2:CreateRoute in their own VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">TGW route tables can only be edited with the AWS CLI</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Only the TGW owner can change TGW route tables<br><br>
+<strong>How to think about it:</strong> Shared TGW: participants can <b>attach</b>, but only the <b>owner manages route tables</b>, associations and propagations.<br><br>
+<strong>Why A is correct:</strong> Accounts that receive the share can create attachments but cannot change TGW routing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) RAM shares stay read-only for the first 24 hours</em> &mdash; There is no waiting period.<br><em>C) Their IAM role lacks ec2:CreateRoute in their own VPC</em> &mdash; VPC route changes are separate; TGW route table changes are blocked for participants whatever IAM says.<br><em>D) TGW route tables can only be edited with the AWS CLI</em> &mdash; The console and API work equally for the owner.
+</div>
+</div>
+
+<!-- Q34 Cloud WAN -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Cloud WAN" data-level="B">
+<div class="q-tags"><span class="q-tag">Cloud WAN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>What is AWS Cloud WAN?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A regional router for the VPCs in one Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A managed VPN client service for remote users</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A managed global WAN run from one network policy</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A content delivery network for web applications</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A managed global WAN run from one network policy<br><br>
+<strong>How to think about it:</strong> Cloud WAN = <b>a managed global WAN</b> run by a <b>core network policy</b>, viewed in <b>Network Manager</b>.<br><br>
+<strong>Why C is correct:</strong> It sets up Core Network Edges in chosen Regions and handles routing between them for you.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A regional router for the VPCs in one Region</em> &mdash; That is a single Transit Gateway.<br><em>B) A managed VPN client service for remote users</em> &mdash; That is AWS Client VPN.<br><em>D) A content delivery network for web applications</em> &mdash; That is CloudFront.
+</div>
+</div>
+
+<!-- Q35 Cloud WAN -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Cloud WAN" data-level="B">
+<div class="q-tags"><span class="q-tag">Cloud WAN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>In Cloud WAN, what is a <em>segment</em>?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A single Region's Core Network Edge router</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An isolated routing domain, similar to a VRF</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A subnet inside one of the attached VPCs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Direct Connect location used by the WAN</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An isolated routing domain, similar to a VRF<br><br>
+<strong>How to think about it:</strong> Segment = <b>an isolated routing domain</b>, like a VRF (e.g. Prod, Dev, Shared).<br><br>
+<strong>Why B is correct:</strong> Attachments in the same segment can talk; traffic between segments must be shared or routed through a policy.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A single Region's Core Network Edge router</em> &mdash; A CNE is the regional router; a segment can span several CNEs.<br><em>C) A subnet inside one of the attached VPCs</em> &mdash; Subnets are VPC constructs, not Cloud WAN segments.<br><em>D) A Direct Connect location used by the WAN</em> &mdash; DX locations are physical sites, not routing domains.
+</div>
+</div>
+
+<!-- Q36 Cloud WAN -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Cloud WAN" data-level="B">
+<div class="q-tags"><span class="q-tag">Cloud WAN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>How does Cloud WAN decide which segment a new VPC attachment joins?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The AWS account ID always maps to one fixed segment</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Attachment policies in the core network policy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The VPC's CIDR range always decides the segment</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Each attachment is placed by hand in a TGW route table</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Attachment policies in the core network policy<br><br>
+<strong>How to think about it:</strong> Cloud WAN <b>attachment policies</b> map attachments to segments, often by <b>tags</b> (e.g. Environment=Production).<br><br>
+<strong>Why B is correct:</strong> Rules like 'tag Environment=Development -&gt; Development segment' place attachments automatically.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The AWS account ID always maps to one fixed segment</em> &mdash; Account can be a condition, but there is no fixed account-to-segment rule.<br><em>C) The VPC's CIDR range always decides the segment</em> &mdash; CIDR can be a condition, but attachment policy rules decide, not a fixed CIDR rule.<br><em>D) Each attachment is placed by hand in a TGW route table</em> &mdash; That is the Transit Gateway way of working, not Cloud WAN's.
+</div>
+</div>
+
+<!-- Q37 Cloud WAN -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Cloud WAN" data-level="B">
+<div class="q-tags"><span class="q-tag">Cloud WAN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>In Cloud WAN, what is a <em>Core Network Edge</em> (CNE)?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A customer-owned router at a branch office site</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A CloudFront edge location used for WAN traffic</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The managed Regional router Cloud WAN runs per Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Direct Connect location where the WAN lands</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The managed Regional router Cloud WAN runs per Region<br><br>
+<strong>How to think about it:</strong> CNE = <b>the Regional router of the Cloud WAN core network</b> (like a managed TGW in each Region you choose).<br><br>
+<strong>Why C is correct:</strong> Attachments in a Region connect to its CNE, and CNEs are meshed together over the AWS backbone.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A customer-owned router at a branch office site</em> &mdash; Branch devices connect through VPN or Connect attachments; they are not CNEs.<br><em>B) A CloudFront edge location used for WAN traffic</em> &mdash; CNEs are Cloud WAN routers, not CDN edges.<br><em>D) A Direct Connect location where the WAN lands</em> &mdash; DX locations are physical colocation sites.
+</div>
+</div>
+
+<!-- Q38 Cloud WAN -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Cloud WAN" data-level="B">
+<div class="q-tags"><span class="q-tag">Cloud WAN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>How can Direct Connect be connected to an AWS Cloud WAN core network today?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Attach a Direct Connect gateway to the core network</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only through a public VIF to the Cloud WAN endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only through an EC2-based router in each Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It cannot; Cloud WAN supports only VPN attachments</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Attach a Direct Connect gateway to the core network<br><br>
+<strong>How to think about it:</strong> Cloud WAN now supports a <b>Direct Connect gateway attachment</b> directly (before, you went through a TGW).<br><br>
+<strong>Why A is correct:</strong> Cloud WAN supports DX gateway attachments natively, so a TGW in between is no longer required.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Only through a public VIF to the Cloud WAN endpoint</em> &mdash; Public VIFs reach AWS public services, not the core network's private routing.<br><em>C) Only through an EC2-based router in each Region</em> &mdash; Self-managed routers are not required.<br><em>D) It cannot; Cloud WAN supports only VPN attachments</em> &mdash; Cloud WAN supports VPC, VPN, Connect, TGW route table and DX gateway attachments.
+</div>
+</div>
+
+<!-- Q39 Cloud WAN -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Cloud WAN" data-level="A">
+<div class="q-tags"><span class="q-tag">Cloud WAN</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>A company uses Cloud WAN with Production and Development segments. Both must reach a Shared Services segment but not each other. What does this in the core network policy?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turn off require-acceptance on all three segments</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Peer the Production and Development VPCs directly</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Share Shared with Prod and Dev, not Prod with Dev</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Put all three in one segment and use security groups</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Share Shared with Prod and Dev, not Prod with Dev<br><br>
+<strong>How to think about it:</strong> Cloud WAN: segments are isolated by default; use <b>share</b> segment actions from Shared to Prod and Dev only.<br><br>
+<strong>Why C is correct:</strong> Segment sharing exchanges routes only between the named segments, so Prod and Dev stay apart.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Turn off require-acceptance on all three segments</em> &mdash; Acceptance controls attachment approval, not routing between segments.<br><em>B) Peer the Production and Development VPCs directly</em> &mdash; Peering would connect Prod and Dev directly, the opposite of the goal.<br><em>D) Put all three in one segment and use security groups</em> &mdash; This flattens routing and depends on host rules instead of network separation.
+</div>
+</div>
+
+<!-- Q40 Cloud WAN -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Cloud WAN" data-level="A">
+<div class="q-tags"><span class="q-tag">Cloud WAN</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>A Cloud WAN user wants all Development-to-Production traffic to pass through firewalls first, with return traffic kept symmetric. Which Cloud WAN feature fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Separate VPC peerings through a firewall VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A blackhole route in the Development segment</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A network function group with a send-via action</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Appliance mode turned on for every VPC attachment</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A network function group with a send-via action<br><br>
+<strong>How to think about it:</strong> Inline inspection between segments in Cloud WAN = <b>Network Function Group</b> with <b>send-via</b> (send-to for egress).<br><br>
+<strong>Why C is correct:</strong> Cloud WAN steers traffic through the inspection attachment in the NFG and keeps both directions on the same appliance.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Separate VPC peerings through a firewall VPC</em> &mdash; Peering is non-transitive, so traffic cannot be passed through a firewall VPC this way.<br><em>B) A blackhole route in the Development segment</em> &mdash; A blackhole drops the traffic instead of inspecting it.<br><em>D) Appliance mode turned on for every VPC attachment</em> &mdash; Appliance mode is a TGW attachment setting; Cloud WAN uses NFG service insertion.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 40;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

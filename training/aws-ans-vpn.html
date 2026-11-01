@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS ANS BGP, Site-to-Site &amp; Client VPN - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">ANS-C01</span>
+            <span>BGP, Site-to-Site &amp; Client VPN</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Advanced Networking Specialty &mdash; BGP, Site-to-Site &amp; Client VPN</h2>
+        <p>40 refresher questions &mdash; Static vs dynamic routing, BGP attributes, VGW/TGW/CGW, tunnels, NAT-T, DPD, accelerated VPN, CloudHub, EC2 VPN &amp; AWS Client VPN</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/40</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 40 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 40</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="BGP & Routing" onclick="filterQ(this)">BGP & Routing</button><button class="filter-btn" data-f="S2S VPN Basics" onclick="filterQ(this)">S2S VPN Basics</button><button class="filter-btn" data-f="Tunnels & HA" onclick="filterQ(this)">Tunnels & HA</button><button class="filter-btn" data-f="VPN Features" onclick="filterQ(this)">VPN Features</button><button class="filter-btn" data-f="Transitive Routing" onclick="filterQ(this)">Transitive Routing</button><button class="filter-btn" data-f="VPN Architectures" onclick="filterQ(this)">VPN Architectures</button><button class="filter-btn" data-f="Client VPN" onclick="filterQ(this)">Client VPN</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short ANS-style scenarios.</p>
+
+<!-- Q1 BGP & Routing -->
+<div class="question" data-type="mc" data-answer="0" data-topic="BGP & Routing" data-level="B">
+<div class="q-tags"><span class="q-tag">BGP & Routing</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>What is the main difference between static and dynamic routing on a VPN connection?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Dynamic routing learns prefixes automatically through BGP</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Static routing fails over between tunnels faster than BGP does</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Static routing encrypts traffic while dynamic routing does not</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Dynamic routing is only available on Direct Connect, never on VPN</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Dynamic routing learns prefixes automatically through BGP<br><br>
+<strong>How to think about it:</strong> <b>Dynamic</b> = routes are learned automatically (BGP); <b>static</b> = you type every prefix yourself.<br><br>
+<strong>Why A is correct:</strong> With BGP, each side advertises its networks, so new on-premises ranges appear on the AWS side without manual edits.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Static routing fails over between tunnels faster than BGP does</em> &mdash; Static routing has no protocol to detect path changes; BGP gives faster, automatic failover.<br><em>C) Static routing encrypts traffic while dynamic routing does not</em> &mdash; Both routing types run inside the same IPsec tunnels; encryption is identical.<br><em>D) Dynamic routing is only available on Direct Connect, never on VPN</em> &mdash; Site-to-Site VPN supports BGP; it is the recommended option.
+</div>
+</div>
+
+<!-- Q2 BGP & Routing -->
+<div class="question" data-type="mc" data-answer="1" data-topic="BGP & Routing" data-level="B">
+<div class="q-tags"><span class="q-tag">BGP & Routing</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>Which private ASN range can you assign to a Virtual Private Gateway (2-byte)?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">65535 to 131071</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">64512 to 65534</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">1 to 64495</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">7224 to 7300</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> 64512 to 65534<br><br>
+<strong>How to think about it:</strong> Private 2-byte ASN = <b>64512–65534</b>; AWS default for a VGW is <b>64512</b>.<br><br>
+<strong>Why B is correct:</strong> This is the private 2-byte ASN range; AWS uses 64512 by default if you choose nothing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 65535 to 131071</em> &mdash; 65535 is reserved and 65536+ are 4-byte numbers, not the 2-byte private range.<br><em>C) 1 to 64495</em> &mdash; This is the public ASN range assigned by registries, not for private use.<br><em>D) 7224 to 7300</em> &mdash; 7224 is the Amazon public ASN, used in BGP communities; it is not a private range.
+</div>
+</div>
+
+<!-- Q3 BGP & Routing -->
+<div class="question" data-type="mc" data-answer="0" data-topic="BGP & Routing" data-level="B">
+<div class="q-tags"><span class="q-tag">BGP & Routing</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>Which BGP attribute is used <em>inside</em> your own AS to choose the outbound path, with the higher value preferred?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">LOCAL_PREF</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">MED (Multi-Exit Discriminator)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Cisco Weight</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">AS_PATH length</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> LOCAL_PREF<br><br>
+<strong>How to think about it:</strong> Leaving my AS, inside my AS = <b>LOCAL_PREF</b> (highest wins).<br><br>
+<strong>Why A is correct:</strong> Local preference is shared between your internal routers to pick the exit path; the highest value wins.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) MED (Multi-Exit Discriminator)</em> &mdash; MED is sent to a neighbouring AS to influence how it enters yours; lowest wins.<br><em>C) Cisco Weight</em> &mdash; Weight is a Cisco-only setting local to a single router and is not shared with other routers.<br><em>D) AS_PATH length</em> &mdash; AS_PATH length is compared after LOCAL_PREF and is visible across autonomous systems.
+</div>
+</div>
+
+<!-- Q4 BGP & Routing -->
+<div class="question" data-type="mc" data-answer="3" data-topic="BGP & Routing" data-level="B">
+<div class="q-tags"><span class="q-tag">BGP & Routing</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>When two paths reach the same prefix between the same pair of autonomous systems, which MED value is preferred?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">MED is ignored when both paths come from the same AS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The highest MED value</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The MED value closest to 100</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The lowest MED value</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> The lowest MED value<br><br>
+<strong>How to think about it:</strong> <b>MED</b>: lower is better.<br><br>
+<strong>Why D is correct:</strong> MED (Multi-Exit Discriminator) is a hint to the neighbour AS; a lower value means a more preferred entry point.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) MED is ignored when both paths come from the same AS</em> &mdash; Comparing paths from the same neighbouring AS is exactly when MED is used.<br><em>B) The highest MED value</em> &mdash; Higher wins for LOCAL_PREF and Weight, not for MED.<br><em>C) The MED value closest to 100</em> &mdash; There is no target value; BGP simply compares and picks the lowest.
+</div>
+</div>
+
+<!-- Q5 BGP & Routing -->
+<div class="question" data-type="mc" data-answer="1" data-topic="BGP & Routing" data-level="A">
+<div class="q-tags"><span class="q-tag">BGP & Routing</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>Your on-premises router advertises 10.0.0.0/16 on two BGP sessions. You want AWS to prefer the first path and keep the second as backup. Which technique works from the customer side without changing prefix length?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Advertise the same prefix with a different MD5 password</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Prepend your ASN several times on the backup path</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Lower the BGP hold timer on the backup session</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Set a higher LOCAL_PREF on the backup advertisement</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Prepend your ASN several times on the backup path<br><br>
+<strong>How to think about it:</strong> Make the backup look longer = <b>AS_PATH prepending</b>.<br><br>
+<strong>Why B is correct:</strong> A longer AS_PATH makes the backup less attractive, so AWS picks the shorter path.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Advertise the same prefix with a different MD5 password</em> &mdash; The MD5 key only authenticates the session; it has no role in path selection.<br><em>C) Lower the BGP hold timer on the backup session</em> &mdash; Timers only affect how fast a failure is detected, not which path is chosen.<br><em>D) Set a higher LOCAL_PREF on the backup advertisement</em> &mdash; LOCAL_PREF is not passed to an external peer, so AWS would never see it.
+</div>
+</div>
+
+<!-- Q6 S2S VPN Basics -->
+<div class="question" data-type="mc" data-answer="2" data-topic="S2S VPN Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">S2S VPN Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>Which VPN protocol does the AWS managed Site-to-Site VPN support?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">DMVPN</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">OpenVPN</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">IPsec</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">GRE</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> IPsec<br><br>
+<strong>How to think about it:</strong> AWS managed S2S VPN = <b>IPsec only</b> (layer 3).<br><br>
+<strong>Why C is correct:</strong> AWS Site-to-Site VPN builds IPsec tunnels using IKEv1 or IKEv2.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) DMVPN</em> &mdash; DMVPN is a Cisco design that AWS managed VPN does not support.<br><em>B) OpenVPN</em> &mdash; OpenVPN is the protocol behind AWS Client VPN, not Site-to-Site VPN.<br><em>D) GRE</em> &mdash; GRE needs a self-managed VPN on EC2, or a TGW Connect attachment for SD-WAN.
+</div>
+</div>
+
+<!-- Q7 S2S VPN Basics -->
+<div class="question" data-type="mc" data-answer="1" data-topic="S2S VPN Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">S2S VPN Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>What is a Virtual Private Gateway (VGW)?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A physical router you install in your own data center</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The AWS-side VPN and DX endpoint attached to one VPC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A regional hub that connects thousands of VPCs together</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A NAT device that gives private subnets internet access</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The AWS-side VPN and DX endpoint attached to one VPC<br><br>
+<strong>How to think about it:</strong> <b>VGW</b> = the AWS-side VPN/DX endpoint for <b>one</b> VPC.<br><br>
+<strong>Why B is correct:</strong> A VGW terminates VPN tunnels and private VIFs; one VGW is attached to one VPC at a time.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A physical router you install in your own data center</em> &mdash; That is the customer gateway device, on your side of the tunnel.<br><em>C) A regional hub that connects thousands of VPCs together</em> &mdash; That describes a Transit Gateway, not a VGW.<br><em>D) A NAT device that gives private subnets internet access</em> &mdash; That is a NAT gateway; a VGW does not provide internet access.
+</div>
+</div>
+
+<!-- Q8 S2S VPN Basics -->
+<div class="question" data-type="mc" data-answer="3" data-topic="S2S VPN Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">S2S VPN Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>In AWS, what does the <em>customer gateway</em> (CGW) resource represent?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A managed VPN appliance that AWS ships to your site</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A route table that AWS attaches to each VPN connection</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The backup VPN tunnel that AWS adds for redundancy</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A record of your device's public IP and BGP ASN</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A record of your device's public IP and BGP ASN<br><br>
+<strong>How to think about it:</strong> <b>CGW resource</b> = AWS's record of <b>your</b> device (public IP + ASN).<br><br>
+<strong>Why D is correct:</strong> The CGW resource tells AWS where your side of the tunnel is and how it does BGP.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A managed VPN appliance that AWS ships to your site</em> &mdash; AWS ships no hardware for VPN; the CGW is just a configuration record.<br><em>B) A route table that AWS attaches to each VPN connection</em> &mdash; Routing lives in VPC or TGW route tables; the CGW only describes your device.<br><em>C) The backup VPN tunnel that AWS adds for redundancy</em> &mdash; Each VPN connection has two tunnels; the CGW is not one of them.
+</div>
+</div>
+
+<!-- Q9 S2S VPN Basics -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S2S VPN Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">S2S VPN Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>How many IPsec tunnels does each AWS Site-to-Site VPN connection create?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Two tunnels, terminating on different AWS endpoints</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One tunnel, with a second added only when you pay extra</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Four tunnels, one per Availability Zone</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">As many tunnels as you have VPC subnets</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Two tunnels, terminating on different AWS endpoints<br><br>
+<strong>How to think about it:</strong> One VPN connection = <b>two tunnels</b> to two different AWS endpoints.<br><br>
+<strong>Why A is correct:</strong> The second tunnel gives redundancy during AWS maintenance or a single endpoint failure.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) One tunnel, with a second added only when you pay extra</em> &mdash; Both tunnels are included with every VPN connection.<br><em>C) Four tunnels, one per Availability Zone</em> &mdash; The number is fixed at two, whatever the number of AZs.<br><em>D) As many tunnels as you have VPC subnets</em> &mdash; Tunnels are per VPN connection, not per subnet.
+</div>
+</div>
+
+<!-- Q10 S2S VPN Basics -->
+<div class="question" data-type="mc" data-answer="0" data-topic="S2S VPN Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">S2S VPN Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>Which two methods can authenticate the endpoints of a Site-to-Site VPN tunnel?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Pre-shared keys or AWS Private CA certificates</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">IAM users or IAM roles with an attached VPN policy</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">SAML federation or Active Directory accounts</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Security groups or network ACLs on the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Pre-shared keys or AWS Private CA certificates<br><br>
+<strong>How to think about it:</strong> S2S tunnel auth = <b>pre-shared key</b> or <b>private certificate</b> (AWS Private CA).<br><br>
+<strong>Why A is correct:</strong> AWS supports PSKs by default, or certificate-based auth using a private certificate authority.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) IAM users or IAM roles with an attached VPN policy</em> &mdash; IAM controls who manages the VPN in the API, not tunnel authentication.<br><em>C) SAML federation or Active Directory accounts</em> &mdash; Those are AWS Client VPN user authentication options.<br><em>D) Security groups or network ACLs on the VPC</em> &mdash; These filter traffic in the VPC; they do not authenticate IPsec peers.
+</div>
+</div>
+
+<!-- Q11 S2S VPN Basics -->
+<div class="question" data-type="mc" data-answer="2" data-topic="S2S VPN Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">S2S VPN Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>Which address range do VPN tunnel <em>inside</em> IPs (used for BGP peering) normally come from?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A /24 from 100.64.0.0/10</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A /28 taken from the VPC CIDR</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A /30 from 169.254.0.0/16</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The public IP of the customer gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A /30 from 169.254.0.0/16<br><br>
+<strong>How to think about it:</strong> Tunnel inside IPv4 = <b>169.254.0.0/16</b>, a /30 per tunnel.<br><br>
+<strong>Why C is correct:</strong> Each tunnel gets a link-local /30; one address is the AWS side, one is yours.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A /24 from 100.64.0.0/10</em> &mdash; The carrier-grade NAT range is not used for VPN tunnel inside addresses.<br><em>B) A /28 taken from the VPC CIDR</em> &mdash; Inside addresses are not carved from your VPC range.<br><em>D) The public IP of the customer gateway</em> &mdash; That public IP is the tunnel's outside address, not the inside one.
+</div>
+</div>
+
+<!-- Q12 S2S VPN Basics -->
+<div class="question" data-type="mc" data-answer="1" data-topic="S2S VPN Basics" data-level="B">
+<div class="q-tags"><span class="q-tag">S2S VPN Basics</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>Which gateway on the AWS side supports IPv6 traffic inside a Site-to-Site VPN?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">NAT gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Transit Gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Internet gateway</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Virtual Private Gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Transit Gateway<br><br>
+<strong>How to think about it:</strong> IPv6 over S2S VPN = <b>Transit Gateway</b> (or Cloud WAN), not the VGW.<br><br>
+<strong>Why B is correct:</strong> VPN connections on a Transit Gateway (and Cloud WAN) can carry IPv6 inner traffic; a VGW cannot.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) NAT gateway</em> &mdash; A NAT gateway does not terminate VPN tunnels and does NAT for IPv4.<br><em>C) Internet gateway</em> &mdash; An IGW does not terminate VPN tunnels at all.<br><em>D) Virtual Private Gateway</em> &mdash; VGW-based VPN connections are IPv4 only.
+</div>
+</div>
+
+<!-- Q13 S2S VPN Basics -->
+<div class="question" data-type="mc" data-answer="2" data-topic="S2S VPN Basics" data-level="A">
+<div class="q-tags"><span class="q-tag">S2S VPN Basics</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>A VGW-based VPN uses BGP. On-premises adds a new subnet, but EC2 instances can't reach it. The CGW shows the prefix being advertised. What is the most likely missing step?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The VPN must be changed from IPsec to GRE tunnels</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The VGW ASN must be changed to a public ASN</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Route propagation is off on the subnet's route table</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A second customer gateway must be created for the new subnet</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Route propagation is off on the subnet's route table<br><br>
+<strong>How to think about it:</strong> BGP routes reach a VPC route table only with <b>route propagation</b> enabled.<br><br>
+<strong>Why C is correct:</strong> Without propagation, routes learned from the VGW are never added to the VPC route table.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The VPN must be changed from IPsec to GRE tunnels</em> &mdash; Protocol has nothing to do with route learning; GRE is not supported anyway.<br><em>B) The VGW ASN must be changed to a public ASN</em> &mdash; A private ASN works fine for BGP over VPN.<br><em>D) A second customer gateway must be created for the new subnet</em> &mdash; One CGW can advertise any number of prefixes (within limits).
+</div>
+</div>
+
+<!-- Q14 Tunnels & HA -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Tunnels & HA" data-level="B">
+<div class="q-tags"><span class="q-tag">Tunnels & HA</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>With static routing and both tunnels UP (active/active), what must the customer gateway tolerate?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Asymmetric routing, as replies may use the other tunnel</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Multicast traffic forwarded between the two tunnels</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Jumbo frames of 9001 bytes on both IPsec tunnels</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A separate public Elastic IP address for each EC2 instance</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Asymmetric routing, as replies may use the other tunnel<br><br>
+<strong>How to think about it:</strong> Static active/active = AWS picks a tunnel at random = allow <b>asymmetric routing</b>.<br><br>
+<strong>Why A is correct:</strong> AWS selects a tunnel for its outbound traffic, so replies can arrive on the other tunnel.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Multicast traffic forwarded between the two tunnels</em> &mdash; Multicast is not carried over Site-to-Site VPN.<br><em>C) Jumbo frames of 9001 bytes on both IPsec tunnels</em> &mdash; VPN tunnels use a much smaller MTU; jumbo frames are not supported.<br><em>D) A separate public Elastic IP address for each EC2 instance</em> &mdash; Instances keep private IPs; the tunnels carry private traffic.
+</div>
+</div>
+
+<!-- Q15 Tunnels & HA -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Tunnels & HA" data-level="B">
+<div class="q-tags"><span class="q-tag">Tunnels & HA</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>With BGP on both tunnels, which change makes AWS prefer tunnel 1 for traffic it sends to you?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Give tunnel 1 a larger inside CIDR block, like a /28</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use a different pre-shared key for tunnel 2</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Lower the DPD timeout value on tunnel 2 only</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Advertise a more specific prefix over tunnel 1</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Advertise a more specific prefix over tunnel 1<br><br>
+<strong>How to think about it:</strong> Influence AWS → on-prem: <b>more specific prefix</b>, then <b>shorter AS_PATH</b>, then <b>lower MED</b>.<br><br>
+<strong>Why D is correct:</strong> Longest prefix match beats every BGP attribute, so the more specific route wins.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Give tunnel 1 a larger inside CIDR block, like a /28</em> &mdash; Inside addresses are always a /30 and don't affect path choice.<br><em>B) Use a different pre-shared key for tunnel 2</em> &mdash; Keys only authenticate the tunnel; they have no routing effect.<br><em>C) Lower the DPD timeout value on tunnel 2 only</em> &mdash; DPD affects failure detection, not which healthy tunnel is preferred.
+</div>
+</div>
+
+<!-- Q16 Tunnels & HA -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Tunnels & HA" data-level="B">
+<div class="q-tags"><span class="q-tag">Tunnels & HA</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>What is Dead Peer Detection (DPD) used for on a Site-to-Site VPN?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Detecting that the IPsec peer is no longer responding</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Replacing a failed tunnel endpoint with a new public IP</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Blocking traffic from IP addresses known to be malicious</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Discovering the best MTU along the tunnel path</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Detecting that the IPsec peer is no longer responding<br><br>
+<strong>How to think about it:</strong> <b>DPD</b> = R-U-THERE keepalives to detect a dead IPsec peer.<br><br>
+<strong>Why A is correct:</strong> AWS sends R-U-THERE messages and acts (clear or restart) if no reply arrives within the timeout.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Replacing a failed tunnel endpoint with a new public IP</em> &mdash; Endpoint replacement is an AWS maintenance task, not part of DPD.<br><em>C) Blocking traffic from IP addresses known to be malicious</em> &mdash; That is a firewall or WAF job, not DPD.<br><em>D) Discovering the best MTU along the tunnel path</em> &mdash; AWS managed VPN does not support Path MTU Discovery; DPD is unrelated.
+</div>
+</div>
+
+<!-- Q17 Tunnels & HA -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Tunnels & HA" data-level="B">
+<div class="q-tags"><span class="q-tag">Tunnels & HA</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>Which DPD timeout action makes AWS restart IKE negotiation instead of simply ending the session?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Clear (default)</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Drop and log</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">None</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Restart</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Restart<br><br>
+<strong>How to think about it:</strong> DPD actions: <b>Clear</b> (default) ends it, <b>Restart</b> renegotiates, <b>None</b> does nothing.<br><br>
+<strong>Why D is correct:</strong> Restart makes AWS start IKE phase 1 again, so the tunnel comes back without the CGW initiating.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Clear (default)</em> &mdash; Clear is the default: it ends the IKE session, stops the tunnel and clears its routes.<br><em>B) Drop and log</em> &mdash; Drop is not one of the DPD timeout actions.<br><em>C) None</em> &mdash; None takes no action when the peer stops responding.
+</div>
+</div>
+
+<!-- Q18 Tunnels & HA -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Tunnels & HA" data-level="A">
+<div class="q-tags"><span class="q-tag">Tunnels & HA</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>A VPN tunnel goes down repeatedly at night when no traffic flows, and the CGW doesn't support DPD well. What is the simplest fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Move the VPN termination from the VGW to a NAT gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Increase the VPC CIDR to a /16 to add capacity</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Keep traffic, such as pings, flowing in the tunnel</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Switch the VPN connection from BGP to static routing</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Keep traffic, such as pings, flowing in the tunnel<br><br>
+<strong>How to think about it:</strong> Idle tunnel dropping = keep it busy (<b>keepalive ping</b>) or let AWS <b>initiate</b> the tunnel.<br><br>
+<strong>Why C is correct:</strong> Constant traffic stops idle timeouts; you can also set the tunnel startup action so AWS starts IKE.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Move the VPN termination from the VGW to a NAT gateway</em> &mdash; A NAT gateway cannot terminate VPN tunnels.<br><em>B) Increase the VPC CIDR to a /16 to add capacity</em> &mdash; The VPC address range has nothing to do with tunnel idle behaviour.<br><em>D) Switch the VPN connection from BGP to static routing</em> &mdash; Routing type doesn't stop idle timeouts; BGP keepalives actually help.
+</div>
+</div>
+
+<!-- Q19 Tunnels & HA -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Tunnels & HA" data-level="A">
+<div class="q-tags"><span class="q-tag">Tunnels & HA</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>A company needs more than a single VPN tunnel's bandwidth to AWS across many VPCs. Which design adds aggregate VPN throughput?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A larger EC2 instance size in the VPC subnets</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enabling jumbo frames on the VPN tunnels</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Several VPNs to a Transit Gateway using ECMP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Several VPN connections to the same VGW</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Several VPNs to a Transit Gateway using ECMP<br><br>
+<strong>How to think about it:</strong> More VPN bandwidth = <b>Transit Gateway + ECMP</b> over several VPN connections.<br><br>
+<strong>Why C is correct:</strong> TGW can spread traffic across equal-cost tunnels, adding up their bandwidth; a VGW cannot.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A larger EC2 instance size in the VPC subnets</em> &mdash; Instance size doesn't change the managed VPN tunnel limits.<br><em>B) Enabling jumbo frames on the VPN tunnels</em> &mdash; VPN tunnels do not support jumbo frames.<br><em>D) Several VPN connections to the same VGW</em> &mdash; A VGW does not use ECMP, so its total throughput stays capped.
+</div>
+</div>
+
+<!-- Q20 VPN Features -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPN Features" data-level="B">
+<div class="q-tags"><span class="q-tag">VPN Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>Your customer gateway is behind a NAT device. Which port does the IPsec traffic switch to?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">TCP 179</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">UDP 53 (DNS)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">TCP 443 (HTTPS)</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">UDP 4500</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> UDP 4500<br><br>
+<strong>How to think about it:</strong> Behind NAT = <b>NAT-T</b> = ESP wrapped in <b>UDP 4500</b>.<br><br>
+<strong>Why D is correct:</strong> NAT-T wraps ESP in UDP 4500 because NAT devices can't handle raw ESP (IP protocol 50).<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) TCP 179</em> &mdash; TCP 179 is BGP, which runs inside the tunnel.<br><em>B) UDP 53 (DNS)</em> &mdash; UDP 53 is DNS.<br><em>C) TCP 443 (HTTPS)</em> &mdash; TCP 443 is used for AWS Client VPN and HTTPS, not NAT-T.
+</div>
+</div>
+
+<!-- Q21 VPN Features -->
+<div class="question" data-type="mc" data-answer="2" data-topic="VPN Features" data-level="B">
+<div class="q-tags"><span class="q-tag">VPN Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>What does an <em>Accelerated</em> Site-to-Site VPN use to improve performance?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A dedicated Direct Connect circuit added automatically</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Amazon CloudFront caching of the VPN packets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Global Accelerator edges and the AWS backbone</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Jumbo frames enabled inside the IPsec tunnels</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Global Accelerator edges and the AWS backbone<br><br>
+<strong>How to think about it:</strong> Accelerated VPN = <b>Global Accelerator</b> edge + AWS backbone, <b>TGW only</b>.<br><br>
+<strong>Why C is correct:</strong> Traffic avoids congested internet paths by joining the AWS backbone early.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A dedicated Direct Connect circuit added automatically</em> &mdash; Acceleration still uses the internet to reach the edge; no DX is created.<br><em>B) Amazon CloudFront caching of the VPN packets</em> &mdash; CloudFront caches HTTP content; it does not carry IPsec.<br><em>D) Jumbo frames enabled inside the IPsec tunnels</em> &mdash; VPN tunnels do not support jumbo frames.
+</div>
+</div>
+
+<!-- Q22 VPN Features -->
+<div class="question" data-type="mc" data-answer="2" data-topic="VPN Features" data-level="B">
+<div class="q-tags"><span class="q-tag">VPN Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>Which statement about Accelerated Site-to-Site VPN is true?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It removes the need for any customer gateway device</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It works only with a VGW and can be enabled at any time later</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It needs a Transit Gateway and is set only at VPN creation</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It needs NAT-T to be turned off on the customer gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> It needs a Transit Gateway and is set only at VPN creation<br><br>
+<strong>How to think about it:</strong> Accelerated VPN: <b>TGW only</b>, <b>set at creation</b>, <b>NAT-T required</b>.<br><br>
+<strong>Why C is correct:</strong> You can't attach an accelerated VPN to a VGW or enable acceleration on an existing VPN.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It removes the need for any customer gateway device</em> &mdash; You still need a CGW device to terminate the tunnels.<br><em>B) It works only with a VGW and can be enabled at any time later</em> &mdash; The opposite is true: TGW only, and only at creation.<br><em>D) It needs NAT-T to be turned off on the customer gateway</em> &mdash; NAT-T must be ON, because Global Accelerator doesn't pass raw ESP.
+</div>
+</div>
+
+<!-- Q23 VPN Features -->
+<div class="question" data-type="mc" data-answer="0" data-topic="VPN Features" data-level="B">
+<div class="q-tags"><span class="q-tag">VPN Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>Which CloudWatch metric shows whether a Site-to-Site VPN tunnel is up?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">TunnelState</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">HealthyHostCount</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">StatusCheckFailed</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">ConnectionState</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> TunnelState<br><br>
+<strong>How to think about it:</strong> VPN health = <b>TunnelState</b> (1 up, 0 down).<br><br>
+<strong>Why A is correct:</strong> 1 means up, 0 means down; a value in between means at least one tunnel is down.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) HealthyHostCount</em> &mdash; This is a load balancer target metric.<br><em>C) StatusCheckFailed</em> &mdash; This is an EC2 instance health metric.<br><em>D) ConnectionState</em> &mdash; ConnectionState is the Direct Connect connection metric.
+</div>
+</div>
+
+<!-- Q24 VPN Features -->
+<div class="question" data-type="mc" data-answer="1" data-topic="VPN Features" data-level="A">
+<div class="q-tags"><span class="q-tag">VPN Features</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>On-premises advertises about 150 prefixes over BGP to a VGW, and some routes never appear in the VPC route table. Why, and what is the fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">BGP only supports 32 prefixes per session, so use static routes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Route tables cap propagated routes, so summarize prefixes</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Each on-premises prefix needs its own VPN connection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Prefixes are rejected unless DPD is set to Restart</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Route tables cap propagated routes, so summarize prefixes<br><br>
+<strong>How to think about it:</strong> VPC route table: max <b>100 propagated routes</b>, so <b>summarize</b> on-premises prefixes.<br><br>
+<strong>Why B is correct:</strong> Combining ranges into larger CIDRs keeps the advertisement within the propagated-route limit.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) BGP only supports 32 prefixes per session, so use static routes</em> &mdash; BGP itself has no such low limit; the constraint is the route table.<br><em>C) Each on-premises prefix needs its own VPN connection</em> &mdash; One connection can carry many prefixes; the fix is summarization.<br><em>D) Prefixes are rejected unless DPD is set to Restart</em> &mdash; DPD has nothing to do with how many prefixes are accepted.
+</div>
+</div>
+
+<!-- Q25 Transitive Routing -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Transitive Routing" data-level="B">
+<div class="q-tags"><span class="q-tag">Transitive Routing</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>Through a VGW-based VPN, which of these can an on-premises host reach?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The internet through the VPC's NAT gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A peered VPC through the VPC peering connection</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An interface VPC endpoint (PrivateLink)</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">S3 through a gateway VPC endpoint</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An interface VPC endpoint (PrivateLink)<br><br>
+<strong>How to think about it:</strong> On-prem via VGW → only the VPC itself and <b>interface endpoints</b>; no edge-to-edge transit.<br><br>
+<strong>Why C is correct:</strong> Interface endpoints are ENIs with private IPs in the VPC, so VPN traffic can reach them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The internet through the VPC's NAT gateway</em> &mdash; A NAT gateway won't forward traffic that came in through the VGW.<br><em>B) A peered VPC through the VPC peering connection</em> &mdash; VPC peering is not transitive, so on-premises traffic can't continue to the peer.<br><em>D) S3 through a gateway VPC endpoint</em> &mdash; Gateway endpoints only work for traffic from inside the VPC, not traffic arriving over VPN.
+</div>
+</div>
+
+<!-- Q26 Transitive Routing -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Transitive Routing" data-level="B">
+<div class="q-tags"><span class="q-tag">Transitive Routing</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>On-premises users must reach the internet through AWS over the VPN. Which option actually works?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The VPC's internet gateway, directly by route</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A managed NAT gateway in a public subnet</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A gateway VPC endpoint for internet traffic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A self-managed NAT or proxy EC2 instance</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A self-managed NAT or proxy EC2 instance<br><br>
+<strong>How to think about it:</strong> Internet via VPC from on-prem = a <b>self-managed NAT/proxy instance</b> (not IGW or NAT GW).<br><br>
+<strong>Why D is correct:</strong> An EC2 instance is a normal target that can forward the traffic onward, unlike the managed gateways.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The VPC's internet gateway, directly by route</em> &mdash; An IGW won't forward traffic that came from a VGW (edge-to-edge routing).<br><em>B) A managed NAT gateway in a public subnet</em> &mdash; NAT gateways drop traffic that comes from a VPN or DX connection to the internet.<br><em>C) A gateway VPC endpoint for internet traffic</em> &mdash; Gateway endpoints only reach S3 and DynamoDB, not the internet.
+</div>
+</div>
+
+<!-- Q27 Transitive Routing -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Transitive Routing" data-level="A">
+<div class="q-tags"><span class="q-tag">Transitive Routing</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>A company has a VPN to VPC-A, and VPC-A is peered with VPC-B. On-premises can't reach VPC-B. What is the best managed fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add a route in VPC-A pointing VPC-B traffic to the VGW</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Attach the VPN and both VPCs to a Transit Gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a gateway endpoint for VPC-B in VPC-A</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable DNS resolution on the peering connection</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Attach the VPN and both VPCs to a Transit Gateway<br><br>
+<strong>How to think about it:</strong> Need transitive routing between VPN and many VPCs = <b>Transit Gateway</b>.<br><br>
+<strong>Why B is correct:</strong> A TGW routes between all its attachments, so on-premises can reach both VPCs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Add a route in VPC-A pointing VPC-B traffic to the VGW</em> &mdash; Peering still won't carry traffic that came in over the VPN.<br><em>C) Create a gateway endpoint for VPC-B in VPC-A</em> &mdash; Gateway endpoints exist only for S3 and DynamoDB.<br><em>D) Enable DNS resolution on the peering connection</em> &mdash; DNS settings don't change how traffic is routed.
+</div>
+</div>
+
+<!-- Q28 Transitive Routing -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Transitive Routing" data-level="A">
+<div class="q-tags"><span class="q-tag">Transitive Routing</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>On-premises servers must reach Amazon S3 privately over the existing Site-to-Site VPN, without using the internet. What should you deploy in the VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A NAT gateway in a public subnet of the VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An S3 interface endpoint, using its endpoint DNS names</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A second VGW dedicated to the S3 traffic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An S3 gateway endpoint with a route in the VPC route table</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An S3 interface endpoint, using its endpoint DNS names<br><br>
+<strong>How to think about it:</strong> S3 from on-prem over VPN/DX = <b>S3 interface endpoint</b> (gateway endpoints don't work from outside the VPC).<br><br>
+<strong>Why B is correct:</strong> Interface endpoints have private IPs in the VPC, which on-premises hosts can reach through the VPN.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A NAT gateway in a public subnet of the VPC</em> &mdash; On-premises traffic cannot use a NAT gateway, and it would go over the internet.<br><em>C) A second VGW dedicated to the S3 traffic</em> &mdash; Only one VGW can be attached to a VPC, and it doesn't reach S3 itself.<br><em>D) An S3 gateway endpoint with a route in the VPC route table</em> &mdash; Gateway endpoints only serve traffic that starts inside the VPC.
+</div>
+</div>
+
+<!-- Q29 Tunnels & HA -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Tunnels & HA" data-level="A">
+<div class="q-tags"><span class="q-tag">Tunnels & HA</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>Since 2021, how can AWS bring up a VPN tunnel without waiting for the customer gateway?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Lower the BGP ASN assigned to the VGW</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Set the tunnel startup action so AWS starts IKE</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Turn on accelerated VPN on the existing connection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable route propagation on the VPC route table</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Set the tunnel startup action so AWS starts IKE<br><br>
+<strong>How to think about it:</strong> AWS-initiated tunnel = set <b>tunnel startup action</b> to Start.<br><br>
+<strong>Why B is correct:</strong> With startup action Start, AWS begins IKE instead of waiting for traffic from the CGW.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Lower the BGP ASN assigned to the VGW</em> &mdash; The ASN has no effect on who starts the tunnel.<br><em>C) Turn on accelerated VPN on the existing connection</em> &mdash; Acceleration can't be added to an existing VPN and does not change who initiates.<br><em>D) Enable route propagation on the VPC route table</em> &mdash; Propagation adds learned routes; it does not start IKE.
+</div>
+</div>
+
+<!-- Q30 VPN Architectures -->
+<div class="question" data-type="mc" data-answer="2" data-topic="VPN Architectures" data-level="B">
+<div class="q-tags"><span class="q-tag">VPN Architectures</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>What does AWS VPN CloudHub provide?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A managed SD-WAN appliance in every branch office</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Private access to Amazon S3 from on-premises sites</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Hub-and-spoke routing between branch sites via one VGW</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Encrypted remote access from user laptops to the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Hub-and-spoke routing between branch sites via one VGW<br><br>
+<strong>How to think about it:</strong> <b>CloudHub</b> = several branch VPNs on one VGW, so branches can talk to each other.<br><br>
+<strong>Why C is correct:</strong> Each branch has its own VPN to the VGW, and BGP lets the branches reach each other through it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A managed SD-WAN appliance in every branch office</em> &mdash; CloudHub uses your existing devices; AWS supplies no hardware.<br><em>B) Private access to Amazon S3 from on-premises sites</em> &mdash; S3 access goes through public VIFs or interface endpoints, not CloudHub.<br><em>D) Encrypted remote access from user laptops to the VPC</em> &mdash; That is AWS Client VPN.
+</div>
+</div>
+
+<!-- Q31 VPN Architectures -->
+<div class="question" data-type="mc" data-answer="1" data-topic="VPN Architectures" data-level="B">
+<div class="q-tags"><span class="q-tag">VPN Architectures</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>For VPN CloudHub to work, what must each branch customer gateway have?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The same ASN as the VGW</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A unique BGP ASN, with dynamic routing</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Static routing with identical prefixes</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Direct Connect connection in addition to VPN</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A unique BGP ASN, with dynamic routing<br><br>
+<strong>How to think about it:</strong> CloudHub needs <b>BGP</b> with a <b>unique ASN</b> per site.<br><br>
+<strong>Why B is correct:</strong> Different ASNs let BGP avoid loops and advertise each branch's routes to the others.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The same ASN as the VGW</em> &mdash; Sharing the VGW's ASN would break eBGP peering.<br><em>C) Static routing with identical prefixes</em> &mdash; CloudHub depends on BGP, and overlapping prefixes would conflict.<br><em>D) A Direct Connect connection in addition to VPN</em> &mdash; CloudHub works over VPN alone; DX is optional.
+</div>
+</div>
+
+<!-- Q32 VPN Architectures -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPN Architectures" data-level="B">
+<div class="q-tags"><span class="q-tag">VPN Architectures</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>Which requirement is a good reason to terminate VPN on an EC2 instance instead of AWS managed VPN?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">You want AWS to manage high availability for you</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">You want two IPsec tunnels created automatically</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">You want the lowest ongoing operational effort</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">You need a non-IPsec protocol such as GRE or DMVPN</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> You need a non-IPsec protocol such as GRE or DMVPN<br><br>
+<strong>How to think about it:</strong> Need <b>GRE/DMVPN</b>, overlapping-CIDR NAT or custom inspection = <b>VPN on EC2</b>.<br><br>
+<strong>Why D is correct:</strong> AWS managed VPN only speaks IPsec, so other protocols need software on EC2.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) You want AWS to manage high availability for you</em> &mdash; With EC2 VPN you manage availability yourself.<br><em>B) You want two IPsec tunnels created automatically</em> &mdash; Automatic dual tunnels are a feature of managed VPN, not EC2.<br><em>C) You want the lowest ongoing operational effort</em> &mdash; Running your own VPN software adds patching and HA work.
+</div>
+</div>
+
+<!-- Q33 VPN Architectures -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPN Architectures" data-level="B">
+<div class="q-tags"><span class="q-tag">VPN Architectures</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>What must you do on an EC2 instance acting as a VPN or routing appliance?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Place it in a cluster placement group</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Attach an Elastic Fabric Adapter</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable termination protection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Disable the source/destination check</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Disable the source/destination check<br><br>
+<strong>How to think about it:</strong> EC2 that forwards traffic = <b>disable source/destination check</b> + enable IP forwarding.<br><br>
+<strong>Why D is correct:</strong> EC2 drops traffic not addressed to itself unless the check is off and the OS forwards packets.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Place it in a cluster placement group</em> &mdash; Placement affects latency, not whether it can forward packets.<br><em>B) Attach an Elastic Fabric Adapter</em> &mdash; EFA is for HPC traffic between instances, not routing.<br><em>C) Enable termination protection</em> &mdash; This only prevents accidental deletion.
+</div>
+</div>
+
+<!-- Q34 VPN Architectures -->
+<div class="question" data-type="mc" data-answer="0" data-topic="VPN Architectures" data-level="A">
+<div class="q-tags"><span class="q-tag">VPN Architectures</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>A legacy design uses a 'transit VPC' with EC2 VPN appliances linking many spoke VPCs. What is the modern AWS-managed replacement?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Transit Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS Client VPN</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">VPC peering in a full mesh</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A NAT gateway in each spoke</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Transit Gateway<br><br>
+<strong>How to think about it:</strong> Transit VPC (DIY hub) → <b>Transit Gateway</b> (managed hub).<br><br>
+<strong>Why A is correct:</strong> A TGW gives a managed regional hub for VPCs, VPNs and DX without EC2 appliances to run.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS Client VPN</em> &mdash; Client VPN is for users, not VPC-to-VPC routing.<br><em>C) VPC peering in a full mesh</em> &mdash; Full-mesh peering grows quickly and still gives no transit for VPN.<br><em>D) A NAT gateway in each spoke</em> &mdash; NAT gateways give internet egress, not inter-VPC routing.
+</div>
+</div>
+
+<!-- Q35 Client VPN -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Client VPN" data-level="B">
+<div class="q-tags"><span class="q-tag">Client VPN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>What is AWS Client VPN?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A dedicated fiber link from an office to AWS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A managed OpenVPN-based remote access service for users</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An IPsec tunnel between two data centers over the internet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A browser-based bastion host for SSH access</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A managed OpenVPN-based remote access service for users<br><br>
+<strong>How to think about it:</strong> <b>Client VPN</b> = managed, OpenVPN-based remote access for users' devices.<br><br>
+<strong>Why B is correct:</strong> Users run an OpenVPN-compatible client and land in the VPC (and beyond, by routes).<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A dedicated fiber link from an office to AWS</em> &mdash; That is Direct Connect.<br><em>C) An IPsec tunnel between two data centers over the internet</em> &mdash; That is Site-to-Site VPN.<br><em>D) A browser-based bastion host for SSH access</em> &mdash; That is closer to EC2 Instance Connect or Session Manager.
+</div>
+</div>
+
+<!-- Q36 Client VPN -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Client VPN" data-level="B">
+<div class="q-tags"><span class="q-tag">Client VPN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Which authentication methods does AWS Client VPN support?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">BGP MD5 passwords or IKE certificates</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Pre-shared keys configured on each client device</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">IAM access keys entered in the client app</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Mutual certificates, Active Directory, or SAML</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Mutual certificates, Active Directory, or SAML<br><br>
+<strong>How to think about it:</strong> Client VPN auth = <b>mutual certificates</b>, <b>Active Directory</b>, <b>SAML</b>.<br><br>
+<strong>Why D is correct:</strong> You can use one, or combine certificate auth with AD or SAML.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) BGP MD5 passwords or IKE certificates</em> &mdash; MD5 keys authenticate BGP sessions, not users.<br><em>B) Pre-shared keys configured on each client device</em> &mdash; PSKs are used for Site-to-Site VPN tunnels.<br><em>C) IAM access keys entered in the client app</em> &mdash; IAM keys are for AWS API calls, not VPN login.
+</div>
+</div>
+
+<!-- Q37 Client VPN -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Client VPN" data-level="B">
+<div class="q-tags"><span class="q-tag">Client VPN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>What is a <em>target network</em> in AWS Client VPN?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The on-premises network behind a customer gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The CIDR range handed out to connected VPN clients</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A VPC subnet associated with the endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The S3 bucket that stores connection logs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A VPC subnet associated with the endpoint<br><br>
+<strong>How to think about it:</strong> <b>Target network</b> = the VPC <b>subnet associated</b> with the endpoint.<br><br>
+<strong>Why C is correct:</strong> Associating subnets lets clients reach the VPC; add subnets in more AZs for high availability.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The on-premises network behind a customer gateway</em> &mdash; Client VPN doesn't use a customer gateway.<br><em>B) The CIDR range handed out to connected VPN clients</em> &mdash; That is the client CIDR range.<br><em>D) The S3 bucket that stores connection logs</em> &mdash; Connection logs go to CloudWatch Logs.
+</div>
+</div>
+
+<!-- Q38 Client VPN -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Client VPN" data-level="B">
+<div class="q-tags"><span class="q-tag">Client VPN</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>Which rule applies to the client CIDR range of a Client VPN endpoint?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A public IPv4 range that you own and registered</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Exactly the same range as the VPC CIDR block</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A /30 per client, carved from the VPC CIDR</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Between /22 and /12, not overlapping the VPC CIDR</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Between /22 and /12, not overlapping the VPC CIDR<br><br>
+<strong>How to think about it:</strong> Client CIDR = <b>/22 to /12</b> and must <b>not overlap</b> the VPC.<br><br>
+<strong>Why D is correct:</strong> Clients get addresses from this pool, so it can't clash with the VPC or the endpoint's routes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A public IPv4 range that you own and registered</em> &mdash; Private ranges are normal for the client pool.<br><em>B) Exactly the same range as the VPC CIDR block</em> &mdash; Overlapping the VPC range is not allowed.<br><em>C) A /30 per client, carved from the VPC CIDR</em> &mdash; A single pool serves all clients; there's no per-client /30.
+</div>
+</div>
+
+<!-- Q39 Client VPN -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Client VPN" data-level="A">
+<div class="q-tags"><span class="q-tag">Client VPN</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Remote users must reach the VPC through Client VPN but keep normal internet traffic on their home connection. What do you enable?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Split-tunnel on the Client VPN endpoint</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A 0.0.0.0/0 route and authorization rule</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Accelerated VPN on the endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A second target network in the same AZ</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Split-tunnel on the Client VPN endpoint<br><br>
+<strong>How to think about it:</strong> Only VPC routes through the tunnel = <b>split-tunnel</b>.<br><br>
+<strong>Why A is correct:</strong> Split-tunnel pushes only the endpoint's routes to clients; other traffic stays local.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A 0.0.0.0/0 route and authorization rule</em> &mdash; That sends all traffic, including internet, through AWS.<br><em>C) Accelerated VPN on the endpoint</em> &mdash; Acceleration is a Site-to-Site VPN option on Transit Gateway.<br><em>D) A second target network in the same AZ</em> &mdash; Extra associations add capacity, not split routing.
+</div>
+</div>
+
+<!-- Q40 Client VPN -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Client VPN" data-level="A">
+<div class="q-tags"><span class="q-tag">Client VPN</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>Users connect to Client VPN successfully but can't reach a database subnet in the VPC. The route exists in the endpoint's route table. What else is required?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An authorization rule for the users' group and CIDR</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Route propagation from a VGW into the endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A customer gateway resource for each remote user</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A public IP address on the database instance</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An authorization rule for the users' group and CIDR<br><br>
+<strong>How to think about it:</strong> Client VPN access = <b>route</b> + <b>authorization rule</b> + security groups.<br><br>
+<strong>Why A is correct:</strong> Without a matching authorization rule, Client VPN blocks the traffic even when a route exists.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Route propagation from a VGW into the endpoint</em> &mdash; Client VPN routes are set on the endpoint, not propagated from a VGW.<br><em>C) A customer gateway resource for each remote user</em> &mdash; Client VPN has no customer gateways.<br><em>D) A public IP address on the database instance</em> &mdash; The database can stay private; the VPN gives private access.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 40;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

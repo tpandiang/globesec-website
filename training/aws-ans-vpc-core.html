@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS ANS VPC Fundamentals &amp; Features - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">ANS-C01</span>
+            <span>VPC Fundamentals &amp; Features</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Advanced Networking Specialty &mdash; VPC Fundamentals &amp; Features</h2>
+        <p>40 refresher questions &mdash; VPC, CIDR, subnets, security groups, NACLs, IGW, NAT, IPv6, secondary CIDRs, ENI, BYOIP &amp; VPC sharing</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/40</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 40 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 40</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="VPC & CIDR" onclick="filterQ(this)">VPC & CIDR</button><button class="filter-btn" data-f="Subnets & IPs" onclick="filterQ(this)">Subnets & IPs</button><button class="filter-btn" data-f="SG & NACL" onclick="filterQ(this)">SG & NACL</button><button class="filter-btn" data-f="Gateways & NAT" onclick="filterQ(this)">Gateways & NAT</button><button class="filter-btn" data-f="IPv6" onclick="filterQ(this)">IPv6</button><button class="filter-btn" data-f="ENI & BYOIP" onclick="filterQ(this)">ENI & BYOIP</button><button class="filter-btn" data-f="VPC Sharing" onclick="filterQ(this)">VPC Sharing</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short ANS-style scenarios.</p>
+
+<!-- Q1 VPC & CIDR -->
+<div class="question" data-type="mc" data-answer="0" data-topic="VPC & CIDR" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC & CIDR</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>What is the scope of an Amazon VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">One Region, across all of its AZs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One Availability Zone only</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">One edge location and its regional PoPs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Global, across every AWS Region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> One Region, across all of its AZs<br><br>
+<strong>How to think about it:</strong> <b>VPC = one Region</b>, spans all its AZs. <b>Subnet = one AZ</b>.<br><br>
+<strong>Why A is correct:</strong> A VPC is a Regional resource, and you can place subnets in any of the Region's AZs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) One Availability Zone only</em> &mdash; That is the scope of a subnet, not of the VPC.<br><em>C) One edge location and its regional PoPs</em> &mdash; Edge locations serve CloudFront and Route 53, not VPCs.<br><em>D) Global, across every AWS Region</em> &mdash; VPCs are never global; joining Regions needs peering, Transit Gateway or Cloud WAN.
+</div>
+</div>
+
+<!-- Q2 VPC & CIDR -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPC & CIDR" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC & CIDR</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>Which IPv4 CIDR block sizes are allowed for a VPC (and for each subnet)?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Between /8 and /32</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Exactly /16 and nothing else</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Between /20 and /24</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Between /16 and /28</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Between /16 and /28<br><br>
+<strong>How to think about it:</strong> VPC and subnet IPv4 size: between <b>/16 (largest) and /28 (smallest)</b>.<br><br>
+<strong>Why D is correct:</strong> AWS accepts IPv4 blocks from /16 (65,536 addresses) down to /28 (16 addresses).<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Between /8 and /32</em> &mdash; A /8 is far too large, and a /32 is a single host.<br><em>B) Exactly /16 and nothing else</em> &mdash; Any size from /16 to /28 is valid, not only /16.<br><em>C) Between /20 and /24</em> &mdash; This range is too narrow; everything from /16 to /28 is allowed.
+</div>
+</div>
+
+<!-- Q3 VPC & CIDR -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPC & CIDR" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC & CIDR</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>How many IP addresses does the CIDR block 192.168.0.0/24 contain?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">254</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">512</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">24</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">256</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> 256<br><br>
+<strong>How to think about it:</strong> Addresses = <b>2^(32 − prefix)</b>. /24 → 2^8 = 256.<br><br>
+<strong>Why D is correct:</strong> 32 − 24 = 8 host bits, and 2^8 = 256 addresses.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 254</em> &mdash; 254 is the usable count on a traditional LAN; the block itself has 256 addresses.<br><em>B) 512</em> &mdash; 512 addresses would be a /23.<br><em>C) 24</em> &mdash; 24 is the prefix length, not the number of addresses.
+</div>
+</div>
+
+<!-- Q4 VPC & CIDR -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPC & CIDR" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC & CIDR</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>Which address ranges are the RFC 1918 private IPv4 ranges recommended for VPC CIDRs?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">169.254.0.0/16 link-local range only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Any public range, with no restriction</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">100.64.0.0/10 shared carrier-grade NAT space</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16<br><br>
+<strong>How to think about it:</strong> RFC 1918 = <b>10/8, 172.16/12, 192.168/16</b>.<br><br>
+<strong>Why D is correct:</strong> These three blocks are the private ranges defined by RFC 1918.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 169.254.0.0/16 link-local range only</em> &mdash; 169.254.0.0/16 is link-local; AWS uses it for metadata and other services.<br><em>B) Any public range, with no restriction</em> &mdash; Using public ranges you do not own causes routing conflicts.<br><em>C) 100.64.0.0/10 shared carrier-grade NAT space</em> &mdash; 100.64.0.0/10 is the carrier-grade NAT shared space (RFC 6598), not RFC 1918.
+</div>
+</div>
+
+<!-- Q5 VPC & CIDR -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPC & CIDR" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC & CIDR</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>A VPC created with 10.0.0.0/16 is running out of addresses. What is the simplest way to add more IPv4 space without rebuilding it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Resize the existing subnets to /20</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Attach an egress-only internet gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Change the primary CIDR from /16 to /8</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Add a secondary IPv4 CIDR to the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Add a secondary IPv4 CIDR to the VPC<br><br>
+<strong>How to think about it:</strong> Out of IPs = add a <b>secondary CIDR block</b> to the VPC, then create subnets in it.<br><br>
+<strong>Why D is correct:</strong> A VPC can hold several IPv4 CIDR blocks, and new subnets can use the extra range.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Resize the existing subnets to /20</em> &mdash; Subnet CIDRs cannot be changed once created.<br><em>B) Attach an egress-only internet gateway</em> &mdash; An egress-only IGW gives IPv6 outbound access; it adds no IPv4 addresses.<br><em>C) Change the primary CIDR from /16 to /8</em> &mdash; The primary CIDR cannot be resized, and /8 is not allowed anyway.
+</div>
+</div>
+
+<!-- Q6 VPC & CIDR -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPC & CIDR" data-level="A">
+<div class="q-tags"><span class="q-tag">VPC & CIDR</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>A team wants to add 10.1.0.0/16 as a secondary CIDR to a VPC that is peered with another VPC already using 10.1.0.0/16. What happens?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It works once an egress-only IGW is attached</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It works if both VPCs are pinned to the same AZ IDs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It works; AWS NATs the overlap automatically</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It fails or breaks routing: the CIDR overlaps the peer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> It fails or breaks routing: the CIDR overlaps the peer<br><br>
+<strong>How to think about it:</strong> Secondary CIDRs must <b>not overlap</b> the VPC's own blocks <b>or routes to peers</b>.<br><br>
+<strong>Why D is correct:</strong> Overlapping CIDRs cannot be routed across a peering connection, so the range must be unique.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It works once an egress-only IGW is attached</em> &mdash; An egress-only IGW is only for IPv6 outbound traffic and does not fix CIDR overlap.<br><em>B) It works if both VPCs are pinned to the same AZ IDs</em> &mdash; VPCs are Regional, and AZ placement does not fix overlap.<br><em>C) It works; AWS NATs the overlap automatically</em> &mdash; VPC peering does no NAT, so overlapping ranges cannot be routed.
+</div>
+</div>
+
+<!-- Q7 Subnets & IPs -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Subnets & IPs" data-level="B">
+<div class="q-tags"><span class="q-tag">Subnets & IPs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>How many IP addresses does AWS reserve in every IPv4 subnet?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">5: the first four and the last one</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">2: the network and broadcast addresses</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">10: the first five and the last five</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">1: just the VPC router address</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> 5: the first four and the last one<br><br>
+<strong>How to think about it:</strong> Reserved per subnet = <b>5</b>: the first 4 and the last 1.<br><br>
+<strong>Why A is correct:</strong> AWS keeps the network address, router (+1), DNS (+2), future use (+3) and the last address.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) 2: the network and broadcast addresses</em> &mdash; A traditional LAN reserves 2, but AWS reserves 5.<br><em>C) 10: the first five and the last five</em> &mdash; The fixed number is 5, whatever the subnet size.<br><em>D) 1: just the VPC router address</em> &mdash; The router is only one of the five reserved addresses.
+</div>
+</div>
+
+<!-- Q8 Subnets & IPs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Subnets & IPs" data-level="B">
+<div class="q-tags"><span class="q-tag">Subnets & IPs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>In subnet 10.0.1.0/24, which address is the VPC router?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">10.0.1.0</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">10.0.1.1</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">10.0.1.255</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">10.0.1.2</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> 10.0.1.1<br><br>
+<strong>How to think about it:</strong> Subnet base <b>+1 = router</b>, +2 = DNS, +3 = reserved.<br><br>
+<strong>Why B is correct:</strong> The address after the network address is the implicit VPC router for that subnet.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) 10.0.1.0</em> &mdash; That is the network address itself.<br><em>C) 10.0.1.255</em> &mdash; The last address is reserved; AWS does not support broadcast.<br><em>D) 10.0.1.2</em> &mdash; Base +2 is reserved for the Amazon DNS server.
+</div>
+</div>
+
+<!-- Q9 Subnets & IPs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Subnets & IPs" data-level="B">
+<div class="q-tags"><span class="q-tag">Subnets & IPs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>What makes a subnet a <em>public</em> subnet?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A NAT gateway deployed inside the subnet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A route of 0.0.0.0/0 to an internet gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A NACL that allows all inbound traffic</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CIDR block carved from a public IPv4 range</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A route of 0.0.0.0/0 to an internet gateway<br><br>
+<strong>How to think about it:</strong> Public subnet = route table has <b>0.0.0.0/0 → internet gateway</b>.<br><br>
+<strong>Why B is correct:</strong> The route to an IGW is the defining feature; instances also need a public IP.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A NAT gateway deployed inside the subnet</em> &mdash; A NAT gateway usually lives in a public subnet, but it does not make a subnet public.<br><em>C) A NACL that allows all inbound traffic</em> &mdash; NACLs filter traffic; they do not create internet routing.<br><em>D) A CIDR block carved from a public IPv4 range</em> &mdash; Public subnets normally use private RFC 1918 ranges too.
+</div>
+</div>
+
+<!-- Q10 Subnets & IPs -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Subnets & IPs" data-level="B">
+<div class="q-tags"><span class="q-tag">Subnets & IPs</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>What is the difference between a public IPv4 address and an Elastic IP address on EC2?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A public IP is the instance's private IP</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Elastic IPs exist only for IPv6 traffic</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Public IPs change on stop/start; EIPs stay fixed</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Public IPs are free; EIPs are billed at a higher rate</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Public IPs change on stop/start; EIPs stay fixed<br><br>
+<strong>How to think about it:</strong> Auto public IP = <b>changes on stop/start</b>. Elastic IP = <b>static</b>, yours until you release it.<br><br>
+<strong>Why C is correct:</strong> An Elastic IP stays allocated to your account until you release it, and can move between instances.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A public IP is the instance's private IP</em> &mdash; The IGW maps the public IP to the private IP; they are different addresses.<br><em>B) Elastic IPs exist only for IPv6 traffic</em> &mdash; Elastic IPs are IPv4 addresses.<br><em>D) Public IPs are free; EIPs are billed at a higher rate</em> &mdash; AWS now charges for every public IPv4 address, in use or idle, at the same hourly rate.
+</div>
+</div>
+
+<!-- Q11 Subnets & IPs -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Subnets & IPs" data-level="A">
+<div class="q-tags"><span class="q-tag">Subnets & IPs</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>A company wants to reduce its bill after AWS started charging for public IPv4 addresses. Which approach helps most?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Swap every auto-assigned public IP for an Elastic IP</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Put instances behind an ALB or NAT and adopt IPv6</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Release the private IPs of idle instances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Move all the instances into the default VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Put instances behind an ALB or NAT and adopt IPv6<br><br>
+<strong>How to think about it:</strong> Cut IPv4 cost = <b>fewer public IPv4</b>: use private subnets + NAT/ALB, or <b>IPv6</b>.<br><br>
+<strong>Why B is correct:</strong> Fewer public IPv4 addresses means lower charges, and IPv6 addresses are not billed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Swap every auto-assigned public IP for an Elastic IP</em> &mdash; Elastic IPs are billed too, so this saves nothing.<br><em>C) Release the private IPs of idle instances</em> &mdash; Private IPs are free, and every instance needs one.<br><em>D) Move all the instances into the default VPC</em> &mdash; The default VPC still assigns billed public IPv4 addresses.
+</div>
+</div>
+
+<!-- Q12 SG & NACL -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SG & NACL" data-level="B">
+<div class="q-tags"><span class="q-tag">SG & NACL</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>Which statement correctly compares security groups and network ACLs?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Both support explicit allow and explicit deny rules</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">SGs are stateless; NACLs are fully stateful</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">NACLs attach to ENIs; SGs attach to subnets</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">SGs are stateful allow-only; NACLs are stateless</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> SGs are stateful allow-only; NACLs are stateless<br><br>
+<strong>How to think about it:</strong> SG = <b>stateful, allow-only, ENI level</b>. NACL = <b>stateless, allow + deny, subnet level</b>.<br><br>
+<strong>Why D is correct:</strong> Return traffic is automatic for SGs, but NACLs need rules both ways and also support deny.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Both support explicit allow and explicit deny rules</em> &mdash; Security groups have only allow rules.<br><em>B) SGs are stateless; NACLs are fully stateful</em> &mdash; This is the reverse of how they work.<br><em>C) NACLs attach to ENIs; SGs attach to subnets</em> &mdash; Security groups attach to ENIs, and NACLs attach to subnets.
+</div>
+</div>
+
+<!-- Q13 SG & NACL -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SG & NACL" data-level="B">
+<div class="q-tags"><span class="q-tag">SG & NACL</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>You must block one malicious IP address from reaching a subnet. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A low-numbered NACL deny rule for that IP</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Remove the subnet's route to the IGW</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A security group inbound deny rule for that IP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A new DHCP option set for the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A low-numbered NACL deny rule for that IP<br><br>
+<strong>How to think about it:</strong> Block a specific IP = <b>NACL deny rule</b> (SGs can't deny).<br><br>
+<strong>Why A is correct:</strong> NACLs support deny rules and are evaluated in number order, so the low-numbered deny wins.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Remove the subnet's route to the IGW</em> &mdash; That cuts off all internet traffic, not just one IP.<br><em>C) A security group inbound deny rule for that IP</em> &mdash; Security groups cannot express deny rules.<br><em>D) A new DHCP option set for the VPC</em> &mdash; DHCP options control DNS and NTP settings, not filtering.
+</div>
+</div>
+
+<!-- Q14 SG & NACL -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SG & NACL" data-level="B">
+<div class="q-tags"><span class="q-tag">SG & NACL</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>In what order are network ACL rules evaluated?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Highest number first; the first match applies</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">All rules apply; the most permissive wins</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Lowest number first; the first match applies</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Deny rules always win, whatever their number</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Lowest number first; the first match applies<br><br>
+<strong>How to think about it:</strong> NACL = <b>lowest rule number first</b>; first match wins.<br><br>
+<strong>Why C is correct:</strong> Once a rule matches, the rest are ignored, so order matters.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Highest number first; the first match applies</em> &mdash; Evaluation starts at the lowest number.<br><em>B) All rules apply; the most permissive wins</em> &mdash; That describes security groups, where all allow rules are combined.<br><em>D) Deny rules always win, whatever their number</em> &mdash; The rule number decides, not the action.
+</div>
+</div>
+
+<!-- Q15 SG & NACL -->
+<div class="question" data-type="mc" data-answer="2" data-topic="SG & NACL" data-level="A">
+<div class="q-tags"><span class="q-tag">SG & NACL</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>A custom NACL allows inbound TCP 443 from 0.0.0.0/0, but clients still time out. Outbound allows only TCP 443. What is missing?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A NAT gateway placed in the same subnet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An inbound security group rule for TCP 80</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An outbound allow for ports 1024-65535</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">enableDnsHostnames turned on for the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An outbound allow for ports 1024-65535<br><br>
+<strong>How to think about it:</strong> Stateless NACL = allow <b>return traffic on ephemeral ports (1024-65535)</b>.<br><br>
+<strong>Why C is correct:</strong> Replies go to the client's ephemeral port, and a stateless NACL needs a rule for them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A NAT gateway placed in the same subnet</em> &mdash; Inbound HTTPS to a public server does not need NAT.<br><em>B) An inbound security group rule for TCP 80</em> &mdash; The service is on 443; port 80 is not involved.<br><em>D) enableDnsHostnames turned on for the VPC</em> &mdash; DNS settings do not affect NACL filtering.
+</div>
+</div>
+
+<!-- Q16 SG & NACL -->
+<div class="question" data-type="mc" data-answer="0" data-topic="SG & NACL" data-level="B">
+<div class="q-tags"><span class="q-tag">SG & NACL</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>What does a newly created custom network ACL do by default?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Denies all traffic in both directions</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Allows all inbound and outbound traffic</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Allows outbound but denies all inbound</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Copies the rules of the default NACL</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Denies all traffic in both directions<br><br>
+<strong>How to think about it:</strong> Default NACL = allow all. <b>New custom NACL = deny all</b> until you add rules.<br><br>
+<strong>Why A is correct:</strong> Only the final * deny rule exists until you add rules, so nothing passes.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Allows all inbound and outbound traffic</em> &mdash; That is how the VPC's default NACL behaves, not a new custom one.<br><em>C) Allows outbound but denies all inbound</em> &mdash; That describes a default security group, not a NACL.<br><em>D) Copies the rules of the default NACL</em> &mdash; A new NACL starts empty except for the deny-all rule.
+</div>
+</div>
+
+<!-- Q17 SG & NACL -->
+<div class="question" data-type="mc" data-answer="3" data-topic="SG & NACL" data-level="A">
+<div class="q-tags"><span class="q-tag">SG & NACL</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>App servers must accept traffic only from the web tier, whose instances scale in and out often. What is the best security group rule?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Allow inbound from 0.0.0.0/0 on the port</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Allow inbound from each web server's IP</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A NACL rule that names the web tier's SG</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Allow inbound from the web tier's SG ID</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Allow inbound from the web tier's SG ID<br><br>
+<strong>How to think about it:</strong> Changing IPs = <b>reference the source security group</b>, not CIDRs.<br><br>
+<strong>Why D is correct:</strong> A security-group reference follows instances as they scale, with no IP lists to maintain.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Allow inbound from 0.0.0.0/0 on the port</em> &mdash; This opens the app tier to everyone.<br><em>B) Allow inbound from each web server's IP</em> &mdash; IPs change during scaling, so the list would always be out of date.<br><em>C) A NACL rule that names the web tier's SG</em> &mdash; NACLs accept only CIDR ranges, not security groups.
+</div>
+</div>
+
+<!-- Q18 Gateways & NAT -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Gateways & NAT" data-level="B">
+<div class="q-tags"><span class="q-tag">Gateways & NAT</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>What does an internet gateway (IGW) do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Links the VPC to an on-premises data centre</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Gives private instances outbound-only access</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Connects public-IP resources to the internet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Filters inbound traffic like a firewall</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Connects public-IP resources to the internet<br><br>
+<strong>How to think about it:</strong> IGW = <b>horizontally scaled, HA</b> gateway; does 1:1 NAT for public IPv4 and routes IPv6.<br><br>
+<strong>Why C is correct:</strong> The IGW is a managed, redundant VPC component that maps public IPv4 to private; one per VPC.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Links the VPC to an on-premises data centre</em> &mdash; That is a virtual private gateway or Direct Connect.<br><em>B) Gives private instances outbound-only access</em> &mdash; That is a NAT gateway.<br><em>D) Filters inbound traffic like a firewall</em> &mdash; An IGW does not filter traffic; security groups and NACLs do.
+</div>
+</div>
+
+<!-- Q19 Gateways & NAT -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Gateways & NAT" data-level="B">
+<div class="q-tags"><span class="q-tag">Gateways & NAT</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>Instances in a private subnet need outbound IPv4 internet access for patches but must not accept inbound connections. What should you use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A NAT gateway in a public subnet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An Elastic IP on every private instance</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A VPC gateway endpoint for the internet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An egress-only internet gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A NAT gateway in a public subnet<br><br>
+<strong>How to think about it:</strong> Private IPv4 outbound-only = <b>NAT gateway</b> in a public subnet.<br><br>
+<strong>Why A is correct:</strong> The private subnet's default route points to it; it hides private IPs and allows only connections that start inside.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An Elastic IP on every private instance</em> &mdash; Public IPs would expose the instances to inbound traffic.<br><em>C) A VPC gateway endpoint for the internet</em> &mdash; Gateway endpoints reach only S3 and DynamoDB, not the whole internet.<br><em>D) An egress-only internet gateway</em> &mdash; Egress-only IGWs handle IPv6 only, not IPv4.
+</div>
+</div>
+
+<!-- Q20 Gateways & NAT -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Gateways & NAT" data-level="B">
+<div class="q-tags"><span class="q-tag">Gateways & NAT</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>Which statement about a NAT gateway is true?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">You must disable its source/destination check</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It can double as an SSH bastion host</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">You must patch its operating system monthly</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It takes no security group; use subnet NACLs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> It takes no security group; use subnet NACLs<br><br>
+<strong>How to think about it:</strong> NAT GW = <b>managed, no security group, no SSH</b>; control it with NACLs.<br><br>
+<strong>Why D is correct:</strong> NAT gateways are fully managed and do not accept security groups.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) You must disable its source/destination check</em> &mdash; That step is needed for a NAT instance, not a NAT gateway.<br><em>B) It can double as an SSH bastion host</em> &mdash; You cannot log in to a NAT gateway.<br><em>C) You must patch its operating system monthly</em> &mdash; AWS manages a NAT gateway completely; there is no OS to reach.
+</div>
+</div>
+
+<!-- Q21 Gateways & NAT -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Gateways & NAT" data-level="B">
+<div class="q-tags"><span class="q-tag">Gateways & NAT</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>You are building a NAT instance on EC2. Which setting must you change?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Place the instance in a private subnet</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Enable enhanced networking (ENA)</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Disable the source/destination check</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Attach an IAM role with S3 access</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Disable the source/destination check<br><br>
+<strong>How to think about it:</strong> NAT instance = <b>disable source/destination check</b>.<br><br>
+<strong>Why C is correct:</strong> A NAT instance forwards traffic not addressed to itself, which the check would block.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Place the instance in a private subnet</em> &mdash; A NAT instance must sit in a public subnet with a public IP.<br><em>B) Enable enhanced networking (ENA)</em> &mdash; Enhanced networking helps performance but is not required for NAT.<br><em>D) Attach an IAM role with S3 access</em> &mdash; IAM roles do not affect packet forwarding.
+</div>
+</div>
+
+<!-- Q22 Gateways & NAT -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Gateways & NAT" data-level="A">
+<div class="q-tags"><span class="q-tag">Gateways & NAT</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>A workload uses one zonal NAT gateway in AZ-a for private subnets in AZ-a, AZ-b and AZ-c. What is the risk, and the fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AZ-a failure cuts all AZs; add a NAT GW per AZ</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Replace it with an internet gateway per AZ</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add a second Elastic IP to the NAT gateway</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">No risk; it fails over to other AZs by itself</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> AZ-a failure cuts all AZs; add a NAT GW per AZ<br><br>
+<strong>How to think about it:</strong> Zonal NAT GW HA = <b>one NAT gateway per AZ</b>, each AZ routes to its own.<br><br>
+<strong>Why A is correct:</strong> A zonal NAT gateway is redundant only inside its AZ; per-AZ gateways also avoid cross-AZ data charges.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Replace it with an internet gateway per AZ</em> &mdash; There is only one IGW per VPC, and private instances would still need NAT.<br><em>C) Add a second Elastic IP to the NAT gateway</em> &mdash; More IPs add port capacity, not AZ resilience.<br><em>D) No risk; it fails over to other AZs by itself</em> &mdash; A zonal NAT gateway does not move to another AZ.
+</div>
+</div>
+
+<!-- Q23 Gateways & NAT -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Gateways & NAT" data-level="A">
+<div class="q-tags"><span class="q-tag">Gateways & NAT</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>Two VPCs have overlapping CIDRs and must talk to a shared service. Which NAT option translates addresses without using the internet?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A private NAT gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An egress-only internet gateway</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A VPC peering connection</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A public NAT gateway with an EIP</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A private NAT gateway<br><br>
+<strong>How to think about it:</strong> Overlap + no internet = <b>private NAT gateway</b> (or PrivateLink).<br><br>
+<strong>Why A is correct:</strong> It translates source IPs into a routable, non-overlapping range over a TGW or VGW, with no IGW.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An egress-only internet gateway</em> &mdash; This is for IPv6 outbound only and does no address translation.<br><em>C) A VPC peering connection</em> &mdash; Peering cannot route between overlapping CIDRs.<br><em>D) A public NAT gateway with an EIP</em> &mdash; That path goes out to the internet, which is what you want to avoid.
+</div>
+</div>
+
+<!-- Q24 IPv6 -->
+<div class="question" data-type="mc" data-answer="1" data-topic="IPv6" data-level="B">
+<div class="q-tags"><span class="q-tag">IPv6</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>Which statement about IPv6 in a VPC is true?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A VPC can hold only a single /64 block</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">All VPC IPv6 addresses are globally unique</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">IPv6 fully replaces IPv4 inside the VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">IPv6 addresses are private and need NAT</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> All VPC IPv6 addresses are globally unique<br><br>
+<strong>How to think about it:</strong> IPv6 in AWS = <b>globally unique and public</b>; reachability is controlled by routes.<br><br>
+<strong>Why B is correct:</strong> There is no private IPv6 pool like RFC 1918, so routes and security rules decide exposure.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A VPC can hold only a single /64 block</em> &mdash; An Amazon-provided VPC block is a /56, and subnets usually get /64 blocks.<br><em>C) IPv6 fully replaces IPv4 inside the VPC</em> &mdash; Most VPCs are dual-stack; IPv6-only subnets are also possible.<br><em>D) IPv6 addresses are private and need NAT</em> &mdash; AWS does not NAT IPv6 to reach IPv6 hosts; the addresses are already public.
+</div>
+</div>
+
+<!-- Q25 IPv6 -->
+<div class="question" data-type="mc" data-answer="1" data-topic="IPv6" data-level="B">
+<div class="q-tags"><span class="q-tag">IPv6</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>What does an egress-only internet gateway provide?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Inbound-only IPv6 internet access</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Outbound-only IPv6 internet access</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A private IPv6 connection to S3</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Outbound-only IPv4 internet access</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Outbound-only IPv6 internet access<br><br>
+<strong>How to think about it:</strong> IPv6 outbound only = <b>egress-only IGW</b> (the IPv6 "NAT gateway").<br><br>
+<strong>Why B is correct:</strong> It is stateful, so replies come back but new inbound connections are refused.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Inbound-only IPv6 internet access</em> &mdash; It does the opposite; it blocks unsolicited inbound traffic.<br><em>C) A private IPv6 connection to S3</em> &mdash; That is a gateway endpoint.<br><em>D) Outbound-only IPv4 internet access</em> &mdash; IPv4 outbound-only access uses a NAT gateway.
+</div>
+</div>
+
+<!-- Q26 IPv6 -->
+<div class="question" data-type="mc" data-answer="2" data-topic="IPv6" data-level="A">
+<div class="q-tags"><span class="q-tag">IPv6</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>An IPv6-only subnet hosts instances that must call an IPv4-only internet API. What combination enables this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A VPC gateway endpoint for the API</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A ::/0 route pointing to an egress-only IGW</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">DNS64 on the subnet plus NAT64 on a NAT GW</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Elastic IPs on the IPv6-only instances</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> DNS64 on the subnet plus NAT64 on a NAT GW<br><br>
+<strong>How to think about it:</strong> IPv6 → IPv4 = <b>DNS64 + NAT64</b> on a NAT gateway.<br><br>
+<strong>Why C is correct:</strong> DNS64 returns synthetic 64:ff9b::/96 answers, and the NAT gateway translates them to IPv4.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A VPC gateway endpoint for the API</em> &mdash; Gateway endpoints are only for S3 and DynamoDB.<br><em>B) A ::/0 route pointing to an egress-only IGW</em> &mdash; An egress-only IGW only reaches IPv6 destinations.<br><em>D) Elastic IPs on the IPv6-only instances</em> &mdash; IPv6-only instances have no IPv4 address for an EIP to map to.
+</div>
+</div>
+
+<!-- Q27 IPv6 -->
+<div class="question" data-type="mc" data-answer="1" data-topic="IPv6" data-level="B">
+<div class="q-tags"><span class="q-tag">IPv6</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>How do you add IPv6 to an existing IPv4-only VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Recreate the VPC with IPv6 at creation</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Associate an IPv6 CIDR, then update subnets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable IPv6 on the VPC's NAT gateway</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Let AWS convert each IPv4 address to IPv6</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Associate an IPv6 CIDR, then update subnets<br><br>
+<strong>How to think about it:</strong> Dual-stack = <b>associate an IPv6 CIDR</b> with the VPC and subnets, then update routes and rules.<br><br>
+<strong>Why B is correct:</strong> IPv6 is opt-in: give subnets /64 blocks and add IPv6 routes and rules beside IPv4.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Recreate the VPC with IPv6 at creation</em> &mdash; IPv6 can be added to an existing VPC at any time.<br><em>C) Enable IPv6 on the VPC's NAT gateway</em> &mdash; NAT gateways do not turn on IPv6 for a VPC.<br><em>D) Let AWS convert each IPv4 address to IPv6</em> &mdash; AWS gives new IPv6 addresses; it does not convert IPv4 ones.
+</div>
+</div>
+
+<!-- Q28 IPv6 -->
+<div class="question" data-type="mc" data-answer="3" data-topic="IPv6" data-level="A">
+<div class="q-tags"><span class="q-tag">IPv6</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>Instances in a dual-stack subnet can reach IPv4 sites but IPv6 connections fail. The route table has 0.0.0.0/0 → IGW. What is the likely gap?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">IPv6 works only in the account's default VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">IPv6 needs a NAT gateway to reach the IGW</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Jumbo frames must be enabled for IPv6</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">No ::/0 route, or no IPv6 SG/NACL rules</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> No ::/0 route, or no IPv6 SG/NACL rules<br><br>
+<strong>How to think about it:</strong> Dual-stack = <b>separate ::/0 route</b> and IPv6 SG/NACL rules.<br><br>
+<strong>Why D is correct:</strong> IPv4 and IPv6 need separate routes and rules; 0.0.0.0/0 covers only IPv4.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) IPv6 works only in the account's default VPC</em> &mdash; Any VPC can use IPv6.<br><em>B) IPv6 needs a NAT gateway to reach the IGW</em> &mdash; IPv6 does not use NAT to reach IPv6 internet hosts.<br><em>C) Jumbo frames must be enabled for IPv6</em> &mdash; MTU settings do not decide IPv6 reachability.
+</div>
+</div>
+
+<!-- Q29 ENI & BYOIP -->
+<div class="question" data-type="mc" data-answer="0" data-topic="ENI & BYOIP" data-level="B">
+<div class="q-tags"><span class="q-tag">ENI & BYOIP</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>What is an Elastic Network Interface (ENI)?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A virtual NIC with IPs, a MAC and SGs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An IPsec VPN tunnel endpoint in the VPC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A physical NIC that you rent from AWS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Regional pool of public IP addresses</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A virtual NIC with IPs, a MAC and SGs<br><br>
+<strong>How to think about it:</strong> ENI = <b>virtual network card</b>: private IPs, MAC, security groups.<br><br>
+<strong>Why A is correct:</strong> Every instance has a primary ENI, and you can attach more within the same AZ.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An IPsec VPN tunnel endpoint in the VPC</em> &mdash; VPN tunnels end on a VGW or TGW, not on an ENI.<br><em>C) A physical NIC that you rent from AWS</em> &mdash; ENIs are virtual; you never handle the hardware.<br><em>D) A Regional pool of public IP addresses</em> &mdash; That describes an IPAM pool or Elastic IPs, not an ENI.
+</div>
+</div>
+
+<!-- Q30 ENI & BYOIP -->
+<div class="question" data-type="mc" data-answer="1" data-topic="ENI & BYOIP" data-level="B">
+<div class="q-tags"><span class="q-tag">ENI & BYOIP</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>Which statement about ENIs is true?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">ENIs can be teamed to add up bandwidth</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A secondary ENI can move within the same AZ</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Security groups attach to single IPs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Any ENI can move to an instance in another Region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A secondary ENI can move within the same AZ<br><br>
+<strong>How to think about it:</strong> Primary ENI is <b>fixed</b>; secondary ENIs move <b>within the same AZ</b>.<br><br>
+<strong>Why B is correct:</strong> The primary ENI cannot be detached, and ENIs are tied to a subnet, so to one AZ.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) ENIs can be teamed to add up bandwidth</em> &mdash; ENIs do not support NIC teaming for more bandwidth.<br><em>C) Security groups attach to single IPs</em> &mdash; Security groups attach to ENIs, not to single IPs.<br><em>D) Any ENI can move to an instance in another Region</em> &mdash; ENIs cannot leave their subnet's AZ.
+</div>
+</div>
+
+<!-- Q31 ENI & BYOIP -->
+<div class="question" data-type="mc" data-answer="0" data-topic="ENI & BYOIP" data-level="A">
+<div class="q-tags"><span class="q-tag">ENI & BYOIP</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>A licensed application is tied to a MAC address. You want to fail it over to a standby instance in the same AZ. What should you do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Move a secondary ENI to the standby</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Re-map an Elastic IP to the standby</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Fail over to an instance in another Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Copy the MAC address in the standby OS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Move a secondary ENI to the standby<br><br>
+<strong>How to think about it:</strong> MAC-bound license = <b>move the secondary ENI</b>; the MAC goes with it.<br><br>
+<strong>Why A is correct:</strong> The ENI keeps its MAC and private IP, so the license still works after failover.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Re-map an Elastic IP to the standby</em> &mdash; An EIP keeps the public IP, not the MAC address.<br><em>C) Fail over to an instance in another Region</em> &mdash; ENIs cannot cross Regions.<br><em>D) Copy the MAC address in the standby OS</em> &mdash; AWS sets the MAC per ENI; you cannot change it in the OS.
+</div>
+</div>
+
+<!-- Q32 ENI & BYOIP -->
+<div class="question" data-type="mc" data-answer="2" data-topic="ENI & BYOIP" data-level="B">
+<div class="q-tags"><span class="q-tag">ENI & BYOIP</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>Services such as RDS and Lambda create ENIs inside your subnets, but you cannot manage them fully. What are these called?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">ECS trunk port interfaces</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Service-linked Elastic IPs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Requester-managed ENIs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Egress-only network gateways</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Requester-managed ENIs<br><br>
+<strong>How to think about it:</strong> ENIs AWS creates for a service = <b>requester-managed ENIs</b>.<br><br>
+<strong>Why C is correct:</strong> A service creates and controls these ENIs in your VPC to give its resources private access.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) ECS trunk port interfaces</em> &mdash; Trunking is an ECS or EKS feature, not the general name for service ENIs.<br><em>B) Service-linked Elastic IPs</em> &mdash; Elastic IPs are addresses, not interfaces.<br><em>D) Egress-only network gateways</em> &mdash; These are IPv6 gateways, not service ENIs.
+</div>
+</div>
+
+<!-- Q33 ENI & BYOIP -->
+<div class="question" data-type="mc" data-answer="2" data-topic="ENI & BYOIP" data-level="B">
+<div class="q-tags"><span class="q-tag">ENI & BYOIP</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>EKS nodes run out of pod IPs because each ENI can hold only a few secondary IPs. Which feature assigns IP blocks to an ENI instead of single addresses?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An Elastic IP attached to each pod</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">NIC teaming across two ENIs</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Prefix delegation of /28 blocks</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A larger VPC CIDR block alone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Prefix delegation of /28 blocks<br><br>
+<strong>How to think about it:</strong> More pod IPs per ENI = <b>prefix delegation</b> (/28 IPv4 prefixes).<br><br>
+<strong>Why C is correct:</strong> Each prefix slot gives 16 addresses (or an IPv6 /80), so a node can run many more pods.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An Elastic IP attached to each pod</em> &mdash; Pods get private IPs; EIPs do not raise the pod count.<br><em>B) NIC teaming across two ENIs</em> &mdash; ENIs do not support teaming.<br><em>D) A larger VPC CIDR block alone</em> &mdash; More VPC space alone does not raise the per-ENI address limit.
+</div>
+</div>
+
+<!-- Q34 ENI & BYOIP -->
+<div class="question" data-type="mc" data-answer="1" data-topic="ENI & BYOIP" data-level="B">
+<div class="q-tags"><span class="q-tag">ENI & BYOIP</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>Why would a company use Bring Your Own IP (BYOIP)?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">To encrypt traffic between peered VPCs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">To keep its own public IPs and reputation</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">To get free IPv4 addresses from AWS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">To allow overlapping private VPC CIDRs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> To keep its own public IPs and reputation<br><br>
+<strong>How to think about it:</strong> Keep <b>IP reputation / allow-lists</b> = <b>BYOIP</b>.<br><br>
+<strong>Why B is correct:</strong> BYOIP lets AWS advertise your range, so partner allow-lists and reputation carry over.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) To encrypt traffic between peered VPCs</em> &mdash; BYOIP has nothing to do with encryption.<br><em>C) To get free IPv4 addresses from AWS</em> &mdash; BYOIP uses addresses you already own.<br><em>D) To allow overlapping private VPC CIDRs</em> &mdash; BYOIP is about public ranges, not private overlap.
+</div>
+</div>
+
+<!-- Q35 ENI & BYOIP -->
+<div class="question" data-type="mc" data-answer="0" data-topic="ENI & BYOIP" data-level="A">
+<div class="q-tags"><span class="q-tag">ENI & BYOIP</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>What must be in place before AWS can advertise your BYOIP IPv4 range?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">RIR registration, a ROA, and at least a /24</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The range already advertised by AWS</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only a support ticket asking AWS to add it</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A range smaller than /28 in the RIR</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> RIR registration, a ROA, and at least a /24<br><br>
+<strong>How to think about it:</strong> BYOIP proof = <b>ROA at the RIR</b> authorising Amazon's ASNs; <b>/24</b> is the smallest public IPv4.<br><br>
+<strong>Why A is correct:</strong> AWS checks ownership and the ROA for Amazon's ASNs, and /24 is the most specific public IPv4 prefix.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) The range already advertised by AWS</em> &mdash; You bring the range; AWS does not advertise it beforehand.<br><em>C) Only a support ticket asking AWS to add it</em> &mdash; Proof of ownership through the RIR and a ROA is required.<br><em>D) A range smaller than /28 in the RIR</em> &mdash; Prefixes smaller than /24 are not accepted on the internet.
+</div>
+</div>
+
+<!-- Q36 VPC Sharing -->
+<div class="question" data-type="mc" data-answer="2" data-topic="VPC Sharing" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC Sharing</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>What does VPC sharing allow?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Letting participants edit owner route tables</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Letting any customer copy your VPC setup</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Sharing subnets with Organization accounts via RAM</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Merging two VPCs from different Regions into one VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Sharing subnets with Organization accounts via RAM<br><br>
+<strong>How to think about it:</strong> VPC sharing = <b>RAM shares subnets</b>; owner runs the network, participants run resources.<br><br>
+<strong>Why C is correct:</strong> Participant accounts launch resources into the owner's subnets, with no peering or TGW between them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Letting participants edit owner route tables</em> &mdash; Only the VPC owner manages route tables, NACLs and gateways.<br><em>B) Letting any customer copy your VPC setup</em> &mdash; Sharing is between accounts you choose in your Organization.<br><em>D) Merging two VPCs from different Regions into one VPC</em> &mdash; Sharing does not merge VPCs; it shares subnets.
+</div>
+</div>
+
+<!-- Q37 VPC Sharing -->
+<div class="question" data-type="mc" data-answer="1" data-topic="VPC Sharing" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC Sharing</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>In a shared VPC, what can a participant account do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Modify other participants' EC2 instances</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Manage its own instances and security groups</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Edit the shared VPC's NACLs and route tables</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Delete the subnet it was given by the owner</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Manage its own instances and security groups<br><br>
+<strong>How to think about it:</strong> Participant = <b>own resources + own security groups</b>; owner = <b>network plumbing</b>.<br><br>
+<strong>Why B is correct:</strong> Participants control their own workloads but cannot change the owner's network resources.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Modify other participants' EC2 instances</em> &mdash; Participants cannot change each other's resources.<br><em>C) Edit the shared VPC's NACLs and route tables</em> &mdash; The owner keeps control of NACLs and route tables.<br><em>D) Delete the subnet it was given by the owner</em> &mdash; Only the owner can delete or change shared subnets.
+</div>
+</div>
+
+<!-- Q38 VPC Sharing -->
+<div class="question" data-type="mc" data-answer="1" data-topic="VPC Sharing" data-level="A">
+<div class="q-tags"><span class="q-tag">VPC Sharing</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>A platform team wants 30 app accounts to use one centrally managed network while keeping billing and IAM separate. They want the fewest peering links. What fits best?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Client VPN endpoint in every account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A shared VPC owned by a network account</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A full mesh of peering across all 30 VPCs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">One AWS account that runs all of the apps</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A shared VPC owned by a network account<br><br>
+<strong>How to think about it:</strong> Many accounts, one network, no peering mesh = <b>shared VPC</b> (+TGW for the edges).<br><br>
+<strong>Why B is correct:</strong> Subnets are shared to the app accounts, so billing and IAM stay separate with no peering.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Client VPN endpoint in every account</em> &mdash; Client VPN is for remote users, not for sharing networks between accounts.<br><em>C) A full mesh of peering across all 30 VPCs</em> &mdash; That means 435 peering links, which is hard to manage.<br><em>D) One AWS account that runs all of the apps</em> &mdash; That loses the account-level separation they asked for.
+</div>
+</div>
+
+<!-- Q39 VPC Sharing -->
+<div class="question" data-type="mc" data-answer="2" data-topic="VPC Sharing" data-level="A">
+<div class="q-tags"><span class="q-tag">VPC Sharing</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Two business units must connect, but their VPCs both use 10.0.0.0/16. Which option avoids renumbering?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Attach both VPCs to one Transit Gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create a VPC peering connection between them</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Expose the service through AWS PrivateLink</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Share one VPC's subnets with the other</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Expose the service through AWS PrivateLink<br><br>
+<strong>How to think about it:</strong> Overlapping CIDRs = <b>PrivateLink</b> (expose the service) or <b>private NAT</b>.<br><br>
+<strong>Why C is correct:</strong> PrivateLink uses an NLB-backed endpoint service and endpoint ENIs, so overlapping CIDRs do not matter.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Attach both VPCs to one Transit Gateway</em> &mdash; A TGW still cannot route between identical CIDRs.<br><em>B) Create a VPC peering connection between them</em> &mdash; Peering is not allowed between overlapping CIDRs.<br><em>D) Share one VPC's subnets with the other</em> &mdash; Sharing subnets does not connect a second overlapping VPC.
+</div>
+</div>
+
+<!-- Q40 VPC Sharing -->
+<div class="question" data-type="mc" data-answer="3" data-topic="VPC Sharing" data-level="B">
+<div class="q-tags"><span class="q-tag">VPC Sharing</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>How do Amazon WorkSpaces reach resources in your VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only across the public internet via HTTPS</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Through an S3 gateway endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only over a Direct Connect link</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Through ENIs placed in your VPC subnets</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Through ENIs placed in your VPC subnets<br><br>
+<strong>How to think about it:</strong> WorkSpaces/AppStream = <b>ENIs in your VPC subnets</b>, then normal VPC routing.<br><br>
+<strong>Why D is correct:</strong> The desktops follow your routes, security groups and NACLs, giving private access to your resources.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only across the public internet via HTTPS</em> &mdash; WorkSpaces use ENIs in your VPC for private access.<br><em>B) Through an S3 gateway endpoint</em> &mdash; Gateway endpoints reach only S3 and DynamoDB.<br><em>C) Only over a Direct Connect link</em> &mdash; DX is optional and is only needed for on-premises access.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 40;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

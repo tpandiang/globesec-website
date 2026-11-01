@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS ANS Route 53 &amp; Hybrid DNS - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">ANS-C01</span>
+            <span>Route 53 &amp; Hybrid DNS</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Advanced Networking Specialty &mdash; Route 53 &amp; Hybrid DNS</h2>
+        <p>40 refresher questions &mdash; Records, public &amp; private hosted zones, alias vs CNAME, routing policies, health checks, registrars, DNSSEC, Resolver endpoints, forwarding rules, query logging</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/40</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 40 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 40</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="Records & Zones" onclick="filterQ(this)">Records & Zones</button><button class="filter-btn" data-f="Alias" onclick="filterQ(this)">Alias</button><button class="filter-btn" data-f="Routing Policies" onclick="filterQ(this)">Routing Policies</button><button class="filter-btn" data-f="Health Checks" onclick="filterQ(this)">Health Checks</button><button class="filter-btn" data-f="Domains & DNSSEC" onclick="filterQ(this)">Domains & DNSSEC</button><button class="filter-btn" data-f="Resolver & Hybrid DNS" onclick="filterQ(this)">Resolver & Hybrid DNS</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short ANS-style scenarios.</p>
+
+<!-- Q1 Records & Zones -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Records & Zones" data-level="B">
+<div class="q-tags"><span class="q-tag">Records & Zones</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>What is the difference between a <b>public</b> and a <b>private</b> hosted zone?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Public zones hold A records; private zones hold only CNAMEs</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Private zones need a Resolver inbound endpoint before they work</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Public serves the internet; private serves associated VPCs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Public zones are free to run; private zones cost extra per VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Public serves the internet; private serves associated VPCs<br><br>
+<strong>How to think about it:</strong> <b>Public</b> zone = answers the internet. <b>Private</b> zone = answers only the VPCs it is associated with.<br><br>
+<strong>Why C is correct:</strong> A private hosted zone is resolved by the Route 53 Resolver only for queries from VPCs associated with it.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Public zones hold A records; private zones hold only CNAMEs</em> &mdash; Both kinds of zone support the usual record types.<br><em>B) Private zones need a Resolver inbound endpoint before they work</em> &mdash; Inbound endpoints are only for on-premises clients. VPCs resolve private zones directly.<br><em>D) Public zones are free to run; private zones cost extra per VPC</em> &mdash; Both kinds of hosted zone are billed the same way, with a monthly fee plus query charges.
+</div>
+</div>
+
+<!-- Q2 Records & Zones -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Records & Zones" data-level="B">
+<div class="q-tags"><span class="q-tag">Records & Zones</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>Which two VPC settings must be turned on for a private hosted zone to resolve inside a VPC?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A custom DHCP options set and an internet gateway</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">enableNetworkAddressUsageMetrics and DNS64</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">enableDnsSupport and enableDnsHostnames</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Route 53 query logging and a CloudWatch log group</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> enableDnsSupport and enableDnsHostnames<br><br>
+<strong>How to think about it:</strong> Private hosted zone = <b>enableDnsSupport</b> + <b>enableDnsHostnames</b> both set to true.<br><br>
+<strong>Why C is correct:</strong> DNS support turns on the .2 Resolver, and DNS hostnames is also required for private hosted zone resolution.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A custom DHCP options set and an internet gateway</em> &mdash; Private zones work with the AmazonProvidedDNS default, and they don't need internet access.<br><em>B) enableNetworkAddressUsageMetrics and DNS64</em> &mdash; These are unrelated VPC features for metrics and IPv6 translation.<br><em>D) Route 53 query logging and a CloudWatch log group</em> &mdash; Logging is optional and has no effect on resolution.
+</div>
+</div>
+
+<!-- Q3 Records & Zones -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Records & Zones" data-level="B">
+<div class="q-tags"><span class="q-tag">Records & Zones</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>Which record type maps a hostname to an IPv6 address?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A record</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AAAA record</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">PTR record</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CNAME record</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> AAAA record<br><br>
+<strong>How to think about it:</strong> <b>A</b> = IPv4, <b>AAAA</b> = IPv6, <b>CNAME</b> = name to name, <b>NS</b> = delegation.<br><br>
+<strong>Why B is correct:</strong> An AAAA record holds a 128-bit IPv6 address for the name.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A record</em> &mdash; An A record holds an IPv4 address.<br><em>C) PTR record</em> &mdash; PTR records do reverse lookups, from an IP address to a name.<br><em>D) CNAME record</em> &mdash; A CNAME maps one name to another name, not to an IPv6 address.
+</div>
+</div>
+
+<!-- Q4 Records & Zones -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Records & Zones" data-level="B">
+<div class="q-tags"><span class="q-tag">Records & Zones</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>Which two records does Route 53 create automatically in every new hosted zone?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CAA and DS for certificates and DNSSEC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">NS and SOA</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A and AAAA for the zone apex</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">MX and TXT for mail validation</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> NS and SOA<br><br>
+<strong>How to think about it:</strong> New hosted zone = <b>NS</b> + <b>SOA</b> created for you.<br><br>
+<strong>Why B is correct:</strong> The NS record lists the zone's four name servers, and the SOA holds the zone's authority settings.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) CAA and DS for certificates and DNSSEC</em> &mdash; CAA and DS records are created only if you choose to add them.<br><em>C) A and AAAA for the zone apex</em> &mdash; Apex address records are yours to create; they are not automatic.<br><em>D) MX and TXT for mail validation</em> &mdash; Mail records are optional and are never created automatically.
+</div>
+</div>
+
+<!-- Q5 Records & Zones -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Records & Zones" data-level="B">
+<div class="q-tags"><span class="q-tag">Records & Zones</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>What does a record's TTL control?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">How long a record lasts before Route 53 deletes it</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">How often Route 53 health-checks the record's endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">How many hops a DNS query may take before being dropped</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">How long resolvers and clients may cache the DNS answer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> How long resolvers and clients may cache the DNS answer<br><br>
+<strong>How to think about it:</strong> <b>TTL</b> = how long resolvers cache the answer. High = fewer queries; low = faster changes.<br><br>
+<strong>Why D is correct:</strong> A long TTL lowers query volume and cost, but changes take longer to reach clients.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) How long a record lasts before Route 53 deletes it</em> &mdash; Records stay until you delete them; the TTL is only a caching hint.<br><em>B) How often Route 53 health-checks the record's endpoint</em> &mdash; Health check intervals are set on the health check, not with the TTL.<br><em>C) How many hops a DNS query may take before being dropped</em> &mdash; That is closer to the IP header's TTL field, not the DNS record TTL.
+</div>
+</div>
+
+<!-- Q6 Records & Zones -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Records & Zones" data-level="B">
+<div class="q-tags"><span class="q-tag">Records & Zones</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>A team wants to manage <code>dev.example.com</code> in its own hosted zone while <code>example.com</code> stays elsewhere. What links the two?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">NS records for dev.example.com in the parent zone</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Associating both zones with the same VPC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CNAME for dev.example.com that points to the new zone</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An alias record at the parent apex for the subdomain zone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> NS records for dev.example.com in the parent zone<br><br>
+<strong>How to think about it:</strong> Subdomain in its own zone = <b>NS records</b> for the subdomain in the parent zone (delegation).<br><br>
+<strong>Why A is correct:</strong> Delegation puts the subdomain zone's name servers into the parent zone, so resolvers follow the referral.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Associating both zones with the same VPC</em> &mdash; VPC association applies only to private zones and does not delegate anything.<br><em>C) A CNAME for dev.example.com that points to the new zone</em> &mdash; A CNAME points one name at another name. It cannot delegate a zone.<br><em>D) An alias record at the parent apex for the subdomain zone</em> &mdash; Alias targets are AWS resources, not hosted zones.
+</div>
+</div>
+
+<!-- Q7 Records & Zones -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Records & Zones" data-level="A">
+<div class="q-tags"><span class="q-tag">Records & Zones</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>Both a public zone <code>example.com</code> and a private zone <code>example.com</code> are associated with a VPC. An instance asks for <code>api.example.com</code>, which exists only in the public zone. What happens?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The query is forwarded to the on-premises DNS servers</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">NXDOMAIN, because the matching private zone is authoritative</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It gets both answers, merged from the two zones</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It gets the public answer, because Resolver falls back automatically</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> NXDOMAIN, because the matching private zone is authoritative<br><br>
+<strong>How to think about it:</strong> If a private zone matches the name, the VPC uses <b>only the private zone</b>. A missing record means <b>NXDOMAIN</b>, with no fallback to public.<br><br>
+<strong>Why B is correct:</strong> The Resolver uses the most specific matching private zone and does not fall back to the public zone when a record is missing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The query is forwarded to the on-premises DNS servers</em> &mdash; That happens only if a forwarding rule matches. None was set up here.<br><em>C) It gets both answers, merged from the two zones</em> &mdash; Route 53 never merges answers from different zones.<br><em>D) It gets the public answer, because Resolver falls back automatically</em> &mdash; There is no fallback. Copy the record into the private zone, or use a different private zone name.
+</div>
+</div>
+
+<!-- Q8 Records & Zones -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Records & Zones" data-level="A">
+<div class="q-tags"><span class="q-tag">Records & Zones</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>A private hosted zone in Account A must be resolvable from a VPC in Account B. What is the process?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Authorize in A, then associate the VPC from B</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Copy the zone file into a new private zone in Account B</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Peer the two VPCs; peering shares DNS zones automatically</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Share the hosted zone with AWS RAM to Account B</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Authorize in A, then associate the VPC from B<br><br>
+<strong>How to think about it:</strong> Cross-account private zone = <b>create-vpc-association-authorization</b> in A, then <b>associate-vpc-with-hosted-zone</b> from B.<br><br>
+<strong>Why A is correct:</strong> The zone owner creates an authorization for the other account's VPC, and that account then completes the association with the CLI, SDK or API.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Copy the zone file into a new private zone in Account B</em> &mdash; This would work, but it creates two copies to maintain instead of one association.<br><em>C) Peer the two VPCs; peering shares DNS zones automatically</em> &mdash; Peering does not share private hosted zones.<br><em>D) Share the hosted zone with AWS RAM to Account B</em> &mdash; RAM shares Resolver rules, not private hosted zones.
+</div>
+</div>
+
+<!-- Q9 Alias -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Alias" data-level="B">
+<div class="q-tags"><span class="q-tag">Alias</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>Why choose an <b>alias</b> record instead of a CNAME for <code>example.com</code> (the zone apex)?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CNAME records cannot point to any name outside AWS at all</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Alias records encrypt the DNS response sent to the client</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Alias records support much longer TTLs than CNAME records</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">CNAMEs are not allowed at the zone apex, but alias records are</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> CNAMEs are not allowed at the zone apex, but alias records are<br><br>
+<strong>How to think about it:</strong> Zone apex to an AWS resource = <b>alias</b>. CNAME is not allowed at the apex.<br><br>
+<strong>Why D is correct:</strong> DNS rules forbid a CNAME at the apex next to the SOA and NS records. An alias returns A or AAAA answers, so it can live there.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) CNAME records cannot point to any name outside AWS at all</em> &mdash; A CNAME can point at any hostname, inside or outside AWS.<br><em>B) Alias records encrypt the DNS response sent to the client</em> &mdash; Neither record type encrypts responses.<br><em>C) Alias records support much longer TTLs than CNAME records</em> &mdash; For an alias you cannot set a TTL; it uses the target's TTL.
+</div>
+</div>
+
+<!-- Q10 Alias -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Alias" data-level="B">
+<div class="q-tags"><span class="q-tag">Alias</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>Which target can an alias record <b>not</b> point to?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An EC2 instance's public DNS name</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An Application Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An S3 bucket configured as a static website</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudFront distribution</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> An EC2 instance's public DNS name<br><br>
+<strong>How to think about it:</strong> Alias targets = AWS resources (ELB, CloudFront, S3 website, API GW, VPC endpoint, GA, same-zone record). Not an <b>EC2 DNS name</b>.<br><br>
+<strong>Why A is correct:</strong> EC2 DNS names are not valid alias targets. Use an A record with the IP, or a CNAME.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An Application Load Balancer</em> &mdash; ELB load balancers are standard alias targets.<br><em>C) An S3 bucket configured as a static website</em> &mdash; S3 website endpoints are alias targets when the bucket name matches the record name.<br><em>D) A CloudFront distribution</em> &mdash; CloudFront distributions are standard alias targets.
+</div>
+</div>
+
+<!-- Q11 Alias -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Alias" data-level="B">
+<div class="q-tags"><span class="q-tag">Alias</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>How are DNS queries to an alias record that points to an AWS resource such as an ALB billed?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">They are billed at twice the standard query rate</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">They are free only when the TTL is set over one day</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">They are free of any Route 53 query charge</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">They are billed to the account that owns the target</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> They are free of any Route 53 query charge<br><br>
+<strong>How to think about it:</strong> Alias to an AWS resource = <b>no query charge</b>.<br><br>
+<strong>Why C is correct:</strong> Queries to alias records that point at AWS resources have no charge, unlike CNAME queries.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) They are billed at twice the standard query rate</em> &mdash; There is no premium; such alias queries are free.<br><em>B) They are free only when the TTL is set over one day</em> &mdash; You cannot set a TTL on an alias, and the free billing does not depend on TTL.<br><em>D) They are billed to the account that owns the target</em> &mdash; The record is free to query; no other account is billed.
+</div>
+</div>
+
+<!-- Q12 Alias -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Alias" data-level="B">
+<div class="q-tags"><span class="q-tag">Alias</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>Which record type should point <code>db.example.com</code> at an RDS endpoint name?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An A record with the RDS instance's current IP address</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A CNAME record pointing to the RDS endpoint hostname</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An alias record pointing directly to the RDS instance</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An NS record that delegates db.example.com to RDS</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A CNAME record pointing to the RDS endpoint hostname<br><br>
+<strong>How to think about it:</strong> RDS endpoint = <b>CNAME</b> (RDS is not an alias target).<br><br>
+<strong>Why B is correct:</strong> RDS endpoints are DNS names whose IPs can change at failover, and alias does not support RDS.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An A record with the RDS instance's current IP address</em> &mdash; The IP changes during failover or maintenance, so the record would go stale.<br><em>C) An alias record pointing directly to the RDS instance</em> &mdash; RDS is not among the supported alias targets.<br><em>D) An NS record that delegates db.example.com to RDS</em> &mdash; RDS does not host DNS zones, so there is nothing to delegate to.
+</div>
+</div>
+
+<!-- Q13 Alias -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Alias" data-level="A">
+<div class="q-tags"><span class="q-tag">Alias</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>Clients in a VPC should reach an interface endpoint for a partner service as <code>partner.internal.corp</code>. What record should you create in your private zone?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A PTR record that maps the endpoint IP to the name</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An A record with one of the endpoint ENI IP addresses</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An alias to the interface VPC endpoint DNS name</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An NS record delegating to the partner's hosted zone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An alias to the interface VPC endpoint DNS name<br><br>
+<strong>How to think about it:</strong> Friendly name for an interface endpoint = <b>alias</b> to the VPC endpoint DNS name.<br><br>
+<strong>Why C is correct:</strong> Interface endpoints are supported alias targets, and the alias follows the endpoint's ENI IPs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A PTR record that maps the endpoint IP to the name</em> &mdash; PTR records do reverse lookups, not forward lookups.<br><em>B) An A record with one of the endpoint ENI IP addresses</em> &mdash; This works but hard-codes one AZ's IP and loses the endpoint's multi-AZ behaviour.<br><em>D) An NS record delegating to the partner's hosted zone</em> &mdash; The partner's zone is not reachable from your VPC, and delegation is the wrong tool here.
+</div>
+</div>
+
+<!-- Q14 Routing Policies -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Routing Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>Which routing policy splits traffic by percentage, for example 90% to v1 and 10% to v2?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Weighted</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Failover</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Latency-based</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Multivalue answer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Weighted<br><br>
+<strong>How to think about it:</strong> Percentage split, canary or blue/green = <b>weighted</b>.<br><br>
+<strong>Why A is correct:</strong> Each record gets a weight, and Route 53 answers in proportion to weight over the total.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Failover</em> &mdash; Failover is active-passive: the secondary is used only when the primary is unhealthy.<br><em>C) Latency-based</em> &mdash; Latency routing picks the Region with the lowest latency, not a percentage.<br><em>D) Multivalue answer</em> &mdash; Multivalue returns up to eight healthy records at random, with no weights.
+</div>
+</div>
+
+<!-- Q15 Routing Policies -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Routing Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>Which routing policy sends users to the AWS Region that gives them the lowest network latency?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Simple routing</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Geolocation</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">IP-based routing</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Latency-based</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Latency-based<br><br>
+<strong>How to think about it:</strong> Fastest Region for the user = <b>latency-based</b> routing.<br><br>
+<strong>Why D is correct:</strong> Route 53 uses measured latency between user networks and AWS Regions to pick the record.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Simple routing</em> &mdash; Simple returns a fixed answer with no regional awareness.<br><em>B) Geolocation</em> &mdash; Geolocation routes by the user's country or continent, not by measured latency.<br><em>C) IP-based routing</em> &mdash; IP-based routing maps client CIDR blocks you list, not measured latency.
+</div>
+</div>
+
+<!-- Q16 Routing Policies -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Routing Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>Which routing policy answers by the user's continent, country or US state, for example for content licensing?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Geolocation</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Latency-based</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Geoproximity</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Weighted</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Geolocation<br><br>
+<strong>How to think about it:</strong> Where the user <b>is</b> (country, continent, state) = <b>geolocation</b>. Add a <b>default</b> record for unmatched users.<br><br>
+<strong>Why A is correct:</strong> Geolocation matches the user's location. A default record catches locations that have no match.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Latency-based</em> &mdash; Latency follows network performance, which may cross country borders.<br><em>C) Geoproximity</em> &mdash; Geoproximity uses the distance to resources plus a bias, not fixed country rules.<br><em>D) Weighted</em> &mdash; Weighted routing ignores where the user is.
+</div>
+</div>
+
+<!-- Q17 Routing Policies -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Routing Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>Which routing policy lets you widen or shrink a Region's share of traffic with a <b>bias</b> value?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Geoproximity</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Latency-based</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Weighted</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Geolocation</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Geoproximity<br><br>
+<strong>How to think about it:</strong> <b>Bias</b> on a geographic area = <b>geoproximity</b> (now in plain records or Traffic Flow).<br><br>
+<strong>Why A is correct:</strong> Geoproximity routes to the nearest resource, and a bias grows or shrinks each resource's area. It can now be set up without Traffic Flow.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Latency-based</em> &mdash; Latency routing has no bias setting.<br><em>C) Weighted</em> &mdash; Weights split traffic, but they don't use geography.<br><em>D) Geolocation</em> &mdash; Geolocation uses fixed location matches with no bias setting.
+</div>
+</div>
+
+<!-- Q18 Routing Policies -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Routing Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>What does <b>multivalue answer</b> routing return?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Every record in the set, healthy or not, in a fixed order</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Only the single record with the highest weight</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The record from the Region closest to the user</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Up to eight healthy records, picked at random</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Up to eight healthy records, picked at random<br><br>
+<strong>How to think about it:</strong> <b>Multivalue</b> = up to <b>8 healthy</b> records per answer, with client-side spreading. It is not a load balancer.<br><br>
+<strong>Why D is correct:</strong> With health checks attached, unhealthy values are left out, so clients spread load over the healthy ones.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Every record in the set, healthy or not, in a fixed order</em> &mdash; That is closer to simple routing with several values. It ignores health.<br><em>B) Only the single record with the highest weight</em> &mdash; Weights belong to weighted routing.<br><em>C) The record from the Region closest to the user</em> &mdash; That is geoproximity or latency routing.
+</div>
+</div>
+
+<!-- Q19 Routing Policies -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Routing Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>Which routing policy uses CIDR blocks you supply, for example to send one ISP's users to a set endpoint?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Geolocation routing with a country list</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Weighted routing with a weight for each ISP</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Simple routing with several IP values</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">IP-based routing with CIDR collections</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> IP-based routing with CIDR collections<br><br>
+<strong>How to think about it:</strong> Route by client CIDR = <b>IP-based routing</b> (CIDR collections).<br><br>
+<strong>Why D is correct:</strong> You group client CIDRs into collections and map each one to a record, which is useful for ISP-specific routing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Geolocation routing with a country list</em> &mdash; Countries are larger than ISP ranges and are not chosen by CIDR.<br><em>B) Weighted routing with a weight for each ISP</em> &mdash; Weights don't know where a query comes from.<br><em>C) Simple routing with several IP values</em> &mdash; Simple routing returns the same values to everyone.
+</div>
+</div>
+
+<!-- Q20 Routing Policies -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Routing Policies" data-level="B">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>What does a <b>simple</b> routing record with three IP values return, and can it use health checks?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The IP closest to the user, with health checks required</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One IP chosen by weight, with optional health checks</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only the first IP, with the others kept as failover backups</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">All three IPs in random order, and it cannot be health-checked</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> All three IPs in random order, and it cannot be health-checked<br><br>
+<strong>How to think about it:</strong> <b>Simple</b> = all values returned, client picks one, <b>no health checks</b>.<br><br>
+<strong>Why D is correct:</strong> Simple routing returns every value and the client chooses one. Use multivalue if unhealthy IPs must be left out.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The IP closest to the user, with health checks required</em> &mdash; Proximity-based answers need latency or geoproximity routing.<br><em>B) One IP chosen by weight, with optional health checks</em> &mdash; Weights and health checks are features of the other routing policies.<br><em>C) Only the first IP, with the others kept as failover backups</em> &mdash; Simple routing has no primary/secondary idea; that is failover routing.
+</div>
+</div>
+
+<!-- Q21 Routing Policies -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Routing Policies" data-level="A">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>A geolocation policy has records for Europe and North America only. A user in Japan gets no answer. What fixes this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Increase the TTL so the user's resolver caches more</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add a geolocation record with the Default location</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Attach a health check to the European record</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Switch the records to latency-based routing</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Add a geolocation record with the Default location<br><br>
+<strong>How to think about it:</strong> Geolocation gaps = add a <b>Default</b> location record.<br><br>
+<strong>Why B is correct:</strong> The Default record answers queries whose location matches no specific record, so users don't get no-answer.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Increase the TTL so the user's resolver caches more</em> &mdash; Caching an empty answer longer does not help.<br><em>C) Attach a health check to the European record</em> &mdash; Health does not change the location matching that is missing.<br><em>D) Switch the records to latency-based routing</em> &mdash; This changes the whole design. A Default record fixes the gap directly.
+</div>
+</div>
+
+<!-- Q22 Routing Policies -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Routing Policies" data-level="A">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>You want a primary site with automatic DNS switchover to a static S3 maintenance page if the primary fails. What setup fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Weighted routing at 100 and 0 with no health checks</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Multivalue routing that returns both the site and the S3 bucket</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Latency routing between the site and the S3 Region</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Failover routing: health-checked primary, secondary alias to S3</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Failover routing: health-checked primary, secondary alias to S3<br><br>
+<strong>How to think about it:</strong> Active-passive = <b>failover</b> routing: primary with a health check, secondary alias to S3.<br><br>
+<strong>Why D is correct:</strong> When the primary health check fails, Route 53 answers with the secondary record, which points at the S3 site.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Weighted routing at 100 and 0 with no health checks</em> &mdash; Without health checks Route 53 cannot tell that the primary failed.<br><em>B) Multivalue routing that returns both the site and the S3 bucket</em> &mdash; Clients would get the maintenance page some of the time even while the primary is healthy.<br><em>C) Latency routing between the site and the S3 Region</em> &mdash; Latency decides by speed, not by health, so it would not switch.
+</div>
+</div>
+
+<!-- Q23 Routing Policies -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Routing Policies" data-level="A">
+<div class="q-tags"><span class="q-tag">Routing Policies</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>A complex policy chains geolocation, then latency, then failover, and the team wants a visual editor with versioning. What should they use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Traffic Flow with a traffic policy and policy record</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Route 53 Resolver forwarding rules for each layer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Route 53 Application Recovery Controller cells</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A CloudFormation template with a single simple record</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Traffic Flow with a traffic policy and policy record<br><br>
+<strong>How to think about it:</strong> Visual, versioned, nested routing trees = <b>Traffic Flow</b> policies and policy records.<br><br>
+<strong>Why A is correct:</strong> Traffic Flow builds nested routing trees in a visual editor and keeps versions you can apply to several zones.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Route 53 Resolver forwarding rules for each layer</em> &mdash; Resolver rules forward queries. They don't route traffic between endpoints.<br><em>C) Route 53 Application Recovery Controller cells</em> &mdash; ARC handles readiness and routing controls. It is not a visual DNS policy editor.<br><em>D) A CloudFormation template with a single simple record</em> &mdash; A simple record cannot express nested routing logic.
+</div>
+</div>
+
+<!-- Q24 Health Checks -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Health Checks" data-level="B">
+<div class="q-tags"><span class="q-tag">Health Checks</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>Which three kinds of Route 53 health checks exist?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Instance, volume, and ENI status</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Ping, traceroute, and SNMP based</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Endpoint, calculated, CloudWatch alarm</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Public, private, and hybrid zone checks</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Endpoint, calculated, CloudWatch alarm<br><br>
+<strong>How to think about it:</strong> Health checks = <b>endpoint</b>, <b>calculated</b> (combines children), <b>CloudWatch alarm</b>.<br><br>
+<strong>Why C is correct:</strong> You can monitor an endpoint directly, combine child checks with AND/OR logic, or follow a CloudWatch alarm.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Instance, volume, and ENI status</em> &mdash; These are EC2 status ideas, not Route 53 health check types.<br><em>B) Ping, traceroute, and SNMP based</em> &mdash; Route 53 health checks use HTTP, HTTPS or TCP, not these tools.<br><em>D) Public, private, and hybrid zone checks</em> &mdash; Health checks are not grouped by zone type.
+</div>
+</div>
+
+<!-- Q25 Health Checks -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Health Checks" data-level="B">
+<div class="q-tags"><span class="q-tag">Health Checks</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>Route 53 health checkers run outside your VPC. How do you health-check a resource that has only a private IP?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Point an endpoint health check directly at the private IP</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Put the health checker inside the VPC with an interface endpoint</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Create a CloudWatch alarm on a metric and health-check the alarm</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Use a calculated check with no child health checks</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Create a CloudWatch alarm on a metric and health-check the alarm<br><br>
+<strong>How to think about it:</strong> Private resource = <b>CloudWatch metric + alarm</b>, then a health check on the alarm.<br><br>
+<strong>Why C is correct:</strong> The checkers cannot reach private IPs, so you watch a metric and let the health check follow the alarm state.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Point an endpoint health check directly at the private IP</em> &mdash; The checkers run on the internet and cannot reach private addresses.<br><em>B) Put the health checker inside the VPC with an interface endpoint</em> &mdash; There is no in-VPC endpoint for Route 53 health checkers.<br><em>D) Use a calculated check with no child health checks</em> &mdash; A calculated check needs child checks, and those would still need to reach the resource.
+</div>
+</div>
+
+<!-- Q26 Health Checks -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Health Checks" data-level="B">
+<div class="q-tags"><span class="q-tag">Health Checks</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>Which HTTP status codes does a Route 53 HTTP or HTTPS endpoint health check count as healthy?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Any response received within ten seconds</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Any 2xx or 3xx status code</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only exactly 200 OK</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Any status except 5xx server errors</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Any 2xx or 3xx status code<br><br>
+<strong>How to think about it:</strong> Healthy = <b>2xx or 3xx</b> (optionally plus a string match in the first 5,120 bytes).<br><br>
+<strong>Why B is correct:</strong> Responses from 200 to 399 pass. You can also require a string to appear in the first part of the body.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Any response received within ten seconds</em> &mdash; The status code matters, not only that a reply arrived.<br><em>C) Only exactly 200 OK</em> &mdash; Redirects (3xx) also count as healthy.<br><em>D) Any status except 5xx server errors</em> &mdash; 4xx client errors count as failures.
+</div>
+</div>
+
+<!-- Q27 Health Checks -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Health Checks" data-level="A">
+<div class="q-tags"><span class="q-tag">Health Checks</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>A web tier is healthy only if at least 2 of its 3 regional endpoints pass. How do you express this in Route 53?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A CloudWatch alarm on HealthCheckPercentageHealthy only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A multivalue record that needs two healthy answers</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A calculated check with child checks and threshold 2</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Three endpoint checks with the failure threshold set to 2</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A calculated check with child checks and threshold 2<br><br>
+<strong>How to think about it:</strong> Combine several checks with a threshold = <b>calculated health check</b>.<br><br>
+<strong>Why C is correct:</strong> Calculated checks report healthy when the set number of child checks pass.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A CloudWatch alarm on HealthCheckPercentageHealthy only</em> &mdash; This metric belongs to one health check, so the calculated check is the native way.<br><em>B) A multivalue record that needs two healthy answers</em> &mdash; Multivalue drops unhealthy records, but it does not create a combined health status.<br><em>D) Three endpoint checks with the failure threshold set to 2</em> &mdash; The failure threshold counts failed attempts in a row for one check, not across endpoints.
+</div>
+</div>
+
+<!-- Q28 Domains & DNSSEC -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Domains & DNSSEC" data-level="B">
+<div class="q-tags"><span class="q-tag">Domains & DNSSEC</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>You bought a domain at a third-party registrar but want Route 53 to host its DNS. What must you do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create a private zone and associate it with any VPC</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Create a public zone, then set its NS servers at the registrar</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Add a CNAME at the registrar that points to Route 53</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Transfer the domain to Route 53 before creating any zone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Create a public zone, then set its NS servers at the registrar<br><br>
+<strong>How to think about it:</strong> Registrar is not the DNS host. Create a <b>public hosted zone</b>, then set the <b>NS records at the registrar</b>.<br><br>
+<strong>Why B is correct:</strong> The registrar's name server settings must list the four Route 53 name servers of your hosted zone.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Create a private zone and associate it with any VPC</em> &mdash; A private zone is not visible on the internet.<br><em>C) Add a CNAME at the registrar that points to Route 53</em> &mdash; Delegation uses NS records, not a CNAME.<br><em>D) Transfer the domain to Route 53 before creating any zone</em> &mdash; A transfer is optional, because Route 53 can host DNS for domains registered anywhere.
+</div>
+</div>
+
+<!-- Q29 Domains & DNSSEC -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Domains & DNSSEC" data-level="B">
+<div class="q-tags"><span class="q-tag">Domains & DNSSEC</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>What does DNSSEC protect against?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Eavesdropping, by encrypting DNS queries in transit</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">DDoS floods aimed at the hosted zone's name servers</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Unauthorized IAM users changing records in the zone</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Forged or tampered DNS answers, such as cache poisoning</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Forged or tampered DNS answers, such as cache poisoning<br><br>
+<strong>How to think about it:</strong> <b>DNSSEC</b> = signed records = stops <b>spoofing and cache poisoning</b>. It does <b>not</b> encrypt.<br><br>
+<strong>Why D is correct:</strong> DNSSEC signs records so resolvers can check where they came from and that they are intact.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Eavesdropping, by encrypting DNS queries in transit</em> &mdash; DNSSEC gives authenticity, not secrecy. Encryption comes from DoH or DoT.<br><em>B) DDoS floods aimed at the hosted zone's name servers</em> &mdash; Shield and Route 53's anycast design handle volume attacks.<br><em>C) Unauthorized IAM users changing records in the zone</em> &mdash; Who can change records is controlled by IAM policies, not by DNSSEC.
+</div>
+</div>
+
+<!-- Q30 Domains & DNSSEC -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Domains & DNSSEC" data-level="B">
+<div class="q-tags"><span class="q-tag">Domains & DNSSEC</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>When you enable DNSSEC signing in Route 53, which key do <b>you</b> manage, and where?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The ZSK, from a symmetric KMS key in the zone's Region</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The KSK, via an asymmetric KMS key in us-east-1</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">No key at all, because Route 53 fully manages both</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Both keys, uploaded as PEM files to the hosted zone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The KSK, via an asymmetric KMS key in us-east-1<br><br>
+<strong>How to think about it:</strong> <b>KSK</b> = yours, backed by an asymmetric customer-managed <b>KMS key in us-east-1</b>. <b>ZSK</b> = AWS-managed.<br><br>
+<strong>Why B is correct:</strong> Route 53 builds the key-signing key from your KMS key (ECC_NIST_P256) in N. Virginia, and manages the zone-signing key itself.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The ZSK, from a symmetric KMS key in the zone's Region</em> &mdash; AWS manages the ZSK, and the KSK needs an asymmetric key in us-east-1.<br><em>C) No key at all, because Route 53 fully manages both</em> &mdash; You create or select the KMS key behind the KSK.<br><em>D) Both keys, uploaded as PEM files to the hosted zone</em> &mdash; You don't upload keys. The KSK comes from KMS.
+</div>
+</div>
+
+<!-- Q31 Domains & DNSSEC -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Domains & DNSSEC" data-level="B">
+<div class="q-tags"><span class="q-tag">Domains & DNSSEC</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>Which DNSSEC feature does Route 53 support only for <b>public</b> hosted zones?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Alias records that point at AWS resources</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Health checks on records in the zone</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Weighted routing between multiple records</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">DNSSEC signing of the zone's records</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> DNSSEC signing of the zone's records<br><br>
+<strong>How to think about it:</strong> DNSSEC <b>signing</b> = public hosted zones only. <b>Validation</b> is done by the Resolver.<br><br>
+<strong>Why D is correct:</strong> Route 53 signs public hosted zones. Private zones cannot be signed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Alias records that point at AWS resources</em> &mdash; Alias records work in both zone types.<br><em>B) Health checks on records in the zone</em> &mdash; Health checks work with both public and private records, and they are not part of DNSSEC.<br><em>C) Weighted routing between multiple records</em> &mdash; Weighted routing works in both zone types.
+</div>
+</div>
+
+<!-- Q32 Domains & DNSSEC -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Domains & DNSSEC" data-level="A">
+<div class="q-tags"><span class="q-tag">Domains & DNSSEC</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>After DNSSEC signing is enabled in Route 53 for <code>example.com</code>, validating resolvers still treat the zone as unsigned. What step is missing?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Add a DS record in the parent zone at the registrar</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Lower every record TTL to under 60 seconds</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Enable query logging for the public hosted zone</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Turn on DNSSEC validation in the VPC's Route 53 Resolver</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Add a DS record in the parent zone at the registrar<br><br>
+<strong>How to think about it:</strong> Chain of trust = add a <b>DS record</b> in the <b>parent</b> zone (through the registrar).<br><br>
+<strong>Why A is correct:</strong> The DS record links the parent to your KSK. Without it, the chain of trust stops at the parent.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Lower every record TTL to under 60 seconds</em> &mdash; Lowering TTLs before signing is good practice, but it does not finish the chain.<br><em>C) Enable query logging for the public hosted zone</em> &mdash; Logging is only for watching queries.<br><em>D) Turn on DNSSEC validation in the VPC's Route 53 Resolver</em> &mdash; Validation in your VPC does not create the public chain of trust.
+</div>
+</div>
+
+<!-- Q33 Resolver & Hybrid DNS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Resolver & Hybrid DNS" data-level="B">
+<div class="q-tags"><span class="q-tag">Resolver & Hybrid DNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>What IP address does a VPC's Route 53 Resolver (AmazonProvidedDNS) use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Any IP you assign when creating a DHCP options set</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The VPC CIDR base plus two, or 169.254.169.253</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The first usable IP in every subnet, the .1 address</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">8.8.8.8, forwarded through the internet gateway</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> The VPC CIDR base plus two, or 169.254.169.253<br><br>
+<strong>How to think about it:</strong> VPC DNS = <b>VPC base + 2</b> (e.g. 10.0.0.2) or <b>169.254.169.253</b>.<br><br>
+<strong>Why B is correct:</strong> The Resolver listens at the reserved .2 address of the primary CIDR and at the link-local 169.254.169.253.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Any IP you assign when creating a DHCP options set</em> &mdash; That replaces the default with custom servers. It is not the Resolver's own address.<br><em>C) The first usable IP in every subnet, the .1 address</em> &mdash; The .1 address is the subnet router. DNS is at .2.<br><em>D) 8.8.8.8, forwarded through the internet gateway</em> &mdash; That is Google's public DNS. VPCs use the internal Resolver.
+</div>
+</div>
+
+<!-- Q34 Resolver & Hybrid DNS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Resolver & Hybrid DNS" data-level="B">
+<div class="q-tags"><span class="q-tag">Resolver & Hybrid DNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>On-premises servers must resolve names in a Route 53 private hosted zone. Which component do they forward queries to?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The VPC's .2 Resolver address over Direct Connect</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Route 53 Resolver outbound endpoint in the VPC</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Route 53 Resolver inbound endpoint in the VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A public hosted zone with copies of the private records</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A Route 53 Resolver inbound endpoint in the VPC<br><br>
+<strong>How to think about it:</strong> On-prem to AWS = <b>Inbound</b> endpoint. AWS to on-prem = <b>Outbound</b> endpoint + rules.<br><br>
+<strong>Why C is correct:</strong> Inbound endpoints are ENIs with private IPs that on-premises DNS servers can forward to over DX or VPN.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The VPC's .2 Resolver address over Direct Connect</em> &mdash; The .2 address only answers queries that start inside the VPC.<br><em>B) A Route 53 Resolver outbound endpoint in the VPC</em> &mdash; Outbound endpoints send queries from the VPC to on-premises, which is the other direction.<br><em>D) A public hosted zone with copies of the private records</em> &mdash; This would expose internal names on the internet.
+</div>
+</div>
+
+<!-- Q35 Resolver & Hybrid DNS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Resolver & Hybrid DNS" data-level="B">
+<div class="q-tags"><span class="q-tag">Resolver & Hybrid DNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>What makes the VPC Resolver send queries for <code>corp.local</code> to on-premises DNS servers?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A DHCP options set listing corp.local as the domain name</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An inbound endpoint with corp.local as its listening domain</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A forwarding rule for corp.local tied to an outbound endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A private hosted zone named corp.local in the VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A forwarding rule for corp.local tied to an outbound endpoint<br><br>
+<strong>How to think about it:</strong> Conditional forwarding from the VPC = <b>outbound endpoint + forwarding rule</b> for the domain.<br><br>
+<strong>Why C is correct:</strong> The rule names the domain and the target IPs, and the outbound endpoint ENIs send the queries.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A DHCP options set listing corp.local as the domain name</em> &mdash; The DHCP domain name sets the search suffix. It does not forward queries.<br><em>B) An inbound endpoint with corp.local as its listening domain</em> &mdash; Inbound endpoints receive queries and have no domain rules.<br><em>D) A private hosted zone named corp.local in the VPC</em> &mdash; That would make AWS the authority instead of forwarding to on-premises.
+</div>
+</div>
+
+<!-- Q36 Resolver & Hybrid DNS -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Resolver & Hybrid DNS" data-level="B">
+<div class="q-tags"><span class="q-tag">Resolver & Hybrid DNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>How can several accounts' VPCs use the same Resolver forwarding rules without copying them?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Peer every VPC with the endpoint VPC to inherit the rules</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Attach the rules to a Transit Gateway route table</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Copy the rules into each account with a StackSet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Share the rules with AWS RAM and associate them with each VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Share the rules with AWS RAM and associate them with each VPC<br><br>
+<strong>How to think about it:</strong> Share Resolver rules across accounts = <b>AWS RAM</b>.<br><br>
+<strong>Why D is correct:</strong> RAM-shared rules can be linked to VPCs in other accounts while the outbound endpoints stay central.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Peer every VPC with the endpoint VPC to inherit the rules</em> &mdash; Peering does not share Resolver rules.<br><em>B) Attach the rules to a Transit Gateway route table</em> &mdash; Transit Gateway routes packets and has no knowledge of DNS rules.<br><em>C) Copy the rules into each account with a StackSet</em> &mdash; This works, but you would need separate endpoints and get copies to maintain, which RAM avoids.
+</div>
+</div>
+
+<!-- Q37 Resolver & Hybrid DNS -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Resolver & Hybrid DNS" data-level="B">
+<div class="q-tags"><span class="q-tag">Resolver & Hybrid DNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>How should Resolver endpoints be deployed for high availability?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">With one IP per VPC subnet, as many as possible</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">In one AZ, with Route 53 failover to another Region</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">With IP addresses in at least two Availability Zones</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Behind a Network Load Balancer for health checks</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> With IP addresses in at least two Availability Zones<br><br>
+<strong>How to think about it:</strong> Resolver endpoint HA = IPs in <b>at least 2 AZs</b>. Each IP handles about <b>10,000 QPS</b>.<br><br>
+<strong>Why C is correct:</strong> Each endpoint needs at least two IPs, and placing them in different AZs keeps DNS working during an AZ outage.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) With one IP per VPC subnet, as many as possible</em> &mdash; Capacity comes from the IP count, but HA needs separate AZs, not maximum spread.<br><em>B) In one AZ, with Route 53 failover to another Region</em> &mdash; A single AZ is a single point of failure for hybrid DNS.<br><em>D) Behind a Network Load Balancer for health checks</em> &mdash; Endpoints are managed ENIs. You do not put a load balancer in front of them.
+</div>
+</div>
+
+<!-- Q38 Resolver & Hybrid DNS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Resolver & Hybrid DNS" data-level="B">
+<div class="q-tags"><span class="q-tag">Resolver & Hybrid DNS</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>Where can Route 53 <b>Resolver query logs</b> for VPC queries be delivered?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudWatch Logs, Amazon S3, or Amazon Data Firehose</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">AWS CloudTrail data events for the hosted zone</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only CloudWatch Logs in us-east-1</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only VPC Flow Logs, under the DNS record type</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> CloudWatch Logs, Amazon S3, or Amazon Data Firehose<br><br>
+<strong>How to think about it:</strong> Resolver query logs go to <b>CloudWatch Logs, S3 or Data Firehose</b>. Public zone query logs go to CloudWatch Logs in us-east-1.<br><br>
+<strong>Why A is correct:</strong> Resolver query logging can send to any of these three, and one config can cover several VPCs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) AWS CloudTrail data events for the hosted zone</em> &mdash; CloudTrail records API calls, not DNS queries.<br><em>C) Only CloudWatch Logs in us-east-1</em> &mdash; That rule is for public hosted zone query logging, not Resolver logs.<br><em>D) Only VPC Flow Logs, under the DNS record type</em> &mdash; Flow logs record IP flows, not DNS query names.
+</div>
+</div>
+
+<!-- Q39 Resolver & Hybrid DNS -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Resolver & Hybrid DNS" data-level="A">
+<div class="q-tags"><span class="q-tag">Resolver & Hybrid DNS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>A hub VPC has outbound endpoints. Spoke VPCs in other accounts should forward <code>corp.local</code> on-premises, while AWS names keep resolving locally. Which design fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Share the hub's forwarding rule by RAM and associate it with spokes</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Set each spoke's DHCP options to the on-premises DNS servers</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Associate the corp.local private zone with every spoke</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create an inbound endpoint in every spoke VPC</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Share the hub's forwarding rule by RAM and associate it with spokes<br><br>
+<strong>How to think about it:</strong> Central hybrid DNS = endpoints in a <b>hub</b>, rules <b>shared by RAM</b>, rules associated with each spoke VPC.<br><br>
+<strong>Why A is correct:</strong> Spoke Resolvers then forward corp.local through the hub's outbound endpoint, and everything else resolves locally.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Set each spoke's DHCP options to the on-premises DNS servers</em> &mdash; Then every query, including AWS names, goes on-premises.<br><em>C) Associate the corp.local private zone with every spoke</em> &mdash; A private zone would answer locally instead of forwarding to the real on-premises servers.<br><em>D) Create an inbound endpoint in every spoke VPC</em> &mdash; Inbound endpoints receive queries from on-premises, which is the opposite direction.
+</div>
+</div>
+
+<!-- Q40 Resolver & Hybrid DNS -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Resolver & Hybrid DNS" data-level="A">
+<div class="q-tags"><span class="q-tag">Resolver & Hybrid DNS</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>A forwarding rule sends all of <code>corp.local</code> on-premises, but <code>aws.corp.local</code> is a private hosted zone in the VPC and should resolve locally. What fixes this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Delete the forwarding rule and use the private zone for everything</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add a System rule for aws.corp.local so the Resolver answers it</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Lower the TTL of the private zone records to 0 seconds</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Create a second outbound endpoint just for aws.corp.local</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Add a System rule for aws.corp.local so the Resolver answers it<br><br>
+<strong>How to think about it:</strong> Carve a subdomain out of a forward rule = a <b>System rule</b> for the more specific name.<br><br>
+<strong>Why B is correct:</strong> The most specific rule wins, and a System rule tells the Resolver to resolve that name itself, including from private zones.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Delete the forwarding rule and use the private zone for everything</em> &mdash; The on-premises corp.local names would then stop resolving.<br><em>C) Lower the TTL of the private zone records to 0 seconds</em> &mdash; TTL has no effect on which rule handles the query.<br><em>D) Create a second outbound endpoint just for aws.corp.local</em> &mdash; Endpoints don't choose domains; rules do. This would still forward on-premises.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 40;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>

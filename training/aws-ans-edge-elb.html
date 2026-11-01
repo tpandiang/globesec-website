@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS ANS CloudFront, Global Accelerator &amp; ELB - GlobeSec.ai</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --bg: #0a1628; --bg2: #0f2744; --bg3: #162d50;
+    --accent: #00d4ff; --accent2: #7b61ff; --aws: #ff9900;
+    --text: #e0e8f0; --text-muted: #8899aa; --white: #ffffff;
+    --gradient: linear-gradient(135deg, #00d4ff 0%, #7b61ff 100%);
+    --border: rgba(0, 212, 255, 0.1);
+    --correct: #10b981; --wrong: #ef4444;
+}
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+/* Top bar */
+.topbar {
+    background: rgba(10, 22, 40, 0.95); backdrop-filter: blur(20px); color: #fff;
+    padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; height: 60px; border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
+.back-link { color: var(--accent); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+.back-link:hover { text-decoration: underline; }
+.topbar-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.6rem; }
+.aws-badge { background: var(--aws); color: #232f3e; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.globe-badge { background: var(--gradient); color: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 800; }
+.topbar-right { display: flex; gap: 0.75rem; align-items: center; }
+.topbar-btn { background: var(--bg3); color: var(--accent); border: 1px solid var(--border); padding: 0.35rem 0.7rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.topbar-btn:hover { background: var(--accent); color: var(--bg); }
+
+/* Main content */
+.main-wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+/* Score banner */
+.score-banner {
+    background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 1.2rem 1.5rem; margin-bottom: 1.25rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.score-banner-left h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 0.2rem; }
+.score-banner-left p { font-size: 0.85rem; color: var(--text-muted); }
+.score-big { font-size: 2rem; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.score-label { font-size: 0.75rem; color: var(--text-muted); }
+.reset-all-btn { background: var(--gradient); color: var(--bg); border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-left: 1rem; transition: opacity 0.2s; }
+.reset-all-btn:hover { opacity: 0.85; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 1.25rem; }
+.progress-bar { background: var(--bg2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-fill { background: var(--gradient); height: 100%; width: 0%; transition: width 0.3s; border-radius: 4px; }
+.progress-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.3rem; }
+
+/* Question */
+.question { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 0.75rem; }
+.question-text { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 0.75rem; display: flex; gap: 0.5rem; }
+.question-num { color: var(--aws); font-weight: 700; white-space: nowrap; }
+.options { display: flex; flex-direction: column; gap: 0.4rem; }
+.option { display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.55rem 0.8rem; border-radius: 6px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); font-size: 0.85rem; }
+.option:hover:not(.disabled) { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.option.disabled { cursor: default; }
+.option-letter { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; border: 1px solid var(--border); color: var(--text-muted); background: var(--bg); transition: all 0.2s; }
+.option.selected .option-letter { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.option.correct { border-color: var(--correct); background: rgba(16,185,129,0.08); }
+.option.correct .option-letter { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.08); }
+.option.wrong .option-letter { background: var(--wrong); color: #fff; border-color: var(--wrong); }
+.option-text { flex: 1; }
+.explanation { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-radius: 6px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--correct); font-size: 0.82rem; color: var(--text); display: none; }
+.explanation.show { display: block; }
+.explanation strong { color: var(--correct); }
+
+/* Policy code block */
+.policy-block { background: #0d1b2a; border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 1rem; margin: 0.5rem 0 0.75rem; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.78rem; color: #8ec8e8; white-space: pre; overflow-x: auto; line-height: 1.5; }
+
+@media (max-width: 900px) {
+    .main-wrap { padding: 1rem; }
+    .topbar-title span:last-child { display: none; }
+    .score-banner { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+
+.q-tags { display: flex; gap: 0.4rem; margin-bottom: 0.45rem; }
+.q-tag { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--bg3); color: var(--accent); border: 1px solid var(--border); }
+.q-tag.lvl-B { color: var(--correct); }
+.q-tag.lvl-A { color: var(--aws); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.filter-btn { background: var(--bg2); color: var(--text-muted); border: 1px solid var(--border); padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.filter-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+.source-note { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-left">
+        <a href="../index.html" class="back-link">&#8592; GlobeSec.ai</a>
+        <div class="topbar-title">
+            <span class="globe-badge">GlobeSec</span>
+            <span class="aws-badge">ANS-C01</span>
+            <span>CloudFront, Global Accelerator &amp; ELB</span>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <button class="topbar-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="main-wrap">
+
+<div class="score-banner">
+    <div class="score-banner-left">
+        <h2>AWS Advanced Networking Specialty &mdash; CloudFront, Global Accelerator &amp; ELB</h2>
+        <p>40 refresher questions &mdash; CloudFront origins, OAC, HTTPS &amp; certificates, edge functions, Global Accelerator, ALB, NLB, GWLB, stickiness, cross-zone, SNI, Proxy Protocol</p>
+    </div>
+    <div class="score-banner-right" style="display:flex;align-items:center;">
+        <div>
+            <div class="score-big" id="overallScore">0/40</div>
+            <div class="score-label">Correct Answers</div>
+        </div>
+        <button class="reset-all-btn" onclick="resetAll()">Reset All</button>
+    </div>
+</div>
+
+<div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text" id="progressText">0 / 40 answered</div>
+</div>
+
+<div class="filter-bar">
+<button class="filter-btn active" data-f="all" onclick="filterQ(this)">All 40</button>
+<button class="filter-btn" data-f="B" onclick="filterQ(this)">Fundamental</button>
+<button class="filter-btn" data-f="A" onclick="filterQ(this)">Advanced</button>
+<button class="filter-btn" data-f="CloudFront" onclick="filterQ(this)">CloudFront</button><button class="filter-btn" data-f="Edge Functions" onclick="filterQ(this)">Edge Functions</button><button class="filter-btn" data-f="Global Accelerator" onclick="filterQ(this)">Global Accelerator</button><button class="filter-btn" data-f="ALB" onclick="filterQ(this)">ALB</button><button class="filter-btn" data-f="NLB" onclick="filterQ(this)">NLB</button><button class="filter-btn" data-f="ELB Features" onclick="filterQ(this)">ELB Features</button>
+</div>
+<p class="source-note">Pick an answer to see the explanation. Fundamental questions refresh the basics; Advanced questions are short ANS-style scenarios.</p>
+
+<!-- Q1 CloudFront -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CloudFront" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q1.</span><span>What is the main job of Amazon CloudFront?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A regional load balancer that spreads traffic over targets</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A static anycast IP front door that proxies TCP and UDP</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CDN that caches content at edge locations near users</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A DNS service that routes users by latency or geography</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> A CDN that caches content at edge locations near users<br><br>
+<strong>How to think about it:</strong> <b>CloudFront</b> = CDN: cache content at edge locations close to users.<br><br>
+<strong>Why C is correct:</strong> CloudFront caches responses at its global points of presence, so users get content from a nearby location instead of the origin.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A regional load balancer that spreads traffic over targets</em> &mdash; That is Elastic Load Balancing. CloudFront is a global edge service, and it can use a load balancer as its origin.<br><em>B) A static anycast IP front door that proxies TCP and UDP</em> &mdash; That is Global Accelerator. It does not cache content; it only carries traffic over the AWS backbone.<br><em>D) A DNS service that routes users by latency or geography</em> &mdash; That is Route 53. CloudFront is reached by a DNS name, but it does not answer DNS queries for your domain.
+</div>
+</div>
+
+<!-- Q2 CloudFront -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFront" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q2.</span><span>What is the role of a CloudFront <b>Regional Edge Cache</b>?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A larger middle cache that keeps less popular objects longer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A cache used only for dynamic, uncacheable API responses</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A cache that runs inside your own VPC for private clients</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A replica of your S3 bucket kept in every AWS Region</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> A larger middle cache that keeps less popular objects longer<br><br>
+<strong>How to think about it:</strong> <b>Regional Edge Cache</b> = a bigger, longer-lived middle cache between edge locations and the origin.<br><br>
+<strong>Why A is correct:</strong> Regional edge caches sit between edge locations and the origin. They hold objects longer, which cuts the number of trips to the origin.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A cache used only for dynamic, uncacheable API responses</em> &mdash; Dynamic, uncacheable requests skip the regional edge cache and go straight to the origin.<br><em>C) A cache that runs inside your own VPC for private clients</em> &mdash; CloudFront caches are AWS-run edge sites. They are never deployed into your VPC.<br><em>D) A replica of your S3 bucket kept in every AWS Region</em> &mdash; That describes S3 Cross-Region Replication. A regional edge cache holds cached copies, not a full bucket.
+</div>
+</div>
+
+<!-- Q3 CloudFront -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFront" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q3.</span><span>You want an S3 bucket to be readable <b>only</b> through your CloudFront distribution. What is the current recommended method?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A custom origin header checked by an S3 bucket policy condition</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Origin Access Control plus a bucket policy for the distribution</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An S3 gateway endpoint so CloudFront reaches S3 privately</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Turn on S3 static website hosting and block public access</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Origin Access Control plus a bucket policy for the distribution<br><br>
+<strong>How to think about it:</strong> Private S3 behind CloudFront = <b>Origin Access Control (OAC)</b> + a bucket policy that trusts the distribution.<br><br>
+<strong>Why B is correct:</strong> OAC signs CloudFront's requests to S3, and the bucket policy allows only that distribution. OAC replaces the older Origin Access Identity (OAI).<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A custom origin header checked by an S3 bucket policy condition</em> &mdash; Custom headers are the pattern for ALB and custom origins. For S3, OAC is the supported method.<br><em>C) An S3 gateway endpoint so CloudFront reaches S3 privately</em> &mdash; CloudFront does not run inside your VPC, so a gateway endpoint has no effect on CloudFront's requests.<br><em>D) Turn on S3 static website hosting and block public access</em> &mdash; A website endpoint is a custom origin that needs public access, and it cannot use OAC.
+</div>
+</div>
+
+<!-- Q4 CloudFront -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFront" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q4.</span><span>Where must an ACM certificate be created or imported so that a CloudFront distribution can use it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The same Region as the origin load balancer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">US East (N. Virginia), us-east-1</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Any Region, as long as it is shared through AWS RAM</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Every Region that has a CloudFront edge location</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> US East (N. Virginia), us-east-1<br><br>
+<strong>How to think about it:</strong> CloudFront certificate = <b>us-east-1 (N. Virginia)</b>, always.<br><br>
+<strong>Why B is correct:</strong> CloudFront is a global service and reads its viewer certificates from ACM in us-east-1 only.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The same Region as the origin load balancer</em> &mdash; That rule applies to ALB and NLB certificates. CloudFront ignores certificates held in other Regions.<br><em>C) Any Region, as long as it is shared through AWS RAM</em> &mdash; ACM certificates are not shared with RAM for CloudFront. The certificate has to be in us-east-1.<br><em>D) Every Region that has a CloudFront edge location</em> &mdash; Edge locations are not ACM Regions. One certificate in us-east-1 covers the whole distribution.
+</div>
+</div>
+
+<!-- Q5 CloudFront -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CloudFront" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q5.</span><span>How do most CloudFront distributions serve HTTPS for a custom domain such as <code>www.example.com</code> without extra cost?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A dedicated IP address at every edge location</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The default *.cloudfront.net certificate on the alias</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">SNI with a matching certificate</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A self-signed certificate uploaded to the IAM store</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> SNI with a matching certificate<br><br>
+<strong>How to think about it:</strong> Custom domain over HTTPS on CloudFront = <b>SNI</b> (dedicated IP is the expensive legacy option).<br><br>
+<strong>Why C is correct:</strong> SNI lets many certificates share the same edge IPs. It is free and works with all modern clients.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A dedicated IP address at every edge location</em> &mdash; Dedicated IPs exist only for very old clients without SNI support, and they cost a lot each month.<br><em>B) The default *.cloudfront.net certificate on the alias</em> &mdash; The default certificate covers only cloudfront.net names, so browsers would reject www.example.com.<br><em>D) A self-signed certificate uploaded to the IAM store</em> &mdash; Viewers would not trust a self-signed certificate. CloudFront needs one from a trusted CA.
+</div>
+</div>
+
+<!-- Q6 CloudFront -->
+<div class="question" data-type="mc" data-answer="3" data-topic="CloudFront" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q6.</span><span>Which CloudFront feature sends requests for <code>/images/*</code> to S3 and <code>/api/*</code> to an ALB?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Geo restriction rules that pick an origin per country</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Lambda@Edge on the viewer request to rewrite each host</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An origin group with a primary and a secondary origin</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Cache behaviors with path patterns, one per origin</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Cache behaviors with path patterns, one per origin<br><br>
+<strong>How to think about it:</strong> Different paths to different origins = <b>cache behaviors with path patterns</b>.<br><br>
+<strong>Why D is correct:</strong> Each cache behavior matches a path pattern and points to its own origin, with its own caching settings.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Geo restriction rules that pick an origin per country</em> &mdash; Geo restriction only allows or blocks countries; it never chooses an origin.<br><em>B) Lambda@Edge on the viewer request to rewrite each host</em> &mdash; This could work, but it is custom code for something cache behaviors already do natively.<br><em>C) An origin group with a primary and a secondary origin</em> &mdash; Origin groups are for failover between two origins, not for splitting traffic by path.
+</div>
+</div>
+
+<!-- Q7 CloudFront -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFront" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q7.</span><span>What does a CloudFront <b>origin group</b> provide?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Failover to a secondary origin when the primary returns errors</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Load balancing that splits requests evenly between origins</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A way to cache a single object in two Regions at once</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A shared cache that several distributions can read from</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Failover to a secondary origin when the primary returns errors<br><br>
+<strong>How to think about it:</strong> <b>Origin group</b> = primary + secondary origin = automatic failover.<br><br>
+<strong>Why A is correct:</strong> If the primary returns a configured error code or times out, CloudFront retries the same request on the secondary origin.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Load balancing that splits requests evenly between origins</em> &mdash; Origin groups do not split traffic. The secondary origin is used only when the primary fails.<br><em>C) A way to cache a single object in two Regions at once</em> &mdash; Caching happens at the edge whatever the origin is. Origin groups exist for availability.<br><em>D) A shared cache that several distributions can read from</em> &mdash; Each distribution has its own cache. Origin groups are only about choosing an origin.
+</div>
+</div>
+
+<!-- Q8 CloudFront -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFront" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q8.</span><span>Which CloudFront feature blocks viewers from specific countries across a whole distribution?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Geo restriction with an allow list or a block list</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Route 53 geolocation routing on the alias record</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A security group on the origin that drops foreign IPs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A cache policy that adds the country header to the key</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Geo restriction with an allow list or a block list<br><br>
+<strong>How to think about it:</strong> Block or allow by country at the CDN = <b>CloudFront geo restriction</b>.<br><br>
+<strong>Why A is correct:</strong> Geo restriction lets you allow or block countries, using a GeoIP database, for the whole distribution.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Route 53 geolocation routing on the alias record</em> &mdash; Geolocation routing changes which answer DNS returns. It does not block anyone at CloudFront.<br><em>C) A security group on the origin that drops foreign IPs</em> &mdash; Security groups have no country awareness, and CloudFront's edge IPs reach the origin, not viewer IPs.<br><em>D) A cache policy that adds the country header to the key</em> &mdash; This would cache separately per country, but it still serves every country.
+</div>
+</div>
+
+<!-- Q9 CloudFront -->
+<div class="question" data-type="mc" data-answer="1" data-topic="CloudFront" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFront</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q9.</span><span>An ALB origin must accept traffic <b>only</b> from your CloudFront distribution, including traffic from the same edge IPs used by other customers. What is the most reliable control?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A network ACL on the ALB subnets with the edge IP ranges</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A secret custom header added by CloudFront and checked by ALB rules</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A security group that allows only the CloudFront managed prefix list</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Origin Access Control attached to the ALB origin</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> A secret custom header added by CloudFront and checked by ALB rules<br><br>
+<strong>How to think about it:</strong> ALB only behind <b>your</b> distribution = <b>secret custom origin header</b> checked by the ALB (plus the CloudFront prefix list).<br><br>
+<strong>Why B is correct:</strong> Only your distribution knows the header value, so the ALB can reject anything without it. Other CloudFront customers share the same edge IPs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A network ACL on the ALB subnets with the edge IP ranges</em> &mdash; NACLs have rule limits and, like the prefix list, cannot tell your distribution apart from others.<br><em>C) A security group that allows only the CloudFront managed prefix list</em> &mdash; This blocks the open internet, but every CloudFront distribution uses those IPs, including other people's.<br><em>D) Origin Access Control attached to the ALB origin</em> &mdash; OAC supports S3, Lambda URLs and some media origins. It is not the control for ALB custom origins.
+</div>
+</div>
+
+<!-- Q10 CloudFront -->
+<div class="question" data-type="mc" data-answer="0" data-topic="CloudFront" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFront</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q10.</span><span>An application sits on an ALB and EC2 in <b>private subnets</b>. The team wants CloudFront in front of it without giving the ALB a public endpoint. What should they use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudFront VPC origins pointing at the internal ALB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An internet-facing ALB with an IP allow list for CloudFront</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Global Accelerator in front of a private ALB endpoint</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An S3 origin with OAC that proxies requests to the ALB</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> CloudFront VPC origins pointing at the internal ALB<br><br>
+<strong>How to think about it:</strong> Private ALB, NLB or EC2 behind CloudFront = <b>CloudFront VPC origins</b>.<br><br>
+<strong>Why A is correct:</strong> VPC origins let CloudFront reach internal ALBs, NLBs and EC2 instances in private subnets, so nothing is exposed to the internet.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) An internet-facing ALB with an IP allow list for CloudFront</em> &mdash; This works, but it still gives the ALB a public endpoint, which the team wants to avoid.<br><em>C) A Global Accelerator in front of a private ALB endpoint</em> &mdash; Global Accelerator is a different service with no caching. It does not make the ALB a CloudFront origin.<br><em>D) An S3 origin with OAC that proxies requests to the ALB</em> &mdash; S3 cannot forward requests to an ALB. OAC only protects S3 and a few other origin types.
+</div>
+</div>
+
+<!-- Q11 CloudFront -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CloudFront" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFront</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q11.</span><span>Viewers use HTTPS to CloudFront, and you also want CloudFront-to-origin traffic encrypted to an EC2 web server. What is required at the origin?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A self-signed certificate with the policy set to match viewer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An ACM certificate installed directly on the EC2 instance</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">HTTPS-only origin policy and a CA-trusted certificate on the origin</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">The default *.cloudfront.net certificate copied to the origin</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> HTTPS-only origin policy and a CA-trusted certificate on the origin<br><br>
+<strong>How to think about it:</strong> End-to-end HTTPS = origin protocol policy <b>HTTPS only</b> + a <b>CA-trusted certificate</b> on the origin.<br><br>
+<strong>Why C is correct:</strong> CloudFront checks the origin certificate, so it must come from a trusted CA and match the origin domain name. A self-signed one is rejected.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A self-signed certificate with the policy set to match viewer</em> &mdash; CloudFront will not accept a self-signed certificate from a custom origin.<br><em>B) An ACM certificate installed directly on the EC2 instance</em> &mdash; ACM public certificates cannot be exported to EC2. Use a third-party certificate or put an ALB in front.<br><em>D) The default *.cloudfront.net certificate copied to the origin</em> &mdash; That certificate belongs to AWS and cannot be put on your server.
+</div>
+</div>
+
+<!-- Q12 CloudFront -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CloudFront" data-level="A">
+<div class="q-tags"><span class="q-tag">CloudFront</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q12.</span><span>The origin needs to know whether each viewer is on a mobile device so it can return a lighter page. How can CloudFront help with no custom code?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Enable geo restriction so each device type gets its own list</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Add the full User-Agent header to the cache key everywhere</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Forward CloudFront-Is-Mobile-Viewer with an origin request policy</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Put Lambda@Edge on origin response to inspect device IDs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Forward CloudFront-Is-Mobile-Viewer with an origin request policy<br><br>
+<strong>How to think about it:</strong> Device, country or protocol at the origin = <b>CloudFront-* headers</b> forwarded with an origin request policy.<br><br>
+<strong>Why C is correct:</strong> CloudFront works out device-type headers from the User-Agent. You can pass them to the origin and add them to the cache key if needed.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Enable geo restriction so each device type gets its own list</em> &mdash; Geo restriction works by country only, and it does not tell the origin anything.<br><em>B) Add the full User-Agent header to the cache key everywhere</em> &mdash; This works but breaks the cache into thousands of variants. The device headers give the same answer much more efficiently.<br><em>D) Put Lambda@Edge on origin response to inspect device IDs</em> &mdash; The origin response is too late, because the page has already been built. It is also custom code that you don't need.
+</div>
+</div>
+
+<!-- Q13 Edge Functions -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Edge Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q13.</span><span>Which statement describes <b>CloudFront Functions</b>?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Code that runs only on origin request and response events</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Node.js or Python that can call other AWS services</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Container tasks started at regional edge caches</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Lightweight JavaScript on viewer request/response</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Lightweight JavaScript on viewer request/response<br><br>
+<strong>How to think about it:</strong> <b>CloudFront Functions</b> = lightweight JavaScript, viewer request and response only, sub-millisecond, no network calls.<br><br>
+<strong>Why D is correct:</strong> CloudFront Functions run at edge locations in under a millisecond. They suit header changes, URL rewrites and simple token checks.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Code that runs only on origin request and response events</em> &mdash; CloudFront Functions run only on viewer events. Origin events need Lambda@Edge.<br><em>B) Node.js or Python that can call other AWS services</em> &mdash; That is Lambda@Edge. CloudFront Functions cannot make network calls.<br><em>C) Container tasks started at regional edge caches</em> &mdash; Neither edge compute option runs containers.
+</div>
+</div>
+
+<!-- Q14 Edge Functions -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Edge Functions" data-level="B">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q14.</span><span>Which edge option can run on the <b>origin request</b> and <b>origin response</b> events?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">CloudFront origin request policy</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudFront KeyValueStore</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CloudFront Functions</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Lambda@Edge</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Lambda@Edge<br><br>
+<strong>How to think about it:</strong> Origin-side events, network access or longer runtime = <b>Lambda@Edge</b>.<br><br>
+<strong>Why D is correct:</strong> Lambda@Edge supports all four events (viewer and origin, request and response) and can run longer and use the network.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) CloudFront origin request policy</em> &mdash; An origin request policy picks which headers, cookies and query strings to forward. It runs no code.<br><em>B) CloudFront KeyValueStore</em> &mdash; KeyValueStore is a data store that CloudFront Functions read from. It does not run code.<br><em>C) CloudFront Functions</em> &mdash; CloudFront Functions only attach to viewer request and viewer response.
+</div>
+</div>
+
+<!-- Q15 Edge Functions -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Edge Functions" data-level="A">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q15.</span><span>On every request you must rewrite the URL and add a security header, at very high volume and the lowest cost. Which option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">AWS WAF custom responses inserted on every request</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An ALB listener rule that rewrites the path at the origin</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">CloudFront Functions on viewer request and viewer response</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Lambda@Edge on origin request and origin response</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> CloudFront Functions on viewer request and viewer response<br><br>
+<strong>How to think about it:</strong> Tiny, high-volume header or URL changes = <b>CloudFront Functions</b>, the cheapest and fastest.<br><br>
+<strong>Why C is correct:</strong> Simple rewrites and headers are the main use case. They cost a fraction of Lambda@Edge and add almost no latency.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) AWS WAF custom responses inserted on every request</em> &mdash; WAF can insert headers into requests it lets through, but rewriting URLs and adding response headers is the job of edge code.<br><em>B) An ALB listener rule that rewrites the path at the origin</em> &mdash; ALB rules can redirect, but they run only for cache misses and cannot change every edge response.<br><em>D) Lambda@Edge on origin request and origin response</em> &mdash; Origin events miss cache hits, so the header would not be added to cached responses. It also costs more.
+</div>
+</div>
+
+<!-- Q16 Edge Functions -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Edge Functions" data-level="A">
+<div class="q-tags"><span class="q-tag">Edge Functions</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q16.</span><span>Before forwarding to the origin, you must look up the user in a DynamoDB table to choose a content version. Which option fits?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Lambda@Edge on the origin request event</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">CloudFront Functions on the viewer request event</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A CloudFront origin group with a DynamoDB origin</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A cache policy that includes the user cookie in the key</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Lambda@Edge on the origin request event<br><br>
+<strong>How to think about it:</strong> Needs a network call such as DynamoDB = <b>Lambda@Edge</b> (CloudFront Functions have no network access).<br><br>
+<strong>Why A is correct:</strong> Lambda@Edge can call other services such as DynamoDB, and the origin request event runs only on cache misses.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) CloudFront Functions on the viewer request event</em> &mdash; CloudFront Functions cannot make network calls, so they cannot query DynamoDB.<br><em>C) A CloudFront origin group with a DynamoDB origin</em> &mdash; DynamoDB is not an HTTP origin, and origin groups are only for failover.<br><em>D) A cache policy that includes the user cookie in the key</em> &mdash; This splits the cache per user, but it cannot look anything up in DynamoDB.
+</div>
+</div>
+
+<!-- Q17 Global Accelerator -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Global Accelerator" data-level="B">
+<div class="q-tags"><span class="q-tag">Global Accelerator</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q17.</span><span>What does AWS Global Accelerator give you?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Two static anycast IPs over the AWS global backbone</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A dedicated private fiber link from your data center</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A global cache of static objects at hundreds of edges</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A DNS service that returns the closest regional endpoint</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Two static anycast IPs over the AWS global backbone<br><br>
+<strong>How to think about it:</strong> <b>Global Accelerator</b> = 2 static anycast IPs + the AWS backbone + fast regional failover. No caching.<br><br>
+<strong>Why A is correct:</strong> Users connect at the nearest edge, and the traffic then rides the AWS global network to healthy endpoints.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) A dedicated private fiber link from your data center</em> &mdash; That is Direct Connect. Global Accelerator serves internet users.<br><em>C) A global cache of static objects at hundreds of edges</em> &mdash; That is CloudFront. Global Accelerator does not cache content.<br><em>D) A DNS service that returns the closest regional endpoint</em> &mdash; Route 53 latency routing works through DNS. Global Accelerator uses fixed IPs and anycast routing instead.
+</div>
+</div>
+
+<!-- Q18 Global Accelerator -->
+<div class="question" data-type="mc" data-answer="1" data-topic="Global Accelerator" data-level="B">
+<div class="q-tags"><span class="q-tag">Global Accelerator</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q18.</span><span>Which protocols can Global Accelerator handle that CloudFront cannot?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only HTTP and HTTPS, plus WebSocket connections</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Any TCP or UDP traffic, such as gaming or VoIP</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">GRE tunnels from on-premises routers into a VPC</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Only ICMP, for latency testing between Regions</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Any TCP or UDP traffic, such as gaming or VoIP<br><br>
+<strong>How to think about it:</strong> Non-HTTP such as gaming or VoIP over <b>UDP</b> (or raw TCP) = <b>Global Accelerator</b>.<br><br>
+<strong>Why B is correct:</strong> Global Accelerator works at Layer 4, so it supports non-HTTP workloads such as UDP games and IoT.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only HTTP and HTTPS, plus WebSocket connections</em> &mdash; That describes CloudFront's protocol support, not something extra that Global Accelerator adds.<br><em>C) GRE tunnels from on-premises routers into a VPC</em> &mdash; GRE is used by Transit Gateway Connect, not by Global Accelerator.<br><em>D) Only ICMP, for latency testing between Regions</em> &mdash; ICMP is not a Global Accelerator workload.
+</div>
+</div>
+
+<!-- Q19 Global Accelerator -->
+<div class="question" data-type="mc" data-answer="2" data-topic="Global Accelerator" data-level="B">
+<div class="q-tags"><span class="q-tag">Global Accelerator</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q19.</span><span>Which of these can be a Global Accelerator <b>endpoint</b>?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A CloudFront distribution in another account</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An S3 bucket or a DynamoDB table</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An ALB, NLB, EC2 instance or Elastic IP</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Route 53 hosted zone with latency routing</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> An ALB, NLB, EC2 instance or Elastic IP<br><br>
+<strong>How to think about it:</strong> GA endpoints = <b>ALB, NLB, EC2, Elastic IP</b>, public or private.<br><br>
+<strong>Why C is correct:</strong> These four are the supported endpoint types, grouped into endpoint groups per Region.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A CloudFront distribution in another account</em> &mdash; CloudFront already has its own global edge network, so it cannot be a GA endpoint.<br><em>B) An S3 bucket or a DynamoDB table</em> &mdash; Global Accelerator sends traffic to compute and load balancer endpoints, not to storage services.<br><em>D) A Route 53 hosted zone with latency routing</em> &mdash; A hosted zone answers DNS queries. It does not receive application traffic.
+</div>
+</div>
+
+<!-- Q20 Global Accelerator -->
+<div class="question" data-type="mc" data-answer="3" data-topic="Global Accelerator" data-level="A">
+<div class="q-tags"><span class="q-tag">Global Accelerator</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q20.</span><span>A partner must allow-list your service IPs in their firewall, and the service runs in two Regions behind ALBs. How can you give them a few addresses that never change?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Share the current ALB node IPs found through a DNS lookup</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Attach Elastic IPs directly to each Application Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Front the ALBs with CloudFront and share the edge IPs</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Put a Global Accelerator in front, then share its two static IPs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Put a Global Accelerator in front, then share its two static IPs<br><br>
+<strong>How to think about it:</strong> Fixed IPs in front of ALBs that partners can allow-list = <b>Global Accelerator</b>.<br><br>
+<strong>Why D is correct:</strong> The two anycast IPs stay the same while the ALBs, Regions and their IPs change behind them.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Share the current ALB node IPs found through a DNS lookup</em> &mdash; ALB node IPs change as the load balancer scales, so the allow list would break.<br><em>B) Attach Elastic IPs directly to each Application Load Balancer</em> &mdash; ALBs do not support Elastic IPs; only NLBs do.<br><em>C) Front the ALBs with CloudFront and share the edge IPs</em> &mdash; CloudFront's edge IP list is very large and changes. It is not a short, fixed list.
+</div>
+</div>
+
+<!-- Q21 Global Accelerator -->
+<div class="question" data-type="mc" data-answer="0" data-topic="Global Accelerator" data-level="A">
+<div class="q-tags"><span class="q-tag">Global Accelerator</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q21.</span><span>An API in two Regions must fail over within seconds if one Region becomes unhealthy, and clients cache DNS for a long time. Which option fails over fastest?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Global Accelerator with per-Region endpoint groups</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Route 53 failover routing with a 60-second TTL</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">An origin group in CloudFront with two API origins</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Cross-zone load balancing on both regional ALBs</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Global Accelerator with per-Region endpoint groups<br><br>
+<strong>How to think about it:</strong> Failover that ignores client DNS caching = <b>Global Accelerator</b> (the IPs stay the same; only the routing changes).<br><br>
+<strong>Why A is correct:</strong> Health checks move traffic between endpoint groups behind the same IPs, so stale DNS caches don't matter.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Route 53 failover routing with a 60-second TTL</em> &mdash; Clients that ignore or extend TTLs keep sending traffic to the failed Region.<br><em>C) An origin group in CloudFront with two API origins</em> &mdash; This can work for HTTP APIs, but it adds caching semantics and is not a general Layer 4 failover answer.<br><em>D) Cross-zone load balancing on both regional ALBs</em> &mdash; Cross-zone works inside one Region. It cannot move traffic to another Region.
+</div>
+</div>
+
+<!-- Q22 ALB -->
+<div class="question" data-type="mc" data-answer="0" data-topic="ALB" data-level="B">
+<div class="q-tags"><span class="q-tag">ALB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q22.</span><span>At which OSI layer does an Application Load Balancer work, and what can it route on?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Layer 7, routing on path, host, headers and query strings</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Layer 2, bridging Ethernet frames between subnets</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Layer 3, sending all IP packets to virtual appliances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Layer 4, routing only on IP address and port number</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Layer 7, routing on path, host, headers and query strings<br><br>
+<strong>How to think about it:</strong> <b>ALB</b> = Layer 7: route on path, host, headers, query string and source IP.<br><br>
+<strong>Why A is correct:</strong> ALB understands HTTP and HTTPS, so listener rules can match request content.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Layer 2, bridging Ethernet frames between subnets</em> &mdash; No Elastic Load Balancer works at Layer 2.<br><em>C) Layer 3, sending all IP packets to virtual appliances</em> &mdash; That is the Gateway Load Balancer, used for firewalls and inspection fleets.<br><em>D) Layer 4, routing only on IP address and port number</em> &mdash; That is the NLB. It does not look inside HTTP requests.
+</div>
+</div>
+
+<!-- Q23 ALB -->
+<div class="question" data-type="mc" data-answer="1" data-topic="ALB" data-level="B">
+<div class="q-tags"><span class="q-tag">ALB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q23.</span><span>Which target types can an ALB target group use?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Only EC2 instances from an Auto Scaling group</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Instances, private IPs, or a Lambda function</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Public IP addresses anywhere on the internet</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An NLB, so traffic can be passed on to Layer 4</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Instances, private IPs, or a Lambda function<br><br>
+<strong>How to think about it:</strong> ALB targets = <b>instances, private IPs, Lambda</b>. (NLB can also target an ALB.)<br><br>
+<strong>Why B is correct:</strong> ALB target groups can be instances, IPs (including on-premises over DX or VPN), or a single Lambda function.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Only EC2 instances from an Auto Scaling group</em> &mdash; Instances are only one of the three ALB target types.<br><em>C) Public IP addresses anywhere on the internet</em> &mdash; IP targets must be private addresses reachable from the VPC.<br><em>D) An NLB, so traffic can be passed on to Layer 4</em> &mdash; It works the other way round: an NLB can use an ALB as its target.
+</div>
+</div>
+
+<!-- Q24 ALB -->
+<div class="question" data-type="mc" data-answer="2" data-topic="ALB" data-level="B">
+<div class="q-tags"><span class="q-tag">ALB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q24.</span><span>With an ALB in front, how does the backend application learn the real client IP address?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">It reads the source IP of the packet, which is unchanged</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">It parses a Proxy Protocol v2 header from the ALB</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">It reads the X-Forwarded-For header that the ALB adds</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">It queries VPC Flow Logs for each connection it receives</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> It reads the X-Forwarded-For header that the ALB adds<br><br>
+<strong>How to think about it:</strong> Client IP behind an ALB = the <b>X-Forwarded-For</b> header.<br><br>
+<strong>Why C is correct:</strong> The ALB ends the TCP connection, so the source IP the backend sees is the ALB's. The ALB puts the client IP in X-Forwarded-For.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) It reads the source IP of the packet, which is unchanged</em> &mdash; That is true for an NLB with instance targets, but not for an ALB.<br><em>B) It parses a Proxy Protocol v2 header from the ALB</em> &mdash; ALB does not send Proxy Protocol. NLB (v2) and CLB (v1) do.<br><em>D) It queries VPC Flow Logs for each connection it receives</em> &mdash; Flow logs are delivered after the fact and are not meant for application logic.
+</div>
+</div>
+
+<!-- Q25 ALB -->
+<div class="question" data-type="mc" data-answer="2" data-topic="ALB" data-level="B">
+<div class="q-tags"><span class="q-tag">ALB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q25.</span><span>What is the difference between the ALB's <b>duration-based</b> and <b>application-based</b> stickiness cookies?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Duration cookies are for NLB, application cookies for ALB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Both are made by the LB and differ only in default lifetime</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The LB makes the duration cookie; your app sets the other one</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Application cookies are encrypted; duration ones are not</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> The LB makes the duration cookie; your app sets the other one<br><br>
+<strong>How to think about it:</strong> <b>AWSALB</b> = generated by the load balancer and time-based. <b>Application cookie</b> = your app sets it, and the LB tracks it as AWSALBAPP.<br><br>
+<strong>Why C is correct:</strong> Duration-based stickiness uses the LB-generated AWSALB cookie. Application-based stickiness follows a cookie name that your application sets.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Duration cookies are for NLB, application cookies for ALB</em> &mdash; NLB stickiness uses the source IP, not cookies.<br><em>B) Both are made by the LB and differ only in default lifetime</em> &mdash; Application-based stickiness depends on a cookie that your application sets.<br><em>D) Application cookies are encrypted; duration ones are not</em> &mdash; The difference is who creates the cookie, not encryption.
+</div>
+</div>
+
+<!-- Q26 ALB -->
+<div class="question" data-type="mc" data-answer="1" data-topic="ALB" data-level="B">
+<div class="q-tags"><span class="q-tag">ALB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q26.</span><span>On an ALB, cross-zone load balancing is on by default. Can you change it?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">No, it is always on for ALB and can never be changed</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Yes, it can be turned off per target group</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Only on internal ALBs, not on internet-facing ones</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Yes, but only by moving the load balancer to one AZ</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Yes, it can be turned off per target group<br><br>
+<strong>How to think about it:</strong> ALB cross-zone: on by default, and it can be <b>turned off per target group</b>.<br><br>
+<strong>Why B is correct:</strong> AWS now lets you turn off cross-zone at the ALB target group level, for example to keep traffic in one AZ.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) No, it is always on for ALB and can never be changed</em> &mdash; This was true in the past, but you can now turn it off at the target group level.<br><em>C) Only on internal ALBs, not on internet-facing ones</em> &mdash; The setting is per target group and has nothing to do with the scheme.<br><em>D) Yes, but only by moving the load balancer to one AZ</em> &mdash; A single-AZ ALB is not allowed, because an ALB needs at least two AZs.
+</div>
+</div>
+
+<!-- Q27 ALB -->
+<div class="question" data-type="mc" data-answer="3" data-topic="ALB" data-level="A">
+<div class="q-tags"><span class="q-tag">ALB</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q27.</span><span>One ALB must serve <code>app.example.com</code> and <code>shop.example.org</code> over HTTPS, each with its own certificate. How?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Create two ALBs, because each listener holds one certificate</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Use one wildcard certificate for *.example.com on the listener</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Pass TCP 443 through and end TLS on the instances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Add both certificates to the HTTPS listener and rely on SNI</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Add both certificates to the HTTPS listener and rely on SNI<br><br>
+<strong>How to think about it:</strong> Several HTTPS domains on one listener = <b>SNI</b> with multiple certificates.<br><br>
+<strong>Why D is correct:</strong> ALB supports several certificates per listener and picks the right one from the SNI hostname the client sends.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Create two ALBs, because each listener holds one certificate</em> &mdash; This was a Classic Load Balancer limit. ALB removed it with SNI.<br><em>B) Use one wildcard certificate for *.example.com on the listener</em> &mdash; A wildcard for example.com does not cover example.org.<br><em>C) Pass TCP 443 through and end TLS on the instances</em> &mdash; An ALB cannot pass TLS through. It always ends HTTPS itself.
+</div>
+</div>
+
+<!-- Q28 ALB -->
+<div class="question" data-type="mc" data-answer="3" data-topic="ALB" data-level="A">
+<div class="q-tags"><span class="q-tag">ALB</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q28.</span><span>Each request needs a slow, long-running HTTP connection drained gracefully during deployments. Which ALB setting controls how long in-flight requests can finish?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">The slow start duration on the target group</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">The health check interval and the unhealthy threshold</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">The load balancer idle timeout, 60 seconds by default</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Target group deregistration delay (default 300 s)</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Target group deregistration delay (default 300 s)<br><br>
+<strong>How to think about it:</strong> Let in-flight requests finish before removing a target = <b>deregistration delay</b> (connection draining).<br><br>
+<strong>Why D is correct:</strong> While a target deregisters, the ALB stops sending new requests but lets existing ones finish until the delay runs out.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) The slow start duration on the target group</em> &mdash; Slow start ramps up traffic to new targets, which is the opposite direction.<br><em>B) The health check interval and the unhealthy threshold</em> &mdash; These decide when a target counts as unhealthy, not how draining works.<br><em>C) The load balancer idle timeout, 60 seconds by default</em> &mdash; The idle timeout closes quiet connections. It does not drain targets.
+</div>
+</div>
+
+<!-- Q29 NLB -->
+<div class="question" data-type="mc" data-answer="3" data-topic="NLB" data-level="B">
+<div class="q-tags"><span class="q-tag">NLB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q29.</span><span>Which load balancer can have one static IP per AZ, including an Elastic IP you choose?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Gateway Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Application Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Classic Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Network Load Balancer</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Network Load Balancer<br><br>
+<strong>How to think about it:</strong> Static or Elastic IP on a load balancer = <b>NLB</b>.<br><br>
+<strong>Why D is correct:</strong> An NLB has a fixed IP in each enabled AZ, and you can assign your own Elastic IPs to an internet-facing NLB.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Gateway Load Balancer</em> &mdash; GWLB is reached through GWLB endpoints in route tables, not through client-facing static IPs.<br><em>B) Application Load Balancer</em> &mdash; ALB IPs change as it scales. To get static IPs for an ALB, put an NLB or Global Accelerator in front.<br><em>C) Classic Load Balancer</em> &mdash; CLB is accessed by its DNS name, and its IPs are not fixed.
+</div>
+</div>
+
+<!-- Q30 NLB -->
+<div class="question" data-type="mc" data-answer="3" data-topic="NLB" data-level="B">
+<div class="q-tags"><span class="q-tag">NLB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q30.</span><span>What is the NLB default for cross-zone load balancing, and what does it cost?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">On by default and always free, like on an ALB</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Not supported at all on Network Load Balancers</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">On by default, but it can be turned off only by AWS Support</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Off by default; turning it on adds inter-AZ data charges</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> Off by default; turning it on adds inter-AZ data charges<br><br>
+<strong>How to think about it:</strong> <b>NLB / GWLB</b>: cross-zone <b>off</b> by default, and inter-AZ data is charged when you turn it on. <b>ALB</b>: on and free.<br><br>
+<strong>Why D is correct:</strong> Each NLB node sends traffic only to targets in its own AZ unless you turn cross-zone on, which then incurs regional data transfer.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) On by default and always free, like on an ALB</em> &mdash; That describes the ALB. NLB defaults to off.<br><em>B) Not supported at all on Network Load Balancers</em> &mdash; NLB supports cross-zone; it is just off by default.<br><em>C) On by default, but it can be turned off only by AWS Support</em> &mdash; You can change it yourself, at the load balancer or target group level.
+</div>
+</div>
+
+<!-- Q31 NLB -->
+<div class="question" data-type="mc" data-answer="1" data-topic="NLB" data-level="B">
+<div class="q-tags"><span class="q-tag">NLB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q31.</span><span>Which target types can an NLB target group use that an ALB cannot?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An S3 bucket served as a static website</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An Application Load Balancer</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Lambda function as the target</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">An API Gateway REST API stage</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An Application Load Balancer<br><br>
+<strong>How to think about it:</strong> NLB can target an <b>ALB</b>, which gives you static IPs + Layer 7 routing.<br><br>
+<strong>Why B is correct:</strong> An NLB target group of type ALB lets you put static IPs or PrivateLink in front of Layer 7 routing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An S3 bucket served as a static website</em> &mdash; Neither load balancer can target S3.<br><em>C) A Lambda function as the target</em> &mdash; Lambda targets are an ALB feature. NLB does not support them.<br><em>D) An API Gateway REST API stage</em> &mdash; API Gateway can use an NLB through a VPC link, but it cannot be an NLB target.
+</div>
+</div>
+
+<!-- Q32 NLB -->
+<div class="question" data-type="mc" data-answer="1" data-topic="NLB" data-level="B">
+<div class="q-tags"><span class="q-tag">NLB</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q32.</span><span>What does Proxy Protocol v2 on an NLB do?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Encrypts traffic between the NLB and its targets</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Prepends a header with the client IP and port</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Lets the NLB inspect HTTP headers for routing</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Keeps each client on the same target with a cookie</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> Prepends a header with the client IP and port<br><br>
+<strong>How to think about it:</strong> <b>Proxy Protocol</b> = a header placed before the TCP payload that carries the client IP and port. <b>NLB = v2</b>, <b>CLB = v1</b>.<br><br>
+<strong>Why B is correct:</strong> It passes the connection details to targets when client IP preservation is off, for example with IP targets or over PrivateLink.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Encrypts traffic between the NLB and its targets</em> &mdash; Encryption comes from a TLS listener or TLS to the targets. Proxy Protocol only adds connection metadata.<br><em>C) Lets the NLB inspect HTTP headers for routing</em> &mdash; NLB stays at Layer 4 and never routes on HTTP headers.<br><em>D) Keeps each client on the same target with a cookie</em> &mdash; NLB stickiness uses the source IP. Proxy Protocol has nothing to do with stickiness.
+</div>
+</div>
+
+<!-- Q33 NLB -->
+<div class="question" data-type="mc" data-answer="3" data-topic="NLB" data-level="A">
+<div class="q-tags"><span class="q-tag">NLB</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q33.</span><span>A SaaS provider wants to expose a TCP service to hundreds of customer VPCs with overlapping CIDRs, without peering. Which load balancer must sit in front of the service?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">An Application Load Balancer in an endpoint service</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A Gateway Load Balancer with GENEVE to the service</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">A Classic Load Balancer with cross-zone turned on</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A Network Load Balancer in an endpoint service</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A Network Load Balancer in an endpoint service<br><br>
+<strong>How to think about it:</strong> PrivateLink endpoint service = <b>NLB</b> (or GWLB for appliances) in front.<br><br>
+<strong>Why D is correct:</strong> AWS PrivateLink endpoint services sit behind an NLB, and consumers reach them through interface endpoints, even with overlapping CIDRs.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) An Application Load Balancer in an endpoint service</em> &mdash; An ALB cannot be the endpoint service load balancer. Put an NLB with an ALB target in front of it instead.<br><em>B) A Gateway Load Balancer with GENEVE to the service</em> &mdash; GWLB is for inline security appliances, not for publishing an application service.<br><em>C) A Classic Load Balancer with cross-zone turned on</em> &mdash; CLB is legacy and cannot back a PrivateLink service.
+</div>
+</div>
+
+<!-- Q34 NLB -->
+<div class="question" data-type="mc" data-answer="0" data-topic="NLB" data-level="A">
+<div class="q-tags"><span class="q-tag">NLB</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q34.</span><span>An NLB with IP-type targets (private IPs) shows the NLB's address as the source on the backend, and the app needs client IPs. What is the simplest fix?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Turn on client IP preservation or Proxy Protocol v2</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Read X-Forwarded-For, which the NLB adds to every packet</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Switch the listener from TCP to UDP to keep the address</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Enable access logs and look each client IP up later</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Turn on client IP preservation or Proxy Protocol v2<br><br>
+<strong>How to think about it:</strong> IP targets hide the client IP by default. Fix it with <b>client IP preservation</b> (or <b>Proxy Protocol v2</b>).<br><br>
+<strong>Why A is correct:</strong> Client IP preservation is on by default for instance targets but off for IP targets. Either setting gives the backend the real client IP.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Read X-Forwarded-For, which the NLB adds to every packet</em> &mdash; NLB does not change payloads, so it cannot add HTTP headers.<br><em>C) Switch the listener from TCP to UDP to keep the address</em> &mdash; Changing the protocol does not control client IP behaviour and would break a TCP app.<br><em>D) Enable access logs and look each client IP up later</em> &mdash; Logs are for audits after the fact. The app needs the IP while the connection is open.
+</div>
+</div>
+
+<!-- Q35 ELB Features -->
+<div class="question" data-type="mc" data-answer="0" data-topic="ELB Features" data-level="B">
+<div class="q-tags"><span class="q-tag">ELB Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q35.</span><span>What is a Gateway Load Balancer used for?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Running inline fleets of third-party security appliances</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">Terminating TLS for websites at the edge locations</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Giving TCP services static IPs in every Availability Zone</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Routing HTTP requests to microservices by URL path</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: A.</strong> Running inline fleets of third-party security appliances<br><br>
+<strong>How to think about it:</strong> <b>GWLB</b> = inline third-party appliances (firewall, IDS/IPS), Layer 3, <b>GENEVE on UDP 6081</b>.<br><br>
+<strong>Why A is correct:</strong> GWLB spreads all IP packets over appliance targets using GENEVE, so firewalls can be scaled out and kept highly available.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>B) Terminating TLS for websites at the edge locations</em> &mdash; Edge TLS termination belongs to CloudFront.<br><em>C) Giving TCP services static IPs in every Availability Zone</em> &mdash; That is the NLB.<br><em>D) Routing HTTP requests to microservices by URL path</em> &mdash; Path routing is an ALB feature.
+</div>
+</div>
+
+<!-- Q36 ELB Features -->
+<div class="question" data-type="mc" data-answer="2" data-topic="ELB Features" data-level="B">
+<div class="q-tags"><span class="q-tag">ELB Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q36.</span><span>Which protocol and port does a Gateway Load Balancer use to send packets to its appliances?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">VXLAN on UDP port 4789</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">GRE on IP protocol 47</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">GENEVE on UDP port 6081</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">IPsec ESP on IP protocol 50</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> GENEVE on UDP port 6081<br><br>
+<strong>How to think about it:</strong> GWLB to appliances = <b>GENEVE, UDP 6081</b>.<br><br>
+<strong>Why C is correct:</strong> GWLB wraps the original packet in GENEVE, so the appliance sees the packet unchanged plus flow metadata.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) VXLAN on UDP port 4789</em> &mdash; VXLAN is used by VPC Traffic Mirroring, not by GWLB.<br><em>B) GRE on IP protocol 47</em> &mdash; GRE is used by Transit Gateway Connect attachments.<br><em>D) IPsec ESP on IP protocol 50</em> &mdash; ESP carries Site-to-Site VPN traffic, not load-balanced appliance traffic.
+</div>
+</div>
+
+<!-- Q37 ELB Features -->
+<div class="question" data-type="mc" data-answer="1" data-topic="ELB Features" data-level="B">
+<div class="q-tags"><span class="q-tag">ELB Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q37.</span><span>Which Classic Load Balancer limit led AWS to recommend ALB or NLB for multi-domain HTTPS?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">No support for internal, non-internet-facing load balancers</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">One TLS certificate per listener, with no SNI support</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">No support for health checks on its registered instances</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Instances in only a single Availability Zone</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> One TLS certificate per listener, with no SNI support<br><br>
+<strong>How to think about it:</strong> <b>CLB</b> = one certificate per listener, no SNI. ALB and NLB support SNI.<br><br>
+<strong>Why B is correct:</strong> A CLB serving many domains needs a SAN or wildcard certificate, or several CLBs. ALB and NLB avoid this with SNI.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) No support for internal, non-internet-facing load balancers</em> &mdash; Internal CLBs are supported.<br><em>C) No support for health checks on its registered instances</em> &mdash; CLB does health checks on its instances.<br><em>D) Instances in only a single Availability Zone</em> &mdash; CLB can span several AZs.
+</div>
+</div>
+
+<!-- Q38 ELB Features -->
+<div class="question" data-type="mc" data-answer="3" data-topic="ELB Features" data-level="B">
+<div class="q-tags"><span class="q-tag">ELB Features</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q38.</span><span>Users who type <code>http://</code> should be sent to HTTPS on an ALB. What is the native way to do this?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Route 53 alias record that points HTTP names to port 443</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A security group that blocks port 80 so browsers retry on 443</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Proxy Protocol on the listener to rewrite the request scheme</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">A port 80 listener whose default action redirects to HTTPS 443</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: D.</strong> A port 80 listener whose default action redirects to HTTPS 443<br><br>
+<strong>How to think about it:</strong> HTTP to HTTPS on an ALB = a port 80 listener with a <b>redirect action</b>.<br><br>
+<strong>Why D is correct:</strong> ALB listener rules support redirect actions, so you don't need a web server or any code.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Route 53 alias record that points HTTP names to port 443</em> &mdash; DNS cannot express ports or protocols, so it cannot do the redirect.<br><em>B) A security group that blocks port 80 so browsers retry on 443</em> &mdash; Browsers do not retry automatically, so users would just see an error.<br><em>C) Proxy Protocol on the listener to rewrite the request scheme</em> &mdash; Proxy Protocol is not an ALB feature, and it never rewrites requests.
+</div>
+</div>
+
+<!-- Q39 CloudFront -->
+<div class="question" data-type="mc" data-answer="2" data-topic="CloudFront" data-level="B">
+<div class="q-tags"><span class="q-tag">CloudFront</span><span class="q-tag lvl-B">Fundamental</span></div>
+<div class="question-text"><span class="question-num">Q39.</span><span>Which CloudFront setting forces viewers onto HTTPS between the browser and the edge?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">Origin protocol policy set to HTTPS only</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">A security policy with a minimum of TLSv1.2_2021</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Viewer protocol policy set to redirect HTTP to HTTPS</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Field-level encryption on the sensitive POST fields</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: C.</strong> Viewer protocol policy set to redirect HTTP to HTTPS<br><br>
+<strong>How to think about it:</strong> Browser to edge = <b>viewer protocol policy</b>. Edge to origin = <b>origin protocol policy</b>.<br><br>
+<strong>Why C is correct:</strong> The viewer protocol policy (HTTP and HTTPS, redirect, or HTTPS only) controls the viewer-to-edge leg.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) Origin protocol policy set to HTTPS only</em> &mdash; This secures the edge-to-origin leg, not the browser-to-edge leg.<br><em>B) A security policy with a minimum of TLSv1.2_2021</em> &mdash; This sets the TLS versions and ciphers. It does not redirect HTTP requests.<br><em>D) Field-level encryption on the sensitive POST fields</em> &mdash; This encrypts chosen form fields, but it does not make viewers use HTTPS.
+</div>
+</div>
+
+<!-- Q40 ELB Features -->
+<div class="question" data-type="mc" data-answer="1" data-topic="ELB Features" data-level="A">
+<div class="q-tags"><span class="q-tag">ELB Features</span><span class="q-tag lvl-A">Advanced</span></div>
+<div class="question-text"><span class="question-num">Q40.</span><span>A web app needs Layer 7 path routing and also a fixed set of IPs that partners can allow-list, in one Region. What is the simplest design?</span></div>
+<div class="options">
+<div class="option" onclick="selectMC(this,0)" data-idx="0"><span class="option-letter">A</span><span class="option-text">A Gateway Load Balancer listening on port 443 for the app</span></div>
+<div class="option" onclick="selectMC(this,1)" data-idx="1"><span class="option-letter">B</span><span class="option-text">An NLB with Elastic IPs that forwards to an ALB target group</span></div>
+<div class="option" onclick="selectMC(this,2)" data-idx="2"><span class="option-letter">C</span><span class="option-text">Use a Classic Load Balancer with path-based routing rules</span></div>
+<div class="option" onclick="selectMC(this,3)" data-idx="3"><span class="option-letter">D</span><span class="option-text">Attach Elastic IPs to the ALB nodes in each subnet</span></div>
+</div>
+<div class="explanation">
+<strong>&#10003; Correct: B.</strong> An NLB with Elastic IPs that forwards to an ALB target group<br><br>
+<strong>How to think about it:</strong> Static IPs + Layer 7 in one Region = <b>NLB with an ALB-type target group</b> (or GA in front of the ALB).<br><br>
+<strong>Why B is correct:</strong> The NLB gives fixed IPs per AZ, and the ALB behind it still handles path-based routing.<br><br>
+<strong>Why the others are wrong:</strong><br>
+<em>A) A Gateway Load Balancer listening on port 443 for the app</em> &mdash; GWLB has no listener port settings and is not used to serve applications.<br><em>C) Use a Classic Load Balancer with path-based routing rules</em> &mdash; CLB has no path routing and no static IPs.<br><em>D) Attach Elastic IPs to the ALB nodes in each subnet</em> &mdash; ALB nodes cannot take Elastic IPs.
+</div>
+</div>
+
+</div>
+
+<script>
+var totalQuestions = 40;
+var totalCorrect = 0;
+var totalAnswered = 0;
+
+function updateScoreDisplay() {
+    document.getElementById('overallScore').textContent = totalCorrect + '/' + totalQuestions;
+    document.getElementById('progressFill').style.width = (totalAnswered / totalQuestions * 100) + '%';
+    document.getElementById('progressText').textContent = totalAnswered + ' / ' + totalQuestions + ' answered';
+}
+
+function selectMC(optEl, idx) {
+    var question = optEl.closest('.question');
+    if (question.dataset.answered) return;
+    question.dataset.answered = 'true';
+    var correct = parseInt(question.dataset.answer);
+    var opts = question.querySelectorAll('.option');
+    opts.forEach(function(o) { o.classList.add('disabled'); });
+    opts[correct].classList.add('correct');
+    if (idx === correct) {
+        optEl.classList.add('selected');
+        totalCorrect++;
+    } else {
+        optEl.classList.add('wrong');
+    }
+    totalAnswered++;
+    question.querySelector('.explanation').classList.add('show');
+    updateScoreDisplay();
+}
+
+function filterQ(btn) {
+    var f = btn.dataset.f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.toggle('active', b === btn); });
+    document.querySelectorAll('.question').forEach(function(q) {
+        var show = f === 'all' || q.dataset.level === f || q.dataset.topic === f;
+        q.style.display = show ? '' : 'none';
+    });
+}
+
+function resetAll() {
+    totalCorrect = 0;
+    totalAnswered = 0;
+    document.querySelectorAll('.question').forEach(function(q) {
+        delete q.dataset.answered;
+        q.querySelectorAll('.option').forEach(function(o) {
+            o.classList.remove('correct', 'wrong', 'selected', 'disabled');
+        });
+        q.querySelector('.explanation').classList.remove('show');
+    });
+    updateScoreDisplay();
+}
+</script>
+</body>
+</html>
