@@ -166,6 +166,19 @@ nav {
 }
 .dropdown-folder-body .dropdown-label { padding-left: 2.1rem; }
 .dropdown-folder-body a { padding-left: 2.8rem; }
+.dropdown-folder-body a .ch-num, .mobile-menu a .ch-num { color: var(--orange); font-weight: 700; margin-right: 0.35rem; }
+.folder-badge { font-size: 0.55rem; letter-spacing: 1px; color: var(--bg); background: var(--orange); padding: 0.05rem 0.35rem; margin-left: 0.4rem; vertical-align: middle; }
+.dropdown-folder.passed-head { color: var(--text-dim, #8899aa); margin-top: 0.4rem; }
+.dropdown-sub > summary, .mobile-sub > summary { list-style: none; cursor: pointer; font-family: var(--mono); font-size: 0.66rem; font-weight: 700; letter-spacing: 2px; color: var(--orange); padding: 0.45rem 1.2rem 0.45rem 1.8rem; }
+.dropdown-sub > summary::-webkit-details-marker, .mobile-sub > summary::-webkit-details-marker { display: none; }
+.dropdown-sub > summary::before, .mobile-sub > summary::before { content: 'B8'; display: inline-block; width: 1rem; transition: transform 0.2s; }
+.dropdown-sub[open] > summary::before, .mobile-sub[open] > summary::before { transform: rotate(90deg); }
+.dropdown-sub > summary:hover { background: rgba(0, 240, 255, 0.06); }
+.passed-tick { color: #3ddc84; margin-left: 0.3rem; }
+.dropdown-sub .dropdown-folder-body .dropdown-label { padding-left: 2.8rem; }
+.dropdown-sub .dropdown-folder-body a { padding-left: 3.4rem; }
+.mobile-sub > summary { padding-left: 0; }
+.dropdown-menu { max-height: calc(100vh - 90px); overflow-y: auto; }
 .nav-dropdown:hover .dropdown-menu { display: block; }
 .dropdown-menu::before {
     content: '';
@@ -885,55 +898,60 @@ footer {
             <li class="nav-dropdown">
                 <span class="dropdown-toggle">Training</span>
                 <div class="dropdown-menu">
-                    <span class="dropdown-folder">AWS-SC03</span>
+                    <span class="dropdown-folder">AWS ANS-C01 <span class="folder-badge">Studying</span></span>
                     <div class="dropdown-folder-body">
-                        <span class="dropdown-label">Quizzes</span>
-                        <a href="quiz.html">Fundamentals (150 Qs)</a>
-                        <a href="aws-security-exam.html">Scenario — Exam SC-02 (63 Qs)</a>
-                        <a href="pre-test/index.html">Scenario — Pre-Test (63 Qs)</a>
-                        <a href="udemy-course/index.html">Official Practice (360 Qs)</a>
-                        <div class="dropdown-divider"></div>
-                        <span class="dropdown-label">Notes</span>
-                        <a href="pre-test/cheatsheet.html">Cheat Sheet</a>
-                        <a href="pre-test/takeaways.html">Key Takeaways</a>
-                        <a href="practice-guide.html">Practice Guide</a>
-                        <div class="dropdown-divider"></div>
-                        <span class="dropdown-label">Diagrams</span>
-                        <a href="diagrams/index.html">Architecture Diagrams (16)</a>
+                        <span class="dropdown-label">Quizzes by Chapter (400 Qs)</span>
+                        <a href="training/aws-ans-vpc-core.html"><span class="ch-num">Ch 01</span> VPC Fundamentals &amp; Features (40 Qs)</a>
+                        <a href="training/aws-ans-vpc-ops.html"><span class="ch-num">Ch 02</span> VPC DNS, Performance &amp; Monitoring (40 Qs)</a>
+                        <a href="training/aws-ans-private-connectivity.html"><span class="ch-num">Ch 03</span> Peering, Endpoints &amp; VPC Lattice (40 Qs)</a>
+                        <a href="training/aws-ans-transit-gateway.html"><span class="ch-num">Ch 04</span> Transit Gateway &amp; Cloud WAN (40 Qs)</a>
+                        <a href="training/aws-ans-vpn.html"><span class="ch-num">Ch 05</span> BGP, Site-to-Site &amp; Client VPN (40 Qs)</a>
+                        <a href="training/aws-ans-direct-connect.html"><span class="ch-num">Ch 06</span> Direct Connect (40 Qs)</a>
+                        <a href="training/aws-ans-edge-elb.html"><span class="ch-num">Ch 07</span> CloudFront, Global Accelerator &amp; ELB (40 Qs)</a>
+                        <a href="training/aws-ans-route53.html"><span class="ch-num">Ch 08</span> Route 53 &amp; Hybrid DNS (40 Qs)</a>
+                        <a href="training/aws-ans-network-security.html"><span class="ch-num">Ch 09</span> Network Security &amp; GWLB (40 Qs)</a>
+                        <a href="training/aws-ans-eks-governance.html"><span class="ch-num">Ch 10</span> EKS Networking &amp; Governance (40 Qs)</a>
                     </div>
-                    <span class="dropdown-folder">AWS-SAP</span>
-                    <div class="dropdown-folder-body">
-                        <span class="dropdown-label">Quizzes</span>
-                        <a href="training/aws-sap-identity-federation.html">Identity &amp; Federation (60 Qs)</a>
-                        <a href="training/aws-sap-security.html">Security (60 Qs)</a>
-                        <a href="training/aws-sap-compute-lb.html">Compute &amp; Load Balancing (60 Qs)</a>
-                        <a href="training/aws-sap-storage.html">Storage (60 Qs)</a>
-                        <a href="training/aws-sap-caching.html">Caching (60 Qs)</a>
-                        <a href="training/aws-sap-databases.html">Databases (60 Qs)</a>
-                        <a href="training/aws-sap-service-communication.html">Service Communication (60 Qs)</a>
-                        <a href="training/aws-sap-data-engineering.html">Data Engineering (60 Qs)</a>
-                        <a href="training/aws-sap-monitoring.html">Monitoring (60 Qs)</a>
-                        <a href="training/aws-sap-deployment.html">Deployment &amp; Instance Management (60 Qs)</a>
-                        <a href="training/aws-sap-cost-control.html">Cost Control (60 Qs)</a>
-                        <a href="training/aws-sap-migrations.html">Migrations (60 Qs)</a>
-                        <a href="training/aws-sap-vpc.html">Amazon VPC (60 Qs)</a>
-                        <a href="training/aws-sap-machine-learning.html">Machine Learning (60 Qs)</a>
-                        <a href="training/aws-sap-other-services.html">Other Services (60 Qs)</a>
-                    </div>
-                    <span class="dropdown-folder">AWS-ANS</span>
-                    <div class="dropdown-folder-body">
-                        <span class="dropdown-label">Quizzes</span>
-                        <a href="training/aws-ans-vpc-core.html">VPC Fundamentals &amp; Features (40 Qs)</a>
-                        <a href="training/aws-ans-vpc-ops.html">VPC DNS, Performance &amp; Monitoring (40 Qs)</a>
-                        <a href="training/aws-ans-private-connectivity.html">Peering, Endpoints &amp; VPC Lattice (40 Qs)</a>
-                        <a href="training/aws-ans-transit-gateway.html">Transit Gateway &amp; Cloud WAN (40 Qs)</a>
-                        <a href="training/aws-ans-vpn.html">BGP, Site-to-Site &amp; Client VPN (40 Qs)</a>
-                        <a href="training/aws-ans-direct-connect.html">Direct Connect (40 Qs)</a>
-                        <a href="training/aws-ans-edge-elb.html">CloudFront, Global Accelerator &amp; ELB (40 Qs)</a>
-                        <a href="training/aws-ans-route53.html">Route 53 &amp; Hybrid DNS (40 Qs)</a>
-                        <a href="training/aws-ans-network-security.html">Network Security &amp; GWLB (40 Qs)</a>
-                        <a href="training/aws-ans-eks-governance.html">EKS Networking &amp; Governance (40 Qs)</a>
-                    </div>
+                    <span class="dropdown-folder passed-head">Passed</span>
+                    <details class="dropdown-sub">
+                        <summary>AWS-SC03 <span class="passed-tick">&#10003;</span></summary>
+                        <div class="dropdown-folder-body">
+                            <span class="dropdown-label">Quizzes</span>
+                            <a href="quiz.html">Fundamentals (150 Qs)</a>
+                            <a href="aws-security-exam.html">Scenario — Exam SC-02 (63 Qs)</a>
+                            <a href="pre-test/index.html">Scenario — Pre-Test (63 Qs)</a>
+                            <a href="udemy-course/index.html">Official Practice (360 Qs)</a>
+                            <div class="dropdown-divider"></div>
+                            <span class="dropdown-label">Notes</span>
+                            <a href="pre-test/cheatsheet.html">Cheat Sheet</a>
+                            <a href="pre-test/takeaways.html">Key Takeaways</a>
+                            <a href="practice-guide.html">Practice Guide</a>
+                            <div class="dropdown-divider"></div>
+                            <span class="dropdown-label">Diagrams</span>
+                            <a href="diagrams/index.html">Architecture Diagrams (16)</a>
+                        </div>
+                    </details>
+                    <details class="dropdown-sub">
+                        <summary>AWS-SAP-C02 <span class="passed-tick">&#10003;</span></summary>
+                        <div class="dropdown-folder-body">
+                            <span class="dropdown-label">Quizzes</span>
+                            <a href="training/aws-sap-identity-federation.html">Identity &amp; Federation (60 Qs)</a>
+                            <a href="training/aws-sap-security.html">Security (60 Qs)</a>
+                            <a href="training/aws-sap-compute-lb.html">Compute &amp; Load Balancing (60 Qs)</a>
+                            <a href="training/aws-sap-storage.html">Storage (60 Qs)</a>
+                            <a href="training/aws-sap-caching.html">Caching (60 Qs)</a>
+                            <a href="training/aws-sap-databases.html">Databases (60 Qs)</a>
+                            <a href="training/aws-sap-service-communication.html">Service Communication (60 Qs)</a>
+                            <a href="training/aws-sap-data-engineering.html">Data Engineering (60 Qs)</a>
+                            <a href="training/aws-sap-monitoring.html">Monitoring (60 Qs)</a>
+                            <a href="training/aws-sap-deployment.html">Deployment &amp; Instance Management (60 Qs)</a>
+                            <a href="training/aws-sap-cost-control.html">Cost Control (60 Qs)</a>
+                            <a href="training/aws-sap-migrations.html">Migrations (60 Qs)</a>
+                            <a href="training/aws-sap-vpc.html">Amazon VPC (60 Qs)</a>
+                            <a href="training/aws-sap-machine-learning.html">Machine Learning (60 Qs)</a>
+                            <a href="training/aws-sap-other-services.html">Other Services (60 Qs)</a>
+                        </div>
+                    </details>
                 </div>
             </li>
             <li><a href="#services">Services</a></li>
@@ -947,7 +965,20 @@ footer {
     </div>
 </nav>
 <div class="mobile-menu">
-    <div class="mobile-section-label" style="color:var(--orange);font-family:var(--mono);font-size:0.62rem;letter-spacing:2px;padding:0.6rem 0 0.3rem;font-weight:700;border-bottom:1px solid rgba(0,240,255,0.10);">TRAINING &mdash; AWS-SC03</div>
+    <div class="mobile-section-label" style="color:var(--orange);font-family:var(--mono);font-size:0.62rem;letter-spacing:2px;padding:0.6rem 0 0.3rem;font-weight:700;border-bottom:1px solid rgba(0,240,255,0.10);">TRAINING &mdash; AWS ANS-C01 (STUDYING)</div>
+    <a href="training/aws-ans-vpc-core.html"><span class="ch-num">Ch 01</span> VPC Fundamentals &amp; Features (40 Qs)</a>
+    <a href="training/aws-ans-vpc-ops.html"><span class="ch-num">Ch 02</span> VPC DNS, Performance &amp; Monitoring (40 Qs)</a>
+    <a href="training/aws-ans-private-connectivity.html"><span class="ch-num">Ch 03</span> Peering, Endpoints &amp; VPC Lattice (40 Qs)</a>
+    <a href="training/aws-ans-transit-gateway.html"><span class="ch-num">Ch 04</span> Transit Gateway &amp; Cloud WAN (40 Qs)</a>
+    <a href="training/aws-ans-vpn.html"><span class="ch-num">Ch 05</span> BGP, Site-to-Site &amp; Client VPN (40 Qs)</a>
+    <a href="training/aws-ans-direct-connect.html"><span class="ch-num">Ch 06</span> Direct Connect (40 Qs)</a>
+    <a href="training/aws-ans-edge-elb.html"><span class="ch-num">Ch 07</span> CloudFront, Global Accelerator &amp; ELB (40 Qs)</a>
+    <a href="training/aws-ans-route53.html"><span class="ch-num">Ch 08</span> Route 53 &amp; Hybrid DNS (40 Qs)</a>
+    <a href="training/aws-ans-network-security.html"><span class="ch-num">Ch 09</span> Network Security &amp; GWLB (40 Qs)</a>
+    <a href="training/aws-ans-eks-governance.html"><span class="ch-num">Ch 10</span> EKS Networking &amp; Governance (40 Qs)</a>
+    <div class="mobile-section-label" style="color:var(--orange);font-family:var(--mono);font-size:0.62rem;letter-spacing:2px;padding:0.6rem 0 0.3rem;font-weight:700;border-bottom:1px solid rgba(0,240,255,0.10);">PASSED</div>
+    <details class="mobile-sub">
+    <summary>AWS-SC03 &#10003;</summary>
     <div class="mobile-section-label" style="color:var(--cyan);font-family:var(--mono);font-size:0.6rem;letter-spacing:2px;padding:0.5rem 0 0.2rem;font-weight:700;">QUIZZES</div>
     <a href="quiz.html">Fundamentals (150 Qs)</a>
     <a href="aws-security-exam.html">Scenario — Exam SC-02</a>
@@ -959,7 +990,10 @@ footer {
     <a href="practice-guide.html">Practice Guide</a>
     <div class="mobile-section-label" style="color:var(--cyan);font-family:var(--mono);font-size:0.6rem;letter-spacing:2px;padding:0.5rem 0 0.2rem;font-weight:700;">DIAGRAMS</div>
     <a href="diagrams/index.html">Architecture Diagrams (16)</a>
-    <div class="mobile-section-label" style="color:var(--orange);font-family:var(--mono);font-size:0.62rem;letter-spacing:2px;padding:0.6rem 0 0.3rem;font-weight:700;border-bottom:1px solid rgba(0,240,255,0.10);">TRAINING &mdash; AWS-SAP</div>
+    
+    </details>
+    <details class="mobile-sub">
+    <summary>AWS-SAP-C02 &#10003;</summary>
     <a href="training/aws-sap-identity-federation.html">Identity &amp; Federation (60 Qs)</a>
     <a href="training/aws-sap-security.html">Security (60 Qs)</a>
     <a href="training/aws-sap-compute-lb.html">Compute &amp; Load Balancing (60 Qs)</a>
@@ -975,17 +1009,7 @@ footer {
     <a href="training/aws-sap-vpc.html">Amazon VPC (60 Qs)</a>
     <a href="training/aws-sap-machine-learning.html">Machine Learning (60 Qs)</a>
     <a href="training/aws-sap-other-services.html">Other Services (60 Qs)</a>
-<div class="mobile-section-label" style="color:var(--orange);font-family:var(--mono);font-size:0.62rem;letter-spacing:2px;padding:0.6rem 0 0.3rem;font-weight:700;border-bottom:1px solid rgba(0,240,255,0.10);">TRAINING &mdash; AWS-ANS</div>
-    <a href="training/aws-ans-vpc-core.html">VPC Fundamentals &amp; Features (40 Qs)</a>
-    <a href="training/aws-ans-vpc-ops.html">VPC DNS, Performance &amp; Monitoring (40 Qs)</a>
-    <a href="training/aws-ans-private-connectivity.html">Peering, Endpoints &amp; VPC Lattice (40 Qs)</a>
-    <a href="training/aws-ans-transit-gateway.html">Transit Gateway &amp; Cloud WAN (40 Qs)</a>
-    <a href="training/aws-ans-vpn.html">BGP, Site-to-Site &amp; Client VPN (40 Qs)</a>
-    <a href="training/aws-ans-direct-connect.html">Direct Connect (40 Qs)</a>
-    <a href="training/aws-ans-edge-elb.html">CloudFront, Global Accelerator &amp; ELB (40 Qs)</a>
-    <a href="training/aws-ans-route53.html">Route 53 &amp; Hybrid DNS (40 Qs)</a>
-    <a href="training/aws-ans-network-security.html">Network Security &amp; GWLB (40 Qs)</a>
-    <a href="training/aws-ans-eks-governance.html">EKS Networking &amp; Governance (40 Qs)</a>
+    </details>
     <div style="height:1px;background:rgba(0,240,255,0.08);margin:0.3rem 0;"></div>
     <a href="#services" onclick="this.parentElement.classList.remove('active')">Services</a>
     <a href="#how" onclick="this.parentElement.classList.remove('active')">Process</a>
