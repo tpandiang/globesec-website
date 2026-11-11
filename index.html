@@ -171,7 +171,7 @@ nav {
 .dropdown-folder.passed-head { color: var(--text-dim, #8899aa); margin-top: 0.4rem; }
 .dropdown-sub > summary, .mobile-sub > summary { list-style: none; cursor: pointer; font-family: var(--mono); font-size: 0.66rem; font-weight: 700; letter-spacing: 2px; color: var(--orange); padding: 0.45rem 1.2rem 0.45rem 1.8rem; }
 .dropdown-sub > summary::-webkit-details-marker, .mobile-sub > summary::-webkit-details-marker { display: none; }
-.dropdown-sub > summary::before, .mobile-sub > summary::before { content: 'B8'; display: inline-block; width: 1rem; transition: transform 0.2s; }
+.dropdown-sub > summary::before, .mobile-sub > summary::before { content: '\25B8'; display: inline-block; width: 1rem; transition: transform 0.2s; }
 .dropdown-sub[open] > summary::before, .mobile-sub[open] > summary::before { transform: rotate(90deg); }
 .dropdown-sub > summary:hover { background: rgba(0, 240, 255, 0.06); }
 .passed-tick { color: #3ddc84; margin-left: 0.3rem; }
@@ -180,12 +180,16 @@ nav {
 .mobile-sub > summary { padding-left: 0; }
 .dropdown-menu { max-height: calc(100vh - 90px); overflow-y: auto; }
 .nav-dropdown:hover .dropdown-menu { display: block; }
-.dropdown-menu::before {
+/* Hover bridge across the 12px gap. It hangs off the li, not the menu, because the
+   menu's overflow-y:auto clips its own ::before and the mouse fell through the gap. */
+.nav-dropdown::after {
     content: '';
     position: absolute;
-    top: -12px;
-    left: 0; right: 0;
-    height: 12px;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 265px;
+    height: 14px;
 }
 .dropdown-label {
     font-family: var(--mono);
